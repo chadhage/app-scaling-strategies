@@ -20,11 +20,11 @@ const { spawn } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const REPOSITORY = path.resolve(ROOT, '..', '..');
 const SUITES = {
-  'canon.cjs': ['canon', 'redact'], 'redact.cjs': ['redact', 'canon', 'evidence', 'service'], 'vault.cjs': ['vault', 'service'], 'evidence.cjs': ['evidence', 'service', 'server'],
+  'canon.cjs': ['canon', 'fragments', 'redact'], 'redact.cjs': ['redact', 'patterns', 'fragments', 'hostile', 'canon', 'evidence', 'service'], 'vault.cjs': ['vault', 'boundary', 'service'], 'evidence.cjs': ['evidence', 'service', 'server'],
   'service.cjs': ['service', 'server'], 'server.cjs': ['server', 'health', 'refusal'], 'page.js': ['page']
 };
 // the second pass over the survivors of the focused pass (--all-suites): every in-process suite of the namespace, the sweep and the property test included
-const ALL_SUITES = ['canon', 'scanner', 'redact', 'vault', 'evidence', 'service', 'server', 'health', 'refusal', 'sweep', 'property', 'page'];
+const ALL_SUITES = ['canon', 'scanner', 'redact', 'patterns', 'fragments', 'hostile', 'vault', 'boundary', 'evidence', 'service', 'server', 'health', 'refusal', 'sweep', 'property', 'page', 'fuzz', 'returns'];
 const suitesFor = (file) => (process.argv.includes('--all-suites') ? ALL_SUITES : SUITES[file]);
 const KEYWORDS = /^\s*(?:const|let|var|return|throw|if|else|for|while|switch|case|default|function|class|module|break|continue|import|export|try|catch|finally|async|await|\}|\)|\]|\/\/)/;
 
@@ -77,7 +77,114 @@ function matching(source, mask, open) {
   return -1;
 }
 
-function generate(source) {
+// Regex-literal mutants (third review, F3). The generator below never looks inside a regular-expression literal, yet the shape table of redact.cjs (PATTERNS) and the validator
+// patterns of vault.cjs ARE their limits. For every literal of the listed regions it emits one mutant per quantifier bound (m-1, m+1, n-1, n+1; an open bound m-1, m+1, m*10),
+// per quantifier character, per character-class item removed (a range also with its end one lower), per alternative removed, per \b \s \d \. escape, per anchor and per flag;
+// a mutant whose regular expression would not compile is never emitted. The validator patterns of vault.cjs only get their quantifiers and anchors mutated (a different alphabet
+// cannot make a value unprotected: whatever the validator accepts is held by value, proved by the boundary sweep), and no other regular expression of the namespace is mutated.
+const REGEX_REGIONS = {
+  'redact.cjs': /const PATTERNS = Object\.freeze\(\[\r?\n([^]*?)\r?\n\]\);/,
+  'vault.cjs': /\nconst TOKEN = ([^]*?)\r?\nconst IDENTITIES/
+};
+const REGEX_KINDS = { 'vault.cjs': /^(?:quantifier|anchor) / };
+const LITERAL = /\/((?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+)\/([a-z]*)/g;
+
+function classEdits(body, open, edits) {
+  let at = open + 1;
+  if (body[at] === '^') at += 1;
+  const items = [];
+  while (body[at] !== ']') {
+    const start = at;
+    at += body[at] === '\\' ? 2 : 1;
+    if (body[at] === '-' && body[at + 1] !== ']') { at += 2; items.push({ start, end: at, range: true }); } else items.push({ start, end: at, range: false });
+  }
+  for (const item of items) {
+    const text = body.slice(item.start, item.end);
+    if (items.length > 1) edits.push([item.start, item.end, '', `class item ${text} removed`]);
+    if (item.range) edits.push([item.end - 1, item.end, String.fromCharCode(text.charCodeAt(text.length - 1) - 1), `class range ${text} shortened`]);
+  }
+  return at + 1;
+}
+
+function regexEdits(body) {
+  const edits = [];
+  const groups = [];
+  let at = 0;
+  while (at < body.length) {
+    const char = body[at];
+    if (char === '\\') {
+      const swap = { '\\b': '', '\\s': '\\S', '\\d': '\\D', '\\.': '.' }[body.slice(at, at + 2)];
+      if (swap !== undefined) edits.push([at, at + 2, swap, `escape ${body.slice(at, at + 2)}`]);
+      at += 2;
+    } else if (char === '[') {
+      at = classEdits(body, at, edits);
+    } else if (char === '(') {
+      const prefix = body.startsWith('(?:', at) ? 3 : 1;
+      groups.push({ from: at + prefix, bars: [] });
+      at += prefix;
+    } else if (char === '|') {
+      groups[groups.length - 1].bars.push(at);
+      at += 1;
+    } else if (char === ')') {
+      const group = groups.pop();
+      const cuts = [group.from - 1, ...group.bars, at];
+      if (group.bars.length > 0) {
+        for (let index = 0; index < cuts.length - 1; index += 1) {
+          const first = index === 0 ? group.from : cuts[index] + 1;
+          const last = cuts[index + 1];
+          const [from, to] = index < cuts.length - 2 ? [first, last + 1] : [first - 1, last];
+          edits.push([from, to, '', `alternative ${body.slice(first, last)} removed`]);
+        }
+      }
+      at += 1;
+    } else if (char === '{') {
+      const close = body.indexOf('}', at);
+      const found = /^\{(\d+)(,(\d*))?\}$/.exec(body.slice(at, close + 1));
+      if (found) {
+        const low = Number(found[1]);
+        const comma = found[2] !== undefined;
+        const high = comma && found[3] !== '' ? Number(found[3]) : null;
+        const emit = (a, b) => edits.push([at, close + 1, comma ? `{${a},${b === null ? '' : b}}` : `{${a}}`, `quantifier ${body.slice(at, close + 1)} -> ${comma ? `{${a},${b === null ? '' : b}}` : `{${a}}`}`]);
+        if (!comma) { if (low > 1) emit(low - 1, null); emit(low + 1, null); } else if (high === null) { if (low > 1) emit(low - 1, null); emit(low + 1, null); emit(low * 10, null); } else {
+          if (low > 0) emit(low - 1, high);
+          if (low + 1 <= high) emit(low + 1, high);
+          if (high - 1 >= low) emit(low, high - 1);
+          emit(low, high + 1);
+        }
+      }
+      at = close + 1;
+    } else {
+      const swaps = { '*': ['+', '?', ''], '+': ['*', '?', ''], '?': [''], '^': [''], $: [''] }[char];
+      if (swaps) for (const replacement of swaps) edits.push([at, at + 1, replacement, `${/[*+?]/.test(char) ? 'quantifier' : 'anchor'} ${char} -> ${replacement || 'nothing'}`]);
+      at += 1;
+    }
+  }
+  return edits;
+}
+
+function regexMutants(source, file) {
+  const region = REGEX_REGIONS[file].exec(source);
+  if (!region) return [];
+  const regionStart = region.index + region[0].indexOf(region[1]);
+  const mutants = [];
+  for (const found of region[1].matchAll(LITERAL)) {
+    const bodyStart = regionStart + found.index + 1;
+    const flagsStart = bodyStart + found[1].length + 1;
+    const compiles = (body, flags) => { try { return Boolean(new RegExp(body, flags)); } catch { return false; } };
+    for (const [from, to, replacement, kind] of regexEdits(found[1])) {
+      if (REGEX_KINDS[file] && !REGEX_KINDS[file].test(kind)) continue;
+      const body = found[1].slice(0, from) + replacement + found[1].slice(to);
+      if (compiles(body, found[2]) && body !== found[1]) mutants.push({ start: bodyStart + from, end: bodyStart + to, original: source.slice(bodyStart + from, bodyStart + to), replacement, kind: `regex ${kind}` });
+    }
+    for (let index = 0; index < found[2].length && !REGEX_KINDS[file]; index += 1) {
+      const flags = found[2].slice(0, index) + found[2].slice(index + 1);
+      if (compiles(found[1], flags)) mutants.push({ start: flagsStart + index, end: flagsStart + index + 1, original: found[2][index], replacement: '', kind: `regex flag ${found[2][index]} removed` });
+    }
+  }
+  return mutants;
+}
+
+function generate(source, file) {
   const mask = codeMask(source);
   const mutants = [];
   const add = (start, end, replacement, kind) => { if (source.slice(start, end) !== replacement) mutants.push({ start, end, original: source.slice(start, end), replacement, kind }); };
@@ -121,6 +228,7 @@ function generate(source) {
     }
     offset += line.length + 1;
   }
+  if (file && Object.hasOwn(REGEX_REGIONS, file)) mutants.push(...regexMutants(source, file));
   const seen = new Set();
   return mutants.filter((mutant) => { const key = `${mutant.start}:${mutant.end}:${mutant.replacement}`; if (seen.has(key)) return false; seen.add(key); return true; }).sort((a, b) => a.start - b.start);
 }
@@ -207,16 +315,17 @@ async function main() {
   const limit = Number(argument('limit', 0));
   const out = argument('out', '');
   const only = argument('only', '');
+  const kind = argument('kind', '');
   const onlyMap = only ? Object.fromEntries(only.split(';').map((part) => { const [name, list] = part.split(':'); return [name, new Set(list.split(',').map(Number))]; })) : null;
   const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
   fs.mkdirSync(path.join(ROOT, 'tests', 'scratch'), { recursive: true });
   const report = { schema: 'C014-mutants/2', startedAtUtc: new Date().toISOString(), generatorFiles: ['tests/mutants.cjs', 'tests/mutate-preload.cjs'], workers, hardLimitSeconds: HARD_LIMIT_MS / 1000, only: only || null, files: {} };
   for (const file of files) {
     const source = fs.readFileSync(path.join(ROOT, file), 'utf8');
-    const all = generate(source);
+    const all = generate(source, file);
     if (process.argv.includes('--list')) { console.log(file, all.length); continue; }
     // an index is the position in the full generated list (stable for one source), so a re-run names exactly the same mutants
-    let chosen = all.map((mutant, index) => ({ mutant, index })).filter(({ index }) => !onlyMap || (onlyMap[file] && onlyMap[file].has(index)));
+    let chosen = all.map((mutant, index) => ({ mutant, index })).filter(({ index }) => !onlyMap || (onlyMap[file] && onlyMap[file].has(index))).filter(({ mutant }) => !kind || mutant.kind.startsWith(kind));
     if (limit) chosen = chosen.filter((_, position) => position % Math.ceil(chosen.length / limit) === 0);
     const entry = { suites: suitesFor(file), sourceLfSha256: sha(source.replace(/\r\n/g, '\n')), generated: all.length, ran: chosen.length };
     if (process.argv.includes('--control')) {

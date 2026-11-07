@@ -3,6 +3,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const net = require('node:net');
+const fs = require('node:fs');
+const path = require('node:path');
 const { startLocal, routeClass, createOut, ASSETS } = require('../server.cjs');
 const { seedConfig, canaryList, WHO } = require('./canaries.cjs');
 const { call, exchange, build, parseAnswers } = require('./harness.cjs');
@@ -186,6 +188,33 @@ test('every request is recorded with its route class, its status, its typed code
   for (let turn = 0; turn < 200 && service.listBody('logs', 200).value.items.length < wanted.length; turn += 1) await new Promise((resolve) => setTimeout(resolve, 20));
   assert.deepEqual(service.listBody('logs', 200).value.items.map((item) => [item.route, item.status, item.code, item.role]), wanted);
   assert.deepEqual(service.listBody('trace', 200).value.items.filter((item) => item.kind === 'request').map((item) => [item.route, item.status, item.code, item.role]), wanted);
+}));
+
+test('a COMMAND request is recorded with the role of its caller as well: a conductor, a visitor that is refused, an anonymous caller and a forged token', () => withLocal(async ({ port, service }) => {
+  const body = { name: 'role-run', units: 1 };
+  await call(port, 'POST', '/v1/commands/run.create', { token: config.tokens['conductor-a'], body });
+  await call(port, 'POST', '/v1/commands/run.create', { token: config.tokens.visitor, body });
+  await call(port, 'POST', '/v1/commands/run.create', { body });
+  await call(port, 'POST', '/v1/commands/run.create', { token: FORGED, body });
+  await call(port, 'POST', '/v1/commands/config.check', { token: config.tokens.operator, body: { mode: 'ok' } });
+  const wanted = [['command', 200, 'ok', 'conductor'], ['command', 403, 'ROLE_FORBIDDEN', 'visitor'], ['command', 401, 'AUTHENTICATION_REQUIRED', null], ['command', 401, 'TOKEN_UNKNOWN', null], ['command', 200, 'ok', 'operator']];
+  for (let turn = 0; turn < 200 && service.listBody('logs', 200).value.items.length < wanted.length; turn += 1) await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.deepEqual(service.listBody('logs', 200).value.items.map((item) => [item.route, item.status, item.code, item.role]), wanted);
+  assert.deepEqual(service.listBody('trace', 200).value.items.filter((item) => item.kind === 'request').map((item) => [item.route, item.status, item.code, item.role]), wanted);
+}));
+
+test('the three assets are served BYTE FOR BYTE: GET /, /page.js and /style.css return exactly index.html, page.js and style.css of the namespace, with their content types', () => withLocal(async ({ port }) => {
+  const sources = [];
+  for (const [route, [file, type]] of Object.entries(ASSETS)) {
+    const result = await call(port, 'GET', route);
+    const expected = fs.readFileSync(path.join(__dirname, '..', file));
+    assert.equal(result.status, 200, route);
+    assert.ok(result.answer.body.equals(expected), `${route} is ${file} (${result.answer.body.length} bytes, expected ${expected.length})`);
+    assert.equal(result.answer.headers['content-type'], type, route);
+    sources.push(expected.toString('latin1'));
+  }
+  assert.equal(new Set(sources).size, 3, 'three different files');
+  assert.deepEqual(Object.entries(ASSETS).map(([route, [file]]) => [route, file]), [['/', 'index.html'], ['/page.js', 'page.js'], ['/style.css', 'style.css']]);
 }));
 
 test('the HTTP timeouts and the connection cap are configured on the server: header and request timeout, keep-alive one second, idle timeout, cap', () => withLocal(async ({ server }) => {

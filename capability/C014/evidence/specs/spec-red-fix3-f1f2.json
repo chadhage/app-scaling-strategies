@@ -1,0 +1,21 @@
+{
+  "name": "red-fix3-f1f2",
+  "purpose": "C014 THIRD FIX, RED for the findings F1 and F2 of the independent review of the published commit c7ec58a79f0d, run on the PUBLISHED production bytes (every production file below is pinned before any fix; the integrity test compares them with that commit). F1: the vault accepted a 5-character contact name that no redaction registers by value, so the raw name reached the anonymous public trace, runs and bundle. F2: a registered part of a secret (a name part, the e-mail local part) was replaced before the whole-value check, so the URL-encoded name, the URL-encoded e-mail and five more encodings left fragments and the README claim that a non-raw form masks the WHOLE value was false. Every failing test fails on a behavioural assertion. The same snapshot bytes replay unchanged against the fixed files in the final captures.",
+  "args": [
+    "capability\\C014\\tests\\sanitized-run.cjs", "--",
+    "--require", ".\\capability\\C014\\tests\\scratch-cwd.cjs",
+    "--test", "--test-concurrency=1", "--test-timeout=120000",
+    "capability\\C014\\evidence\\red\\fix3\\f1.snapshot.cjs",
+    "capability\\C014\\evidence\\red\\fix3\\f2.snapshot.cjs"
+  ],
+  "inputs": [
+    "capability\\C014\\C014.feature", "capability\\C014\\imports.json",
+    "capability\\C014\\canon.cjs", "capability\\C014\\redact.cjs", "capability\\C014\\vault.cjs", "capability\\C014\\evidence.cjs", "capability\\C014\\service.cjs", "capability\\C014\\server.cjs",
+    "capability\\C014\\page.js", "capability\\C014\\index.html", "capability\\C014\\style.css",
+    "capability\\C014\\evidence\\red\\fix3\\f1.snapshot.cjs", "capability\\C014\\evidence\\red\\fix3\\f2.snapshot.cjs",
+    "capability\\C014\\tests\\scratch-cwd.cjs", "capability\\C014\\tests\\sanitized-run.cjs"
+  ],
+  "outDir": "capability\\C014\\evidence\\red\\red-03",
+  "expectedExitCode": 1,
+  "timeoutMs": 300000
+}

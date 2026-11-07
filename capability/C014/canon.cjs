@@ -35,8 +35,8 @@ function unicodeUnescape(text) {
   });
 }
 
-// The text as it is, with one and two rounds of URL decoding, HTML entities and \u escapes decoded.
-const views = (text) => [text, percentDecode(text), percentDecode(percentDecode(text)), htmlDecode(text), unicodeUnescape(text)];
+// The text as it is, with one and two rounds of URL decoding, HTML entities and \u escapes decoded, and the plus signs of a form-encoded text read as spaces.
+const views = (text) => [text, percentDecode(text), percentDecode(percentDecode(text)), htmlDecode(text), unicodeUnescape(text), percentDecode(text.replace(/\+/g, ' '))];
 
 // What to look for: base64 and base64url at the three alignments the secret can have inside a longer base64 text (the characters that depend on
 // the neighbouring bytes are cut off), and the folded text and the hex of the secret (hex is matched case-insensitively on folded views).
@@ -55,16 +55,29 @@ function needlesFor(secret) {
   return { exact: [...exact], folded: [...new Set([fold(secret), bytes.toString('hex')])] };
 }
 
-// True when any view of the text, folded or not, holds any needle of any registered secret.
-function leaksIn(text, registry) {
+// The marker that takes the place of a secret where it stands verbatim: no needle contains it and fold() leaves it alone.
+const SET_ASIDE = '\u0000';
+
+const holds = (needles, exactViews, foldedViews) => needles.exact.some((needle) => exactViews.some((view) => view.includes(needle)))
+  || needles.folded.some((needle) => foldedViews.some((view) => view.includes(needle)));
+
+// True when the ORIGINAL text holds a registered secret in a covered form other than as written (case, compatibility forms, format characters, URL, HTML and \u escapes,
+// plus for space, base64, hex). Where a registered secret stands verbatim it is replaced in place and whole, so for a given secret every verbatim occurrence of a registered
+// secret that contains it (itself, a longer secret, an e-mail address that holds a name in lower case) is set aside first. That is what lets a registered PART of a longer secret
+// (a surname, an e-mail local part) stand verbatim inside an encoded form of the longer secret without hiding it: the longer secret is not set aside, so its form is found.
+function encodedIn(text, registry) {
   if (text.length < MIN_SECRET) return false;
-  const exactViews = views(text);
-  const foldedViews = exactViews.map(fold);
-  for (const needles of registry.values()) {
-    if (needles.exact.some((needle) => exactViews.some((view) => view.includes(needle)))) return true;
-    if (needles.folded.some((needle) => foldedViews.some((view) => view.includes(needle)))) return true;
+  const shared = views(text);
+  const sharedFolded = shared.map(fold);
+  const present = [...registry.keys()].filter((other) => text.includes(other)).map((other) => [other, fold(other)]);
+  for (const [secret, needles] of registry) {
+    const key = fold(secret);
+    const covering = present.filter(([, folded]) => folded.includes(key)).map(([other]) => other);
+    const exactViews = covering.length > 0 ? views(covering.reduce((rest, other) => rest.split(other).join(SET_ASIDE), text)) : shared;
+    const foldedViews = covering.length > 0 ? exactViews.map(fold) : sharedFolded;
+    if (holds(needles, exactViews, foldedViews)) return true;
   }
   return false;
 }
 
-module.exports = Object.freeze({ MIN_SECRET, fold, percentDecode, htmlDecode, unicodeUnescape, views, needlesFor, leaksIn });
+module.exports = Object.freeze({ MIN_SECRET, fold, percentDecode, htmlDecode, unicodeUnescape, views, needlesFor, encodedIn });

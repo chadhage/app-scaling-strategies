@@ -42,6 +42,8 @@ function runFile(name) {
       const count = (key) => Number((new RegExp(`^# ${key} (\\d+)$`, 'm').exec(text) || [])[1] || 0);
       const row = { file: name, exit: code, durationMs: Date.now() - started, tests: count('tests'), pass: count('pass'), fail: count('fail'), cancelled: count('cancelled'), skipped: count('skipped'), todo: count('todo'), endedByGuard: ended };
       row.failing = [...text.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim().slice(0, 100));
+      // the assertion text of a failing test (the YAML block node:test prints under `not ok`), with the repository and home paths made neutral: a failure under load must say what failed
+      if (code !== 0 || row.fail > 0) row.detail = (/^not ok [^]*?^# /m.exec(text) || [''])[0].split(REPOSITORY).join('<REPO>').replace(/[A-Za-z]:[\\/]+Users[\\/]+[^\\/\s'"]+/g, '<HOME>').slice(0, 2500);
       row.ok = !ended && code === 0 && row.tests > 0 && row.pass === row.tests && row.fail === 0 && row.cancelled === 0 && row.skipped === 0 && row.todo === 0;
       resolve(row);
     });

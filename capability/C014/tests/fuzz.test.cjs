@@ -60,11 +60,11 @@ function hostile(rng, meter, mode = 'any') {
     () => true, () => '', () => '\u0000', () => '\ud800', () => 10n, () => Symbol('hostile'), () => () => 1, () => class Hostile {},
     () => 'x'.repeat(LIMITS.textCap + 1), () => `${BAIT} `.repeat(1 + rng.int(40)), () => '%25'.repeat(20000), () => '&#65;'.repeat(20000), () => '\\u0041'.repeat(20000),
     () => '\u{1F600}'.repeat(40000), () => `${'a'.repeat(LIMITS.text)}${BAIT}`,
-    () => [], () => [, , 1], () => new Array(2 ** 32 - 1), () => Object.assign([1, 2], { [BAIT]: BAIT }), () => ({ length: 1e9 }),
+    () => [], () => [, , 1], () => new Array(1e5), () => Object.assign([1, 2], { [BAIT]: BAIT }), () => ({ length: 1e9 }),
     () => cyclic(), () => deep(50), () => deep(20000), () => JSON.parse('{"__proto__":{"polluted":1},"constructor":{"prototype":{"polluted":1}}}'), () => Object.create(null),
     () => Object.freeze({ id: 'run-0001' }), () => new Date(0), () => new Map([[BAIT, BAIT]]), () => new Set([BAIT]), () => /x/g, () => Buffer.from(BAIT), () => new Uint8Array(8),
     () => Object(BAIT), () => Object(5), () => Promise.resolve(BAIT), () => new Error(BAIT), accessors,
-    () => counting(new Array(2 ** 32 - 1), meter), () => counting({ id: 'run-0001', units: 1, steps: counting([], meter) }, meter)
+    () => counting(new Array(1e5), meter), () => counting({ id: 'run-0001', units: 1, steps: counting([], meter) }, meter)
   ];
   if (mode === 'any') factories.push(trap);
   return rng.pick(mode === 'owner' ? factories.filter((factory) => factory !== accessors) : factories)();
@@ -187,15 +187,15 @@ test('the oracles of the fuzz are not vacuous: an extra key, a value out of rang
   assert.ok(visits(SCHEMAS.signedBundle) > visits(SCHEMAS.runs) && visits(SCHEMAS.runs) > LIMITS.steps);
 });
 
-test('a hostile container costs at most the reads its limit allows: a proxied array that claims four billion entries is read at most as often as the list limit, never as often as it claims', () => {
+test('a hostile container costs at most the reads its limit allows: a proxied array that claims a hundred thousand entries is read at most as often as the list limit, never as often as it claims', () => {
   const instance = createRedactor({ secrets: SECRETS });
   const steps = { meter: { reads: 0 } };
-  steps.huge = counting(new Array(2 ** 32 - 1), steps.meter);
+  steps.huge = counting(new Array(1e5), steps.meter);
   const runs = instance.publish('runs', { id: 'run-0001', units: 1, revision: 0, status: 'ok', artifacts: 0, steps: steps.huge });
   assert.deepEqual(runs.value.steps, []);
   assert.ok(steps.meter.reads > 0 && steps.meter.reads <= 1 + 2 * LIMITS.steps, `${steps.meter.reads} reads for ${LIMITS.steps} steps`);
   const items = { meter: { reads: 0 } };
-  items.huge = counting(new Array(2 ** 32 - 1), items.meter);
+  items.huge = counting(new Array(1e5), items.meter);
   const list = instance.publish('list', { outcome: 'ok', kind: 'runs', revision: 0, total: 0, shown: 0, limit: 50, items: items.huge });
   assert.deepEqual(list.value.items, []);
   assert.ok(items.meter.reads > 0 && items.meter.reads <= 1 + 2 * LIMITS.entries, `${items.meter.reads} reads for ${LIMITS.entries} items`);

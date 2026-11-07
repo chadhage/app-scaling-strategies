@@ -71,7 +71,7 @@ function checkMutants({ reports, reruns, equivalents, root = ROOT }) {
   const problems = [];
   for (const file of Object.keys(SUITES)) {
     const source = fs.readFileSync(path.join(root, file), 'utf8');
-    const generated = generate(source);
+    const generated = generate(source, file);
     const hash = sha(Buffer.from(source.replace(/\r\n/g, '\n')));
     const decided = new Map();
     let mainReport = false;
@@ -128,4 +128,23 @@ function mutantTotals({ reports, reruns, equivalents, root = ROOT }) {
   return totals;
 }
 
-module.exports = Object.freeze({ ROOT, REPOSITORY, sha, lf, checkManifest, manifests, printedDocument, checkMutants, mutantTotals });
+// The mutation evidence stored in evidence\mutants: the main reports, the re-runs of survivors and the written equivalences.
+function mutationEvidence(root = ROOT) {
+  const directory = path.join(root, 'evidence', 'mutants');
+  const names = fs.readdirSync(directory);
+  const read = (name) => JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8'));
+  return {
+    reports: names.filter((name) => /^systematic-\d+.*\.json$/.test(name)).sort().map(read),
+    reruns: names.filter((name) => /^rerun-\d+.*\.json$/.test(name)).sort().map(read),
+    equivalents: names.includes('equivalents.json') ? read('equivalents.json') : []
+  };
+}
+
+// The FINAL capture of a kind is the one with the highest serial of its stem (green-suite-03 over green-suite-02); the earlier ones stay as history.
+function finalCapture(stem, root) {
+  const pattern = new RegExp(`^${stem}-(\\d+)$`);
+  const found = manifests(root).map((file) => ({ file, serial: pattern.exec(path.basename(file, '.json')) })).filter((item) => item.serial).sort((left, right) => Number(left.serial[1]) - Number(right.serial[1]));
+  return found.length > 0 ? found[found.length - 1].file : null;
+}
+
+module.exports = Object.freeze({ ROOT, REPOSITORY, sha, lf, checkManifest, manifests, printedDocument, checkMutants, mutantTotals, mutationEvidence, finalCapture });

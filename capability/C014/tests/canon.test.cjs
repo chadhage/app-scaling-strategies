@@ -29,13 +29,16 @@ test('unicodeUnescape: \\uXXXX, \\u{...} and \\xHH; out-of-range stays', () => {
   assert.equal(canon.unicodeUnescape('\\u{110000}\\u12'), '\\u{110000}\\u12');
 });
 
-test('views: the text and its URL (twice), HTML and escape decodings', () => {
-  const [plain, once, twice, html, escaped] = canon.views('%2563&#99;\\u0063');
-  assert.equal(plain, '%2563&#99;\\u0063');
-  assert.equal(once, '%63&#99;\\u0063');
-  assert.equal(twice, 'c&#99;\\u0063');
-  assert.equal(html, '%2563c\\u0063');
-  assert.equal(escaped, '%2563&#99;c');
+test('views: the text and its URL (twice), HTML, escape and form-encoded (plus for space) decodings', () => {
+  const [plain, once, twice, html, escaped, form] = canon.views('%2563&#99;\\u0063+x');
+  assert.equal(plain, '%2563&#99;\\u0063+x');
+  assert.equal(once, '%63&#99;\\u0063+x');
+  assert.equal(twice, 'c&#99;\\u0063+x');
+  assert.equal(html, '%2563c\\u0063+x');
+  assert.equal(escaped, '%2563&#99;c+x');
+  assert.equal(form, '%63&#99;\\u0063 x', 'plus becomes a space before the URL decoding, so %2B stays a plus');
+  assert.equal(canon.views('a+b%2Bc+%41').length, 6);
+  assert.equal(canon.views('a+b%2Bc+%41')[5], 'a b+c A');
 });
 
 test('needlesFor: base64 and base64url are found at all three alignments inside a longer base64 text', () => {
@@ -52,27 +55,41 @@ test('needlesFor: base64 and base64url are found at all three alignments inside 
   assert.ok(exact.every((needle) => needle.length >= 8), 'a needle too short to be specific is never used');
 });
 
-test('leaksIn: any view of a text, folded or not, that holds any needle of any registered secret', () => {
-  const secret = 'CNRY-leak-0123456789abcdef';
+test('encodedIn: any view of a text, folded or not, that holds any needle of any registered secret in a form other than as written; the secret itself, as written, is not a form', () => {
+  const secret = 'CNRY leak+0123456789=abcdef';
   const registry = new Map([[secret, canon.needlesFor(secret)]]);
-  const forms = [secret, secret.toUpperCase(), encodeURIComponent(secret), `%25${[...Buffer.from(secret)].map((byte) => byte.toString(16)).join('%25')}`, Buffer.from(secret).toString('base64'),
-    Buffer.from(`x${secret}`).toString('base64url'), Buffer.from(secret).toString('hex').toUpperCase(), [...secret].join('\u200b'), [...secret].map((char) => `&#${char.charCodeAt(0)};`).join('')];
-  for (const form of forms) assert.equal(canon.leaksIn(`before ${form} after`, registry), true, form.slice(0, 24));
-  assert.equal(canon.leaksIn('nothing to see here, a plain sentence of some length', registry), false);
-  assert.equal(canon.leaksIn('short', registry), false);
+  const forms = [secret.toUpperCase(), encodeURIComponent(secret), `%25${[...Buffer.from(secret)].map((byte) => byte.toString(16)).join('%25')}`, Buffer.from(secret).toString('base64'),
+    Buffer.from(`x${secret}`).toString('base64url'), Buffer.from(secret).toString('hex').toUpperCase(), [...secret].join('\u200b'), [...secret].map((char) => `&#${char.charCodeAt(0)};`).join(''),
+    encodeURIComponent(secret).replace(/%20/g, '+')];
+  for (const form of forms) assert.equal(canon.encodedIn(`before ${form} after`, registry), true, form.slice(0, 24));
+  assert.equal(canon.encodedIn(`before ${secret} after`, registry), false, 'as written');
+  assert.equal(canon.encodedIn(`${secret}${secret}`, registry), false, 'as written twice');
+  assert.equal(canon.encodedIn(`${secret} ${encodeURIComponent(secret)}`, registry), true, 'as written beside an encoded form');
+  assert.equal(canon.encodedIn('nothing to see here, a plain sentence of some length', registry), false);
+  assert.equal(canon.encodedIn('short', registry), false);
 });
 
-test('the minimum lengths are 6 for a secret and 8 for a base64 needle: a secret of exactly six characters is found, a text of exactly six characters is examined, and a shorter text never is', () => {
+test('encodedIn sets aside a verbatim secret that CONTAINS the one it looks for (an address that holds a name in lower case) and a verbatim part never hides a form of the longer secret', () => {
+  const name = 'Zorvald Quillfeather';
+  const address = 'zorvald.quillfeather.1a2b3c@mail.invalid';
+  const registry = new Map([[name, canon.needlesFor(name)], ['Quillfeather', canon.needlesFor('Quillfeather')], [address, canon.needlesFor(address)]]);
+  assert.equal(canon.encodedIn(`mail ${address} sent`, registry), false, 'the lower-case name parts inside a verbatim address are explained by it');
+  assert.equal(canon.encodedIn(`mail ${address} to zorvald quillfeather`, registry), true, 'the same name in lower case outside the address is a form of the name');
+  assert.equal(canon.encodedIn(`Zorvald%20Quillfeather`, registry), true, 'the surname stands verbatim inside the encoded name');
+  assert.equal(canon.encodedIn('Zorvald Quillfeather and Quillfeather', registry), false);
+});
+
+test('the minimum lengths are 6 for a secret and 8 for a base64 needle: a text of exactly six characters is examined, and a shorter text never is', () => {
   assert.equal(canon.MIN_SECRET, 6);
   const six = 'abcdef';
   const registry = new Map([[six, canon.needlesFor(six)]]);
-  assert.equal(canon.leaksIn(six, registry), true, 'a text of exactly the minimum length that is the secret');
-  assert.equal(canon.leaksIn(`${six.slice(0, 5)}`, registry), false, 'five characters are shorter than any secret');
+  assert.equal(canon.encodedIn('ABCDEF', registry), true, 'a text of exactly the minimum length that is a form of the secret');
+  assert.equal(canon.encodedIn('ABCDE', registry), false, 'five characters are shorter than any secret');
   // a secret whose folded form is shorter than the minimum (zero-width characters): the text that equals the folded form is too short to be examined
   const degenerate = 'ab\u200b\u200b\u200b\u200b';
   assert.deepEqual(canon.needlesFor(degenerate).folded.slice(0, 1), ['ab']);
-  assert.equal(canon.leaksIn('ab', new Map([[degenerate, canon.needlesFor(degenerate)]])), false, 'two characters are never examined');
-  assert.equal(canon.leaksIn('ab\u200b\u200b\u200b\u200b', new Map([[degenerate, canon.needlesFor(degenerate)]])), true, 'six characters are');
+  assert.equal(canon.encodedIn('ab', new Map([[degenerate, canon.needlesFor(degenerate)]])), false, 'two characters are never examined');
+  assert.equal(canon.encodedIn('ab\u200b\u200b\u200b\u200d', new Map([[degenerate, canon.needlesFor(degenerate)]])), true, 'six characters are');
 });
 
 test('htmlDecode and unicodeUnescape decode the last code point U+10FFFF and leave the first one beyond it', () => {

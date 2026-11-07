@@ -9,16 +9,17 @@ const canon = require('./canon.cjs');
 
 const MASK = '[redacted]';
 const LIMITS = Object.freeze({ textCap: 65536, text: 4096, entries: 200, steps: 8, claims: 32 });
-// Shapes that are secrets whether or not the service was told about them (each is linear: bounded quantifiers, no nesting).
+// Shapes that are secrets whether or not the service was told about them (each is linear: bounded quantifiers, no nesting). The ORDER matters: the phone number, which
+// masks any run of nine or more digits, comes LAST, so that it can never chew the digits of a long hex run, a blob or a token and leave its letters visible.
 const PATTERNS = Object.freeze([
   ['management token', /c009_[A-Za-z0-9_-]{43}/g],
-  ['bearer credential', /\bBearer\s+[A-Za-z0-9._~+/-]{1,512}=*/gi],
+  ['bearer credential', /\bBearer\s+[a-z0-9._~+/-]{1,512}=*/gi],
   ['connection string secret', /\b(?:Password|Pwd|AccountKey|SharedAccessKey|SharedAccessSignature|ApiKey|Secret)\s*=\s*[^;\s,]{1,256}/gi],
   ['e-mail address', /[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63}){1,8}/g],
-  ['phone number', /\+?\d[\d ().-]{7,18}\d/g],
   ['json web token', /eyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{0,512}/g],
   ['long blob', /[A-Za-z0-9+/_-]{40,}={0,2}/g],
-  ['long hex', /\b[0-9a-fA-F]{32,}\b/g]
+  ['long hex', /\b[0-9a-fA-F]{32,}\b/g],
+  ['phone number', /\+?\d[\d ().-]{7,18}\d/g]
 ]);
 
 const ROLES = contract.roles;
@@ -110,14 +111,15 @@ function createRedactor({ secrets = [], limits = LIMITS } = {}) {
   }
   secrets.forEach(register);
 
-  // Exact occurrences are replaced in place; every other form (case, NFKC, format characters, URL, HTML and \u escapes, base64, hex) that still shows in
-  // any view of the text masks the whole value. That check runs BEFORE the shapes are replaced: a shape (a phone number, a blob) must never chew a
-  // part of a secret and hide it from the by-value check. The text is cut at the limit only after masking.
+  // Exact occurrences are replaced in place; every other form (case, NFKC, format characters, URL, HTML and \u escapes, plus for space, base64, hex) of a registered secret masks
+  // the WHOLE text. That check looks at the ORIGINAL text and runs BEFORE the exact replacements: a registered part of a secret (a surname, an e-mail local part) that stands
+  // verbatim inside an encoded form of the whole must not consume the evidence, and a shape (a phone number, a blob) must never chew a part of a secret either (the shapes
+  // run last). The text is cut at the limit only after masking.
   function maskText(input) {
     if (typeof input !== 'string' || input.length > limits.textCap) return MASK;
+    if (canon.encodedIn(input, registry)) return MASK;
     let value = input;
     for (const secret of ordered) if (value.includes(secret)) value = value.split(secret).join(MASK);
-    if (canon.leaksIn(value, registry)) return MASK;
     for (const [, shape] of PATTERNS) value = value.replace(shape, MASK);
     return value.length > limits.text ? `${value.slice(0, limits.text)}\u2026` : value;
   }

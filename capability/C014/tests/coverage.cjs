@@ -12,12 +12,12 @@ const { spawn } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const REPOSITORY = path.resolve(ROOT, '..', '..');
 const PRODUCTION = ['canon.cjs', 'redact.cjs', 'vault.cjs', 'evidence.cjs', 'service.cjs', 'server.cjs', 'page.js'];
-const SUITES = ['canon', 'scanner', 'redact', 'vault', 'evidence', 'service', 'server', 'refusal', 'sweep', 'property', 'page', 'health'].map((name) => `capability/C014/tests/${name}.test.cjs`);
+const SUITES = ['canon', 'scanner', 'redact', 'patterns', 'fragments', 'hostile', 'vault', 'boundary', 'evidence', 'service', 'server', 'refusal', 'sweep', 'property', 'page', 'health'].map((name) => `capability/C014/tests/${name}.test.cjs`);
 const THRESHOLD = 85;
 const ROW = /^# +(\S+\.(?:js|cjs|mjs)) +\| +([\d.]+) +\| +([\d.]+) +\| +([\d.]+) +\|/;
 // --focused: each file is measured over the suites that exercise it (a focused per-file run, not a whole-namespace run); the default measures every file over all in-process suites.
 const FOCUSED = {
-  'canon.cjs': ['canon', 'redact'], 'redact.cjs': ['redact', 'canon', 'evidence', 'service'], 'vault.cjs': ['vault', 'service'], 'evidence.cjs': ['evidence', 'service', 'server'],
+  'canon.cjs': ['canon', 'fragments', 'redact'], 'redact.cjs': ['redact', 'patterns', 'fragments', 'hostile', 'canon', 'evidence', 'service'], 'vault.cjs': ['vault', 'boundary', 'service'], 'evidence.cjs': ['evidence', 'service', 'server'],
   'service.cjs': ['service', 'server'], 'server.cjs': ['server', 'health', 'refusal'], 'page.js': ['page']
 };
 
