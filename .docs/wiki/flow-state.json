@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1416,
+  "revision": 1420,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
-  "status": "running",
-  "updatedAtUtc": "2026-11-08T20:14:25.8727162Z",
+  "status": "stopped",
+  "updatedAtUtc": "2026-11-08T22:06:09.9964259Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -17,7 +17,183 @@
     "path": ".docs/wiki/kanban.md",
     "unadmittedMeaning": "Source inventory is not a workflow column.",
     "parents": 171,
-    "zeroCredit": "U001-U018 unblock, slice and tooling cards and 84 derived K quality-debt cards are zero-credit operationalWork. They are not part of this 414-card inventory and never fund a Kano quota."
+    "zeroCredit": "U001-U018 unblock, slice and tooling cards and 84 derived K quality-debt cards are zero-credit operationalWork. They are not part of this 414-card inventory and never fund a Kano quota.",
+    "operationalSpecs": {
+      "U054": {
+        "kind": "hardening",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C041 that is changed or added.",
+        "source": "reviews/C059.fix2.verdict.json (Q9, M2)",
+        "entryGate": "C059 Done (its README states the limit until this item lands)",
+        "id": "U054",
+        "createdBy": "controller-2026-11-06",
+        "serves": "C041",
+        "createdAtUtc": "2026-11-06T19:59:39Z",
+        "unblocks": [],
+        "kanoCredit": 0,
+        "tdd": "RED first (archived under a NEW directory of capability/C041): the service-starting tests run in an LF-converted tree and fail on the published bytes with the asset integrity mismatch (0 of 8 catalog asset pins match the LF bytes, 8 of 8 match after CRLF conversion: the reviewer probe pin.cjs in RUN/results/C059-review); then the change; the RED replayed unchanged; no absolute timing bound.",
+        "title": "C041 lesson assets: serve() verifyAsset accepts the LF-normalized form of each pinned asset (record raw and LF like the import pins) so a Linux or LF checkout can start the service of every consumer",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the C059 second-fix review (Q9 and M2): git archive on this machine applies core.autocrlf so the 8 pinned lesson assets come out CRLF and everything passes here; a Linux clone of blobs stored as LF fails every test that starts the service (Pinned lesson asset integrity mismatch from capability/C041/serve.cjs verifyAsset, sha256 of the RAW bytes). The reviewer probes heavy2.ps1, conv.cjs and pin.cjs in RUN/results/C059-review reproduce it with an LF-converted copy of C041, C042 and learning/S001, S003. Entry gate C059 Done so that the C059 README limit (service-starting suites need CRLF assets) can be lifted in a later amendment of C059.",
+            "evidence": "reviews/C059.fix2.verdict.json (Q9, M2)"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C041 is an accepted sealed card: amend only through the addendum chain (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). PUBLISHER ROUTE (check the map of the publisher BEFORE you order a worker to use it: the U040 order named the wrong one): C041 (class S) is NOT in the closed map of publish-ext.ps1 and has no GO file, but it IS in the map of the legacy publish.ps1 (localCapabilityClasses: C041='S'): publish with the legacy publisher, `publish.ps1 -CardId C041 -WorkerId worker-U054 -Paths ... -Message '[C041][S] U054 ...'`, one amendment commit. Add no local Windows user name and no session id to any added file (rule 15).",
+            "evidence": "orders/U032.md; orders/_CONTROLLER-UPDATE.md rule 15; .git/kanban-orchestrator/publish.ps1 line 24"
+          }
+        ],
+        "acceptance": "In capability/C041 verifyAsset (called from serve.cjs, and by C059 server.cjs loadAssets) accepts a lesson asset whose raw SHA-256 OR whose CRLF-to-LF canonical SHA-256 equals the pin, the catalog records both hashes for each of the 8 pinned lesson assets, a tampered asset (a changed byte in either line-ending form) is still refused by name and a test per branch proves it; the services of C041 and of its consumers (C059 and any other importer) start from a git-archive tree whose text files were converted to LF, proved by running the service-starting suites of C041 and C059 in an LF tree; the changes reach the sealed card only through a chained append-only addendum or NEW files without editing a pinned file in place; per-file 85/85/85 still holds for every changed production file.",
+        "lineage": "OP-C041-LF-ASSETS"
+      },
+      "U045": {
+        "unblocks": [],
+        "entryGate": "U018",
+        "coverage": "85/85/85 per file on every first-party production file of testing/browser/qualify that is changed or added; documentation-only parts state coverage not-applicable with the diff.",
+        "kind": "defect-fix",
+        "source": "reviews/U018.fix2.verdict.json (P2, P3, P4, P5)",
+        "tdd": "RED first (archived under a NEW directory of testing/browser/qualify): a test that fails on the published bytes because a timing assertion depends on real spawn time, a test that fails while the README or --help sentence contradicts the clock probe, and an injected EPERM that makes the published append fail at once; then the fix; the RED replayed unchanged; no absolute timing bound.",
+        "acceptance": "In testing/browser/qualify the wall-clock tests that flaked under load (timeouts.test.cjs: an explicit shell bound below the outer bound is kept and one above is clamped; outer-timeout.test.cjs: the outer bound) decide by structural facts (a virtual clock, counters, an injected adapter that records the bounds it was given) so that no machine load makes them fail; the README sentence claiming that a forged report is refused is replaced by what is checked (consistency and agreement with the installed Edge) and what is not (authenticity), the --help text and the code comment that say a timeout never passes a check state the clock exception, the 11-waits upper bound states the common 2.6 bounds, the figures (29 files and 225 tests, addendum.cjs branches 96.22) are corrected, and the append retries a bounded number of times on EPERM or EBUSY with a typed refusal after the bound (a test with an injected adapter); the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
+        "lineage": "OP-U018-RESIDUALS",
+        "id": "U045",
+        "title": "U018 residuals: make the qualify timing tests structural, correct the README and --help overclaims, add a bounded EPERM retry to the addendum append",
+        "serves": "U018",
+        "createdAtUtc": "2026-11-06T14:30:25Z",
+        "hints": [
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "U018 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md and orders/R3-U018.md for this tool own addendum design); never edit qualified.json. If U034 (Edge 157) becomes the work in progress first, stop and let U034 go first: both append to the same chain.",
+            "evidence": "reviews/U018.fix2.verdict.json; orders/R3-U018.md"
+          },
+          {
+            "kind": "reuse",
+            "confidence": 4,
+            "text": "Reviewer findings with reproductions: P3 timeouts.test.cjs 248/249 because spawning the fake shell took longer than 500 ms so the outer bound fired first (the same flake as the retained failed attempt coverage-fix2-adapters); P2 replay, never-run loopback, string counters and hand-made reports accepted by --dry-run; P4 qualifyEdge with a clock that never answers gives ok:true and checkedAtUtc null; P5 the retry RED archive pins intermediate working bytes.",
+            "evidence": "reviews/U018.fix2.verdict.json (P2-P5)"
+          }
+        ],
+        "createdBy": "controller-2026-11-06",
+        "kanoCredit": 0
+      },
+      "U046": {
+        "unblocks": [],
+        "entryGate": "C009 Done, U050 Done (same namespace capability/C009, one item at a time)",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C009 that is changed or added (new tests only: coverage not-applicable for production files).",
+        "kind": "hardening",
+        "source": "reviews/C009.fix2.verdict.json (F17, follow-up advice for self-review line 4)",
+        "tdd": "RED first (archived under a NEW directory of capability/C009): the generated mutants that survive the published suite are the RED (each survivor is a scratch copy the new tests must fail on and the real code must pass); then the new tests; the RED replayed unchanged; no absolute timing bound.",
+        "acceptance": "In capability/C009 a systematic generator mutates every statement and every single condition of http-io.cjs, server.cjs and commands.cjs (the three files that C010, C014 and C022 import) in scratch copies with a bounded pool at BelowNormal priority; every survivor is killed by a NEW named test file or listed as equivalent with a written proof (a reachability argument is not an equivalence; the reviewer judged the argument for the existing hand-listed mutant M10 incomplete); the campaign report is archived with node RUN/scripts/archive-run.cjs; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
+        "lineage": "OP-C009-MUTATION",
+        "id": "U046",
+        "title": "C009 mutation generator: every statement and single condition of http-io.cjs, server.cjs and commands.cjs killed by a named test or proven equivalent",
+        "serves": "C009",
+        "createdAtUtc": "2026-11-06T14:54:52Z",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "Entry gate: C009 accepted (its third fix R11-C009 is in progress). Do not start before the C009 evidence is sealed, because the addendum chain pins the accepted bytes. The reviewer recommended this because C010, C014 and C022 import these three files: a guard mutation that survives here is a hole in three cards. Use the generators of C059 (tests/mutate-gen.cjs) and X001 (tests/mutant-gen.cjs) as exemplars and run the campaign at BelowNormal priority with at most 4 workers (rule 13).",
+            "evidence": "reviews/C009.fix2.verdict.json (F17)"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). Publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists).",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdBy": "controller-2026-11-06",
+        "kanoCredit": 0
+      },
+      "U048": {
+        "unblocks": [],
+        "entryGate": "C043",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C043 that is changed or added; documentation and test-only parts state coverage not-applicable with the diff.",
+        "kind": "hardening",
+        "source": "reviews/C043.fix.verdict.json (N1, N2, N3, N5)",
+        "tdd": "RED first (archived under a NEW directory of capability/C043): a test that fails on the published bytes because node-own-lanes is unpinned or mutgen counts a timeout as a kill or a README claim names a test that does not exist; then the fix; the RED replayed unchanged; no absolute timing bound. RED first for the incomplete-body rows (a typed answer is expected, none arrives): they fail on the published bytes for the reason of the finding; a named mutant that waits for the lane entry of an incomplete request must fail a named test.",
+        "acceptance": "In capability/C043 tests/node-own-lanes.test.cjs is pinned by an evidence manifest and named in the README test command and the documented count; mutgen.cjs reports a timeout as undecided and fails the run (never a kill) and a recorded generated campaign over the whole of server.cjs finishes with every survivor killed by a named test or listed as equivalent with a proof; claims.test.cjs checks that each named test exists AND passes AND mentions the claim subject (or the claim sentence is narrowed), and README line 157 says that a named code can carry a short path that the page prints; the fresh-tree check does not clone with --local and runs all 28 suites in LF and CRLF; the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. ALSO (found by the controller probe of 6 Nov 14:30 after the U039 review, RUN/scratch/ctl/p-body.cjs; model: the U039 fix 4 and capability/C009/http-io.cjs admit.refuse): a client error for the request that is still reading its BODY (a bad chunk size, a Content-Length body cut then silence, the same then a client FIN, a missing CRLF after chunk data) gets its typed 400 or 408 AT ONCE and a closed connection, like the accepted parent design and C009 (the request Node was still receiving, request.complete false, is the one that failed: answer it at once and wait only for the requests before it); today refuseUnparsed waits on the lane entry of that very request, writes nothing and the connection is closed only by the request timeout of about 5 s (the controller probe: no bytes for all four cases, closed at 1.7 to 2.5 s with a 1.5 s request timeout, 0 connections left afterwards): rows for all four cases behind 0 to 2 complete earlier requests, after Expect: 100-continue, in the test process and in a separate server process, with a server-side connection count that must return to zero through a bounded poll and the 128-socket burst of the bad chunk size followed by a legitimate GET that answers 200.",
+        "lineage": "OP-C043-RESIDUALS",
+        "id": "U048",
+        "title": "C043 residuals: pin the third-hole regression test and put it in the documented command, make the mutation generator treat a timeout as undecided and finish the campaign, back the README claims with real tests and narrow the no-server-prose sentence, run the fresh trees over all 28 suites",
+        "serves": "C043",
+        "createdAtUtc": "2026-11-06T17:51:58Z",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the C043 acceptance review: N1 tests/node-own-lanes.test.cjs is real and good (99/99 in 82 s, 62 of 99 fail on the first publication) but pinned by no capture; N2 mutgen.cjs counts a timeout as a kill, the retained campaign mutgen-run-01.jsonl is partial (about 51 of 101 mutants, server.cjs lines 60-135 and 196-262 only); N3 claims.test.cjs proves existence only (14 of 86 sentences) and README line 157 is narrower than the validator; N5 fresh-tree clones with --local (hardlink failure once) and covers 19 of 28 suites. Run campaigns at normal priority with at most 4 workers (rule 13 as revised).",
+            "evidence": "reviews/C043.fix.verdict.json"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C043 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); publish with publish-ext.ps1 under C043 [S] after the GO file (RUN/GO/publish-C043.txt exists; refresh its note for the amendment).",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdBy": "controller-2026-11-06",
+        "kanoCredit": 0
+      },
+      "U050": {
+        "unblocks": [],
+        "entryGate": "C009 Done, U053 Done (same namespace capability/C009, one item at a time)",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C009 (production files stay frozen: coverage not-applicable for them, the new test layout must still reach the same lines).",
+        "kind": "hardening",
+        "source": "reviews/C009.fix2.verdict.json (F9c); results/C009.json (third fix loops)",
+        "tdd": "RED first (archived under a NEW directory of capability/C009): the per-file cost figures of the published files recorded as evidence and a structural test that fails when a spawned child count or a naive-control step per file exceeds the recorded budget (a counter, never a wall-clock bound); then the cuts; the RED replayed unchanged; no absolute timing bound inside any test.",
+        "acceptance": "In capability/C009 every process-spawning test file (refusal-flood, pipeline-process, resources, the three pipeline-refusal parts) runs in about 12 seconds on a quiet machine, measured and recorded as evidence (not asserted in a test), by cutting the naive-control step of refusal-flood (33 to 43 s alone in the third fix), sharing one child per file and trimming matrix cells that repeat a code path; the documented suite command states the per-file cap it needs and the whole suite runs green once as the machine is; the 8 x 8 loops under 8 burners of the worker (resources 4 of 64 bad, refusal-flood 64 of 64, pipeline-process 63 of 64, pipeline-refusal-mixed 21, pipeline-refusal-http10 15 in the third fix) are rerun in a RESERVED quiet window (no other agent running heavy work) with the result archived; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. The final tree ALSO archives, through the same chained addendum, per-file coverage with ONE command per file for all 11 first-party production files of capability/C009, the 42 hand-written mutants (41 killed, M10 equivalent by reachability) and one real isolated headless Edge run, because the third fix archived none of them (review G5: the reviewer measured them once and the seal contains none); U053 lands first, so U050 starts from the corrected README and the pinned RED subjects.",
+        "lineage": "OP-C009-SUITE-COST",
+        "id": "U050",
+        "title": "C009 suite cost: cut the process-spawning test files further so each runs in about 12 s on a quiet machine, document a per-file cap, prove it in a reserved quiet window",
+        "serves": "C009",
+        "createdAtUtc": "2026-11-06T18:08:38Z",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the third fix of C009: every file's slowest run per loop round was 35 to 81 s against the 60 s file cap on a machine at 100 percent CPU with 80 to 94 node processes; the worker proposed cutting the naive-control step of refusal-flood (33 to 43 s alone) and the matrix cells further, and running the load proof on a quiet or reserved machine (a load proof needs a quiet machine). The controller decision on F9c: a file cancelled only under about 8 burners with 8 parallel copies is a minor; a failure in one plain suite run is a major. Entry gate: C009 accepted (its evidence sealed) because the addendum chain pins the accepted bytes.",
+            "evidence": "results/C009.json; orders/review-C009-fix3.md"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); production files stay frozen (C010, C014 and C022 pin them by commit); publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists; refresh its note). A reserved quiet window means the controller pauses other heavy work: ask before starting the loops. Run under U046 (the mutation generator) one after the other, never two publications racing.",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdBy": "controller-2026-11-06",
+        "kanoCredit": 0
+      },
+      "U057": {
+        "unblocks": [],
+        "entryGate": "C010 Done",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C010 that is changed or added.",
+        "kind": "hardening",
+        "source": "reviews/C010.fix.verdict.json (F1 to F4, F9)",
+        "tdd": "RED first (archived under a NEW directory of capability/C010): the ten boundary and counter assertions fail by name on the ten mutants (generator --retest) and pass on the real bytes; the ordering assertion idleMs above headerMs plus checkMs fails on the published bytes (5000 against 5000 plus checkMs) and the two default-limits tests fail there (silent close at about 5.2 s, no 408, empty audit: the reviewer probes hdrstall.cjs and idle.cjs in RUN/results/C010-review/fix, which carry local paths, so read them as models and never copy them); then the change; the RED replayed unchanged; no assertion depends on a duration (a bounded poll for the typed answer only).",
+        "acceptance": "In capability/C010, in ONE evidence phase after the last edit: (F2) the ten survivors of the reviewer run are killed by named tests (a default server filled to 100 and 101 entries for the ownerEntries default of contract.js; a 2048 and a 2049 character target for urlChars; run units 100 and 101; exact visited counts per pass for the store.cjs work counter start and increment; a header VALUE that looks like a claim name such as Accept: x-lease is not listed in ignoredClaims for the claimedHeaders loop stride of server.cjs; the automatic port of startLocal), the campaign is finished with --retest and --finalize so that 806 of 806 mutants are decided with 0 survivors and 0 undecided (the 17 equivalents keep their proofs), the mutation entry of evidence/uncaptured.json is deleted, and evidence.test.cjs compares report.generated with the generator own --list total; (F1) README lines 49 and 212 stop saying the campaign is complete unless it is; (F3) one assertion in commit.test.cjs: a held authorized mutation whose connection was cut AND whose token expired writes no audit record, which kills the mutant that evaluates cancelled() only after the token check; (F4) at the DEFAULT limits a stalled request line plus header and a stalled body (Content-Length 100 with 13 bytes, then silence) are answered with the typed 408 REQUEST_TIMEOUT and its audit record: the idleMs default is above headerMs plus checkMs (for example 2 x headerMs), asserted on the limits read back from the server, plus one real default-limits test per shape with a bounded poll; the same stalled-header probe is run against C009 at its own defaults and, if C009 shows the same silent close, the reproduction goes into the result hints (do NOT edit C009); published once under C010 [D] by the amendment path (an append-only addendum that pins the earlier evidence byte for byte, or one fix commit whose single evidence phase follows the last edit); per-file 85/85/85 still holds.",
+        "lineage": "OP-C010-RESIDUALS",
+        "id": "U057",
+        "title": "C010 residuals after the accepted fix: close the mutation campaign (ten survivors, the README completeness lines, the cancelled-after-token audit record) and answer a stalled header or body with a typed 408 at the default limits",
+        "serves": "C010",
+        "createdAtUtc": "2026-11-07T01:23:55Z",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "Entry gate C010 Done (accepted 6 Nov 20:30 local). Every C010 capture pins every non-evidence file of the namespace, so ANY edit forces a full recapture (3 to 4 hours): make ALL test, generator and production edits first and take every capture afterwards in one evidence phase, or amend through an append-only addendum that supersedes only the manifests whose subject changed (lesson: pin captures to the files they execute). The reviewer scripts for the survivors and the guard mutants (mutf.cjs, mut.cjs, tamper2.cjs, sortcheck.cjs, floodloop.cjs, probe3.cjs) are in RUN/results/C010-review/fix/; run any mutation work inside a mutation slot (heavy-slot.ps1 -Slots 3 -LockDir RUN/locks-mut). Publish with publish-ext.ps1 under C010 [D] after refreshing the note of RUN/GO/publish-C010.txt; no local Windows user name and no session id in any added file (rule 15).",
+            "evidence": "reviews/C010.fix.verdict.json"
+          }
+        ],
+        "createdBy": "controller-2026-11-06",
+        "kanoCredit": 0
+      }
+    }
   },
   "limits": {
     "contributors": 8,
@@ -42,8 +218,8 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
-    "S": 177,
     "L": 2,
+    "S": 177,
     "D": 12
   },
   "reservations": {
@@ -59946,7 +60122,7 @@
   "admittedReadyIds": [],
   "plannedNextIds": [],
   "blockedReasons": [],
-  "stopNewDispatch": false,
+  "stopNewDispatch": true,
   "evidencePolicy": "A lessons are synthetic learning deliverables only. B native proof, original parent acceptance, live Azure outcomes and reliability guarantees remain unfulfilled.",
   "standingRules": {
     "version": 1,
@@ -64963,6 +65139,258 @@
       ],
       "confidence": 5,
       "atUtc": "2026-11-08T19:29:09Z"
+    },
+    {
+      "confidence": 5,
+      "kind": "plan",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0246",
+      "evidence": "results\\U007.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U007"
+      ],
+      "tags": [
+        "lifecycle",
+        "resume"
+      ],
+      "text": "U007 is additive/private: scratch owner + ALS session observer; old 326 lifecycle files unchanged. RED controls, Windows handle barriers and per-file coverage retained. Finish recorded namespace/mutation and authorized real-browser gates."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0247",
+      "evidence": "red-windows-lock-02-command.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U007"
+      ],
+      "tags": [
+        "windows",
+        "red"
+      ],
+      "text": "The first Windows capture is an execution-policy fault, not RED. Encoded-command fixture then held real delete-denying handles; ReadWrite transient and None persistent controls fail behaviorally and release through closed/exit barriers."
+    },
+    {
+      "confidence": 5,
+      "kind": "process",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0248",
+      "evidence": "results\\U007.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U007"
+      ],
+      "tags": [
+        "stop",
+        "coordination"
+      ],
+      "text": "STOP: U034 U005/U006 readers did not execute; no read-complete or application authorization exists. Keep U007 private. Reader completion is coordination only; request separate coordinator application authorization after review."
+    },
+    {
+      "confidence": 5,
+      "kind": "reuse",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0249",
+      "evidence": "<RUN>\\scratch\\U049\\captures\\red\\run-1\\u049-red-1.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U049"
+      ],
+      "tags": [
+        "red",
+        "work-budget"
+      ],
+      "text": "G1 is privately GREEN: unchanged accepted-model RED fails2 by ERR_ASSERTION; candidate replay passes2. Use retained baseline/RED, not a new OOM or timeout RED."
+    },
+    {
+      "confidence": 5,
+      "kind": "coverage",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0250",
+      "evidence": "<RUN>\\scratch\\U049\\captures\\coverage",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U049"
+      ],
+      "tags": [
+        "coverage"
+      ],
+      "text": "Full149/149 and EACH-file gates pass: describe/page/saved100/100/100; timeline99.75/100/98.88. LF and CRLF accepted-source trees each149/149; no exclusions."
+    },
+    {
+      "confidence": 5,
+      "kind": "plan",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0251",
+      "evidence": "<RUN>\\scratch\\U049\\mutation-summary.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U049"
+      ],
+      "tags": [
+        "mutation"
+      ],
+      "text": "Full2442 outcomes:2285 named kills,14 witnessed equivalents,100 survivors,32 undecided,11 invalid-not-kills. All18 page rows close4+14. Resume exact IDs; no timeout kills."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0252",
+      "evidence": "<RUN>\\scratch\\U049\\final-private-integrity.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U049"
+      ],
+      "tags": [
+        "ownership",
+        "qualification"
+      ],
+      "text": "Live120 X001 files are unchanged. Reader-complete is not apply/qualification/acceptance/publication approval; separate reviewed-candidate authorization remains missing."
+    },
+    {
+      "confidence": 5,
+      "kind": "reuse",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0253",
+      "evidence": "capability\\X001\\evidence-index-addendum-3.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U049"
+      ],
+      "tags": [
+        "amendment",
+        "evidence"
+      ],
+      "text": "Private addenda1-3 retain exact predecessors. D3 checks head hash before reads and fixes browser-kind tamper witness; all byte/tamper controls now pass. Never repin old raw/seals."
+    },
+    {
+      "confidence": 5,
+      "kind": "reuse",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0254",
+      "evidence": "capability\\C043\\U059.feature",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U058"
+      ],
+      "tags": [
+        "observer",
+        "evidence"
+      ],
+      "text": "U059 counts an armed request/start/block/completion per flood phase. Native lag is diagnostic only. Original deterministic pre-arm RED and unchanged GREEN are separate from old76/105ms observations."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0255",
+      "evidence": "capability\\C043\\evidence-u059-head.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U058"
+      ],
+      "tags": [
+        "authority",
+        "publication"
+      ],
+      "text": "U058 head2 stays immutable; U059 D3/D4/head4 owns six exact tooling replacements. Both cards share one stable candidate but require separate review/Done; coordinator alone publishes serially."
+    },
+    {
+      "confidence": 5,
+      "kind": "plan",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0256",
+      "evidence": "capability\\C043\\U058.feature",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U058"
+      ],
+      "tags": [
+        "qualification"
+      ],
+      "text": "Fixture157 is not installed157 qualification. U034 must run real requalification and every adopter gate after independent U058 Done; no real browser or application signal was produced here."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0257",
+      "evidence": "<RUN>\\scratch\\U059\\resume-gate-accounting.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U058"
+      ],
+      "tags": [
+        "verification",
+        "evidence"
+      ],
+      "text": "No source changes: only named remaining gates are unresolved (mutants). Preserve the sealed joint candidate and every raw attempt; never count a timeout as a pass."
+    },
+    {
+      "confidence": 5,
+      "kind": "reuse",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0258",
+      "evidence": "capability\\C043\\U059.feature",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U059"
+      ],
+      "tags": [
+        "observer",
+        "evidence"
+      ],
+      "text": "U059 counts an armed request/start/block/completion per flood phase. Native lag is diagnostic only. Original deterministic pre-arm RED and unchanged GREEN are separate from old76/105ms observations."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0259",
+      "evidence": "capability\\C043\\evidence-u059-head.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U059"
+      ],
+      "tags": [
+        "authority",
+        "publication"
+      ],
+      "text": "U058 head2 stays immutable; U059 D3/D4/head4 owns six exact tooling replacements. Both cards share one stable candidate but require separate review/Done; coordinator alone publishes serially."
+    },
+    {
+      "confidence": 5,
+      "kind": "trap",
+      "atUtc": "2026-11-08T21:56:47Z",
+      "id": "L-0260",
+      "evidence": "<RUN>\\scratch\\U059\\resume-gate-accounting.json",
+      "status": "active",
+      "by": "execution-coordinator",
+      "cards": [
+        "U059"
+      ],
+      "tags": [
+        "verification",
+        "evidence"
+      ],
+      "text": "No source changes: only named remaining gates are unresolved (mutants). Preserve the sealed joint candidate and every raw attempt; never count a timeout as a pass."
     }
   ],
   "coverageBaseline": {
@@ -65938,16 +66366,18 @@
     ]
   },
   "frontier": {
-    "computedAtUtc": "2026-11-08T20:10:16.134Z",
+    "computedAtUtc": "2026-11-08T21:56:46.633Z",
     "by": "execution-coordinator",
-    "ledgerRevision": 1414,
+    "ledgerRevision": 1418,
     "basis": "414 frozen credit units, original zero-credit specifications and current live operational gates; only actual Done satisfies dependencies",
-    "openItems": 247,
-    "depth": 11,
+    "openItems": 250,
+    "depth": 13,
     "widthByLevel": [
-      17,
+      16,
       3,
-      7,
+      2,
+      1,
+      8,
       6,
       5,
       6,
@@ -65959,49 +66389,31 @@
     ],
     "readyNow": [
       "C013",
+      "U045",
+      "U048",
+      "U057",
       "U002",
-      "U007",
       "U008",
       "U010",
       "U011",
       "U014",
       "U015",
       "U016",
-      "U045",
       "U047",
-      "U048",
-      "U049",
       "U051",
       "U056",
-      "U057",
-      "U058"
+      "U060",
+      "U061"
     ],
     "readyUnownedAdmitted": [
-      "U045",
       "U047",
-      "U048",
       "U051",
       "U056",
-      "U057"
+      "U060",
+      "U061"
     ],
-    "dispatchableReady": [
-      "U008",
-      "U010",
-      "U014",
-      "U015",
-      "U016",
-      "U045",
-      "U047",
-      "U048",
-      "U051",
-      "U056",
-      "U057"
-    ],
-    "activeItems": [
-      "U007",
-      "U049",
-      "U058"
-    ],
+    "dispatchableReady": [],
+    "activeItems": [],
     "readyKCards": 84,
     "nativeApprovalsGranted": false,
     "browserRuntimeGateDone": false,
@@ -66084,6 +66496,270 @@
       "disposition": "pruned",
       "retiredAtUtc": "2026-11-04T16:54:29Z",
       "note": "Stale partial Done list replaced by a pointer; accepted-history narrative collapsed into an archive block in kanban.md."
+    },
+    {
+      "by": "execution-coordinator",
+      "id": "ADMISSION-WITHDRAWAL-U054-20261108",
+      "reason": "Never started, no owner, C059 entry gate unfinished. Free the bounded queue slot for an actual newly observed failing gate; no credit or reservation is awarded.",
+      "sourceCardId": "U054",
+      "priorState": "To Do",
+      "atUtc": "2026-11-08T20:30:01Z",
+      "sourceSpecification": "sourceInventory.operationalSpecs.U054",
+      "kanoCredit": 0,
+      "historicalSnapshot": {
+        "kind": "hardening",
+        "state": "To Do",
+        "readiness": false,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/C059.fix2.verdict.json (Q9, M2)",
+        "id": "U054",
+        "title": "C041 lesson assets: serve() verifyAsset accepts the LF-normalized form of each pinned asset (record raw and LF like the import pins) so a Linux or LF checkout can start the service of every consumer",
+        "entryGate": "C059 Done (its README states the limit until this item lands)",
+        "serves": "C041",
+        "unblocks": [],
+        "lineage": "OP-C041-LF-ASSETS",
+        "acceptance": "In capability/C041 verifyAsset (called from serve.cjs, and by C059 server.cjs loadAssets) accepts a lesson asset whose raw SHA-256 OR whose CRLF-to-LF canonical SHA-256 equals the pin, the catalog records both hashes for each of the 8 pinned lesson assets, a tampered asset (a changed byte in either line-ending form) is still refused by name and a test per branch proves it; the services of C041 and of its consumers (C059 and any other importer) start from a git-archive tree whose text files were converted to LF, proved by running the service-starting suites of C041 and C059 in an LF tree; the changes reach the sealed card only through a chained append-only addendum or NEW files without editing a pinned file in place; per-file 85/85/85 still holds for every changed production file.",
+        "tdd": "RED first (archived under a NEW directory of capability/C041): the service-starting tests run in an LF-converted tree and fail on the published bytes with the asset integrity mismatch (0 of 8 catalog asset pins match the LF bytes, 8 of 8 match after CRLF conversion: the reviewer probe pin.cjs in RUN/results/C059-review); then the change; the RED replayed unchanged; no absolute timing bound.",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C041 that is changed or added.",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the C059 second-fix review (Q9 and M2): git archive on this machine applies core.autocrlf so the 8 pinned lesson assets come out CRLF and everything passes here; a Linux clone of blobs stored as LF fails every test that starts the service (Pinned lesson asset integrity mismatch from capability/C041/serve.cjs verifyAsset, sha256 of the RAW bytes). The reviewer probes heavy2.ps1, conv.cjs and pin.cjs in RUN/results/C059-review reproduce it with an LF-converted copy of C041, C042 and learning/S001, S003. Entry gate C059 Done so that the C059 README limit (service-starting suites need CRLF assets) can be lifted in a later amendment of C059.",
+            "evidence": "reviews/C059.fix2.verdict.json (Q9, M2)"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C041 is an accepted sealed card: amend only through the addendum chain (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). PUBLISHER ROUTE (check the map of the publisher BEFORE you order a worker to use it: the U040 order named the wrong one): C041 (class S) is NOT in the closed map of publish-ext.ps1 and has no GO file, but it IS in the map of the legacy publish.ps1 (localCapabilityClasses: C041='S'): publish with the legacy publisher, `publish.ps1 -CardId C041 -WorkerId worker-U054 -Paths ... -Message '[C041][S] U054 ...'`, one amendment commit. Add no local Windows user name and no session id to any added file (rule 15).",
+            "evidence": "orders/U032.md; orders/_CONTROLLER-UPDATE.md rule 15; .git/kanban-orchestrator/publish.ps1 line 24"
+          }
+        ],
+        "createdAtUtc": "2026-11-06T19:59:39Z"
+      },
+      "disposition": "Admission withdrawn; source specification retained, not a workflow state"
+    },
+    {
+      "priorState": "To Do",
+      "disposition": "Admission withdrawn; unchanged source specification retained outside workflow",
+      "historicalSnapshot": {
+        "kind": "defect-fix",
+        "state": "To Do",
+        "readiness": true,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/U018.fix2.verdict.json (P2, P3, P4, P5)",
+        "id": "U045",
+        "title": "U018 residuals: make the qualify timing tests structural, correct the README and --help overclaims, add a bounded EPERM retry to the addendum append",
+        "entryGate": "U018",
+        "serves": "U018",
+        "unblocks": [],
+        "lineage": "OP-U018-RESIDUALS",
+        "acceptance": "In testing/browser/qualify the wall-clock tests that flaked under load (timeouts.test.cjs: an explicit shell bound below the outer bound is kept and one above is clamped; outer-timeout.test.cjs: the outer bound) decide by structural facts (a virtual clock, counters, an injected adapter that records the bounds it was given) so that no machine load makes them fail; the README sentence claiming that a forged report is refused is replaced by what is checked (consistency and agreement with the installed Edge) and what is not (authenticity), the --help text and the code comment that say a timeout never passes a check state the clock exception, the 11-waits upper bound states the common 2.6 bounds, the figures (29 files and 225 tests, addendum.cjs branches 96.22) are corrected, and the append retries a bounded number of times on EPERM or EBUSY with a typed refusal after the bound (a test with an injected adapter); the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
+        "tdd": "RED first (archived under a NEW directory of testing/browser/qualify): a test that fails on the published bytes because a timing assertion depends on real spawn time, a test that fails while the README or --help sentence contradicts the clock probe, and an injected EPERM that makes the published append fail at once; then the fix; the RED replayed unchanged; no absolute timing bound.",
+        "coverage": "85/85/85 per file on every first-party production file of testing/browser/qualify that is changed or added; documentation-only parts state coverage not-applicable with the diff.",
+        "hints": [
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "U018 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md and orders/R3-U018.md for this tool own addendum design); never edit qualified.json. If U034 (Edge 157) becomes the work in progress first, stop and let U034 go first: both append to the same chain.",
+            "evidence": "reviews/U018.fix2.verdict.json; orders/R3-U018.md"
+          },
+          {
+            "kind": "reuse",
+            "confidence": 4,
+            "text": "Reviewer findings with reproductions: P3 timeouts.test.cjs 248/249 because spawning the fake shell took longer than 500 ms so the outer bound fired first (the same flake as the retained failed attempt coverage-fix2-adapters); P2 replay, never-run loopback, string counters and hand-made reports accepted by --dry-run; P4 qualifyEdge with a clock that never answers gives ok:true and checkedAtUtc null; P5 the retry RED archive pins intermediate working bytes.",
+            "evidence": "reviews/U018.fix2.verdict.json (P2-P5)"
+          }
+        ],
+        "createdAtUtc": "2026-11-06T14:30:25Z"
+      },
+      "sourceCardId": "U045",
+      "atUtc": "2026-11-08T21:51:30Z",
+      "reason": "Never started and unowned; bounded queue capacity is reserved for honest stopped pieces and their actual unblock gates.",
+      "by": "execution-coordinator",
+      "kanoCredit": 0,
+      "sourceSpecification": "sourceInventory.operationalSpecs.U045",
+      "id": "ADMISSION-WITHDRAWAL-U045-20261108"
+    },
+    {
+      "priorState": "To Do",
+      "disposition": "Admission withdrawn; unchanged source specification retained outside workflow",
+      "historicalSnapshot": {
+        "kind": "hardening",
+        "state": "To Do",
+        "readiness": false,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/C009.fix2.verdict.json (F17, follow-up advice for self-review line 4)",
+        "id": "U046",
+        "title": "C009 mutation generator: every statement and single condition of http-io.cjs, server.cjs and commands.cjs killed by a named test or proven equivalent",
+        "entryGate": "C009 Done, U050 Done (same namespace capability/C009, one item at a time)",
+        "serves": "C009",
+        "unblocks": [],
+        "lineage": "OP-C009-MUTATION",
+        "acceptance": "In capability/C009 a systematic generator mutates every statement and every single condition of http-io.cjs, server.cjs and commands.cjs (the three files that C010, C014 and C022 import) in scratch copies with a bounded pool at BelowNormal priority; every survivor is killed by a NEW named test file or listed as equivalent with a written proof (a reachability argument is not an equivalence; the reviewer judged the argument for the existing hand-listed mutant M10 incomplete); the campaign report is archived with node RUN/scripts/archive-run.cjs; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
+        "tdd": "RED first (archived under a NEW directory of capability/C009): the generated mutants that survive the published suite are the RED (each survivor is a scratch copy the new tests must fail on and the real code must pass); then the new tests; the RED replayed unchanged; no absolute timing bound.",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C009 that is changed or added (new tests only: coverage not-applicable for production files).",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "Entry gate: C009 accepted (its third fix R11-C009 is in progress). Do not start before the C009 evidence is sealed, because the addendum chain pins the accepted bytes. The reviewer recommended this because C010, C014 and C022 import these three files: a guard mutation that survives here is a hole in three cards. Use the generators of C059 (tests/mutate-gen.cjs) and X001 (tests/mutant-gen.cjs) as exemplars and run the campaign at BelowNormal priority with at most 4 workers (rule 13).",
+            "evidence": "reviews/C009.fix2.verdict.json (F17)"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). Publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists).",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdAtUtc": "2026-11-06T14:54:52Z"
+      },
+      "sourceCardId": "U046",
+      "atUtc": "2026-11-08T21:51:30Z",
+      "reason": "Never started and unowned; bounded queue capacity is reserved for honest stopped pieces and their actual unblock gates.",
+      "by": "execution-coordinator",
+      "kanoCredit": 0,
+      "sourceSpecification": "sourceInventory.operationalSpecs.U046",
+      "id": "ADMISSION-WITHDRAWAL-U046-20261108"
+    },
+    {
+      "priorState": "To Do",
+      "disposition": "Admission withdrawn; unchanged source specification retained outside workflow",
+      "historicalSnapshot": {
+        "kind": "hardening",
+        "state": "To Do",
+        "readiness": true,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/C043.fix.verdict.json (N1, N2, N3, N5)",
+        "id": "U048",
+        "title": "C043 residuals: pin the third-hole regression test and put it in the documented command, make the mutation generator treat a timeout as undecided and finish the campaign, back the README claims with real tests and narrow the no-server-prose sentence, run the fresh trees over all 28 suites",
+        "entryGate": "C043",
+        "serves": "C043",
+        "unblocks": [],
+        "lineage": "OP-C043-RESIDUALS",
+        "acceptance": "In capability/C043 tests/node-own-lanes.test.cjs is pinned by an evidence manifest and named in the README test command and the documented count; mutgen.cjs reports a timeout as undecided and fails the run (never a kill) and a recorded generated campaign over the whole of server.cjs finishes with every survivor killed by a named test or listed as equivalent with a proof; claims.test.cjs checks that each named test exists AND passes AND mentions the claim subject (or the claim sentence is narrowed), and README line 157 says that a named code can carry a short path that the page prints; the fresh-tree check does not clone with --local and runs all 28 suites in LF and CRLF; the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. ALSO (found by the controller probe of 6 Nov 14:30 after the U039 review, RUN/scratch/ctl/p-body.cjs; model: the U039 fix 4 and capability/C009/http-io.cjs admit.refuse): a client error for the request that is still reading its BODY (a bad chunk size, a Content-Length body cut then silence, the same then a client FIN, a missing CRLF after chunk data) gets its typed 400 or 408 AT ONCE and a closed connection, like the accepted parent design and C009 (the request Node was still receiving, request.complete false, is the one that failed: answer it at once and wait only for the requests before it); today refuseUnparsed waits on the lane entry of that very request, writes nothing and the connection is closed only by the request timeout of about 5 s (the controller probe: no bytes for all four cases, closed at 1.7 to 2.5 s with a 1.5 s request timeout, 0 connections left afterwards): rows for all four cases behind 0 to 2 complete earlier requests, after Expect: 100-continue, in the test process and in a separate server process, with a server-side connection count that must return to zero through a bounded poll and the 128-socket burst of the bad chunk size followed by a legitimate GET that answers 200.",
+        "tdd": "RED first (archived under a NEW directory of capability/C043): a test that fails on the published bytes because node-own-lanes is unpinned or mutgen counts a timeout as a kill or a README claim names a test that does not exist; then the fix; the RED replayed unchanged; no absolute timing bound. RED first for the incomplete-body rows (a typed answer is expected, none arrives): they fail on the published bytes for the reason of the finding; a named mutant that waits for the lane entry of an incomplete request must fail a named test.",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C043 that is changed or added; documentation and test-only parts state coverage not-applicable with the diff.",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the C043 acceptance review: N1 tests/node-own-lanes.test.cjs is real and good (99/99 in 82 s, 62 of 99 fail on the first publication) but pinned by no capture; N2 mutgen.cjs counts a timeout as a kill, the retained campaign mutgen-run-01.jsonl is partial (about 51 of 101 mutants, server.cjs lines 60-135 and 196-262 only); N3 claims.test.cjs proves existence only (14 of 86 sentences) and README line 157 is narrower than the validator; N5 fresh-tree clones with --local (hardlink failure once) and covers 19 of 28 suites. Run campaigns at normal priority with at most 4 workers (rule 13 as revised).",
+            "evidence": "reviews/C043.fix.verdict.json"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C043 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); publish with publish-ext.ps1 under C043 [S] after the GO file (RUN/GO/publish-C043.txt exists; refresh its note for the amendment).",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdAtUtc": "2026-11-06T17:51:58Z"
+      },
+      "sourceCardId": "U048",
+      "atUtc": "2026-11-08T21:51:30Z",
+      "reason": "Never started and unowned; bounded queue capacity is reserved for honest stopped pieces and their actual unblock gates.",
+      "by": "execution-coordinator",
+      "kanoCredit": 0,
+      "sourceSpecification": "sourceInventory.operationalSpecs.U048",
+      "id": "ADMISSION-WITHDRAWAL-U048-20261108"
+    },
+    {
+      "priorState": "To Do",
+      "disposition": "Admission withdrawn; unchanged source specification retained outside workflow",
+      "historicalSnapshot": {
+        "kind": "hardening",
+        "state": "To Do",
+        "readiness": false,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/C009.fix2.verdict.json (F9c); results/C009.json (third fix loops)",
+        "id": "U050",
+        "title": "C009 suite cost: cut the process-spawning test files further so each runs in about 12 s on a quiet machine, document a per-file cap, prove it in a reserved quiet window",
+        "entryGate": "C009 Done, U053 Done (same namespace capability/C009, one item at a time)",
+        "serves": "C009",
+        "unblocks": [],
+        "lineage": "OP-C009-SUITE-COST",
+        "acceptance": "In capability/C009 every process-spawning test file (refusal-flood, pipeline-process, resources, the three pipeline-refusal parts) runs in about 12 seconds on a quiet machine, measured and recorded as evidence (not asserted in a test), by cutting the naive-control step of refusal-flood (33 to 43 s alone in the third fix), sharing one child per file and trimming matrix cells that repeat a code path; the documented suite command states the per-file cap it needs and the whole suite runs green once as the machine is; the 8 x 8 loops under 8 burners of the worker (resources 4 of 64 bad, refusal-flood 64 of 64, pipeline-process 63 of 64, pipeline-refusal-mixed 21, pipeline-refusal-http10 15 in the third fix) are rerun in a RESERVED quiet window (no other agent running heavy work) with the result archived; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. The final tree ALSO archives, through the same chained addendum, per-file coverage with ONE command per file for all 11 first-party production files of capability/C009, the 42 hand-written mutants (41 killed, M10 equivalent by reachability) and one real isolated headless Edge run, because the third fix archived none of them (review G5: the reviewer measured them once and the seal contains none); U053 lands first, so U050 starts from the corrected README and the pinned RED subjects.",
+        "tdd": "RED first (archived under a NEW directory of capability/C009): the per-file cost figures of the published files recorded as evidence and a structural test that fails when a spawned child count or a naive-control step per file exceeds the recorded budget (a counter, never a wall-clock bound); then the cuts; the RED replayed unchanged; no absolute timing bound inside any test.",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C009 (production files stay frozen: coverage not-applicable for them, the new test layout must still reach the same lines).",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "From the third fix of C009: every file's slowest run per loop round was 35 to 81 s against the 60 s file cap on a machine at 100 percent CPU with 80 to 94 node processes; the worker proposed cutting the naive-control step of refusal-flood (33 to 43 s alone) and the matrix cells further, and running the load proof on a quiet or reserved machine (a load proof needs a quiet machine). The controller decision on F9c: a file cancelled only under about 8 burners with 8 parallel copies is a minor; a failure in one plain suite run is a major. Entry gate: C009 accepted (its evidence sealed) because the addendum chain pins the accepted bytes.",
+            "evidence": "results/C009.json; orders/review-C009-fix3.md"
+          },
+          {
+            "kind": "trap",
+            "confidence": 5,
+            "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); production files stay frozen (C010, C014 and C022 pin them by commit); publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists; refresh its note). A reserved quiet window means the controller pauses other heavy work: ask before starting the loops. Run under U046 (the mutation generator) one after the other, never two publications racing.",
+            "evidence": "orders/U032.md"
+          }
+        ],
+        "createdAtUtc": "2026-11-06T18:08:38Z"
+      },
+      "sourceCardId": "U050",
+      "atUtc": "2026-11-08T21:51:30Z",
+      "reason": "Never started and unowned; bounded queue capacity is reserved for honest stopped pieces and their actual unblock gates.",
+      "by": "execution-coordinator",
+      "kanoCredit": 0,
+      "sourceSpecification": "sourceInventory.operationalSpecs.U050",
+      "id": "ADMISSION-WITHDRAWAL-U050-20261108"
+    },
+    {
+      "priorState": "To Do",
+      "disposition": "Admission withdrawn; unchanged source specification retained outside workflow",
+      "historicalSnapshot": {
+        "kind": "hardening",
+        "state": "To Do",
+        "readiness": true,
+        "owner": null,
+        "heartbeatUtc": null,
+        "kanoCredit": 0,
+        "createdBy": "controller-2026-11-06",
+        "source": "reviews/C010.fix.verdict.json (F1 to F4, F9)",
+        "id": "U057",
+        "title": "C010 residuals after the accepted fix: close the mutation campaign (ten survivors, the README completeness lines, the cancelled-after-token audit record) and answer a stalled header or body with a typed 408 at the default limits",
+        "entryGate": "C010 Done",
+        "serves": "C010",
+        "unblocks": [],
+        "lineage": "OP-C010-RESIDUALS",
+        "acceptance": "In capability/C010, in ONE evidence phase after the last edit: (F2) the ten survivors of the reviewer run are killed by named tests (a default server filled to 100 and 101 entries for the ownerEntries default of contract.js; a 2048 and a 2049 character target for urlChars; run units 100 and 101; exact visited counts per pass for the store.cjs work counter start and increment; a header VALUE that looks like a claim name such as Accept: x-lease is not listed in ignoredClaims for the claimedHeaders loop stride of server.cjs; the automatic port of startLocal), the campaign is finished with --retest and --finalize so that 806 of 806 mutants are decided with 0 survivors and 0 undecided (the 17 equivalents keep their proofs), the mutation entry of evidence/uncaptured.json is deleted, and evidence.test.cjs compares report.generated with the generator own --list total; (F1) README lines 49 and 212 stop saying the campaign is complete unless it is; (F3) one assertion in commit.test.cjs: a held authorized mutation whose connection was cut AND whose token expired writes no audit record, which kills the mutant that evaluates cancelled() only after the token check; (F4) at the DEFAULT limits a stalled request line plus header and a stalled body (Content-Length 100 with 13 bytes, then silence) are answered with the typed 408 REQUEST_TIMEOUT and its audit record: the idleMs default is above headerMs plus checkMs (for example 2 x headerMs), asserted on the limits read back from the server, plus one real default-limits test per shape with a bounded poll; the same stalled-header probe is run against C009 at its own defaults and, if C009 shows the same silent close, the reproduction goes into the result hints (do NOT edit C009); published once under C010 [D] by the amendment path (an append-only addendum that pins the earlier evidence byte for byte, or one fix commit whose single evidence phase follows the last edit); per-file 85/85/85 still holds.",
+        "tdd": "RED first (archived under a NEW directory of capability/C010): the ten boundary and counter assertions fail by name on the ten mutants (generator --retest) and pass on the real bytes; the ordering assertion idleMs above headerMs plus checkMs fails on the published bytes (5000 against 5000 plus checkMs) and the two default-limits tests fail there (silent close at about 5.2 s, no 408, empty audit: the reviewer probes hdrstall.cjs and idle.cjs in RUN/results/C010-review/fix, which carry local paths, so read them as models and never copy them); then the change; the RED replayed unchanged; no assertion depends on a duration (a bounded poll for the typed answer only).",
+        "coverage": "85/85/85 per file on every first-party production file of capability/C010 that is changed or added.",
+        "hints": [
+          {
+            "kind": "plan",
+            "confidence": 4,
+            "text": "Entry gate C010 Done (accepted 6 Nov 20:30 local). Every C010 capture pins every non-evidence file of the namespace, so ANY edit forces a full recapture (3 to 4 hours): make ALL test, generator and production edits first and take every capture afterwards in one evidence phase, or amend through an append-only addendum that supersedes only the manifests whose subject changed (lesson: pin captures to the files they execute). The reviewer scripts for the survivors and the guard mutants (mutf.cjs, mut.cjs, tamper2.cjs, sortcheck.cjs, floodloop.cjs, probe3.cjs) are in RUN/results/C010-review/fix/; run any mutation work inside a mutation slot (heavy-slot.ps1 -Slots 3 -LockDir RUN/locks-mut). Publish with publish-ext.ps1 under C010 [D] after refreshing the note of RUN/GO/publish-C010.txt; no local Windows user name and no session id in any added file (rule 15).",
+            "evidence": "reviews/C010.fix.verdict.json"
+          }
+        ],
+        "createdAtUtc": "2026-11-07T01:23:55Z"
+      },
+      "sourceCardId": "U057",
+      "atUtc": "2026-11-08T21:51:30Z",
+      "reason": "Never started and unowned; bounded queue capacity is reserved for honest stopped pieces and their actual unblock gates.",
+      "by": "execution-coordinator",
+      "kanoCredit": 0,
+      "sourceSpecification": "sourceInventory.operationalSpecs.U057",
+      "id": "ADMISSION-WITHDRAWAL-U057-20261108"
     }
   ],
   "dispatchOwner": "parent",
@@ -67784,17 +68460,17 @@
     },
     {
       "kind": "unblock",
-      "state": "In Progress",
-      "readiness": true,
-      "owner": "worker-U007",
-      "heartbeatUtc": "2026-11-08T20:02:10Z",
+      "state": "To Do",
+      "readiness": false,
+      "owner": null,
+      "heartbeatUtc": null,
       "kanoCredit": 0,
       "createdAtUtc": "2026-11-04T16:54:29Z",
       "createdBy": "hygiene-2026-11-04",
       "source": ".docs/wiki/kanban.md#zero-credit-work-cards",
       "id": "U007",
       "title": "Remove owned scratch despite a transient Edge file lock",
-      "entryGate": "none",
+      "entryGate": "none, U034, U061",
       "unblocks": [],
       "lineage": "OP-BROWSER-BOUNDED-LIFECYCLE",
       "acceptance": "Bounded retry with backoff on owned scratch only; any remaining file is reported; unknown paths are never deleted.",
@@ -67806,6 +68482,59 @@
           "text": "Edge can keep a BITS temporary file after shutdown. Never delete a path you do not own.",
           "evidence": "testing/browser/evidence/lifecycle-blocked.json",
           "confidence": 5
+        },
+        {
+          "kind": "plan",
+          "cards": [
+            "U007"
+          ],
+          "tags": [
+            "lifecycle",
+            "resume"
+          ],
+          "confidence": 5,
+          "text": "U007 is additive/private: scratch owner + ALS session observer; old 326 lifecycle files unchanged. RED controls, Windows handle barriers and per-file coverage retained. Finish recorded namespace/mutation and authorized real-browser gates.",
+          "evidence": "results\\U007.json"
+        },
+        {
+          "kind": "trap",
+          "cards": [
+            "U007"
+          ],
+          "tags": [
+            "windows",
+            "red"
+          ],
+          "confidence": 5,
+          "text": "The first Windows capture is an execution-policy fault, not RED. Encoded-command fixture then held real delete-denying handles; ReadWrite transient and None persistent controls fail behaviorally and release through closed/exit barriers.",
+          "evidence": "red-windows-lock-02-command.json"
+        },
+        {
+          "kind": "process",
+          "cards": [
+            "U007",
+            "U034"
+          ],
+          "tags": [
+            "stop",
+            "coordination"
+          ],
+          "confidence": 5,
+          "text": "STOP: U034 U005/U006 readers did not execute; no read-complete or application authorization exists. Keep U007 private. Reader completion is coordination only; request separate coordinator application authorization after review.",
+          "evidence": "results\\U007.json"
+        },
+        {
+          "evidence": "<RUN>/results/U007.json",
+          "confidence": 5,
+          "cards": [
+            "U007"
+          ],
+          "tags": [
+            "resumption",
+            "budget"
+          ],
+          "kind": "process",
+          "text": "Execution stopped safely; original worker ID and immutable partial evidence retained. Ordinary entry gates U034, U061 remain necessary; no live application, publication or Done is claimed."
         }
       ],
       "agentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=df443332-154f-486f-83f9-4d7ce8295e88",
@@ -67825,8 +68554,20 @@
           "previousAgentId": "d9ce5e05-843c-427f-8366-5a120b3cdb04",
           "kind": "fresh-asynchronous-continuation",
           "reason": "Task API is synchronous and write_agent refuses sync actors; preserved specification/results reused, no concurrent old writer."
+        },
+        {
+          "kind": "bounded-execution-checkpoint",
+          "from": "In Progress",
+          "previousOwner": "worker-U007",
+          "previousAgentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=df443332-154f-486f-83f9-4d7ce8295e88",
+          "to": "To Do",
+          "atUtc": "2026-11-08T21:51:30Z",
+          "retainedResult": "<RUN>/results/U007.json",
+          "entryGates": "U034, U061",
+          "stateReached": "Stopped safely with private BDD, additive implementation, real/failing RED controls, final GREEN/per-file coverage, namespace/LF/CRLF failures and partial mutation records retained; no live application or Done claim."
         }
-      ]
+      ],
+      "result": "<RUN>/results/U007.json"
     },
     {
       "kind": "quality-debt",
@@ -71315,74 +72056,6 @@
       "heartbeatUtc": null,
       "kanoCredit": 0,
       "createdBy": "controller-2026-11-06",
-      "source": "reviews/U018.fix2.verdict.json (P2, P3, P4, P5)",
-      "id": "U045",
-      "title": "U018 residuals: make the qualify timing tests structural, correct the README and --help overclaims, add a bounded EPERM retry to the addendum append",
-      "entryGate": "U018",
-      "serves": "U018",
-      "unblocks": [],
-      "lineage": "OP-U018-RESIDUALS",
-      "acceptance": "In testing/browser/qualify the wall-clock tests that flaked under load (timeouts.test.cjs: an explicit shell bound below the outer bound is kept and one above is clamped; outer-timeout.test.cjs: the outer bound) decide by structural facts (a virtual clock, counters, an injected adapter that records the bounds it was given) so that no machine load makes them fail; the README sentence claiming that a forged report is refused is replaced by what is checked (consistency and agreement with the installed Edge) and what is not (authenticity), the --help text and the code comment that say a timeout never passes a check state the clock exception, the 11-waits upper bound states the common 2.6 bounds, the figures (29 files and 225 tests, addendum.cjs branches 96.22) are corrected, and the append retries a bounded number of times on EPERM or EBUSY with a typed refusal after the bound (a test with an injected adapter); the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
-      "tdd": "RED first (archived under a NEW directory of testing/browser/qualify): a test that fails on the published bytes because a timing assertion depends on real spawn time, a test that fails while the README or --help sentence contradicts the clock probe, and an injected EPERM that makes the published append fail at once; then the fix; the RED replayed unchanged; no absolute timing bound.",
-      "coverage": "85/85/85 per file on every first-party production file of testing/browser/qualify that is changed or added; documentation-only parts state coverage not-applicable with the diff.",
-      "hints": [
-        {
-          "kind": "trap",
-          "confidence": 5,
-          "text": "U018 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md and orders/R3-U018.md for this tool own addendum design); never edit qualified.json. If U034 (Edge 157) becomes the work in progress first, stop and let U034 go first: both append to the same chain.",
-          "evidence": "reviews/U018.fix2.verdict.json; orders/R3-U018.md"
-        },
-        {
-          "kind": "reuse",
-          "confidence": 4,
-          "text": "Reviewer findings with reproductions: P3 timeouts.test.cjs 248/249 because spawning the fake shell took longer than 500 ms so the outer bound fired first (the same flake as the retained failed attempt coverage-fix2-adapters); P2 replay, never-run loopback, string counters and hand-made reports accepted by --dry-run; P4 qualifyEdge with a clock that never answers gives ok:true and checkedAtUtc null; P5 the retry RED archive pins intermediate working bytes.",
-          "evidence": "reviews/U018.fix2.verdict.json (P2-P5)"
-        }
-      ],
-      "createdAtUtc": "2026-11-06T14:30:25Z"
-    },
-    {
-      "kind": "hardening",
-      "state": "To Do",
-      "readiness": false,
-      "owner": null,
-      "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
-      "source": "reviews/C009.fix2.verdict.json (F17, follow-up advice for self-review line 4)",
-      "id": "U046",
-      "title": "C009 mutation generator: every statement and single condition of http-io.cjs, server.cjs and commands.cjs killed by a named test or proven equivalent",
-      "entryGate": "C009 Done, U050 Done (same namespace capability/C009, one item at a time)",
-      "serves": "C009",
-      "unblocks": [],
-      "lineage": "OP-C009-MUTATION",
-      "acceptance": "In capability/C009 a systematic generator mutates every statement and every single condition of http-io.cjs, server.cjs and commands.cjs (the three files that C010, C014 and C022 import) in scratch copies with a bounded pool at BelowNormal priority; every survivor is killed by a NEW named test file or listed as equivalent with a written proof (a reachability argument is not an equivalence; the reviewer judged the argument for the existing hand-listed mutant M10 incomplete); the campaign report is archived with node RUN/scripts/archive-run.cjs; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds.",
-      "tdd": "RED first (archived under a NEW directory of capability/C009): the generated mutants that survive the published suite are the RED (each survivor is a scratch copy the new tests must fail on and the real code must pass); then the new tests; the RED replayed unchanged; no absolute timing bound.",
-      "coverage": "85/85/85 per file on every first-party production file of capability/C009 that is changed or added (new tests only: coverage not-applicable for production files).",
-      "hints": [
-        {
-          "kind": "plan",
-          "confidence": 4,
-          "text": "Entry gate: C009 accepted (its third fix R11-C009 is in progress). Do not start before the C009 evidence is sealed, because the addendum chain pins the accepted bytes. The reviewer recommended this because C010, C014 and C022 import these three files: a guard mutation that survives here is a hole in three cards. Use the generators of C059 (tests/mutate-gen.cjs) and X001 (tests/mutant-gen.cjs) as exemplars and run the campaign at BelowNormal priority with at most 4 workers (rule 13).",
-          "evidence": "reviews/C009.fix2.verdict.json (F17)"
-        },
-        {
-          "kind": "trap",
-          "confidence": 5,
-          "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). Publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists).",
-          "evidence": "orders/U032.md"
-        }
-      ],
-      "createdAtUtc": "2026-11-06T14:54:52Z"
-    },
-    {
-      "kind": "defect-fix",
-      "state": "To Do",
-      "readiness": true,
-      "owner": null,
-      "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
       "source": "reviews/U005.fix.verdict.json (FX1-FX5)",
       "id": "U047",
       "title": "U005 and U006 residuals: honour abort during the adoption read, make adoptRoots private or seal-checked, typed refusal for null adapter rows, one options snapshot and typed refusals for hostile session shapes and terminate reports, kill the surviving mutants and pin the defaults, LF-safe canonical pins, correct the README statements",
@@ -71412,49 +72085,15 @@
     {
       "kind": "hardening",
       "state": "To Do",
-      "readiness": true,
+      "readiness": false,
       "owner": null,
       "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
-      "source": "reviews/C043.fix.verdict.json (N1, N2, N3, N5)",
-      "id": "U048",
-      "title": "C043 residuals: pin the third-hole regression test and put it in the documented command, make the mutation generator treat a timeout as undecided and finish the campaign, back the README claims with real tests and narrow the no-server-prose sentence, run the fresh trees over all 28 suites",
-      "entryGate": "C043",
-      "serves": "C043",
-      "unblocks": [],
-      "lineage": "OP-C043-RESIDUALS",
-      "acceptance": "In capability/C043 tests/node-own-lanes.test.cjs is pinned by an evidence manifest and named in the README test command and the documented count; mutgen.cjs reports a timeout as undecided and fails the run (never a kill) and a recorded generated campaign over the whole of server.cjs finishes with every survivor killed by a named test or listed as equivalent with a proof; claims.test.cjs checks that each named test exists AND passes AND mentions the claim subject (or the claim sentence is narrowed), and README line 157 says that a named code can carry a short path that the page prints; the fresh-tree check does not clone with --local and runs all 28 suites in LF and CRLF; the changes reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. ALSO (found by the controller probe of 6 Nov 14:30 after the U039 review, RUN/scratch/ctl/p-body.cjs; model: the U039 fix 4 and capability/C009/http-io.cjs admit.refuse): a client error for the request that is still reading its BODY (a bad chunk size, a Content-Length body cut then silence, the same then a client FIN, a missing CRLF after chunk data) gets its typed 400 or 408 AT ONCE and a closed connection, like the accepted parent design and C009 (the request Node was still receiving, request.complete false, is the one that failed: answer it at once and wait only for the requests before it); today refuseUnparsed waits on the lane entry of that very request, writes nothing and the connection is closed only by the request timeout of about 5 s (the controller probe: no bytes for all four cases, closed at 1.7 to 2.5 s with a 1.5 s request timeout, 0 connections left afterwards): rows for all four cases behind 0 to 2 complete earlier requests, after Expect: 100-continue, in the test process and in a separate server process, with a server-side connection count that must return to zero through a bounded poll and the 128-socket burst of the bad chunk size followed by a legitimate GET that answers 200.",
-      "tdd": "RED first (archived under a NEW directory of capability/C043): a test that fails on the published bytes because node-own-lanes is unpinned or mutgen counts a timeout as a kill or a README claim names a test that does not exist; then the fix; the RED replayed unchanged; no absolute timing bound. RED first for the incomplete-body rows (a typed answer is expected, none arrives): they fail on the published bytes for the reason of the finding; a named mutant that waits for the lane entry of an incomplete request must fail a named test.",
-      "coverage": "85/85/85 per file on every first-party production file of capability/C043 that is changed or added; documentation and test-only parts state coverage not-applicable with the diff.",
-      "hints": [
-        {
-          "kind": "plan",
-          "confidence": 4,
-          "text": "From the C043 acceptance review: N1 tests/node-own-lanes.test.cjs is real and good (99/99 in 82 s, 62 of 99 fail on the first publication) but pinned by no capture; N2 mutgen.cjs counts a timeout as a kill, the retained campaign mutgen-run-01.jsonl is partial (about 51 of 101 mutants, server.cjs lines 60-135 and 196-262 only); N3 claims.test.cjs proves existence only (14 of 86 sentences) and README line 157 is narrower than the validator; N5 fresh-tree clones with --local (hardlink failure once) and covers 19 of 28 suites. Run campaigns at normal priority with at most 4 workers (rule 13 as revised).",
-          "evidence": "reviews/C043.fix.verdict.json"
-        },
-        {
-          "kind": "trap",
-          "confidence": 5,
-          "text": "C043 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); publish with publish-ext.ps1 under C043 [S] after the GO file (RUN/GO/publish-C043.txt exists; refresh its note for the amendment).",
-          "evidence": "orders/U032.md"
-        }
-      ],
-      "createdAtUtc": "2026-11-06T17:51:58Z"
-    },
-    {
-      "kind": "hardening",
-      "state": "In Progress",
-      "readiness": true,
-      "owner": "worker-U049",
-      "heartbeatUtc": "2026-11-08T20:02:10Z",
       "kanoCredit": 0,
       "createdBy": "controller-2026-11-06",
       "source": "reviews/X001.fix.verdict.json (G1, G2, G3)",
       "id": "U049",
       "title": "X001 residuals: bound the work of verify for shared raw structures, record a systematic mutation run for timeline.js and the page.js survivors",
-      "entryGate": "X001",
+      "entryGate": "X001, U034",
       "serves": "X001",
       "unblocks": [],
       "lineage": "OP-X001-RESIDUALS",
@@ -71473,6 +72112,88 @@
           "confidence": 5,
           "text": "X001 is ACCEPTED and sealed: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); publish with publish-ext.ps1 under X001 [L] after the GO file (RUN/GO/publish-X001.txt exists; refresh its note for the amendment).",
           "evidence": "orders/U032.md"
+        },
+        {
+          "kind": "reuse",
+          "confidence": 5,
+          "cards": [
+            "U049",
+            "X001"
+          ],
+          "tags": [
+            "red",
+            "work-budget"
+          ],
+          "text": "G1 is privately GREEN: unchanged accepted-model RED fails2 by ERR_ASSERTION; candidate replay passes2. Use retained baseline/RED, not a new OOM or timeout RED.",
+          "evidence": "<RUN>\\scratch\\U049\\captures\\red\\run-1\\u049-red-1.json"
+        },
+        {
+          "kind": "coverage",
+          "confidence": 5,
+          "cards": [
+            "U049",
+            "X001"
+          ],
+          "tags": [
+            "coverage"
+          ],
+          "text": "Full149/149 and EACH-file gates pass: describe/page/saved100/100/100; timeline99.75/100/98.88. LF and CRLF accepted-source trees each149/149; no exclusions.",
+          "evidence": "<RUN>\\scratch\\U049\\captures\\coverage"
+        },
+        {
+          "kind": "plan",
+          "confidence": 5,
+          "cards": [
+            "U049",
+            "X001"
+          ],
+          "tags": [
+            "mutation"
+          ],
+          "text": "Full2442 outcomes:2285 named kills,14 witnessed equivalents,100 survivors,32 undecided,11 invalid-not-kills. All18 page rows close4+14. Resume exact IDs; no timeout kills.",
+          "evidence": "<RUN>\\scratch\\U049\\mutation-summary.json"
+        },
+        {
+          "kind": "trap",
+          "confidence": 5,
+          "cards": [
+            "U049",
+            "U034",
+            "X001"
+          ],
+          "tags": [
+            "ownership",
+            "qualification"
+          ],
+          "text": "Live120 X001 files are unchanged. Reader-complete is not apply/qualification/acceptance/publication approval; separate reviewed-candidate authorization remains missing.",
+          "evidence": "<RUN>\\scratch\\U049\\final-private-integrity.json"
+        },
+        {
+          "kind": "reuse",
+          "confidence": 5,
+          "cards": [
+            "U049",
+            "X001"
+          ],
+          "tags": [
+            "amendment",
+            "evidence"
+          ],
+          "text": "Private addenda1-3 retain exact predecessors. D3 checks head hash before reads and fixes browser-kind tamper witness; all byte/tamper controls now pass. Never repin old raw/seals.",
+          "evidence": "capability\\X001\\evidence-index-addendum-3.json"
+        },
+        {
+          "evidence": "<RUN>/results/U049.json",
+          "confidence": 5,
+          "cards": [
+            "U049"
+          ],
+          "tags": [
+            "resumption",
+            "budget"
+          ],
+          "kind": "process",
+          "text": "Execution stopped safely; original worker ID and immutable partial evidence retained. Ordinary entry gates U034 remain necessary; no live application, publication or Done is claimed."
         }
       ],
       "createdAtUtc": "2026-11-06T17:51:58Z",
@@ -71493,42 +72214,20 @@
           "previousAgentId": "13ec9bc4-5fd8-40f3-8fb8-d2b2db33b78e",
           "kind": "fresh-asynchronous-continuation",
           "reason": "Task API is synchronous and write_agent refuses sync actors; preserved specification/results reused, no concurrent old writer."
-        }
-      ]
-    },
-    {
-      "kind": "hardening",
-      "state": "To Do",
-      "readiness": false,
-      "owner": null,
-      "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
-      "source": "reviews/C009.fix2.verdict.json (F9c); results/C009.json (third fix loops)",
-      "id": "U050",
-      "title": "C009 suite cost: cut the process-spawning test files further so each runs in about 12 s on a quiet machine, document a per-file cap, prove it in a reserved quiet window",
-      "entryGate": "C009 Done, U053 Done (same namespace capability/C009, one item at a time)",
-      "serves": "C009",
-      "unblocks": [],
-      "lineage": "OP-C009-SUITE-COST",
-      "acceptance": "In capability/C009 every process-spawning test file (refusal-flood, pipeline-process, resources, the three pipeline-refusal parts) runs in about 12 seconds on a quiet machine, measured and recorded as evidence (not asserted in a test), by cutting the naive-control step of refusal-flood (33 to 43 s alone in the third fix), sharing one child per file and trimming matrix cells that repeat a code path; the documented suite command states the per-file cap it needs and the whole suite runs green once as the machine is; the 8 x 8 loops under 8 burners of the worker (resources 4 of 64 bad, refusal-flood 64 of 64, pipeline-process 63 of 64, pipeline-refusal-mixed 21, pipeline-refusal-http10 15 in the third fix) are rerun in a RESERVED quiet window (no other agent running heavy work) with the result archived; the new tests reach the sealed card through a chained append-only addendum without editing a pinned file in place; per-file 85/85/85 still holds. The final tree ALSO archives, through the same chained addendum, per-file coverage with ONE command per file for all 11 first-party production files of capability/C009, the 42 hand-written mutants (41 killed, M10 equivalent by reachability) and one real isolated headless Edge run, because the third fix archived none of them (review G5: the reviewer measured them once and the seal contains none); U053 lands first, so U050 starts from the corrected README and the pinned RED subjects.",
-      "tdd": "RED first (archived under a NEW directory of capability/C009): the per-file cost figures of the published files recorded as evidence and a structural test that fails when a spawned child count or a naive-control step per file exceeds the recorded budget (a counter, never a wall-clock bound); then the cuts; the RED replayed unchanged; no absolute timing bound inside any test.",
-      "coverage": "85/85/85 per file on every first-party production file of capability/C009 (production files stay frozen: coverage not-applicable for them, the new test layout must still reach the same lines).",
-      "hints": [
-        {
-          "kind": "plan",
-          "confidence": 4,
-          "text": "From the third fix of C009: every file's slowest run per loop round was 35 to 81 s against the 60 s file cap on a machine at 100 percent CPU with 80 to 94 node processes; the worker proposed cutting the naive-control step of refusal-flood (33 to 43 s alone) and the matrix cells further, and running the load proof on a quiet or reserved machine (a load proof needs a quiet machine). The controller decision on F9c: a file cancelled only under about 8 burners with 8 parallel copies is a minor; a failure in one plain suite run is a major. Entry gate: C009 accepted (its evidence sealed) because the addendum chain pins the accepted bytes.",
-          "evidence": "results/C009.json; orders/review-C009-fix3.md"
         },
         {
-          "kind": "trap",
-          "confidence": 5,
-          "text": "C009 is a sealed accepted card once Done: use the amendment path (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md); production files stay frozen (C010, C014 and C022 pin them by commit); publish with publish-ext.ps1 under C009 [D] after the GO file (RUN/GO/publish-C009.txt exists; refresh its note). A reserved quiet window means the controller pauses other heavy work: ask before starting the loops. Run under U046 (the mutation generator) one after the other, never two publications racing.",
-          "evidence": "orders/U032.md"
+          "kind": "bounded-execution-checkpoint",
+          "from": "In Progress",
+          "previousOwner": "worker-U049",
+          "previousAgentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=d234608a-013b-4331-a7d7-db33a7c5613b",
+          "to": "To Do",
+          "atUtc": "2026-11-08T21:51:30Z",
+          "retainedResult": "<RUN>/results/U049.json",
+          "entryGates": "U034",
+          "stateReached": "Actual private implementation, genuine RED, unchanged replay, full 149/149 namespace regression, EACH-file 85/85/85, LF/CRLF and exact current authority verified. All18 page residuals closed. Full timeline/page campaign remains incomplete with 100 survivors and 32 undecided; live application and final real browser are not authorized."
         }
       ],
-      "createdAtUtc": "2026-11-06T18:08:38Z"
+      "result": "<RUN>/results/U049.json"
     },
     {
       "kind": "hardening",
@@ -71640,40 +72339,6 @@
           "from": "In Progress"
         }
       ]
-    },
-    {
-      "kind": "hardening",
-      "state": "To Do",
-      "readiness": false,
-      "owner": null,
-      "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
-      "source": "reviews/C059.fix2.verdict.json (Q9, M2)",
-      "id": "U054",
-      "title": "C041 lesson assets: serve() verifyAsset accepts the LF-normalized form of each pinned asset (record raw and LF like the import pins) so a Linux or LF checkout can start the service of every consumer",
-      "entryGate": "C059 Done (its README states the limit until this item lands)",
-      "serves": "C041",
-      "unblocks": [],
-      "lineage": "OP-C041-LF-ASSETS",
-      "acceptance": "In capability/C041 verifyAsset (called from serve.cjs, and by C059 server.cjs loadAssets) accepts a lesson asset whose raw SHA-256 OR whose CRLF-to-LF canonical SHA-256 equals the pin, the catalog records both hashes for each of the 8 pinned lesson assets, a tampered asset (a changed byte in either line-ending form) is still refused by name and a test per branch proves it; the services of C041 and of its consumers (C059 and any other importer) start from a git-archive tree whose text files were converted to LF, proved by running the service-starting suites of C041 and C059 in an LF tree; the changes reach the sealed card only through a chained append-only addendum or NEW files without editing a pinned file in place; per-file 85/85/85 still holds for every changed production file.",
-      "tdd": "RED first (archived under a NEW directory of capability/C041): the service-starting tests run in an LF-converted tree and fail on the published bytes with the asset integrity mismatch (0 of 8 catalog asset pins match the LF bytes, 8 of 8 match after CRLF conversion: the reviewer probe pin.cjs in RUN/results/C059-review); then the change; the RED replayed unchanged; no absolute timing bound.",
-      "coverage": "85/85/85 per file on every first-party production file of capability/C041 that is changed or added.",
-      "hints": [
-        {
-          "kind": "plan",
-          "confidence": 4,
-          "text": "From the C059 second-fix review (Q9 and M2): git archive on this machine applies core.autocrlf so the 8 pinned lesson assets come out CRLF and everything passes here; a Linux clone of blobs stored as LF fails every test that starts the service (Pinned lesson asset integrity mismatch from capability/C041/serve.cjs verifyAsset, sha256 of the RAW bytes). The reviewer probes heavy2.ps1, conv.cjs and pin.cjs in RUN/results/C059-review reproduce it with an LF-converted copy of C041, C042 and learning/S001, S003. Entry gate C059 Done so that the C059 README limit (service-starting suites need CRLF assets) can be lifted in a later amendment of C059.",
-          "evidence": "reviews/C059.fix2.verdict.json (Q9, M2)"
-        },
-        {
-          "kind": "trap",
-          "confidence": 5,
-          "text": "C041 is an accepted sealed card: amend only through the addendum chain (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). PUBLISHER ROUTE (check the map of the publisher BEFORE you order a worker to use it: the U040 order named the wrong one): C041 (class S) is NOT in the closed map of publish-ext.ps1 and has no GO file, but it IS in the map of the legacy publish.ps1 (localCapabilityClasses: C041='S'): publish with the legacy publisher, `publish.ps1 -CardId C041 -WorkerId worker-U054 -Paths ... -Message '[C041][S] U054 ...'`, one amendment commit. Add no local Windows user name and no session id to any added file (rule 15).",
-          "evidence": "orders/U032.md; orders/_CONTROLLER-UPDATE.md rule 15; .git/kanban-orchestrator/publish.ps1 line 24"
-        }
-      ],
-      "createdAtUtc": "2026-11-06T19:59:39Z"
     },
     {
       "kind": "hardening",
@@ -71919,34 +72584,6 @@
       "createdAtUtc": "2026-11-07T00:46:56Z"
     },
     {
-      "kind": "hardening",
-      "state": "To Do",
-      "readiness": true,
-      "owner": null,
-      "heartbeatUtc": null,
-      "kanoCredit": 0,
-      "createdBy": "controller-2026-11-06",
-      "source": "reviews/C010.fix.verdict.json (F1 to F4, F9)",
-      "id": "U057",
-      "title": "C010 residuals after the accepted fix: close the mutation campaign (ten survivors, the README completeness lines, the cancelled-after-token audit record) and answer a stalled header or body with a typed 408 at the default limits",
-      "entryGate": "C010 Done",
-      "serves": "C010",
-      "unblocks": [],
-      "lineage": "OP-C010-RESIDUALS",
-      "acceptance": "In capability/C010, in ONE evidence phase after the last edit: (F2) the ten survivors of the reviewer run are killed by named tests (a default server filled to 100 and 101 entries for the ownerEntries default of contract.js; a 2048 and a 2049 character target for urlChars; run units 100 and 101; exact visited counts per pass for the store.cjs work counter start and increment; a header VALUE that looks like a claim name such as Accept: x-lease is not listed in ignoredClaims for the claimedHeaders loop stride of server.cjs; the automatic port of startLocal), the campaign is finished with --retest and --finalize so that 806 of 806 mutants are decided with 0 survivors and 0 undecided (the 17 equivalents keep their proofs), the mutation entry of evidence/uncaptured.json is deleted, and evidence.test.cjs compares report.generated with the generator own --list total; (F1) README lines 49 and 212 stop saying the campaign is complete unless it is; (F3) one assertion in commit.test.cjs: a held authorized mutation whose connection was cut AND whose token expired writes no audit record, which kills the mutant that evaluates cancelled() only after the token check; (F4) at the DEFAULT limits a stalled request line plus header and a stalled body (Content-Length 100 with 13 bytes, then silence) are answered with the typed 408 REQUEST_TIMEOUT and its audit record: the idleMs default is above headerMs plus checkMs (for example 2 x headerMs), asserted on the limits read back from the server, plus one real default-limits test per shape with a bounded poll; the same stalled-header probe is run against C009 at its own defaults and, if C009 shows the same silent close, the reproduction goes into the result hints (do NOT edit C009); published once under C010 [D] by the amendment path (an append-only addendum that pins the earlier evidence byte for byte, or one fix commit whose single evidence phase follows the last edit); per-file 85/85/85 still holds.",
-      "tdd": "RED first (archived under a NEW directory of capability/C010): the ten boundary and counter assertions fail by name on the ten mutants (generator --retest) and pass on the real bytes; the ordering assertion idleMs above headerMs plus checkMs fails on the published bytes (5000 against 5000 plus checkMs) and the two default-limits tests fail there (silent close at about 5.2 s, no 408, empty audit: the reviewer probes hdrstall.cjs and idle.cjs in RUN/results/C010-review/fix, which carry local paths, so read them as models and never copy them); then the change; the RED replayed unchanged; no assertion depends on a duration (a bounded poll for the typed answer only).",
-      "coverage": "85/85/85 per file on every first-party production file of capability/C010 that is changed or added.",
-      "hints": [
-        {
-          "kind": "plan",
-          "confidence": 4,
-          "text": "Entry gate C010 Done (accepted 6 Nov 20:30 local). Every C010 capture pins every non-evidence file of the namespace, so ANY edit forces a full recapture (3 to 4 hours): make ALL test, generator and production edits first and take every capture afterwards in one evidence phase, or amend through an append-only addendum that supersedes only the manifests whose subject changed (lesson: pin captures to the files they execute). The reviewer scripts for the survivors and the guard mutants (mutf.cjs, mut.cjs, tamper2.cjs, sortcheck.cjs, floodloop.cjs, probe3.cjs) are in RUN/results/C010-review/fix/; run any mutation work inside a mutation slot (heavy-slot.ps1 -Slots 3 -LockDir RUN/locks-mut). Publish with publish-ext.ps1 under C010 [D] after refreshing the note of RUN/GO/publish-C010.txt; no local Windows user name and no session id in any added file (rule 15).",
-          "evidence": "reviews/C010.fix.verdict.json"
-        }
-      ],
-      "createdAtUtc": "2026-11-07T01:23:55Z"
-    },
-    {
       "hints": [
         {
           "kind": "trap",
@@ -71966,17 +72603,17 @@
       ],
       "agentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=111255c3-c1aa-43d5-9761-cb80ddf8e9e9",
       "browserCheck": "No browser-production change; driver behavior is tested hermetically. Actual installed-157 qualification and all C043 real-browser observations remain mandatory on U034 and are not claimed here.",
-      "heartbeatUtc": "2026-11-08T20:02:10Z",
+      "heartbeatUtc": null,
       "kind": "unblock",
       "createdAtUtc": "2026-11-08T19:35:01Z",
       "serves": "C043",
       "id": "U058",
-      "owner": "worker-U058",
-      "entryGate": "C043, U018",
+      "owner": null,
+      "entryGate": "C043, U018, U059",
       "kanoCredit": 0,
-      "readiness": true,
+      "readiness": false,
       "startedAtUtc": "2026-11-08T19:35:01Z",
-      "state": "In Progress",
+      "state": "To Do",
       "createdBy": "execution-coordinator",
       "coverage": "not-applicable only with an enumerated diff/hash proof that C043 first-party production is unchanged; verification tooling under tests is not production.",
       "tdd": "Archive a genuine assertion RED on retained original C043 verification bytes for a fixture-qualified signed major 157 before changing the driver; replay unchanged on the corrected driver. Preserve raw stdout/stderr/exit/input hashes and prove unknown or unqualified reports remain refused.",
@@ -72006,8 +72643,209 @@
           "previousAgentId": "4e77f1ee-da11-4d74-b2e3-604fcf402bf5",
           "kind": "fresh-asynchronous-continuation",
           "reason": "Task API is synchronous and write_agent refuses sync actors; preserved specification/results reused, no concurrent old writer."
+        },
+        {
+          "previousOwner": "worker-U058",
+          "to": "To Do",
+          "retainedResult": "<RUN>/results/U058.json",
+          "atUtc": "2026-11-08T20:30:01Z",
+          "from": "In Progress",
+          "entryGate": "U059",
+          "kind": "entry-gate-checkpoint"
         }
       ]
+    },
+    {
+      "tdd": "Specification first, then genuine deterministic behavioral assertion RED on retained current tooling showing a requested stall can be missed; archive raw stdout/stderr/exit/input hashes before repair. The current twice-failed historical wall-clock assertion is retained as observed failure, not relabeled the new behavioral RED. Replay unchanged on final tooling.",
+      "agentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=111255c3-c1aa-43d5-9761-cb80ddf8e9e9",
+      "attemptHistory": [
+        {
+          "by": "execution-coordinator",
+          "kind": "admission",
+          "to": "To Do",
+          "atUtc": "2026-11-08T20:30:01Z"
+        },
+        {
+          "to": "In Progress",
+          "kind": "pull",
+          "from": "To Do",
+          "by": "execution-coordinator",
+          "atUtc": "2026-11-08T20:30:01Z"
+        },
+        {
+          "kind": "bounded-execution-checkpoint",
+          "from": "In Progress",
+          "previousOwner": "worker-U059",
+          "previousAgentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=111255c3-c1aa-43d5-9761-cb80ddf8e9e9",
+          "to": "To Do",
+          "atUtc": "2026-11-08T21:51:30Z",
+          "retainedResult": "<RUN>/results/U059.json",
+          "entryGates": "U060",
+          "stateReached": "Sealed deterministic repair and original evidence remain intact. Remaining gates not green: mutants. No ready-for-review or Done claim."
+        }
+      ],
+      "state": "To Do",
+      "createdAtUtc": "2026-11-08T20:30:01Z",
+      "kind": "unblock",
+      "createdBy": "execution-coordinator",
+      "entryGate": "C043, U060",
+      "hints": [
+        {
+          "evidence": "<RUN>/results/U058.json",
+          "confidence": 5,
+          "cards": [
+            "U059",
+            "U058"
+          ],
+          "tags": [
+            "load",
+            "timing",
+            "evidence"
+          ],
+          "text": "Observed5000ms injection returned lag76/105ms twice. Fix observation/arming and remove absolute-duration pass/fail; preserve old failed captures and production, never invent a stall proof.",
+          "kind": "trap"
+        },
+        {
+          "kind": "reuse",
+          "cards": [
+            "U059",
+            "U058"
+          ],
+          "tags": [
+            "observer",
+            "evidence"
+          ],
+          "confidence": 5,
+          "text": "U059 counts an armed request/start/block/completion per flood phase. Native lag is diagnostic only. Original deterministic pre-arm RED and unchanged GREEN are separate from old76/105ms observations.",
+          "evidence": "capability\\C043\\U059.feature"
+        },
+        {
+          "kind": "trap",
+          "cards": [
+            "U059",
+            "U058"
+          ],
+          "tags": [
+            "authority",
+            "publication"
+          ],
+          "confidence": 5,
+          "text": "U058 head2 stays immutable; U059 D3/D4/head4 owns six exact tooling replacements. Both cards share one stable candidate but require separate review/Done; coordinator alone publishes serially.",
+          "evidence": "capability\\C043\\evidence-u059-head.json"
+        },
+        {
+          "kind": "trap",
+          "cards": [
+            "U059",
+            "U058"
+          ],
+          "tags": [
+            "verification",
+            "evidence"
+          ],
+          "confidence": 5,
+          "text": "No source changes: only named remaining gates are unresolved (mutants). Preserve the sealed joint candidate and every raw attempt; never count a timeout as a pass.",
+          "evidence": "<RUN>\\scratch\\U059\\resume-gate-accounting.json"
+        },
+        {
+          "evidence": "<RUN>/results/U059.json",
+          "confidence": 5,
+          "cards": [
+            "U059"
+          ],
+          "tags": [
+            "resumption",
+            "budget"
+          ],
+          "kind": "process",
+          "text": "Execution stopped safely; original worker ID and immutable partial evidence retained. Ordinary entry gates U060 remain necessary; no live application, publication or Done is claimed."
+        }
+      ],
+      "heartbeatUtc": null,
+      "startedAtUtc": "2026-11-08T20:30:01Z",
+      "kanoCredit": 0,
+      "id": "U059",
+      "source": "<RUN>/results/U058.json; capability/C043/tests/load.test.cjs:33",
+      "title": "Prove C043 injected resource-test stalls without an absolute wall-clock success criterion",
+      "owner": null,
+      "coverage": "not-applicable only with full unchanged C043 production hash/diff proof; tests/tooling changes are separately enumerated.",
+      "unblocks": [
+        "U058"
+      ],
+      "serves": "C043",
+      "readiness": false,
+      "acceptance": "Repair the existing load-observation tooling so the injected server stall is demonstrably exercised using counted/injected-clock facts or a correctly armed explicit observation, never an absolute elapsed-duration pass/fail. A deterministic named regression exposes the current missed-stall observation. Preserve historical red-load-flake captures and every sealed production byte. Supersede changed test/evidence verifier bytes through an append-only chained amendment; required full C043 tests and original retained RED/final replay pass; independently publish under C043[S], zero credit. No Edge157 qualification or reader-completion is implied.",
+      "result": "<RUN>/results/U059.json"
+    },
+    {
+      "state": "To Do",
+      "readiness": true,
+      "serves": "C043",
+      "createdBy": "execution-coordinator",
+      "owner": null,
+      "entryGate": "C043",
+      "hints": [
+        {
+          "evidence": "<RUN>/results/U059.json; <RUN>/scratch/U059/resume-mutants/u059-mutants-isolated.json",
+          "confidence": 5,
+          "cards": [
+            "U060"
+          ],
+          "tags": [
+            "resumption",
+            "evidence"
+          ],
+          "kind": "process",
+          "text": "Resume from the exact retained failed gate; preserve all historical raw and partial work. No proxy, timeout-as-kill, approval or self-awarded Done."
+        }
+      ],
+      "acceptance": "The exact retained C043 mutation gate completes with every mutant decided by a named behavioral assertion or demonstrated equivalence, no timeout counted as kill, and the unchanged full/fresh candidate gates pass. Preserve all failed/timeout raw evidence and every old seal; publish only an independently accepted scoped repair under C043[S], zero credit.",
+      "title": "Complete and diagnose the unchanged C043 named mutation verification gate",
+      "id": "U060",
+      "unblocks": [
+        "U059"
+      ],
+      "kind": "unblock",
+      "source": "<RUN>/results/U059.json; <RUN>/scratch/U059/resume-mutants/u059-mutants-isolated.json",
+      "coverage": "At least 85 EACH line/branch/function over every affected first-party production file; N/A only with complete no-production-change proof.",
+      "tdd": "Specification first, genuine retained-subject behavioral assertion RED with immutable raw stdout/stderr/exit/input hashes, repair, unchanged GREEN replay; environment faults and timeouts are not behavioral RED or mutant kills.",
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-08T21:51:30Z"
+    },
+    {
+      "state": "To Do",
+      "readiness": true,
+      "serves": "U005/U006",
+      "createdBy": "execution-coordinator",
+      "owner": null,
+      "entryGate": "U005, U006",
+      "hints": [
+        {
+          "evidence": "<RUN>/results/U007.json",
+          "confidence": 5,
+          "cards": [
+            "U061"
+          ],
+          "tags": [
+            "resumption",
+            "evidence"
+          ],
+          "kind": "process",
+          "text": "Resume from the exact retained failed gate; preserve all historical raw and partial work. No proxy, timeout-as-kill, approval or self-awarded Done."
+        }
+      ],
+      "acceptance": "The exact U007 candidate fresh-LF failures caused by historical U005/U006 raw-byte pins are reproduced behaviorally and fixed through a chained append-only raw/canonical authority path; LF and CRLF gates pass while every original capture remains exact. No threshold or evidence waiver, no production or runtime qualification inferred; scoped U005/U006 tooling publication is independently verified.",
+      "title": "Repair lifecycle fresh-LF historical verification without rewriting retained raw evidence",
+      "id": "U061",
+      "unblocks": [
+        "U007"
+      ],
+      "kind": "unblock",
+      "source": "<RUN>/results/U007.json",
+      "coverage": "At least 85 EACH line/branch/function over every affected first-party production file; N/A only with complete no-production-change proof.",
+      "tdd": "Specification first, genuine retained-subject behavioral assertion RED with immutable raw stdout/stderr/exit/input hashes, repair, unchanged GREEN replay; environment faults and timeouts are not behavioral RED or mutant kills.",
+      "kanoCredit": 0,
+      "createdAtUtc": "2026-11-08T21:51:30Z"
     }
   ],
   "localPublisherAuthorization": {
@@ -75098,6 +75936,19 @@
         "C010",
         "C011"
       ]
+    },
+    {
+      "agentId": "agent-host-session://ahp-session/c53d987f-60fa-4139-80b5-9eb2f77eadc2?chat=111255c3-c1aa-43d5-9761-cb80ddf8e9e9",
+      "reason": "One shared C043 test/evidence namespace writer and real prerequisite chain: U058 cannot finish its full suite until U059 repairs the measured stall gate. Each item retains separate RED, evidence, publication and acceptance; U059 is pulled first.",
+      "items": [
+        "U059",
+        "U058"
+      ],
+      "createdAtUtc": "2026-11-08T20:30:01Z",
+      "maxSimultaneouslyActive": 2,
+      "id": "B-C043-RUNTIME-GATE-20261108",
+      "closedAtUtc": "2026-11-08T21:56:47Z",
+      "result": "Both items incomplete; To Do with actual gates, no publication or credit."
     }
   ],
   "localPublisherExtensionAuthorization": {
@@ -75199,13 +76050,25 @@
       "asyncImplementationChatCount": 3,
       "peakConcurrentImplementers": 4,
       "workerMode": "Task API is sync; write_agent rejects sync actors. Fresh scoped async continuation chats reuse retained card specs/results; no duplicate source writer.",
-      "currentWip": [
-        "U007",
-        "U049",
-        "U058"
-      ],
+      "currentWip": [],
       "bundles": [],
-      "privateLocator": "<RUN> denotes the private execution directory supplied in the final response. Raw archives remain unmodified."
+      "privateLocator": "<RUN> denotes the private execution directory supplied in the final response. Raw archives remain unmodified.",
+      "stoppedAtUtc": "2026-11-08T21:51:30Z",
+      "stopCause": "Four-hour dispatch budget reached; all remaining actors explicitly stopped and incomplete pieces returned with actual entry gates.",
+      "readerSignalsDelivered": [],
+      "U034Executed": false,
+      "nativeAuthorityChanged": false,
+      "finishedPieces": [
+        "U055",
+        "U041"
+      ],
+      "newZeroCreditGates": [
+        "U058",
+        "U059",
+        "U060",
+        "U061"
+      ],
+      "allContinuationChatsStopped": true
     }
   ]
 }
