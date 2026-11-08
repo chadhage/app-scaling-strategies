@@ -1,0 +1,134 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { runHermeticChecks, verifyAcceptedSurface } = require('./strict-evidence.cjs');
+const { ACCEPTED_COMMIT, sha, normalize } = require('./u041-authority.cjs');
+const { fs, path, subject, load, makeScratch, dispose } = require('./u041-support.cjs');
+const { fakeRunner, tapSummary, lcovRecord } = require('./support.cjs');
+
+const tap = (change = {}) => Object.entries({ tests: 8, pass: 8, fail: 0, cancelled: 0, skipped: 0, todo: 0, ...change })
+  .map(([key, value]) => `# ${key} ${value}`).join('\n') + '\n';
+
+test('U041 strict evidence enables the actual heavy file and removes nested context, V8 coverage and the capture bypass', () => {
+  const outcome = runHermeticChecks({
+    env: { NODE_TEST_CONTEXT: 'child-v8', NODE_V8_COVERAGE: 'caller', U009_EVIDENCE_CAPTURE: '1' },
+    spawn: (command, args, options) => {
+      assert.equal(command, process.execPath);
+      assert.deepEqual(args.slice(0, 2), ['--test', '--test-concurrency=1']);
+      assert.match(args[2], /fix2-hermetic\.test\.cjs$/);
+      assert.equal(options.env.NODE_TEST_CONTEXT, undefined);
+      assert.equal(options.env.NODE_V8_COVERAGE, undefined);
+      assert.equal(options.env.U009_EVIDENCE_CAPTURE, undefined);
+      assert.equal(options.env.U009_HEAVY_HERMETIC, '1');
+      assert.equal(Object.hasOwn(options.env, 'NODE_V8_COVERAGE'), true);
+      assert.equal('timeout' in options, false);
+      return { status: 0, stdout: tap() };
+    }
+  });
+  assert.deepEqual([outcome.tests, outcome.pass, outcome.skipped, outcome.heavy, outcome.capture], [8, 8, 0, true, false]);
+});
+
+for (const [label, run] of [
+  ['failed tests', { status: 1, stdout: tap({ pass: 7, fail: 1 }) }],
+  ['skipped heavy tests', { status: 0, stdout: tap({ pass: 2, skipped: 6 }) }],
+  ['empty file', { status: 0, stdout: tap({ tests: 1, pass: 1 }) }],
+  ['no summary', { status: 0, stdout: '' }],
+  ['spawn failure', { status: null, error: new Error('fixture failure') }]
+]) {
+  test(`U041 strict evidence refuses ${label}`, () => {
+    assert.throws(() => runHermeticChecks({ spawn: () => run }), /strict heavy hermetic checks failed/);
+  });
+}
+
+test('U041 strict surface compares immutable blobs, not HEAD or live producer bytes', () => {
+  const bytes = Buffer.from('accepted\r\n');
+  const entry = { path: 'gate.cjs', gitBlobSha256: sha(bytes), crlfToLfSha256: sha(normalize(bytes)) };
+  const key = `${ACCEPTED_COMMIT}:testing/coverage/gate.cjs`;
+  assert.deepEqual(verifyAcceptedSurface([entry], (keys) => { assert.deepEqual(keys, [key]); return new Map([[key, bytes]]); }), { checked: 1, problems: [] });
+  assert.match(verifyAcceptedSurface([entry], () => new Map()).problems[0], /differs from the exact/);
+  assert.match(verifyAcceptedSurface([entry], () => new Map([[key, Buffer.from('other')]])).problems[0], /differs from the exact/);
+});
+
+test('U041 self-only policy: normal roots preserve caller opt-in, while a self-gate removes an inherited capture bypass', async (t) => {
+  const { parseArgs, runGate } = load('gate.cjs');
+  const base = makeScratch('u041-env-scope');
+  t.after(() => dispose(base));
+  for (const [root, env, expectedHeavy, expectedCapture] of [
+    [path.join(subject, 'fixtures', 'pass'), {}, undefined, undefined],
+    [path.join(subject, 'fixtures', 'pass'), { U009_HEAVY_HERMETIC: '1' }, '1', undefined],
+    [subject, { U009_HEAVY_HERMETIC: '0', U009_EVIDENCE_CAPTURE: '1' }, '1', undefined]
+  ]) {
+    const run = fakeRunner(({ include }) => ({ run: { stdout: tapSummary() }, lcov: lcovRecord(include) }));
+    await assert.doesNotReject(() => runGate(parseArgs(['--root', root, '--scratch', base]), {
+      fsApi: fs, cwd: base, repoRoot: path.resolve(subject, '..', '..'), env, run, nodeExecutable: 'fixture-node',
+      nodeVersion: 'v22.23.4', defaultScratch: base
+    }));
+    assert.equal(run.calls.length > 0, true);
+    for (const call of run.calls) {
+      assert.equal(call.options.env.U009_HEAVY_HERMETIC, expectedHeavy);
+      assert.equal(call.options.env.U009_EVIDENCE_CAPTURE, expectedCapture);
+    }
+  }
+});
+
+test('U041 public main never rejects and emits one typed document for passing, usage and internal failures', async (t) => {
+  const base = makeScratch('u041-main-contract');
+  t.after(() => dispose(base));
+  const { main } = load('gate.cjs');
+  for (const [args, expected] of [
+    [['--root', path.join(subject, 'fixtures', 'pass')], 0],
+    [['--root', path.join(subject, 'fixtures', 'pass'), '--min', '101'], 2],
+    [['--root', path.join(base, 'missing')], 2]
+  ]) {
+    const stdout = [];
+    let status;
+    await assert.doesNotReject(async () => {
+      status = await main([...args, '--scratch', base], {
+        cwd: base, repoRoot: path.resolve(subject, '..', '..'), fsApi: fs, env: {},
+        run: fakeRunner(({ include }) => ({ run: { stdout: tapSummary() }, lcov: lcovRecord(include) })),
+        stdout: (text) => stdout.push(text), stderr: () => {}
+      });
+    });
+    assert.equal(status, expected);
+    assert.equal(stdout.length, 1);
+    let document;
+    assert.doesNotThrow(() => { document = JSON.parse(stdout[0]); });
+    assert.equal(document.schema, 'U009-coverage-gate/1');
+    assert.equal(document.pass, expected === 0);
+  }
+  const stdout = [];
+  let exit;
+  await assert.doesNotReject(async () => {
+    exit = await main(['--root', path.join(subject, 'fixtures', 'pass'), '--scratch', base], {
+      cwd: base, repoRoot: path.resolve(subject, '..', '..'), fsApi: fs, env: {},
+      run: async () => { throw new Error('owned fixture internal failure'); },
+      stdout: (text) => stdout.push(text), stderr: () => {}
+    });
+  });
+  assert.equal(exit, 1);
+  assert.doesNotThrow(() => JSON.parse(stdout[0]));
+  assert.equal(JSON.parse(stdout[0]).error.type, 'internal');
+});
+
+test('U041 production strictness and the complete matcher return contract are observable', () => {
+  for (const [file, name] of [['gate.cjs', 'parseArgs'], ['glob.cjs', 'normalizePattern']]) {
+    assert.throws(() => Reflect.get(load(file)[name], 'caller'), TypeError, `${file} retains strict function semantics`);
+  }
+  const { compileGlob } = load('glob.cjs');
+  for (const [pattern, input] of [['*', 'aaa'], ['a', 'a'], ['a', 'b'], ['**/', 'a/'], ['?', '/'], ['*', '']]) {
+    let matcher;
+    let outcome;
+    assert.doesNotThrow(() => { matcher = compileGlob(pattern); outcome = matcher.measure(input); });
+    assert.deepEqual(Object.keys(outcome).sort(), ['consumed', 'matched', 'steps', 'tokens']);
+    assert.equal(typeof outcome.matched, 'boolean');
+    assert.equal(Number.isInteger(outcome.steps), true);
+    assert.equal(Number.isInteger(outcome.tokens), true);
+    assert.equal(Number.isInteger(outcome.consumed), true);
+    const baseline = { ...outcome };
+    for (const key of Object.keys(outcome)) outcome[key] = null;
+    assert.deepEqual(matcher.measure(input), baseline, 'each public data return is independent');
+    assert.equal(Object.isFrozen(matcher), true);
+    assert.throws(() => { matcher.pattern = 'changed'; }, TypeError);
+  }
+});

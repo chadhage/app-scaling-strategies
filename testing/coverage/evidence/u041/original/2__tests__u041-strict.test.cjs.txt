@@ -1,0 +1,49 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { runHermeticChecks, verifyAcceptedSurface } = require('./strict-evidence.cjs');
+const { ACCEPTED_COMMIT, sha, normalize } = require('./u041-authority.cjs');
+
+const tap = (change = {}) => Object.entries({ tests: 8, pass: 8, fail: 0, cancelled: 0, skipped: 0, todo: 0, ...change })
+  .map(([key, value]) => `# ${key} ${value}`).join('\n') + '\n';
+
+test('U041 strict evidence enables the actual heavy file and removes nested context, V8 coverage and the capture bypass', () => {
+  const outcome = runHermeticChecks({
+    env: { NODE_TEST_CONTEXT: 'child-v8', NODE_V8_COVERAGE: 'caller', U009_EVIDENCE_CAPTURE: '1' },
+    spawn: (command, args, options) => {
+      assert.equal(command, process.execPath);
+      assert.deepEqual(args.slice(0, 2), ['--test', '--test-concurrency=1']);
+      assert.match(args[2], /fix2-hermetic\.test\.cjs$/);
+      assert.equal(options.env.NODE_TEST_CONTEXT, undefined);
+      assert.equal(options.env.NODE_V8_COVERAGE, undefined);
+      assert.equal(options.env.U009_EVIDENCE_CAPTURE, undefined);
+      assert.equal(options.env.U009_HEAVY_HERMETIC, '1');
+      assert.equal(Object.hasOwn(options.env, 'NODE_V8_COVERAGE'), true);
+      assert.equal('timeout' in options, false);
+      return { status: 0, stdout: tap() };
+    }
+  });
+  assert.deepEqual([outcome.tests, outcome.pass, outcome.skipped, outcome.heavy, outcome.capture], [8, 8, 0, true, false]);
+});
+
+for (const [label, run] of [
+  ['failed tests', { status: 1, stdout: tap({ pass: 7, fail: 1 }) }],
+  ['skipped heavy tests', { status: 0, stdout: tap({ pass: 2, skipped: 6 }) }],
+  ['empty file', { status: 0, stdout: tap({ tests: 1, pass: 1 }) }],
+  ['no summary', { status: 0, stdout: '' }],
+  ['spawn failure', { status: null, error: new Error('fixture failure') }]
+]) {
+  test(`U041 strict evidence refuses ${label}`, () => {
+    assert.throws(() => runHermeticChecks({ spawn: () => run }), /strict heavy hermetic checks failed/);
+  });
+}
+
+test('U041 strict surface compares immutable blobs, not HEAD or live producer bytes', () => {
+  const bytes = Buffer.from('accepted\r\n');
+  const entry = { path: 'gate.cjs', gitBlobSha256: sha(bytes), crlfToLfSha256: sha(normalize(bytes)) };
+  const key = `${ACCEPTED_COMMIT}:testing/coverage/gate.cjs`;
+  assert.deepEqual(verifyAcceptedSurface([entry], (keys) => { assert.deepEqual(keys, [key]); return new Map([[key, bytes]]); }), { checked: 1, problems: [] });
+  assert.match(verifyAcceptedSurface([entry], () => new Map()).problems[0], /differs from the exact/);
+  assert.match(verifyAcceptedSurface([entry], () => new Map([[key, Buffer.from('other')]])).problems[0], /differs from the exact/);
+});

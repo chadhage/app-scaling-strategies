@@ -25,7 +25,8 @@ const USAGE = [
   '  --min      minimum percent for lines, branches and functions of every file, an integer from 0 to 100 (default 85)',
   '  --json     also write the JSON report to this path (--json <out> or --json=<out>): a new file or a previous gate report only (anything else is',
   '             refused, exit 2). A "started" marker is written first and a failure or not-run report on every error and for --help, so an older result',
-  '             does not survive at that path; a file the gate can neither replace nor remove keeps its bytes (the exit code and stdout still say so)',
+  '             does not survive at that path unless it is unwritable or another writer owns it. Use a unique --json path for every run.',
+  '             REPORT_CHANGED exits 1 on stdout without replacing the other writer\'s marker or report.',
   '  --include  measure only the production files that match these globs (relative to the root; * ** ?)',
   '  --exclude  leave out files that match these globs; the report records every exclusion',
   '  --timeout  hard limit in seconds for one per-file run (default 900); the child process tree is ended',
@@ -47,16 +48,18 @@ function parseArgs(argv) {
   const options = { root: null, tests: [], min: 85, json: null, include: [], exclude: [], timeout: 900, jobs: 1, scratch: null, manifest: null, help: false };
   const raw = {};
   for (let index = 0; index < argv.length; index += 1) {
-    const flag = argv[index];
+    const argument = argv[index];
+    const jsonEquals = argument.startsWith('--json=');
+    const flag = jsonEquals ? '--json' : argument;
     if (flag === '--help' || flag === '-h') {
       options.help = true;
     } else if (SCALAR_FLAGS[flag] || LIST_FLAGS[flag]) {
-      const values = [];
-      while (index + 1 < argv.length && !argv[index + 1].startsWith('--')) {
+      const values = jsonEquals ? [argument.slice('--json='.length)] : [];
+      while (!jsonEquals && index + 1 < argv.length && !argv[index + 1].startsWith('--')) {
         values.push(argv[index + 1]);
         index += 1;
       }
-      if (values.length === 0) throw new UsageError(`${flag} needs a value.`);
+      if (values.length === 0 || (flag === '--json' && values[0] === '')) throw new UsageError(`${flag} needs a value.`);
       if (SCALAR_FLAGS[flag]) {
         if (values.length !== 1) throw new UsageError(`${flag} takes exactly one value.`);
         if (raw[SCALAR_FLAGS[flag]] !== undefined) throw new UsageError(`${flag} was given more than once: say which value you mean.`);
@@ -192,9 +195,14 @@ async function runGate(options, deps) {
       deps.progress?.(`measuring ${entry.file} (${index + 1} of ${enumeration.production.length})`);
       const temp = path.join(scratch, `t${index}`);
       fsApi.mkdirSync(temp, { recursive: true });
+      const overrides = { TEMP: temp, TMP: temp, TMPDIR: temp };
+      if (root === path.resolve(__dirname)) {
+        overrides.U009_HEAVY_HERMETIC = '1';
+        overrides.U009_EVIDENCE_CAPTURE = undefined;
+      }
       const run = await deps.run({
         command: deps.nodeExecutable, args: command.args, cwd: repoRoot, timeoutMs,
-        env: buildEnvironment(deps.env, { TEMP: temp, TMP: temp, TMPDIR: temp })
+        env: buildEnvironment(deps.env, overrides)
       });
       let record;
       let lcovError = null;
@@ -236,8 +244,8 @@ function replaceReports(argv, document, deps) {
   }
 }
 
-// Every failure becomes a typed report on stdout, at every --json path named on the command line, and an exit code: 2 for a usage error and 1 for
-// anything else, an error of the gate itself included. Nothing is rethrown, so NODE_OPTIONS=--unhandled-rejections=warn can never turn one into exit 0 (F2).
+// Every failure becomes a typed report on stdout and an exit code. REPORT_CHANGED does not replace another writer's file; other failures replace the
+// named reports when allowed. Nothing is rethrown, so NODE_OPTIONS=--unhandled-rejections=warn can never turn one into exit 0 (F2).
 async function main(argv, io = {}) {
   const deps = {
     cwd: process.cwd(), env: process.env, repoRoot: REPOSITORY, fsApi: fs, run: runProcess, nodeExecutable: process.execPath,
@@ -258,7 +266,7 @@ async function main(argv, io = {}) {
     return exitCode;
   } catch (error) {
     const failure = failureReport(error);
-    replaceReports(argv, failure, deps);
+    if (failure.error.code !== 'REPORT_CHANGED') replaceReports(argv, failure, deps);
     deps.stdout(`${JSON.stringify(failure, null, 2)}\n`);
     if (failure.error.type === 'usage') {
       deps.stderr(`${error.message}\n\n${USAGE}\n`);

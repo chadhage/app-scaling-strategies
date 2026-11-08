@@ -8,7 +8,9 @@
 // makes no network call. stdout is one JSON document; exit 0 only when every input matches, 1 otherwise.
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { ACCEPTED, C031, manifestsIn, verifyAgainstCommits } = require('./evidence-lib.cjs');
+const { ACCEPTED, C031, manifestsIn, verifyAgainstCommits, sha, crlfToLf } = require('./evidence-lib.cjs');
+const { buildEnvironment } = require('../command.cjs');
+const { verifyAuthority, ACCEPTED_COMMIT } = require('./u041-authority.cjs');
 
 const namespace = path.resolve(__dirname, '..');
 const repository = path.resolve(namespace, '..', '..');
@@ -47,10 +49,47 @@ function strictVerify({ manifests, fetch = fetchBlobs }) {
   return verifyAgainstCommits(manifests, (commit, file) => blobs.get(`${commit}:${file}`) ?? null, { retained });
 }
 
+function runHermeticChecks({ spawn = spawnSync, env = process.env } = {}) {
+  const args = ['--test', '--test-concurrency=1', path.join(__dirname, 'fix2-hermetic.test.cjs')];
+  const run = spawn(process.execPath, args, {
+    cwd: repository, env: buildEnvironment(env, { U009_HEAVY_HERMETIC: '1', U009_EVIDENCE_CAPTURE: undefined }),
+    maxBuffer: 64 * 1024 * 1024, windowsHide: true
+  });
+  const text = String(run.stdout || '');
+  const counts = Object.fromEntries(['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo'].map((key) =>
+    [key, Number(new RegExp(`^# ${key} (\\d+)$`, 'm').exec(text)?.[1])]));
+  if (run.error || run.status !== 0 || !(counts.tests >= 8) || counts.pass !== counts.tests ||
+      counts.fail !== 0 || counts.cancelled !== 0 || counts.skipped !== 0 || counts.todo !== 0) {
+    throw new Error(`strict heavy hermetic checks failed: ${JSON.stringify(counts)}\n${text.slice(-6000)}\n${String(run.stderr || '')}`);
+  }
+  return { command: ['node', '--test', '--test-concurrency=1', 'testing\\coverage\\tests\\fix2-hermetic.test.cjs'], ...counts, heavy: true, capture: false };
+}
+
+function verifyAcceptedSurface(entries, fetch = fetchBlobs) {
+  const keys = entries.map((entry) => `${ACCEPTED_COMMIT}:testing/coverage/${entry.path.replace(/\\/g, '/')}`);
+  const blobs = fetch(keys);
+  const problems = [];
+  entries.forEach((entry, index) => {
+    const blob = blobs.get(keys[index]);
+    if (!blob || sha(blob) !== entry.gitBlobSha256 || sha(crlfToLf(blob)) !== entry.crlfToLfSha256) {
+      problems.push(`accepted U009 surface: ${entry.path} differs from the exact ${ACCEPTED_COMMIT} blob`);
+    }
+  });
+  return { checked: entries.length, problems };
+}
+
 function main() {
+  const authority = verifyAuthority(namespace);
+  const hermetic = runHermeticChecks();
   const manifests = manifestsIn(path.join(namespace, 'evidence'));
-  const { checked, problems } = strictVerify({ manifests });
-  const document = { strict: true, pass: problems.length === 0, manifests: manifests.length, checked, accepted: ACCEPTED, c031: { commit: C031.commit, tag: C031.tag }, problems };
+  const legacy = strictVerify({ manifests });
+  const surface = verifyAcceptedSurface(authority.surfaceFiles());
+  const problems = [...legacy.problems, ...surface.problems];
+  const document = {
+    strict: true, pass: problems.length === 0, manifests: manifests.length, checked: legacy.checked + surface.checked,
+    accepted: ACCEPTED, c031: { commit: C031.commit, tag: C031.tag },
+    authority: { acceptedCommit: authority.acceptedCommit, checked: authority.checked, tip: authority.tip }, hermetic, problems
+  };
   process.stdout.write(`${JSON.stringify(document, null, 2)}\n`);
   process.exitCode = document.pass ? 0 : 1;
 }
@@ -64,4 +103,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = Object.freeze({ fetchBlobs, retained, strictVerify });
+module.exports = Object.freeze({ fetchBlobs, retained, strictVerify, runHermeticChecks, verifyAcceptedSurface });

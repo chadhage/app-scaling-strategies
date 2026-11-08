@@ -14,17 +14,30 @@ const pins = require('./evidence-pins.cjs');
 
 const namespace = path.resolve(__dirname, '..');
 const evidenceRoot = path.join(namespace, 'evidence');
+const AUTHORITY_SHA = '6199bac7fce4198897c78dfd6f48dbf7a4d25ab2950b111db8254d12636f4c0b';
+let currentAuthority;
+const authority = () => {
+  const file = path.join(__dirname, 'u041-authority.cjs');
+  assert.equal(sha(crlfToLf(fs.readFileSync(file))), AUTHORITY_SHA, 'the amendment checker itself is pinned before it is trusted');
+  currentAuthority ??= require('./u041-authority.cjs').verifyAuthority(namespace);
+  return currentAuthority;
+};
 const capturing = process.env.U009_EVIDENCE_CAPTURE === '1';
 const found = manifestsIn(evidenceRoot);
 const cache = new Map();
 const readOwn = (relative) => {
-  if (!cache.has(relative)) cache.set(relative, fs.readFileSync(path.join(namespace, ...relative.split('\\'))));
+  if (!cache.has(relative)) cache.set(relative, authority().historical(relative));
   return cache.get(relative);
 };
 const transcriptReader = (entry) => (relative) => fs.readFileSync(path.join(entry.directory, ...relative.split('\\')));
 const readme = fs.readFileSync(path.join(namespace, 'README.md'), 'utf8');
 const where = (relatives) => found.filter((entry) => relatives.includes(entry.relative));
 const folderOf = (relative) => relative.split('/').slice(0, -1).pop();
+
+test('U041 current authority: every accepted and amended file, original witness, and consecutive link verifies independently of historical evidence', () => {
+  assert.doesNotThrow(() => authority(), 'an unlisted current byte or a broken amendment must fail by this name');
+  assert.equal(authority().checked >= 37, true);
+});
 
 test('N5: the archives found are exactly the pinned list of every generation: a missing or an unexpected archive fails', () => {
   const expected = [...pins.FIRST, ...pins.FIX1, ...pins.FIX2.finals, ...pins.FIX2.reds, ...pins.FIX2.superseded, ...pins.FIX2.optional];
@@ -41,7 +54,7 @@ test('every archived run of every generation verifies its transcripts, its exit 
   assert.deepEqual(bad, []);
 });
 
-test('the final archives of this round pin the bytes of this checkout for every input inside testing\\coverage, and no external input is read', () => {
+test('the final R3 archives pin their exact historical bytes; U041 checks current authority separately and no external input is read', () => {
   const bad = where([...pins.FIX2.finals, ...pins.FIX2.optional]).flatMap((entry) => inputProblems(entry.data, readOwn).map((problem) => `${entry.relative}: ${problem}`));
   assert.deepEqual(bad, []);
 });

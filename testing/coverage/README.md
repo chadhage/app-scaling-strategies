@@ -4,7 +4,7 @@ One command checks the kanban *Coverage bar* for a namespace: every production f
 functions, measured by Node's own coverage over an **enumerated** file set (a file that no test loads counts as 0/0/0, never as a pass).
 
 ```powershell
-node testing\coverage\gate.cjs --root capability\C031 --json c031-coverage.json
+node testing\coverage\gate.cjs --root capability\C031 --json "c031-coverage-$([guid]::NewGuid().ToString('N')).json"
 ```
 
 - stdout is one JSON document; a readable summary and progress lines go to stderr.
@@ -17,6 +17,7 @@ node testing\coverage\gate.cjs --root capability\C031 --json c031-coverage.json
 - It passes its own gate and reproduces the reviewer figures for `capability\C031` (see [Evidence](#evidence)).
 - Fixed after the independent review of the first publication (commit `8cfdce17f62c`): five majors F1 to F5 and eight minors m1 to m8, see [Fix run R2-U009](#fix-run-r2-u009-after-the-independent-review).
 - Fixed again after the second independent review (the first fix, commit `85ee70a3d4c9`, was rejected on two hermeticity majors N1 and N2 and nine smaller findings N3 to N11): see [Fix run R3-U009](#fix-run-r3-u009-after-the-second-independent-review).
+- U041 repairs the existing merged U041/U042/U043 residuals through an append-only authority chain; it earns no new credit. See [U041 current authority](#u041-current-authority-and-verification).
 
 ## Commands
 
@@ -26,14 +27,15 @@ Run everything from the repository root in PowerShell. PowerShell does not expan
 | --- | --- |
 | Measure a namespace | `node testing\coverage\gate.cjs --root <dir> [--tests <files or globs...>] [--min 85] [--json <out>] [--include <glob...>] [--exclude <glob...>] [--timeout <seconds>] [--jobs <n>] [--scratch <dir>] [--manifest <file>]` |
 | Help | `node testing\coverage\gate.cjs --help` |
-| The gate passes itself (about 15 minutes, 886 s measured under load, or a third of that with `--jobs 3`, which gives the same figures: the whole suite runs once per production file; take a heavy slot) | `node testing\coverage\gate.cjs --root testing\coverage --scratch <dir>` |
+| The full self-gate runs the strict suite nine times and enables the expensive hermetic checks in every child; `--jobs 3` overlaps those runs (take a heavy slot) | `node testing\coverage\gate.cjs --root testing\coverage --scratch <dir> --jobs 3` |
 | Per-file L-0004 by hand, one command per file (see below) | `node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=tap --test-coverage-include=testing/coverage/gate.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 "testing/coverage/tests/*.test.cjs"` |
-| GREEN: the whole suite (183 tests in 19 files: about 35 s on a quiet machine, 72 to 172 s under the load of this shared one; nothing is skipped by default) | `node --test --test-concurrency=1 "testing/coverage/tests/*.test.cjs"` |
-| The same while the final archives are being recorded: the 5 tamper cases of `tests\fix2-hermetic.test.cjs` and the requirement that the newest evidence generation is complete are skipped, nothing else (see Evidence) | `$env:U009_EVIDENCE_CAPTURE = '1'` before the command above (never set it for a GREEN run that you report) |
-| Strict mode of the evidence checks, NOT part of the suite: the C031 inputs and the inputs of the retained generations against `git cat-file blob <accepted commit>:<path>` (no working tree; needs git and those commits, no network) | `node testing\coverage\tests\strict-evidence.cjs` (stdout is JSON, exit 0 only when every input matches) |
+| GREEN: the default suite explicitly skips six opt-in hermetic copies. The pre-U041 reviewer scope was 183 tests in 19 files, 224 to 441 s with other agents running; current before/after figures are recorded separately below | `node --test --test-concurrency=1 "testing/coverage/tests/*.test.cjs"` |
+| Full strict suite, including all six expensive copy/tamper checks | `$env:U009_HEAVY_HERMETIC = '1'; node --test --test-concurrency=1 "testing/coverage/tests/*.test.cjs"` (unset it afterwards) |
+| Historical capture switch: relaxes archive completeness and, when heavy checks are enabled, skips five tamper cases. U041 does not use it for reported GREEN | `U009_EVIDENCE_CAPTURE=1` is never a reported-GREEN setting |
+| Strict evidence: enables all eight `fix2-hermetic` checks, validates current amendment authority, and compares historical inputs with immutable accepted git blobs (needs those local commits; no network) | `node testing\coverage\tests\strict-evidence.cjs` (stdout is JSON, exit 0 only when every check passes) |
 | RED replay of the first publication against the naive stub (exit 1, 7 of 7 fail by assertion) | `node --test --test-concurrency=1 testing\coverage\evidence\red\gate.red.test.cjs` |
 | RED replay of the first fix run (R2-U009): each of the 6 archived REDs now passes, the same unchanged test file | `node --test --test-concurrency=1 testing\coverage\tests\fix-f1-env.test.cjs` (and `fix-f2-exit`, `fix-f3-stale`, `fix-f5-json`, `fix-minors`; `fix-f4-glob` was rewritten by R3-U009, see below) |
-| RED replay of the second fix run (R3-U009): each of the 3 archived REDs (and the superseded first RED of N3 and N4) now passes, the same unchanged test files | `node --test --test-concurrency=1 testing\coverage\tests\fix-f4-glob.test.cjs testing\coverage\tests\glob.test.cjs` (N1), `testing\coverage\tests\fix2-json.test.cjs` (N3, N4), `testing\coverage\tests\fix2-hermetic.test.cjs` (N2, N5, N6, N8) |
+| R3-U009 retained RED versions stay immutable. U041 supersedes two current test files through exact digests, without rewriting those historical versions | Current checks: `node --test --test-concurrency=1 testing\coverage\tests\fix-f4-glob.test.cjs testing\coverage\tests\glob.test.cjs testing\coverage\tests\fix2-json.test.cjs`; add `U009_HEAVY_HERMETIC=1` for `fix2-hermetic` |
 | Mutation check (78 mutants, each must be killed by a named assertion, about 25 minutes) | `node testing\coverage\evidence\fix2\mutation\mutants.cjs --scratch <dir>` (`--check` only verifies that the mutants apply, `--only id,id` runs some) |
 | Whitespace of the published files | `git -c "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol" diff --check -- testing/coverage` (after the files are staged or committed) |
 | Real isolated headless Edge observation | not applicable: this tool has no page and no browser code |
@@ -121,12 +123,13 @@ without a reason, an unknown key, a path with `..` or an unsupported glob charac
 - **`--json <out>` or `--json=<out>`: the same document is written to `<out>` (relative to the current directory), under a rule (F3, F5, N3, N4).** Only a new file or a previous gate report (JSON that carries this schema) is ever replaced.
   Refused with exit 2, before anything is written or started: an existing file that is not a gate report (a source file, a text file, any other JSON), a directory, a link, a file with more than one hard link, a device name (`NUL`, `CON`, `nul.json`, `\\.\...`), an alternate data stream
   (`x.json:s`), a trailing dot or space, and a script name (`.js .cjs .mjs .ts .ps1 ...`, which would be enumerated as production code). A repository confinement is not the rule: reviewers keep their scratch outside the repository.
-  An older result does not survive at a path that the command line names, in either spelling: a `{ pass: false, status: "started" }` marker is written first, the final report replaces it, and every usage or internal error writes a typed failure report there, in whichever order the flags came
-  (a usage error in `--min` is still found because every `--json <out>` and `--json=<out>` value is scanned first; the equals spelling is still an unknown argument, exit 2, but its path gets the failure report). `--help` next to `--json` writes a `{ pass: false, status: "not-run" }` report there and still exits 0.
+  Both spellings use one scalar parsing rule; both empty values are usage errors, and mixed repeated spellings are refused. A `{ pass: false, status: "started" }` marker is written first, and the final report replaces it. Usage and internal errors replace a writable report path except `REPORT_CHANGED`,
+  which reports the displaced writer's failure only on stdout and leaves the other writer's marker or final report untouched. A usage error in `--min` still reaches the named paths because both spellings are scanned first. `--help` next to `--json` writes a `{ pass: false, status: "not-run" }` report there and still exits 0.
+  **Every run should use its own unique `--json` path.** Two concurrent passing gates sharing one path can produce one displaced writer (exit 1, `REPORT_CHANGED`) and one winner (exit 0); the loser must not replace the winner. The two-real-gate tests cover both completion orders after explicit started-marker barriers.
   A read-only previous report is removed and replaced. A crash that kills the process leaves the started marker, which is a failure, never the previous pass.
   **What this cannot cover** (N3, N6b): a path whose folder the gate cannot write to, or a file that it can neither replace nor remove, keeps its bytes (the exit code and the typed report on stdout still say so); another spelling (`--JSON`, `-json`) is an unknown argument that names no path; a file name that starts with two dashes can only be named as `--json=<path>`; a crash before the marker is written leaves the earlier file. Read `$LASTEXITCODE` first, always.
   **Replacement is by name, never through a link** (N4): every write goes to `<out>.<pid>-<random>.tmp` (exclusive create) and replaces `<out>` by rename, and the final write first checks the target again: a regular file, one link, a gate report and the very file (volume and file id) that the gate wrote at the start.
-  A hard link or another file that someone puts at the name during the run is therefore replaced or refused, never written through, and the final write fails with the typed `REPORT_CHANGED` (exit 1). A process with write access to the folder can still swap the name between that check and the rename: that cannot be made atomic, but the swap can no longer redirect the write into another file. A killed run can leave a `<out>.<pid>-<random>.tmp` beside the target.
+  A hard link or another file put at the name during the run is refused at the final write, never written through; `REPORT_CHANGED` (exit 1) does not replace that file. A process with write access to the folder can still swap the name between that check and the rename: that cannot be made atomic, but the swap can no longer redirect the write into another file. A killed run can leave a `<out>.<pid>-<random>.tmp` beside the target.
 - A failure report is `{ schema, pass: false, error: { code, type, message } }`: `type` is `usage` (exit 2) or `internal` (exit 1, for example `EEXIST` when `--scratch` names a file).
 
 ## Limits (read before trusting a number)
@@ -137,17 +140,19 @@ without a reason, an unknown key, a path with `..` or an unsupported glob charac
   are reported (hence the enumeration). Coverage of a file loaded only by a child process that a test spawns is merged by Node, because the nested `node --test` run sets its own `NODE_V8_COVERAGE` for the test processes it starts (never the caller's, see item 3).
 - **PowerShell, TypeScript and shell scripts are not measured**: they fail as `unclassified` until a manifest entry excludes them with a reason (L-0060 asks for PowerShell coverage as a later item).
 - **Cost**: the whole test set runs once per production file (the price of one L-0004 command per file); `--jobs <n>` runs files in parallel, `--tests` narrows the suite. Take a heavy slot for a whole namespace.
-  Measured on this shared machine (N11; they depend on its ambient load): the suite 72 to 172 s (about 35 s when quiet), the whole self-gate 886 s, the nine L-0004 runs about 25 minutes.
+  Before U041, the independent reviewer measured 224 to 441 s for the 183-test, 19-file suite with other agents running. The nine-file self-gate repeats that selected suite nine times; this is a work multiplier, not a wall-clock bound. The earlier 886 s self-gate and 25-minute hand-run figures are historical captures, not current predictions.
+  U041's default omits six expensive hermetic copies; the full self-gate and strict evidence still enable them. Current measured runtime and exact before/after scope are recorded in the U041 section, without a time-based test threshold.
 - Tests are an input: the gate trusts the namespace's tests and its own enumeration rules; a namespace whose tests are not hermetic gets the figures of the tests it has.
 - `--min` is an integer from 0 to 100 because Node's threshold flags are integers.
 - The default scratch folder is `testing\coverage\.scratch` (hidden, never enumerated). The gate removes its per-run `u009-*` directory and, when it created the scratch parent (and the folders above it) itself, those too, so an
   empty `.scratch` is no longer left behind (m4); a parent that already existed or holds anything else stays. A run that is killed leaves its `u009-*` directory, which is harmless and untracked: delete it by hand, and
   never pass the whole `testing\coverage` folder to a publisher while one exists. The test suite removes its own `.scratch\work` the same way. Pass `--scratch` to use another place. Two gate runs that share the default parent can still leave an EMPTY `.scratch` behind (N10: the run that
   found the folder existing does not remove it); it is untracked and harmless, delete it by hand.
-- **Glob matching is linear and bounded (F4 of the first review, N1 and N6c of the second).** `*`, `**` and `?` are matched by an automaton, not a RegExp: one match costs at most `tokens x (1 + 2 x characters)` steps (`compileGlob(pattern).measure(path)` returns the answer with its steps, tokens and the characters it read;
+- **Glob scan/closure work is linear and bounded (F4, N1, U041).** `*`, `**` and `?` are matched by an automaton, not a RegExp: the scan/closure counter increments inside the actual token iterations and costs at most `tokens x (1 + 2 x characters)` steps (`compileGlob(pattern).measure(path)` returns the answer with its steps, tokens and the characters it read;
   `tests\fix-f4-glob.test.cjs` bounds the steps of the reviewer's hostile patterns and compares them with a naive backtracking matcher that counts its calls, with no clock anywhere), a pattern may have at most 1024 characters, and a name that leaves no live state stops the match at once.
   The work of the enumeration is therefore linear in entries x files x pattern length x path length, and there is **no cap on the number of manifest entries** or of command-line patterns: the reviewer measured 200 manifest entries of 1002 characters against 300 files of 63 characters at 3.7 s,
   so a hostile manifest can make the enumeration slow, never exponential. Differences from the old translation: none for ordinary patterns (a seeded differential test of 6000 cases), except that `**` also matches a line break in a name.
+  The counter does not claim to count arbitrary inserted work. `u041-real-work.test.cjs` observes actual native scan-buffer-clear calls and kills both exact reviewer hidden-rescan mutants A08/A09 by name; `u041-work.test.cjs` independently compares actual CPU usage with a naive control on the same 1024-character input, never elapsed time.
 - **`fullBar` ignores `--manifest`** (N6d): an external manifest that excludes a file still gives `fullBar: true` (the exclusion is listed under `excluded` with `by: manifest`); only `--min`, `--include` and `--exclude` narrow it. A consumer that needs the namespace's own classification must not pass `--manifest`.
 - **The gate does not sanitize `NODE_OPTIONS` on purpose** (N9): a `--require` preload runs in the gate, in the test runner and in every test process, and a hostile preload that sets `process.exitCode = 0` at exit makes a failing namespace exit 0. The caller chooses its own environment, so this is outside the guard: U013 and every caller must not run the gate under a foreign `NODE_OPTIONS`.
 - **What `pass` means:** the full 85 bar over the full namespace only when `fullBar` is true. `--exclude` also silences UNCLASSIFIED for the files it names (documented, recorded as `by: cli`).
@@ -157,7 +162,7 @@ without a reason, an unknown key, a path with `..` or an unsupported glob charac
 
 ## Extending it (U010, U013, U014)
 
-The tooling-scope publisher accepts only **new** files under `testing\coverage`, so later items add files that `require` these modules; nothing here has to be edited.
+Ordinary extensions add files that `require` these modules. Replacing an accepted file additionally requires a reviewed, consecutive append-only authority amendment; historical seals are never rewritten. Publication remains controller-owned.
 
 | Module | Pure functions (all exported) |
 | --- | --- |
@@ -173,6 +178,7 @@ The tooling-scope publisher accepts only **new** files under `testing\coverage`,
 - U010 (browser V8 coverage): wrap `deps.run` to add a preload or `NODE_OPTIONS` and merge line data with its own parser; `parseLcov` returns integer totals only, so a union merge needs a new parser for the `DA`, `FNDA` and `BRDA` records.
   To give a child a V8 coverage directory of your own, pass `{ NODE_V8_COVERAGE: '<dir>' }` as an override of `buildEnvironment`; never rely on a deleted key (see item 3 above).
 - U013 (`state.ps1` Accept): run `node testing\coverage\gate.cjs --root <ns> --json <path> 2>$null | Out-Null`, then **check `$LASTEXITCODE` first** (0 pass, 1 miss or internal error, 2 usage error), then read `<path>`:
+  use a unique report path for every run; on `REPORT_CHANGED` the other writer's report remains intact, and is not evidence for this displaced run.
   accept only when `pass` is true **and `fullBar` is true** (`--min`, `--include`, `--exclude` make `pass` relative to the options), then `files[].counts` and `unclassified`. The path does not keep an older result (a started marker, the final report,
   a failure report or a not-run report replace it; see the limits of `--json`), but the exit code stays the first signal. Never run the gate under a foreign `NODE_OPTIONS` (see the limits). The run takes minutes, so do it before taking the State mutex, never inside its 8 s wait.
 - U014 (board lint): `enumerateRoot(root)` lists production files, exclusions and unclassified candidates without running a test, in milliseconds.
@@ -201,6 +207,8 @@ The **strict mode** (`node testing\coverage\tests\strict-evidence.cjs`, never pa
 **Capture switch (`U009_EVIDENCE_CAPTURE=1`):** while the final archives are being recorded the newest generation is incomplete by design, so this variable skips ONLY the requirement that it is complete (and the 5 tamper cases, which need the complete set); everything that exists is still verified. The default is strict, the archives of the L-0004, self-gate, C031, mutation and replay runs were recorded with the switch set (their manifests list it under `environmentAdded` where the recorder sees it), and the final GREEN suite and the busy-machine loops were run without it.
 **Honest limits.** A consistent rewrite of the README, the tests and the pins is not detectable by any test in the repository: only git history against the accepted commits shows it. The tests compare line-ending-normalized hashes (a CRLF to LF change of a pinned file is invisible; the raw hash is in each manifest and `.gitattributes` keeps the bytes). The recorder manifests are self-attested by a script that lives outside the repository.
 The archives of the second fix cannot pin the commit that contains them; the evidence test of a later checkout therefore compares them with that checkout and the strict mode compares the older generations with git.
+
+That last sentence describes the original R3 authority. U041 preserves those manifests and resolves their exact historical inputs through retained originals; a separately pinned checker verifies every current accepted/amended source before those originals can be used. Strict evidence additionally checks the 37-file original surface against the exact accepted R3 commit, not HEAD.
 
 **RED** (before any implementation): `evidence\red\red-01-behavior.json` archives `node --test --test-concurrency=1 testing\coverage\evidence\red\gate.red.test.cjs`
 against the naive loadable stub `evidence\red\gate.stub.cjs` (it runs the L-0004 command per script with the inherited environment and trusts Node's exit code): 7 tests, 7 failures, exit 1.
@@ -305,7 +313,7 @@ Final archives of this round (all under `evidence\fix2\`, captured last on the f
   The evidence checks themselves are not in this tool (its scratch copies carry no evidence folder): their guards are killed by the tamper cases of `tests\fix2-hermetic.test.cjs`, which run in the strict suite.
 - **Strict mode**: `evidence\fix2\strict\strict-run-01.json`: the 1416 inputs of the two retained generations and the C031 files against `git cat-file blob` of the accepted commits, 0 problems.
 - **GREEN, the whole suite, strict** (no capture switch, every archive above present): `evidence\fix2\green\green-03-suite.json`.
-- **Busy-machine loops** (N1; `evidence\fix2\loops\`: one summary JSON per loop with the exit code and the TAP counts of every run, written by `loop.cjs`, which is archived next to them and starts CPU burners that it ends by pid): 64 runs 8-way of the changed test files with 8 CPU burners,
+- **Busy-machine loops** (historical N1; `evidence\fix2\loops\`): the 64-run, 8-way loop covered exactly `fix-f4-glob.test.cjs`, `glob.test.cjs`, `fix2-json.test.cjs`, `output.test.cjs` and `evidence.test.cjs`, with 8 owned CPU burners;
   and whole-suite runs under the load of parallel suites, burners and the other jobs of this shared machine. A loop counts as passed only when every run exits 0 with no failed, cancelled or unexpectedly skipped test.
 - **Discarded attempts of this round**: one. The first self-gate run (`self-gate-run-3`, exit 1: every file failed with 2 failed tests) wrote its report with `--json` into `evidence\fix2\coverage`, where the evidence test of the nested suite runs read the half-finished `started` marker and failed (its check of the report files, and through the copy the N2 test): a self-gate run cannot be verified by the suite it runs.
   Its archive was moved out of the repository (nothing in the tests changed), and the run was repeated with `--json` pointing outside the repository, the report being copied in afterwards. Every other archive in `evidence\fix2` is the first and only run of its spec (the first start of the mutation capture ended at once on an error in the scratch driver script, before the recorder ran, and wrote nothing, and two runs
@@ -328,3 +336,40 @@ Final archives of this round (all under `evidence\fix2\`, captured last on the f
 | `tests\` | 19 test files (unit tests with injected runners, end-to-end runs of the real CLI, the fix-run tests `fix-*.test.cjs` and `fix2-*.test.cjs`, `output`, `gate-fixes`, `evidence`) and the helpers `support.cjs`, `clisupport.cjs`, `naive-glob.cjs` (the naive control of the glob tests), `evidence-lib.cjs`, `evidence-pins.cjs` and `strict-evidence.cjs` (the strict mode, not matched by `*.test.cjs`) |
 | `fixtures\` | static fixture roots, to be run only through the gate with `--root` (never by a recursive `node --test`: `failing` holds a deliberately failing test): `pass`, `unloaded`, `below` (84.9057 percent), `failing`, `unclassified`, `manifested`, `notests` |
 | `evidence\` | first publication: RED (naive stub, behavioral test, archived run), GREEN, coverage, C031 and mutation runs; first fix: `red\fix-*` and `fix\`; second fix: `red\fix2-*` and `fix2\` (replays, per-file L-0004, self-gate, C031, mutation tool and run, strict run, busy-machine loops) |
+
+## U041 current authority and verification
+
+This is the existing merged U041/U042/U043 card, not three new cards or credits. Only `gate.cjs` and `glob.cjs` are changed production files. The complete production set remains **command, enumerate, errors, evaluate, gate, glob, output, report and runner**, nine files; each must independently meet 85/85/85, with an unloaded file counted as zero. The new `tests\u041-*.cjs` files drive this card's verification and are test tooling, not additional production.
+
+The accepted R3 commit is `5ca751aec0df0aa48d892c1b2b9be066eb2661f3`. `evidence\u041\accepted-surface.json` was derived from its exact 37 owned source/test/document blobs and the retained working bytes, not an invented pin. `evidence-index-addendum-N.json` links consecutively with LF-normalized digests. Each replacement names its exact prior digests and an immutable original witness. The helper checks all 37 original paths plus indexed additions, not only amended files. The evidence test pins the helper before trusting it. No historical seal, transcript, RED or old pin file is rewritten.
+
+Current checks are hermetic. The strict evidence command alone reads immutable accepted git blobs. A consistent rewrite of the verifier, its embedded trust pin, and the amendment chain is still not detectable inside this repository; independent review against accepted history is required. LF/CRLF representations are accepted through explicit normalized digests, never described as raw-byte identical.
+
+### Commands and separate evidence scopes
+
+```powershell
+# Same unchanged behavioral RED tests on the current candidate:
+node --test --test-concurrency=1 testing\coverage\tests\u041-json.test.cjs testing\coverage\tests\u041-policy.test.cjs testing\coverage\tests\u041-amendment-behavior.test.cjs
+
+# Actual matcher observations and exact A08/A09 named structural regression:
+node --test --test-concurrency=1 testing\coverage\tests\u041-real-work.test.cjs testing\coverage\tests\u041-work.test.cjs
+
+# Current default; six expensive N2/N5 copies are explicitly opt-in:
+node --test --test-concurrency=1 "testing/coverage/tests/*.test.cjs"
+
+# Full strict evidence includes all eight fix2-hermetic checks, without the capture bypass:
+node testing\coverage\tests\strict-evidence.cjs
+
+# Full self-gate forces U009_HEAVY_HERMETIC=1 and removes the capture bypass in all nine children:
+node testing\coverage\gate.cjs --root testing\coverage --scratch <owned-scratch> --json <unique-owned-report.json> --jobs 3
+```
+
+The original default suite in this run measured **28.961 s, 183/183 tests, 19 files, no skips** on retained unchanged subjects. This is a different measurement scope from the earlier review's **224 to 441 s** under shared-machine load. No elapsed time decides a test result. The cheaper default changes the structural cost from six expensive N2/N5 copies to zero; all eight hermetic checks still execute in full/strict verification. Current after-run counts and measured scope are recorded separately, never substituted for historical figures.
+
+Recorded comparisons: the same original 19-file selection after the fix measured **27.179 s, 178 passed plus 6 explicit skips (184 total)**. The enlarged amendment-1 default pilot measured **29.535 s, 214 passed plus 6 skips (220 total, 28 files)**; it is not claimed to be a latency improvement over the smaller original suite. Amendment 2's full strict suite measured **82.706 s, 223/223 with zero skips**. Strict evidence ran all **8/8** hermetic checks and verified **1495** immutable historical inputs/surface blobs across **62** original recorder manifests. These are distinct scopes; later final replays and counts live in the private result bundle.
+
+The systematic tool covers **247 gate statements and 71 single conditions, plus 128 glob statements and 26 single conditions**: 472 valid generated mutants, with no syntax exclusions, plus seven named mutants. `node testing\coverage\tests\u041-mutations.cjs --scratch <owned-dir> --source <retained-candidate> --workers 2` records every subject, raw output, named assertion, survivor and undecided outcome. Per-function harness-only iteration guards (500 for gate, 5,000,000 for glob) are first qualified on unmutated baselines. Named A08/A09 run without those guards. A timeout, signal or non-assertion crash is not a kill; equivalence requires a recorded runnable proof.
+
+Fresh-candidate replay: `node testing\coverage\tests\u041-fresh.cjs <owned-dir>` starts with the immutable accepted git archive, overlays the unpublished candidate, and runs the full suite in LF and CRLF source representations, without `.git` or C031. Evidence/witness bytes are never converted. This is explicitly a candidate overlay, not a claim that unpublished files exist at HEAD. `node testing\coverage\tests\u041-loops.cjs <owned-dir>` repeats exactly `u041-json.test.cjs`, `u041-fast-json.test.cjs` and `u041-real-work.test.cjs` 64 times, 8-way, with `--test-concurrency=1`, no burners and no clock-based decision.
+
+New raw recorder manifests and transcripts are retained in the coordinator's private U041 result/scratch bundle: the existing recorder necessarily records its resolved local executable, and raw process diagnostics can contain local paths. Originals and raw captures containing those identifiers remain private and unchanged. Public documentation uses relative paths or placeholders. The result names every raw RED, unchanged final replay, coverage command, mutation outcome and measurement; publication and the Done decision belong only to the coordinator after independent review.

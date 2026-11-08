@@ -1,0 +1,207 @@
+'use strict';
+
+// The evidence integrity test. Hermetic since the second independent review (N2): it reads only files INSIDE testing\coverage (its own manifests, transcripts,
+// README, .gitattributes and sources). The inputs of another namespace (capability\C031) are never read: their recorded identity is verified (the pinned file
+// list, the form of the digests, the accepted commit in the README and the report in the transcript). The explicit strict mode tests\strict-evidence.cjs,
+// named in the README and never part of this suite, compares them with the blobs of the accepted commit.
+// While the final archives of a fix round are being recorded the newest generation is incomplete by design: U009_EVIDENCE_CAPTURE=1 skips ONLY the
+// requirement that it is complete (N5). The default is strict, and the final GREEN run is recorded without the variable.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { fs, path, zlib, sha, crlfToLf, OWN, C031, C031_INPUTS, C031_DEFAULT_EXTRA, C031_COUNTS, ACCEPTED, manifestsIn, transcriptProblems, inputProblems, externalProblems, c031ReportProblems, verifyAgainstCommits } = require('./evidence-lib.cjs');
+const { fetchBlobs, retained, strictVerify } = require('./strict-evidence.cjs');
+const pins = require('./evidence-pins.cjs');
+
+const namespace = path.resolve(__dirname, '..');
+const evidenceRoot = path.join(namespace, 'evidence');
+const capturing = process.env.U009_EVIDENCE_CAPTURE === '1';
+const found = manifestsIn(evidenceRoot);
+const cache = new Map();
+const readOwn = (relative) => {
+  if (!cache.has(relative)) cache.set(relative, fs.readFileSync(path.join(namespace, ...relative.split('\\'))));
+  return cache.get(relative);
+};
+const transcriptReader = (entry) => (relative) => fs.readFileSync(path.join(entry.directory, ...relative.split('\\')));
+const readme = fs.readFileSync(path.join(namespace, 'README.md'), 'utf8');
+const where = (relatives) => found.filter((entry) => relatives.includes(entry.relative));
+const folderOf = (relative) => relative.split('/').slice(0, -1).pop();
+
+test('N5: the archives found are exactly the pinned list of every generation: a missing or an unexpected archive fails', () => {
+  const expected = [...pins.FIRST, ...pins.FIX1, ...pins.FIX2.finals, ...pins.FIX2.reds, ...pins.FIX2.superseded, ...pins.FIX2.optional];
+  const names = found.map((entry) => entry.relative);
+  const required = capturing ? [...pins.FIRST, ...pins.FIX1, ...pins.FIX2.reds, ...pins.FIX2.superseded] : [...pins.FIRST, ...pins.FIX1, ...pins.FIX2.finals, ...pins.FIX2.reds, ...pins.FIX2.superseded];
+  assert.deepEqual({ unexpected: names.filter((name) => !expected.includes(name)).sort(), missing: required.filter((name) => !names.includes(name)).sort() }, { unexpected: [], missing: [] });
+  const count = (prefix) => pins.FIX2.finals.filter((name) => name.startsWith(prefix)).length;
+  assert.deepEqual([pins.FIRST.length, pins.FIX1.length, count('fix2/replay/'), count('fix2/coverage/l0004-'), count('fix2/coverage/self-'), count('fix2/c031/'), count('fix2/mutation/'), count('fix2/strict/'), pins.FIX2.reds.length],
+    [14, 26, 3, 9, 1, 2, 1, 1, 3], 'the pinned list itself: replay 3, l0004 9, self 1, c031 2, mutation 1, strict 1, REDs 3 (first generation 14, first fix 26)');
+});
+
+test('every archived run of every generation verifies its transcripts, its exit code and its timeout flag', () => {
+  const bad = found.flatMap((entry) => transcriptProblems(entry.data, transcriptReader(entry)).map((problem) => `${entry.relative}: ${problem}`));
+  assert.deepEqual(bad, []);
+});
+
+test('the final archives of this round pin the bytes of this checkout for every input inside testing\\coverage, and no external input is read', () => {
+  const bad = where([...pins.FIX2.finals, ...pins.FIX2.optional]).flatMap((entry) => inputProblems(entry.data, readOwn).map((problem) => `${entry.relative}: ${problem}`));
+  assert.deepEqual(bad, []);
+});
+
+test('the REDs of this round failed by assertion, pin their own test files unchanged and the gate they ran against, and each has an unchanged replay', () => {
+  const reds = where(pins.FIX2.reds);
+  assert.equal(capturing || reds.length === 3, true);
+  for (const { data, relative } of reds) {
+    assert.deepEqual([data.expectedExitCode, data.exitCode], [1, 1], relative);
+    assert.equal(data.summary.fail >= 1, true, `${relative} has failing tests`);
+    assert.equal(data.inputs.some((input) => /\\gate\.cjs$/.test(input.path)), true, `${relative} pins the gate it ran against`);
+    const tests = data.command.filter((argument) => /\.test\.cjs$/.test(argument)).map((argument) => `${OWN}tests\\${argument.split(/[\\/]/).pop()}`);
+    assert.equal(tests.length >= 1, true);
+    assert.deepEqual(inputProblems(data, readOwn, { filter: (input) => tests.includes(input) }), [], `${relative}: the test files of the RED are unchanged`);
+    const replay = found.find((entry) => entry.data.name === `replay-01-${data.name.replace(/^red-\d+-/, '')}`);
+    if (replay === undefined && capturing) continue;
+    assert.notEqual(replay, undefined, `a replay of ${data.name}`);
+    assert.equal(replay.data.exitCode, 0, 'the same test passes on the final code');
+    for (const input of tests) assert.equal(replay.data.inputs.find((entry) => entry.path === input).crlfToLfSha256, data.inputs.find((entry) => entry.path === input).crlfToLfSha256, `${input} is replayed unchanged`);
+  }
+});
+
+test('the C031 runs record the identity of what they measured: the pinned files, a report that agrees, the accepted commit; no C031 file is read', () => {
+  const runs = found.filter((entry) => entry.relative.startsWith('fix2/c031/'));
+  assert.equal(capturing || runs.length === 2, true);
+  for (const entry of runs) {
+    assert.deepEqual(externalProblems(entry.data), [], entry.relative);
+    assert.deepEqual(c031ReportProblems(entry.data, transcriptReader(entry)), [], entry.relative);
+  }
+  const digests = (entry) => new Map(entry.data.inputs.filter((input) => !input.path.startsWith(OWN)).map((input) => [input.path, input.crlfToLfSha256]));
+  for (const entry of runs) {
+    for (const [file, digest] of digests(entry)) assert.equal(digests(runs[0]).get(file) ?? digest, digest, `${entry.relative} lists a different digest of ${file} than ${runs[0].relative}`);
+  }
+  assert.equal(readme.includes(C031.commit) && readme.includes(C031.tag), true, 'the README names the accepted C031 commit and tag');
+});
+
+test('the gate reports of the final runs say pass and fullBar, and the self-gate covers the 9 production files', () => {
+  const read = (relative) => (fs.existsSync(path.join(evidenceRoot, ...relative.split('/'))) ? JSON.parse(fs.readFileSync(path.join(evidenceRoot, ...relative.split('/')), 'utf8')) : null);
+  const self = read(pins.FIX2.reports.self);
+  assert.equal(capturing || self !== null, true, 'the self-gate report exists');
+  if (self !== null) {
+    assert.deepEqual([self.pass, self.fullBar, self.files.length, self.unclassified.length], [true, true, 9, 0]);
+    assert.equal(self.files.every((file) => file.ok && file.lines >= 85 && file.branches >= 85 && file.functions >= 85), true);
+  }
+  for (const relative of pins.FIX2.reports.c031) {
+    const report = read(relative);
+    assert.equal(capturing || report !== null, true, `${relative} exists`);
+    if (report !== null) assert.deepEqual([report.pass, report.fullBar, JSON.stringify(Object.fromEntries(report.files.map((file) => [file.file, file.counts])))], [true, true, JSON.stringify(C031_COUNTS)]);
+  }
+});
+
+test('README.md names every archived RED folder and accepted commit, states the pilot run, the strict mode and the capture switch, and the self-gate pins README.md and .gitattributes', () => {
+  const folders = [...pins.FIX1, ...pins.FIX2.reds, ...pins.FIX2.superseded].filter((name) => name.startsWith('red/fix')).map(folderOf);
+  assert.equal(folders.length, 10);
+  for (const folder of folders) assert.equal(readme.includes(folder), true, `README names ${folder}`);
+  for (const accepted of ACCEPTED) assert.equal(readme.includes(accepted.commit.slice(0, 12)) && readme.includes(accepted.tag), true, `README names ${accepted.tag}`);
+  assert.match(readme, /pilot/i);
+  assert.match(readme, /discarded/i);
+  assert.match(readme, /strict-evidence\.cjs/);
+  assert.match(readme, /U009_EVIDENCE_CAPTURE/);
+  const [self] = where(['fix2/coverage/self-gate-run-3.json']);
+  if (self === undefined && capturing) return;
+  for (const pinned of [`${OWN}README.md`, `${OWN}evidence\\.gitattributes`]) assert.equal(self.data.inputs.some((input) => input.path === pinned), true, `${pinned} is pinned by the final self-gate run`);
+});
+
+function synthetic() {
+  const own = fs.readFileSync(__filename);
+  const stdout = Buffer.from('# tests 1\r\n# pass 1\r\n');
+  const gz = { stdout: zlib.gzipSync(stdout), stderr: zlib.gzipSync(Buffer.alloc(0)) };
+  const entry = (name, raw) => ({ path: `raw\\x.${name}.raw.gz`, bytes: raw.length, sha256: sha(raw), gzipBytes: gz[name].length, gzipSha256: sha(gz[name]), rawCRLFPairs: (raw.toString('latin1').match(/\r\n/g) || []).length });
+  const manifest = {
+    schemaVersion: 1, name: 'synthetic', expectedExitCode: 0, exitCode: 0, timedOut: false,
+    inputs: [{ path: `${OWN}tests\\evidence.test.cjs`, bytes: own.length, rawSha256: sha(own), crlfToLfSha256: sha(crlfToLf(own)) }],
+    transcripts: { stdout: entry('stdout', stdout), stderr: entry('stderr', Buffer.alloc(0)) }
+  };
+  const files = { 'raw\\x.stdout.raw.gz': gz.stdout, 'raw\\x.stderr.raw.gz': gz.stderr };
+  return { manifest, files, readOwn: () => own, transcript: (relative) => files[relative] };
+}
+
+test('tamper check: a changed input byte, transcript byte, count, exit code or a missing file is found', () => {
+  const { manifest, files, readOwn: own, transcript } = synthetic();
+  const all = (copy, overrides = {}) => [...transcriptProblems(copy, overrides.transcript || transcript), ...inputProblems(copy, overrides.readOwn || own)];
+  const clone = (change) => {
+    const copy = JSON.parse(JSON.stringify(manifest));
+    change(copy);
+    return copy;
+  };
+  assert.deepEqual(all(manifest), [], 'the untouched archive verifies');
+  assert.match(all(clone((copy) => { copy.inputs[0].crlfToLfSha256 = '0'.repeat(64); }))[0], /bytes differ from the pinned hash/);
+  assert.match(all(manifest, { readOwn: () => Buffer.from('tampered readme') })[0], /bytes differ/);
+  assert.match(all(manifest, { readOwn: () => { throw new Error('gone'); } })[0], /missing/);
+  const flipped = Buffer.from(files['raw\\x.stdout.raw.gz']);
+  flipped[flipped.length - 9] ^= 1;
+  assert.match(all(manifest, { transcript: (relative) => (relative.includes('stdout') ? flipped : files[relative]) }).join(), /stdout: gzip transcript differs/);
+  assert.match(all(manifest, { transcript: (relative) => (relative.includes('stdout') ? Buffer.alloc(0) : files[relative]) }).join(), /stdout: gzip transcript differs/);
+  assert.match(all(manifest, { transcript: () => { throw new Error('gone'); } }).join(), /transcript missing/);
+  const notGzip = Buffer.from('plain text');
+  const regzipped = clone((copy) => { copy.transcripts.stdout.gzipBytes = notGzip.length; copy.transcripts.stdout.gzipSha256 = sha(notGzip); });
+  assert.match(all(regzipped, { transcript: (relative) => (relative.includes('stdout') ? notGzip : files[relative]) }).join(), /not a gzip stream/);
+  assert.match(all(clone((copy) => { copy.transcripts.stdout.bytes += 1; })).join(), /raw transcript differs/);
+  assert.match(all(clone((copy) => { copy.transcripts.stdout.rawCRLFPairs += 1; })).join(), /CRLF pairs differ/);
+  assert.match(all(clone((copy) => { copy.exitCode = 1; })).join(), /exit 1, expected 0/);
+  assert.match(all(clone((copy) => { copy.timedOut = true; })).join(), /timed out/);
+});
+
+test('N2: an external input is never read, and its recorded identity is checked: the pinned list, the form of the digests, the report in the transcript', () => {
+  const digest = (name) => ({ path: name, bytes: 5, rawSha256: sha(name), crlfToLfSha256: sha(name) });
+  const manifest = { inputs: [digest(`${OWN}README.md`), ...C031_INPUTS.map(digest)] };
+  let reads = 0;
+  assert.deepEqual(inputProblems({ inputs: [digest(`${C031.prefix}cli.cjs`)] }, () => { reads += 1; return Buffer.alloc(0); }), []);
+  assert.equal(reads, 0, 'an input outside testing\\coverage is not read');
+  assert.deepEqual(externalProblems(manifest), []);
+  assert.deepEqual(externalProblems({ inputs: [...manifest.inputs, ...C031_DEFAULT_EXTRA.map(digest)] }), [], 'default discovery also ran two more test files of C031');
+  assert.deepEqual(externalProblems({ inputs: [digest(`${OWN}README.md`)] }), [], 'a manifest without external inputs has nothing to pin');
+  assert.match(externalProblems({ inputs: manifest.inputs.slice(0, -1) })[0], /are not the 20 \(or 22\) pinned C031 files/);
+  assert.match(externalProblems({ inputs: [...manifest.inputs, digest('capability\\C031\\extra.cjs')] })[0], /pinned C031 files/);
+  assert.match(externalProblems({ inputs: manifest.inputs.map((input, index) => (index === 3 ? { ...input, crlfToLfSha256: 'xyz' } : input)) })[0], /digests are malformed/);
+  const report = (change = (value) => value) => {
+    const files = Object.entries(C031_COUNTS).map(([file, counts]) => ({ file, counts }));
+    const document = change({ root: 'capability/C031', pass: true, fullBar: true, tests: ['capability/C031/tests/cli.test.cjs'], files });
+    const raw = Buffer.from(JSON.stringify(document));
+    return (relative) => (relative === 'o' ? zlib.gzipSync(raw) : Buffer.alloc(0));
+  };
+  const shaped = { ...manifest, transcripts: { stdout: { path: 'o' } } };
+  assert.deepEqual(c031ReportProblems(shaped, report()), []);
+  assert.match(c031ReportProblems(shaped, report((value) => ({ ...value, root: 'capability/C032' }))).join(), /measured capability\/C032/);
+  assert.match(c031ReportProblems(shaped, report((value) => ({ ...value, fullBar: false }))).join(), /not pass and fullBar/);
+  assert.match(c031ReportProblems(shaped, report((value) => ({ ...value, tests: ['capability/C031/tests/ghost.test.cjs'] }))).join(), /ghost.test.cjs, which is not a listed input/);
+  assert.match(c031ReportProblems(shaped, report((value) => ({ ...value, files: value.files.slice(1) }))).join(), /the report measured/);
+  assert.match(c031ReportProblems(shaped, report((value) => ({ ...value, files: value.files.map((file) => (file.file === 'saved.js' ? { ...file, counts: { ...file.counts, lines: [160, 161] } } : file)) }))).join(), /saved.js: the counts/);
+  assert.match(c031ReportProblems({ ...shaped, inputs: manifest.inputs.filter((input) => !input.path.endsWith('saved.js')) }, report()).join(), /saved.js is not a listed input/);
+  assert.match(c031ReportProblems(shaped, () => Buffer.from('not gzip'))[0], /not the JSON report/);
+});
+
+test('N2: the strict mode compares external and retained inputs with the blobs of the accepted commits (a fake git here, the real one in strict-evidence.cjs)', () => {
+  const store = new Map();
+  const put = (commit, file, text) => store.set(`${commit}:${file}`, Buffer.from(text));
+  const entry = (file, text) => ({ path: file, crlfToLfSha256: sha(Buffer.from(text)) });
+  put(C031.commit, 'capability/C031/cli.cjs', 'cli\n');
+  put(ACCEPTED[1].commit, 'testing/coverage/glob.cjs', 'glob\n');
+  const manifests = [
+    { relative: 'fix/c031/a.json', data: { inputs: [entry('capability\\C031\\cli.cjs', 'cli\n'), entry('testing\\coverage\\glob.cjs', 'glob\n')] } },
+    { relative: 'fix2/replay/b.json', data: { inputs: [entry('testing\\coverage\\glob.cjs', 'something else\n'), entry('capability\\C031\\cli.cjs', 'cli\n')] } }
+  ];
+  const read = (commit, file) => store.get(`${commit}:${file}`) ?? null;
+  assert.deepEqual(verifyAgainstCommits(manifests, read, { retained }), { checked: 3, problems: [] }, 'the newest generation is compared with the checkout elsewhere, its external input here');
+  store.set(`${C031.commit}:capability/C031/cli.cjs`, Buffer.from('changed\n'));
+  assert.match(verifyAgainstCommits(manifests, read, { retained }).problems[0], /fix\/c031\/a.json: capability\\C031\\cli.cjs matches no accepted commit/);
+  store.delete(`${C031.commit}:capability/C031/cli.cjs`);
+  assert.match(verifyAgainstCommits(manifests, read, { retained }).problems[0], /is in none of the accepted commits 09297317f706/);
+  assert.deepEqual(retained('fix2/x.json'), false);
+  assert.deepEqual([retained('red/fix2-n1/x.json'), retained('fix/x.json'), retained('red/fix-f1/x.json'), retained('x.json')], [false, true, true, true]);
+  const answer = Buffer.concat([Buffer.from('abc123 blob 5\nhello\n'), Buffer.from('c0ffee:missing.txt missing\n'), Buffer.from('def456 blob 0\n\n')]);
+  const keys = ['c1:a.txt', 'c0ffee:missing.txt', 'c1:empty.txt'];
+  const blobs = fetchBlobs(keys, { spawn: (command, args, options) => { assert.deepEqual([command, args, options.input], ['git', ['cat-file', '--batch'], `${keys.join('\n')}\n`]); return { status: 0, stdout: answer }; } });
+  assert.deepEqual([String(blobs.get('c1:a.txt')), blobs.get('c0ffee:missing.txt'), blobs.get('c1:empty.txt').length], ['hello', null, 0]);
+  assert.throws(() => fetchBlobs(keys, { spawn: () => ({ status: 128, stderr: Buffer.from('fatal') }) }), /git cat-file failed: fatal/);
+  assert.throws(() => fetchBlobs(keys, { spawn: () => ({ error: new Error('spawn git ENOENT') }) }), /git cat-file failed: spawn git ENOENT/);
+  const seen = [];
+  assert.deepEqual(strictVerify({ manifests, fetch: (wanted) => { seen.push(...wanted); return new Map(wanted.map((key) => [key, store.get(key) ?? null])); } }).checked, 3);
+  assert.deepEqual(seen.sort(), [`${ACCEPTED[0].commit}:testing/coverage/glob.cjs`, `${ACCEPTED[1].commit}:testing/coverage/glob.cjs`, `${C031.commit}:capability/C031/cli.cjs`].sort());
+  assert.equal(fs.existsSync(path.join(__dirname, 'strict-evidence.cjs')) && !/\.test\.cjs$/.test('strict-evidence.cjs'), true, 'the strict mode exists and is not matched by tests/*.test.cjs');
+});

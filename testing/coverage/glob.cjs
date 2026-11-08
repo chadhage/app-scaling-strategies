@@ -59,7 +59,9 @@ function tokenize(text) {
 // Adds every state that can be reached without consuming a character. The edges only go forward, so one ascending pass is the whole closure.
 // It returns what the pass cost: one step per state of the token table.
 function close(marks, kinds) {
+  let steps = 0;
   for (let state = 0; state < kinds.length; state += 1) {
+    steps += 1;
     if (marks[state] === 1) {
       const kind = kinds[state];
       if (kind === SEGMENT_RUN || kind === ANY_RUN) {
@@ -70,7 +72,7 @@ function close(marks, kinds) {
       }
     }
   }
-  return kinds.length;
+  return steps;
 }
 
 // Simulates the pattern as a non-deterministic automaton over the path: one pass over the characters, at most one step per token and character.
@@ -91,6 +93,7 @@ function run({ kinds, characters }, input) {
     following.fill(0);
     let alive = false;
     for (let state = 0; state < count; state += 1) {
+      steps += 1;
       if (active[state] === 1) {
         const kind = kinds[state];
         if (kind === LITERAL) {
@@ -114,7 +117,6 @@ function run({ kinds, characters }, input) {
         }
       }
     }
-    steps += count;
     if (!alive) return { matched: false, steps, consumed };
     steps += close(following, kinds);
     [active, following] = [following, active];

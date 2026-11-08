@@ -1,0 +1,120 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn, spawnSync } = require('node:child_process');
+const { buildEnvironment } = require('../command.cjs');
+const { killTree } = require('../runner.cjs');
+const { ACCEPTED_COMMIT, sha } = require('./u041-authority.cjs');
+
+const namespace = path.resolve(__dirname, '..');
+const repository = path.resolve(namespace, '..', '..');
+
+function extract(tar, root) {
+  let offset = 0;
+  let files = 0;
+  const text = (buffer) => buffer.toString('utf8').replace(/\0.*$/s, '');
+  while (offset + 512 <= tar.length) {
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) break;
+    const name = text(header.subarray(0, 100));
+    const prefix = text(header.subarray(345, 500));
+    const relative = prefix ? `${prefix}/${name}` : name;
+    const size = parseInt(text(header.subarray(124, 136)).trim() || '0', 8);
+    const type = String.fromCharCode(header[156]);
+    offset += 512;
+    if (type === '0' || type === '\0' || type === '5') {
+      const ownedParent = type === '5' && relative === 'testing/';
+      if ((!ownedParent && !relative.startsWith('testing/coverage/')) || relative.split('/').some((part) => part === '..')) throw new Error(`archive path refused: ${relative}`);
+      const destination = path.join(root, ...relative.split('/').filter(Boolean));
+      if (type === '5') fs.mkdirSync(destination, { recursive: true });
+      else {
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        fs.writeFileSync(destination, tar.subarray(offset, offset + size));
+        files += 1;
+      }
+    } else if (!['g', 'x'].includes(type)) {
+      throw new Error(`archive entry type refused: ${type}`);
+    }
+    offset += Math.ceil(size / 512) * 512;
+  }
+  return files;
+}
+
+function convertSource(root, ending) {
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (entry.name === 'evidence' || entry.name === '.scratch') continue;
+    const file = path.join(root, entry.name);
+    if (entry.isDirectory()) convertSource(file, ending);
+    else if (/\.(cjs|js|mjs|json|md|feature)$/.test(entry.name)) {
+      const text = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+      fs.writeFileSync(file, ending === 'CRLF' ? text.replace(/\n/g, '\r\n') : text);
+    }
+  }
+}
+
+async function runSuite(root) {
+  const tests = fs.readdirSync(path.join(root, 'testing', 'coverage', 'tests')).filter((name) => name.endsWith('.test.cjs')).sort();
+  const child = spawn(process.execPath, ['--test', '--test-concurrency=1', ...tests.map((name) => path.join('testing', 'coverage', 'tests', name))], {
+    cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+    env: buildEnvironment(process.env, { U041_SUBJECT_ROOT: undefined, U009_HEAVY_HERMETIC: '1', U009_EVIDENCE_CAPTURE: undefined })
+  });
+  const stdout = [];
+  const stderr = [];
+  try {
+    const ended = await new Promise((resolve) => {
+      child.stdout.on('data', (bytes) => stdout.push(bytes));
+      child.stderr.on('data', (bytes) => stderr.push(bytes));
+      child.once('error', (error) => stderr.push(Buffer.from(error.message)));
+      child.once('close', (exit, signal) => resolve({ exit, signal }));
+    });
+    const out = Buffer.concat(stdout);
+    const err = Buffer.concat(stderr);
+    const counts = Object.fromEntries(['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo'].map((key) =>
+      [key, Number(new RegExp(`^# ${key} (\\d+)$`, 'm').exec(out.toString('utf8'))?.[1])]));
+    return { ...ended, ...counts, pid: child.pid, testFiles: tests, stdout: out, stderr: err,
+      ok: ended.exit === 0 && ended.signal === null && counts.tests > 0 && counts.pass === counts.tests &&
+        counts.fail === 0 && counts.cancelled === 0 && counts.skipped === 0 && counts.todo === 0 };
+  } finally {
+    if (child.exitCode === null && child.signalCode === null && child.pid) killTree(child.pid);
+  }
+}
+
+async function fresh(outDir) {
+  const environment = { ...process.env };
+  for (const key of Object.keys(environment)) if (/^GIT_(DIR|INDEX_FILE|WORK_TREE)$/i.test(key)) delete environment[key];
+  const archive = spawnSync('git', ['archive', ACCEPTED_COMMIT, '--', 'testing\\coverage'], {
+    cwd: repository, env: environment, windowsHide: true, maxBuffer: 64 * 1024 * 1024
+  });
+  if (archive.error || archive.status !== 0) throw new Error(`immutable git archive failed: ${String(archive.stderr)}`);
+  fs.mkdirSync(outDir, { recursive: true });
+  const results = [];
+  for (const [ending, label] of [['LF', 'L'], ['CRLF', 'C']]) {
+    const root = path.join(outDir, label);
+    try {
+      const archivedFiles = extract(archive.stdout, root);
+      fs.cpSync(namespace, path.join(root, 'testing', 'coverage'), { recursive: true, filter: (file) => path.basename(file) !== '.scratch' });
+      convertSource(path.join(root, 'testing', 'coverage'), ending);
+      const run = await runSuite(root);
+      fs.writeFileSync(path.join(outDir, `${ending}.stdout.raw`), run.stdout, { flag: 'wx' });
+      fs.writeFileSync(path.join(outDir, `${ending}.stderr.raw`), run.stderr, { flag: 'wx' });
+      const { stdout, stderr, ...summary } = run;
+      results.push({ ending, archiveBase: ACCEPTED_COMMIT, archivedFiles, candidateOverlay: true,
+        evidenceBytesConverted: false, gitPresent: fs.existsSync(path.join(root, '.git')), c031Present: fs.existsSync(path.join(root, 'capability', 'C031')),
+        stdoutSha256: sha(stdout), stderrSha256: sha(stderr), ...summary });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+  const document = { schema: 'U041-fresh-candidate/1', pass: results.every((result) => result.ok), timeoutUsed: false, results };
+  fs.writeFileSync(path.join(outDir, 'fresh.json'), JSON.stringify(document, null, 2) + '\n', { flag: 'wx' });
+  return document;
+}
+
+if (require.main === module) {
+  if (!process.argv[2]) throw new Error('Usage: node testing\\coverage\\tests\\u041-fresh.cjs <owned-output-dir>');
+  fresh(path.resolve(process.argv[2])).then((document) => { console.log(JSON.stringify(document)); process.exitCode = document.pass ? 0 : 1; })
+    .catch((error) => { console.error(error.stack); process.exitCode = 2; });
+}
+
+module.exports = Object.freeze({ extract, convertSource, fresh });

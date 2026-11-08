@@ -55,11 +55,11 @@ test.describe('N3 through the real CLI: a previous pass:true is never left at a 
     if (state.scratch) dispose(state.scratch);
   });
 
-  test('the equals spelling is still a usage error (exit 2) and its path holds a typed failure, not the old pass', () => {
-    assert.equal(state.runs.equals.status, 2, state.runs.equals.stderr);
-    assert.equal(state.files.equals.pass, false, 'a stale pass:true survived --json=<path>');
-    assert.equal(state.files.equals.error.code, 'USAGE');
-    assert.match(state.files.equals.error.message, /Unknown argument "--json=/);
+  test('the equals spelling writes the successful fresh report (exit 0), not the old pass', () => {
+    assert.equal(state.runs.equals.status, 0, state.runs.equals.stderr);
+    assert.deepEqual([state.files.equals.pass, state.files.equals.fullBar], [true, true]);
+    assert.equal('stale' in state.files.equals, false, 'the old pass was replaced by this run');
+    assert.deepEqual(state.files.equals, state.runs.equals.report);
   });
 
   test('--help next to --json still prints the usage and exits 0, and the path holds a not-run report', () => {
@@ -209,7 +209,7 @@ test('N4: the same swap through main ends with a typed failure on stdout, exit 1
   assert.equal(readJson(precious).pass, true, 'no failure report was written through the link');
 });
 
-test('N4: a foreign regular report put at the path during the run is refused at the final write and then replaced by the failure report, as the rule says', async (t) => {
+test('N4/U041: a foreign regular report put at the path during the run is refused at the final write and remains untouched', async (t) => {
   const base = makeScratch('n4-foreign');
   t.after(() => dispose(base));
   const target = path.join(base, 'report.json');
@@ -224,5 +224,5 @@ test('N4: a foreign regular report put at the path during the run is refused at 
   const io = { ...dependencies(run, base), stdout: (text) => out.push(text), stderr: () => {} };
   assert.equal(await main(['--root', relative(fixtureRoot('pass')), '--json', target], io), 1);
   assert.equal(JSON.parse(out[out.length - 1]).error.code, 'REPORT_CHANGED');
-  assert.deepEqual([readJson(target).pass, readJson(target).error.code], [false, 'REPORT_CHANGED'], 'the gate report that sits there carries the failure of this run, never a pass');
+  assert.deepEqual(readJson(target), { schema: SCHEMA, pass: true, foreign: true }, 'REPORT_CHANGED reports this run on stdout without replacing another writer');
 });

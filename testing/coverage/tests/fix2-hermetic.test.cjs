@@ -14,6 +14,8 @@ const { makeScratch, dispose } = require('./support.cjs');
 
 const namespace = path.resolve(__dirname, '..');
 const capturing = process.env.U009_EVIDENCE_CAPTURE === '1';
+const heavy = process.env.U009_HEAVY_HERMETIC === '1';
+const heavySkip = heavy ? false : 'opt-in: U009_HEAVY_HERMETIC=1 (enabled by the full self-gate and strict evidence)';
 // A hang detector for the nested test run, far above any load of a shared machine: the evidence checks read about one megabyte.
 const HANG_DEADLINE_MS = 300000;
 
@@ -63,7 +65,7 @@ function newestGeneration(copy) {
   return { generation, directory: path.join(copy, 'evidence', generation), reds: reds.map((name) => path.join(copy, 'evidence', 'red', name)) };
 }
 
-test('N2: the evidence test passes in a copy of the namespace without capability/C031 and without .git', async (t) => {
+test('N2: the evidence test passes in a copy of the namespace without capability/C031 and without .git', { skip: heavySkip }, async (t) => {
   const base = makeScratch('h-copy');
   t.after(() => dispose(base));
   const copy = copyNamespace(base);
@@ -94,7 +96,7 @@ const tampers = [
 ];
 
 for (const [label, pattern, tamper] of tampers) {
-  test(`N5: the evidence test fails when ${label}`, { skip: capturing ? 'the archives are being recorded (U009_EVIDENCE_CAPTURE=1)' : false }, async (t) => {
+  test(`N5: the evidence test fails when ${label}`, { skip: heavySkip || (capturing ? 'the archives are being recorded (U009_EVIDENCE_CAPTURE=1)' : false) }, async (t) => {
     const base = makeScratch('h-tamper');
     t.after(() => dispose(base));
     const copy = copyNamespace(base);
@@ -126,7 +128,7 @@ test('N3, N6, N9 and N11: the README says what the code does, states the costs a
   assert.match(readme, /`fullBar` ignores `--manifest`/, 'N6d');
   assert.match(readme, /`--json=<path>`/, 'N3: the spellings are listed');
   assert.match(readme, /does not sanitize `NODE_OPTIONS`[^\n]*foreign `NODE_OPTIONS`/s, 'N9: U013 and every caller must not run the gate under a foreign NODE_OPTIONS');
-  assert.match(readme, /72 to 172 s/, 'N11: the timing hint');
+  assert.match(readme, /224 to 441 s/, 'N11/U041: the measured reviewer timing scope');
   assert.match(readme, /strict-evidence\.cjs/, 'N2: the explicit strict mode is named');
   assert.match(readme, /U009_EVIDENCE_CAPTURE/, 'N5: the capture switch is named');
   assert.match(readme, /consistent rewrite of the README, the tests and the pins is not detectable/, 'N5: the honest limit');
