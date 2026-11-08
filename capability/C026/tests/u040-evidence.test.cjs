@@ -13,6 +13,7 @@ const path = require('node:path');
 const test = require('node:test');
 const zlib = require('node:zlib');
 const chain = require('./u040-chain.cjs');
+const currentAuthority = require('./u055-authority.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
@@ -21,9 +22,10 @@ const PRODUCTION = Object.freeze(['framing.cjs', 'stream.cjs', 'server.cjs', 'co
 const VERIFIERS = Object.freeze(['evidence-final.test.cjs', 'u040-evidence.test.cjs']);
 const FILE = (name) => `capability\\C026\\${name}`;
 const resolveRel = (relative) => path.join(repository, ...relative.split('\\'));
-const read = (relative) => {
+const readCurrent = (relative) => {
   try { return fs.readFileSync(resolveRel(relative)); } catch { return null; }
 };
+const read = currentAuthority.readerAtSequence(readCurrent, 2);
 const live = (name) => chain.sha(read(FILE(name)));
 
 const HELPER = 'tests\\u040-support.cjs';
@@ -65,7 +67,7 @@ const replacedByFix2 = (relative, recorded, liveBytes) => FIX2_AMENDED.includes(
 const shipped = (recorded, name) => recorded === live(name) || replacedByFix2(FILE(name), recorded, read(FILE(name)));
 // The verifier of addendum 2 and the suites that fix 2 adds ran in no capture of this file.
 const FIX2_SUITES = Object.freeze(['u040-evidence-2.test.cjs', 'u040-flood.test.cjs', 'u040-budget.test.cjs', 'u040-expect.test.cjs']);
-const liveSuiteNames = () => fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !VERIFIERS.includes(name) && !FIX2_SUITES.includes(name)).sort();
+const liveSuiteNames = () => fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !name.startsWith('u055-') && !VERIFIERS.includes(name) && !FIX2_SUITES.includes(name)).sort();
 const addendum = JSON.parse(read(chain.addendumPath(1))?.toString('utf8') ?? '{"evidence":[]}');
 const manifestPaths = addendum.evidence.map((item) => item.path).filter((item) => /\\evidence\\u040\\(?:red|green)\\[^\\]+\.json$/.test(item));
 

@@ -1,0 +1,100 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const chain = require('./u040-chain.cjs');
+const authority = require('./u055-authority.cjs');
+const prefix = 'capability\\C026\\';
+const repository = path.resolve(__dirname, '..', '..', '..');
+const read = (relative) => {
+  try { return fs.readFileSync(path.join(repository, relative)); } catch { return null; }
+};
+const overlay = (changes) => (relative) => changes.has(relative) ? changes.get(relative) : read(relative);
+const bytes = (object) => Buffer.from(JSON.stringify(object));
+const resignFixture = (edit) => {
+  const addendum = JSON.parse(read(chain.addendumPath(3)));
+  edit(addendum);
+  const altered = bytes(addendum);
+  const anchor = JSON.parse(read(authority.HEAD));
+  const fourth = JSON.parse(read(chain.addendumPath(4)));
+  fourth.previous.rawSha256 = chain.sha(altered);
+  const fourthBytes = bytes(fourth);
+  anchor.rawSha256 = chain.sha(fourthBytes);
+  return overlay(new Map([[chain.addendumPath(3), altered], [chain.addendumPath(4), fourthBytes], [authority.HEAD, bytes(anchor)]]));
+};
+
+test('U055 authority: the independently anchored chain and all 296 retained baseline files verify', () => {
+  assert.deepEqual(authority.verifyAuthority(read).errors, []);
+  const baseline = JSON.parse(read(authority.BASELINE));
+  assert.equal(baseline.files.length, 296);
+  const third = JSON.parse(read(chain.addendumPath(3)));
+  assert.deepEqual(third.previous, { path: chain.addendumPath(2), rawSha256: chain.sha(read(chain.addendumPath(2))) });
+  assert.deepEqual(third.currentAuthorityAmendments.map((entry) => entry.path), [...authority.EXTRA]);
+});
+
+test('U055 authority: every single-byte flip of the last addendum, including informational bytes, fails BY NAME', () => {
+  const headPath = chain.addendumPath(authority.HEAD_SEQUENCE);
+  const original = read(headPath);
+  let checked = 0;
+  for (let index = 0; index < original.length; index += 1) {
+    const altered = Buffer.from(original);
+    altered[index] ^= 1;
+    assert.deepEqual(authority.verifyHead(overlay(new Map([[headPath, altered]]))).errors, [`HEAD_BYTES_CHANGED ${headPath}`], `byte ${index}`);
+    checked += 1;
+  }
+  assert.equal(checked, original.length);
+});
+
+test('U055 authority: missing anchors, missing heads, unanchored successors and changed previous links fail by name', () => {
+  assert.deepEqual(authority.verifyHead(overlay(new Map([[authority.HEAD, null]]))).errors, [`MISSING ${authority.HEAD}`]);
+  assert.deepEqual(authority.verifyHead(overlay(new Map([[chain.addendumPath(4), null]]))).errors, [`HEAD_MISSING ${chain.addendumPath(4)}`]);
+  assert.deepEqual(authority.verifyHead(overlay(new Map([[chain.addendumPath(5), Buffer.from('{}')]]))).errors, [`UNANCHORED_ADDENDUM ${chain.addendumPath(5)}`]);
+  const broken = resignFixture((third) => { third.previous.rawSha256 = '0'.repeat(64); });
+  assert.ok(authority.verifyAuthority(broken).errors.includes(`CHAIN_BROKEN ${chain.addendumPath(3)}`));
+  const second = Buffer.from(read(chain.addendumPath(2)).toString().replace('"item": "U040"', '"item": "U041"'));
+  assert.ok(authority.verifyAuthority(overlay(new Map([[chain.addendumPath(2), second]]))).errors.includes(`CHAIN_BROKEN ${chain.addendumPath(3)}`));
+});
+
+test('U055 authority: even a re-signed fixture cannot authorize an unrelated replacement or a gap', () => {
+  const extra = resignFixture((third) => { third.currentAuthorityAmendments[0].path = `${prefix}framing.cjs`; });
+  assert.ok(authority.verifyAuthority(extra).errors.includes(`AUTHORITY_AMENDMENT_SET_CHANGED ${chain.addendumPath(3)}`));
+  const gap = resignFixture((third) => { third.amendments[0].previousRawSha256 = '0'.repeat(64); });
+  assert.ok(authority.verifyAuthority(gap).errors.includes(`GAP_IN_CHAIN ${prefix}server.cjs`));
+});
+
+test('U055 authority: a live verifier edit, a replaced source edit and a retained-copy edit remain detectable', () => {
+  for (const relative of [`${prefix}tests\\u040-evidence.test.cjs`, `${prefix}server.cjs`]) {
+    const changed = Buffer.concat([read(relative), Buffer.from(' ')]);
+    assert.ok(authority.verifyAuthority(overlay(new Map([[relative, changed]]))).errors.includes(`LIVE_AUTHORITY_BYTES_CHANGED ${relative}`), relative);
+  }
+  const copy = JSON.parse(read(chain.addendumPath(3))).amendments[0].supersededCopy;
+  assert.ok(authority.verifyAuthority(overlay(new Map([[copy, Buffer.from('wrong')]]))).errors.includes(`SUPERSEDED_COPY_MISMATCH ${prefix}server.cjs`));
+  const sealed = `${prefix}evidence.json`;
+  assert.ok(authority.verifyAuthority(overlay(new Map([[sealed, Buffer.from('{}')]]))).errors.includes(`HISTORICAL_BYTES_CHANGED ${sealed}`));
+});
+
+test('U055 authority: only source-comment lines change; all executable server bytes and the other six production files stay exact', () => {
+  const baseline = JSON.parse(read(authority.BASELINE));
+  const server = baseline.files.find((entry) => entry.path === `${prefix}server.cjs`);
+  const withoutComments = (source) => source.toString('utf8').replace(/\r\n/g, '\n').split('\n').filter((line) => !/^\s*\/\//.test(line)).join('\n');
+  assert.equal(withoutComments(read(server.path)), withoutComments(read(server.retainedCopy)));
+  assert.notEqual(chain.sha(read(server.path)), server.rawSha256, 'the comment changed the source pin and needs measured coverage');
+  for (const name of ['framing.cjs', 'stream.cjs', 'conversation.cjs', 'page.js', 'index.html', 'styles.css']) {
+    const entry = baseline.files.find((file) => file.path === `${prefix}${name}`);
+    assert.equal(chain.sha(read(entry.path)), entry.rawSha256, name);
+  }
+});
+
+test('U055 authority: historical verifiers see exactly sequence 2, after the current authority has verified', () => {
+  const historical = authority.readerAtSequence(read, 2);
+  assert.equal(historical(chain.addendumPath(3)), null);
+  const third = JSON.parse(read(chain.addendumPath(3)));
+  for (const entry of [...third.amendments, ...third.currentAuthorityAmendments]) {
+    assert.equal(chain.sha(historical(entry.path)), entry.previousRawSha256, entry.path);
+  }
+  assert.deepEqual(chain.verifyChain(historical).errors, []);
+  assert.equal(historical(chain.addendumPath(4)), null);
+  assert.throws(() => authority.readerAtSequence(read, 1), /only supplies/);
+});

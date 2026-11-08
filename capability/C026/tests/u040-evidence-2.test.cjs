@@ -12,15 +12,17 @@ const path = require('node:path');
 const test = require('node:test');
 const zlib = require('node:zlib');
 const chain = require('./u040-chain.cjs');
+const currentAuthority = require('./u055-authority.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const FILE = (name) => `capability\\C026\\${name}`;
 const D2 = FILE('evidence\\u040-2');
 const resolveRel = (relative) => path.join(repository, ...relative.split('\\'));
-const read = (relative) => {
+const readCurrent = (relative) => {
   try { return fs.readFileSync(resolveRel(relative)); } catch { return null; }
 };
+const read = currentAuthority.readerAtSequence(readCurrent, 2);
 const live = (name) => chain.sha(read(FILE(name)));
 const overlay = (changes) => (relative) => (changes.has(relative) ? changes.get(relative) : read(relative));
 const flip = (bytes) => {
@@ -172,7 +174,7 @@ test('the final runs: every input is the live byte, the whole suite passed, serv
   }
   const whole = run('f2-green-01-whole-suite');
   const suites = whole.manifest.command.filter((argument) => argument.endsWith('.test.cjs')).map((argument) => path.basename(argument)).sort();
-  const liveSuites = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !VERIFIERS.includes(name)).sort();
+  const liveSuites = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs') && !name.startsWith('u055-') && !VERIFIERS.includes(name)).sort();
   assert.deepEqual(suites, liveSuites, 'every suite except the three verifiers');
   for (const name of NEW_SUITES) assert.equal(suites.includes(name), true, name);
   assert.deepEqual([whole.manifest.summary.fail, whole.manifest.summary.cancelled, whole.manifest.summary.skipped, whole.manifest.summary.todo, whole.manifest.summary.pass], [0, 0, 0, 0, whole.manifest.summary.tests]);

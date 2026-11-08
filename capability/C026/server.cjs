@@ -48,8 +48,10 @@ const closing = new WeakSet();
 // writes nothing, so Node never sees output pile up behind an unfinished answer and never pauses the connection: it would keep parsing and
 // holding one request and one response object (about 2 KB) per pipelined request for as long as the peer sends. The first
 // MAX_DROPPED_REQUESTS are dropped quietly, so that the answers queued before the mark and the refusal itself are still flushed; the next one
-// destroys the connection. What bounds the work: Node has parsed at most the read in progress (64 KB, about 1,000 of the smallest requests)
-// when that happens, the destroy ends every further read, and the objects are released when the socket closes.
+// destroys the connection. The minimum is the 18-byte GET / HTTP/1.1 without Host; the review observed 3,639 request events per 64 KiB read.
+// An all-minimal aligned read fits 3,640 requests, or one marking request plus 3,639 more.
+// The accepted review observed about 6 MB per socket, about 0.8 GB extrapolated at 128 connections, and a 12 to 15 s stall at 32 sockets.
+// These observations are not memory or latency guarantees. The destroy ends further reads; objects are released when the socket closes.
 const MAX_DROPPED_REQUESTS = 16;
 const dropped = new WeakMap();
 // Parse errors that Node reports through 'clientError' (it would write its own bare 400, 408 or 431): the typed refusal for each.

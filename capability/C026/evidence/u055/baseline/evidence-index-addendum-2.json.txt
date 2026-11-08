@@ -1,0 +1,157 @@
+{
+  "schema": "C026-evidence-index-addendum/1",
+  "cardId": "C026",
+  "sequence": 2,
+  "createdAtUtc": "2026-11-06T22:24:34.668Z",
+  "item": "U040",
+  "reason": "Fix 2 of the defect fix U040 after the independent review of its first publication (finding F1: the requests that fix 1 dropped were never answered and never stopped the socket, so a flood behind a refusal or a pending transcript killed a child with a 48 MB heap at 3 sockets; minor m1: an answer that Node forces to close did not mark its connection). The archived runs of fix 1 hashed the bytes that this addendum replaces; the replaced bytes stay under evidence\\u040-2\\superseded and the earlier archives are unchanged.",
+  "note": "previous pins evidence-index-addendum-1.json by the SHA-256 of its raw bytes, which no hash inside the repository covered before (an edit of its informational fields went undetected). U040.md and U040.feature are pinned by the captures of fix 1 and are not edited: U040.md still names the 8-way below-normal loop of the first attempt, evidence\\u040\\COMMANDS.md states the corrected rule (normal priority, at most 4 workers, nothing else of the item running); fix 2 states its own commands in evidence\\u040-2\\COMMANDS.md and U040-fix2.feature.",
+  "base": {
+    "path": "capability\\C026\\evidence.json",
+    "rawSha256": "4f0fb0407dade8cfdbdfe605fa0796254572acbb343db06c7611df236e52a9ab"
+  },
+  "previous": {
+    "path": "capability\\C026\\evidence-index-addendum-1.json",
+    "rawSha256": "416985b6618954b6115bddcf0b91f4447e9cfb96e7d6097636a751cd8555a0d6"
+  },
+  "amendments": [
+    {
+      "path": "capability\\C026\\server.cjs",
+      "status": "applied",
+      "previousRawSha256": "db597b1c5d50cb151a6e901105fd3be1b4ef19dce67926d70a61f639062944d9",
+      "rawSha256": "85ebbc331a226fcd282110d935c2ff33c73c254d916c617059fac9a105606821",
+      "supersededCopy": "capability\\C026\\evidence\\u040-2\\superseded\\server.cjs.txt",
+      "edit": "U040 fix 2: a drop budget per marked connection (a WeakMap next to closing; 16 requests are dropped quietly, the 17th destroys the connection and announces the limit DROPPED_REQUEST_BACKLOG once) and the mark of a connection whose answer Node forced to close (response.shouldKeepAlive false after writeHead: Expect: 100-continue answered without 100)."
+    },
+    {
+      "path": "capability\\C026\\README.md",
+      "status": "applied",
+      "previousRawSha256": "19286ab64cd2b591f7918f06e5ab378b84dafe0768dbbb4b0d51edfdc02700b9",
+      "rawSha256": "0317a4fb9f4e667ed67e75d4d074131ba4b2ee4e713a7d80523ae78e0da104fb",
+      "supersededCopy": "capability\\C026\\evidence\\u040-2\\superseded\\README.md.txt",
+      "edit": "The first U040 paragraph no longer says that nothing is ever destroyed, and the last section states fix 2: the drop budget and what bounds the work, the Expect mark, what was measured, the documented limits m2 to m4 and what is not covered. The figures that the earlier sections state about the archives are unchanged."
+    },
+    {
+      "path": "capability\\C026\\tests\\coverage-gate.cjs",
+      "status": "applied",
+      "previousRawSha256": "38e32399e8bf2990a53713fa8dc59fe0589af94d9eaf0df9b30d2bb394a834a2",
+      "rawSha256": "bf263ff5a69705c3cba4732bc5c66dd6cfb47a659a54fe7207f25532b8cbd911",
+      "supersededCopy": "capability\\C026\\evidence\\u040-2\\superseded\\coverage-gate.cjs.txt",
+      "edit": "The three suites of fix 2 (u040-flood, u040-budget, u040-expect) join TESTS, so tests\\coverage.cjs measures the new code of server.cjs."
+    }
+  ],
+  "evidence": [
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\red\\f2-red-01-new-tests-committed-bytes.json",
+      "rawSha256": "d6b564d420e72831f2a989990185c71a5709833d79a5321c1da1567dae40abba"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\red\\f2-red-02-final-tests-committed-bytes.json",
+      "rawSha256": "7ba2cd0e4122e01bb6eeb80da74350cf1e688b3f3b506c03be2ab7346c42d372"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-browser-01.json",
+      "rawSha256": "70f23ae84230b8f7d0decf37dfd305ee620429a4d4e8687b8c3f6c06ab03296f"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-control-01-flood-pre-u040-bytes.json",
+      "rawSha256": "93de97507b70b61acefcc73add6ed29f1f8e815f7807dc74bd918b6f50765ee7"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-coverage-server.cjs.json",
+      "rawSha256": "291edec267c652c7ea429aadb17aca5b55a549a6fdb55c7610084c10422cb366"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-fresh-01-archive-lf.json",
+      "rawSha256": "8ad570b126036f13740a1e20a5e539f1eefed6e21b600ff8517048885f5e1385"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-fresh-02-archive-crlf.json",
+      "rawSha256": "60df1c707e3fdb26492f38e1552e32588e3dc3bb84f2f96edcc8505666af41f1"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-green-01-whole-suite.json",
+      "rawSha256": "21484002cd584082777914c3fa61b8577e695de325238d53936cef248614cd81"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-loop-01-20x4.json",
+      "rawSha256": "4e85eeffddbd9bf99d044e401ae8def44104a1eed5b66f993def61969c6631c8"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-loop-02-20x4.json",
+      "rawSha256": "567bf6949fbc765a494d7842616fe1908b9829b5ef3c8edc3b5bb1b85e9f927f"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-loop-03-20x4.json",
+      "rawSha256": "6b77ddd2ea8314ad92718b7a61add5c45dce58ead8f4539153f5da2790e18576"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-replay-01-red-unchanged.json",
+      "rawSha256": "f65dc87f5847cfd3ee9458c234fc7a622b605cb95d20b97dc17a3459528019f1"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\green\\f2-syntax-01.json",
+      "rawSha256": "d7425413bac5aa10a2268338757bd8a321f028238802ec999aefc35a15b07eef"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\mutants\\f2-mutants-01.report.json",
+      "rawSha256": "02e9852b8e1609f65f704b4f315fb7e1c2e8b988593018446acf866daf1296c6"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\mutants\\f2-mutants-01.staged.json",
+      "rawSha256": "2c02112034a56e92873fedb08a90e3100f5de536b32214f2721ee8e8f60c5efa"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\mutants\\f2-mutants-01.stdout.txt",
+      "rawSha256": "3f1ce4d09016d9e289814921894afa30a64661d90b07a247ceace4d1a3dce5cf"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\README.md.txt",
+      "rawSha256": "19286ab64cd2b591f7918f06e5ab378b84dafe0768dbbb4b0d51edfdc02700b9"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\campaign-tests\\u040-budget.test.cjs.txt",
+      "rawSha256": "dcdd86c4e0dcc80c7d6647a0e9484f85d13d34feb01ad954cbb9eb134984b679"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\campaign-tests\\u040-expect.test.cjs.txt",
+      "rawSha256": "09dea3e5fddcc540caf2e690d369acad1b4a85ca8ad45657d92a5e1a54b9bd5d"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\coverage-gate.cjs.txt",
+      "rawSha256": "38e32399e8bf2990a53713fa8dc59fe0589af94d9eaf0df9b30d2bb394a834a2"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-budget.test.cjs.txt",
+      "rawSha256": "9ac782130c840026a51516f40110a7b22907890019faa3c3c4a732e7fb7b7305"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-expect.test.cjs.txt",
+      "rawSha256": "229c26348bb78548c06bb09488229c3b7a339d492163ff755fb1c58be517c6a5"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-flood-child.cjs.txt",
+      "rawSha256": "d6677282e6cdeb0fe04e1045fca2e570d569925e13df0549477c8130cccc56c0"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-flood-support.cjs.txt",
+      "rawSha256": "ef13c50241ab1b5545ce34dd9a58d7ade035ae52291653fb44328bc0d5eee5e8"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-flood.test.cjs.txt",
+      "rawSha256": "47bd946abc2460ff07659fcaecebcc08a7ba7b9cf228e69ef1ec73b6800ff5e1"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\first-tests\\u040-target.cjs.txt",
+      "rawSha256": "dc771707ee983a94848ad4715dedfa877fda89c063fc16d8f3c2843fd781485c"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\loop2-tests\\u040-budget.test.cjs.txt",
+      "rawSha256": "30b8ddc4d8b8a5efd10ac8c281b82b6849c0d0e4643a9a712f29d73a52a5cd38"
+    },
+    {
+      "path": "capability\\C026\\evidence\\u040-2\\superseded\\server.cjs.txt",
+      "rawSha256": "db597b1c5d50cb151a6e901105fd3be1b4ef19dce67926d70a61f639062944d9"
+    }
+  ]
+}

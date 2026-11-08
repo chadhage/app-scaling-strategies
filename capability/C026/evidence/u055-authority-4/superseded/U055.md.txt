@@ -1,0 +1,63 @@
+# U055: truthful C026 parser cost and independently anchored amendment head
+
+Zero-credit work; coordinator review and publication only. Local loopback, Node built-ins, no install, cloud, identity or spending. The accepted U040 review supplies the historical performance observations in `evidence\u055\review-observations.json`; U055 tests the arithmetic and the wording, not a new latency guarantee.
+
+## Authority and preservation
+
+Addendum 3 links to the exact unchanged bytes of addendum 2 and the sealed `evidence.json`. The original 296 namespace files are enumerated in `evidence\u055\baseline.json`. Exact pre-edit copies of the README, server, two historical verifiers and command notes are retained in `evidence\u055\baseline`.
+
+The ordinary amendments replace only `server.cjs` and `README.md`. A separate closed `currentAuthorityAmendments` list replaces only `tests\u040-evidence.test.cjs`, `tests\u040-evidence-2.test.cjs` and `evidence\u040-2\COMMANDS.md`. The original pinned `u040-chain.cjs` is unchanged. The amended historical verifiers validate current authority first, then check their original captures against the accepted sequence-2 view; no historical capture is claimed to have measured new bytes.
+
+`evidence-chain-head.json` is a separate repository anchor containing the raw SHA-256 of addendum 3. It is not generated during a test. Every single-byte flip of the last addendum fails `HEAD_BYTES_CHANGED` by name. Missing anchors, missing heads, broken links and unanchored successors are tested. A coordinated rewrite of the anchor, verifier and addenda together remains outside this local tripwire's guarantee; independent review against accepted publication history remains necessary. A later amendment needs explicit authority and a separately reviewed new head anchor, never an automatic repin.
+
+The server's required comment changes its raw source hash. Only whole-line comments differ; all executable lines and the other six production files remain exact. Coverage is therefore **not N/A for server.cjs**: its full file is remeasured at 85/85/85. No functional production code changes. The page, markup and CSS are unchanged, so U055 needs no new actual-browser observation and does not bypass current Edge qualification.
+
+## Commands
+
+Run from the repository root in PowerShell 7. Remove `NODE_TEST_CONTEXT` and `NODE_V8_COVERAGE` in child environments; each nested CLI test uses `--test-concurrency=1`. The safe reporter emits named raw test verdicts and assertion kinds without local paths; it does not rewrite an archived transcript.
+
+```powershell
+# Retained baseline: six behavioral assertion failures, exit 1.
+$env:C026_U055_BASELINE = '1'
+try { node capability\C026\tests\u055-run.cjs } finally { Remove-Item Env:\C026_U055_BASELINE }
+
+# The unchanged genuine RED against current authority: six passes.
+node capability\C026\tests\u055-run.cjs
+
+# Focused facts, real producer/held-producer boundary, and by-name head tamper.
+node capability\C026\tests\u055-suite.cjs capability\C026\tests\u055-behavior.test.cjs capability\C026\tests\u055-authority.test.cjs capability\C026\tests\u055-boundary.test.cjs capability\C026\tests\u055-facts.test.cjs
+
+# Every current namespace suite, including the historical and new evidence verifiers.
+node capability\C026\tests\u055-suite.cjs "capability\C026\tests\*.test.cjs"
+
+# Accepted Git blobs overlaid with the current namespace, all suites including verifiers.
+node capability\C026\tests\u055-fresh.cjs lf
+node capability\C026\tests\u055-fresh.cjs crlf
+
+# Actual downstream contract consumers, not a broad coverage gate.
+node capability\C026\tests\u055-suite.cjs learning\S045\tests\integrity.test.cjs learning\S045\tests\model.test.cjs learning\S045\tests\surface.test.cjs learning\S139\integrity.test.cjs learning\S139\model.test.cjs
+
+# The one changed production file: full enumeration, per-file Node threshold.
+$suites = Get-ChildItem capability\C026\tests\*.test.cjs | Where-Object { $_.Name -ne 'u055-evidence.test.cjs' } | ForEach-Object { "capability\C026\tests\$($_.Name)" }
+node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=capability/C026/server.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 $suites
+
+git -c "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol" diff --check -- capability\C026
+```
+
+Whole-file coverage excludes only the new evidence verifier, which checks that very capture after it exists and contains no production behavior. The changed production set is exactly `server.cjs`; nothing is excluded from its line/branch/function measurement. The all-suite run includes that verifier after captures exist.
+
+Fresh-tree runs extract the explicit accepted publication, verify every extracted blob, and overlay the current C026 namespace. The LF run uses the accepted C001 import blobs; the CRLF run converts those two imports. C026's `* -text` source, evidence and anchors retain their exact bytes in both modes. Each run has its own private U055 scratch tree; no ambient index, mutable HEAD or new scratch commit is involved.
+
+The shared `<RUN>\scripts\archive-run.cjs` records immutable manifests, input raw/LF hashes and gzip stdout/stderr with exclusive creation. U055's captures are under `evidence\u055\red`, `green` and `final`. A recorder setup failure was retained privately and is not the behavioral RED. No historical raw transcript, manifest, seal or RED is overwritten or scrubbed.
+
+The first public attempt, `u055-red-02-published-readme-and-unpinned-head`, preceded implementation and had five genuine behavioral failures plus one invalid assertion equating `floor(65536 / 18)` with 3,639. Its raw evidence, original test and original feature remain immutable. The corrected `u055-red-03-correct-facts-retained-published-baseline` has six genuine behavioral assertion failures against the retained published bytes; its test and command replay unchanged on the final code. It is a disclosed correction/supplement, not a rewrite of the earlier attempt.
+
+After all captures, `node capability\C026\tests\u055-seal.cjs write` creates the final namespace-byte seal and its separate anchor once (`wx`). `node capability\C026\tests\u055-seal.cjs verify` must then pass. The evidence tests recompute available captures during collection and additionally enforce that final seal when present; a final all-suite rerun and this explicit verify command establish the completed state. A capture cannot check its own not-yet-written manifest; the subsequent final seal checks it separately.
+
+## Evidence limits
+
+- The minimum request is 18 bytes; an aligned 65536-byte read fits 3,640 complete copies, or one minimal marking request plus 3,639 further requests. The review observed 3,639 request events per read in its flood shape; that observation is not the mathematical ceiling. Node dispatches the no-Host shape, but the fixture responds 421. About 6 MB per socket, about 0.8 GB at 128 connections, and the 32-socket 12 to 15 s stall are accepted-review observations/extrapolation, not fresh U055 performance measurements.
+- `[T]+16` and `[T]+17` are asserted in a separate server process with a real transcript producer and a manually released producer. Parsed-data and close barriers, not sleeps or quiet-window deadlines, decide the assertions. The 17th drop destroys the socket and loses the transcript answer itself.
+- The final/control flood suite has four variants. The first retained RED had three; the later expect survival control passed while its budget assertion failed. The original stdout supplies these distinctions.
+- The failed `f2-loop-01-20x4` README input `032309f138894613fb377fd16e983acd0247db0c2f8c09ab015f43d11b105349` has no retained byte-exact copy. It remains **unavailable and unverified**. The note never reconstructs it or changes its manifest hash. Earlier historical input mismatches remain historical; U055 does not invent replacement captures.
+- No new complete production mutation campaign, CPU burners, native network qualification, HTTP/2, TLS, proxy, browser WebSocket, memory guarantee or wall-clock latency qualification is claimed. Exhaustive head-byte tamper tests are integrity tests, not a new production mutation score.

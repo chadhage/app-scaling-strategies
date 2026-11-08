@@ -12,6 +12,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const chain = require('./u040-chain.cjs');
+const currentAuthority = require('./u055-authority.cjs');
 const { root, index, sha, resolve, PRODUCTION, manifestOf, stdoutOf, inputHash } = require('./evidence-support.cjs');
 
 const CHAIN_SHA256 = '937fe67978f005dff2a12440999a0e75f5171fe7cf8900ea0de65b174a3fa0e2';
@@ -21,7 +22,7 @@ const readRelative = (relative) => {
 
 test('the final runs passed, hashed the production files that ship, and the replay passes every RED assertion unchanged', () => {
   assert.equal(sha(fs.readFileSync(path.join(__dirname, 'u040-chain.cjs'))), CHAIN_SHA256, 'u040-chain.cjs is not the pinned helper');
-  const amended = chain.verifyChain(readRelative);
+  const amended = currentAuthority.verifyAuthority(readRelative);
   assert.deepEqual(amended.errors, [], 'the addendum chain must verify');
   const finals = index.fixRuns.filter((run) => run.kind !== 'red');
   const kinds = new Set(finals.map((run) => run.kind));

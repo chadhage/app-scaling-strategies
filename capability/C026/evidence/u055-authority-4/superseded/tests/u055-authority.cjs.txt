@@ -1,0 +1,90 @@
+'use strict';
+
+const chain = require('./u040-chain.cjs');
+const PREFIX = 'capability\\C026\\';
+const HEAD = `${PREFIX}evidence-chain-head.json`;
+const BASELINE = `${PREFIX}evidence\\u055\\baseline.json`;
+const EXTRA = Object.freeze([
+  `${PREFIX}tests\\u040-evidence.test.cjs`,
+  `${PREFIX}tests\\u040-evidence-2.test.cjs`,
+  `${PREFIX}evidence\\u040-2\\COMMANDS.md`
+]);
+const HEX = /^[0-9a-f]{64}$/;
+
+function json(read, relative, errors) {
+  const bytes = read(relative);
+  if (!Buffer.isBuffer(bytes)) { errors.push(`MISSING ${relative}`); return null; }
+  try { return JSON.parse(bytes.toString('utf8')); } catch { errors.push(`UNPARSABLE ${relative}`); return null; }
+}
+
+function verifyHead(read) {
+  const errors = [];
+  const anchor = json(read, HEAD, errors);
+  if (anchor === null) return { ok: false, errors };
+  if (anchor.schema !== 'C026-evidence-chain-head/1' || anchor.cardId !== 'C026' || anchor.sequence !== 3
+    || anchor.path !== chain.addendumPath(3) || !HEX.test(anchor.rawSha256 ?? '')
+    || Object.keys(anchor).sort().join(',') !== 'cardId,path,rawSha256,schema,sequence') {
+    errors.push(`BAD_HEAD_ANCHOR ${HEAD}`);
+    return { ok: false, errors };
+  }
+  const bytes = read(anchor.path);
+  if (!Buffer.isBuffer(bytes)) errors.push(`HEAD_MISSING ${anchor.path}`);
+  else if (chain.sha(bytes) !== anchor.rawSha256) errors.push(`HEAD_BYTES_CHANGED ${anchor.path}`);
+  if (errors.length > 0) return { ok: false, errors };
+  for (let sequence = 4; sequence <= 20; sequence += 1) {
+    if (read(chain.addendumPath(sequence)) !== null) errors.push(`UNANCHORED_ADDENDUM ${chain.addendumPath(sequence)}`);
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+function verifyAuthority(read) {
+  const head = verifyHead(read);
+  if (!head.ok) return head;
+  const errors = [];
+  const result = chain.verifyChain(read);
+  errors.push(...result.errors);
+  const baseline = json(read, BASELINE, errors);
+  const addendum = json(read, chain.addendumPath(3), errors);
+  if (baseline === null || addendum === null) return { ok: false, errors };
+  const accepted = new Map(baseline.files.map((entry) => [entry.path, entry]));
+  const replacements = [...addendum.amendments, ...(addendum.currentAuthorityAmendments ?? [])];
+  if (JSON.stringify(addendum.amendments.map((entry) => entry.path)) !== JSON.stringify([`${PREFIX}server.cjs`, `${PREFIX}README.md`])) {
+    errors.push(`AMENDMENT_SET_CHANGED ${chain.addendumPath(3)}`);
+  }
+  if (JSON.stringify((addendum.currentAuthorityAmendments ?? []).map((entry) => entry.path)) !== JSON.stringify(EXTRA)) {
+    errors.push(`AUTHORITY_AMENDMENT_SET_CHANGED ${chain.addendumPath(3)}`);
+  }
+  for (const entry of replacements) {
+    const before = accepted.get(entry.path);
+    if (before === undefined || before.rawSha256 !== entry.previousRawSha256 || before.retainedCopy !== entry.supersededCopy) {
+      errors.push(`BASELINE_REPLACEMENT_MISMATCH ${entry.path}`);
+    }
+    const copy = read(entry.supersededCopy);
+    if (!Buffer.isBuffer(copy) || chain.sha(copy) !== entry.previousRawSha256) errors.push(`SUPERSEDED_COPY_MISMATCH ${entry.path}`);
+    const live = read(entry.path);
+    if (entry.status !== 'applied' || !HEX.test(entry.rawSha256 ?? '') || !Buffer.isBuffer(live) || chain.sha(live) !== entry.rawSha256) {
+      errors.push(`LIVE_AUTHORITY_BYTES_CHANGED ${entry.path}`);
+    }
+  }
+  const replaced = new Set(replacements.map((entry) => entry.path));
+  for (const entry of baseline.files) {
+    if (replaced.has(entry.path)) continue;
+    const bytes = read(entry.path);
+    if (!Buffer.isBuffer(bytes) || chain.sha(bytes) !== entry.rawSha256) errors.push(`HISTORICAL_BYTES_CHANGED ${entry.path}`);
+  }
+  return { ok: errors.length === 0, errors, hashes: result.hashes };
+}
+
+function readerAtSequence(read, sequence) {
+  if (sequence !== 2) throw new Error('U055 only supplies the accepted sequence-2 historical view.');
+  const verified = verifyAuthority(read);
+  if (!verified.ok) throw new Error(verified.errors.join('\n'));
+  const addendum = JSON.parse(read(chain.addendumPath(3)).toString('utf8'));
+  const replacements = new Map([...addendum.amendments, ...addendum.currentAuthorityAmendments].map((entry) => [entry.path, entry.supersededCopy]));
+  return (relative) => {
+    if (relative === HEAD || /^capability\\C026\\evidence-index-addendum-(?:[3-9]|1\d|20)\.json$/.test(relative)) return null;
+    return read(replacements.get(relative) ?? relative);
+  };
+}
+
+module.exports = Object.freeze({ HEAD, BASELINE, EXTRA, verifyHead, verifyAuthority, readerAtSequence });

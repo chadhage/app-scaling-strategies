@@ -1,0 +1,31 @@
+U055 additive fresh-tree environment clarification
+
+The pinned fresh-tree driver is unchanged. Git archive honors the caller's
+core.autocrlf setting: the first LF attempt extracted CRLF C001/ledger text,
+then correctly refused it because its raw Git-blob check failed before tests.
+That failed manifest and both raw streams are retained privately, unchanged,
+because its diagnostic contained a local checkout path.
+
+The fresh commands in U055.md require a command-local core.autocrlf=false
+override. Append it to the existing Git environment; do not replace existing
+entries, change persistent Git configuration, or touch the index or HEAD.
+
+PowerShell, repository root:
+
+  $n = if ($env:GIT_CONFIG_COUNT) { [int]$env:GIT_CONFIG_COUNT } else { 0 }
+  Set-Item "Env:GIT_CONFIG_KEY_$n" 'core.autocrlf'
+  Set-Item "Env:GIT_CONFIG_VALUE_$n" 'false'
+  $env:GIT_CONFIG_COUNT = "$($n + 1)"
+  node capability\C026\tests\u055-fresh.cjs lf
+  node capability\C026\tests\u055-fresh.cjs crlf
+
+Use an owned empty fresh-lf/fresh-crlf destination. The driver intentionally
+refuses an existing tree; preserve a failed attempt separately before retrying.
+The archive and ls-tree calls then share the same process-local Git settings.
+Every extracted file is verified against its accepted blob before the current
+C026 overlay. The CRLF variant changes only the two C001 imports; C026's -text
+source, archives and independent anchors remain exact.
+
+validation-environment-addendum-1.json links this clarification to addendum 3.
+The final namespace-byte seal covers the new clarification and the successful
+fresh captures; no old source pin, archive, manifest or seal is rewritten.
