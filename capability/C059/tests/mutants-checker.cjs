@@ -41,7 +41,7 @@ module.exports = [
   m("members.some((member) => member !== stops[0] && tabIndexOf(member) !== -1)", "false", 'checker: other radios may be tab stops'),
   m("if (busy && element.getAttribute('aria-busy') !== 'true')", "if (false)", 'checker: visual-only busy allowed'),
   m("if (disabled && element.getAttribute('aria-disabled') !== 'true' && !element.hasAttribute('disabled'))", "if (false)", 'checker: visual-only disabled allowed'),
-  m("members.length === 0 || chosen.length > 1 ||", "chosen.length > 1 ||", 'checker: an empty composite widget allowed', 'proof: stops is a filter of members, so members.length === 0 implies stops.length === 0, and the later condition stops.length !== 1 of the same disjunction is then true: an empty group is reported with or without the explicit test'),
+  m("members.length === 0 || chosen.length > 1 ||", "chosen.length > 1 ||", 'checker: an empty composite widget allowed', 'DEMONSTRATED (tests\\empty-widget-equivalence.test.cjs): the same empty radiogroup reports ROVING_TABINDEX on the real and mutated checker, while the populated valid control reports no finding; zero members also means zero tab stops'),
   m("members.some((member) => !['true', 'false'].includes(member.getAttribute(state))) ||", "", 'checker: a member without its state allowed'),
   m("for (const group of shown.filter((element) => COMPOSITES.has(roleOf(element)))) {", "for (const group of shown.filter((element) => roleOf(element) === 'radiogroup')) {", 'checker: a tab list is not a composite widget'),
   m("isControl(item) && !item.hasAttribute('disabled') && !inTabOrder(item, options) && groupOf(item) === null", "false", 'checker: no control is ever unreachable'),
@@ -82,5 +82,5 @@ module.exports = [
   m("const printed = extractBlocks(calm.rest, /@media[^{]*\\bprint\\b/i);", "const printed = { rest: calm.rest };", 'styles: print rules are judged like screen rules'),
   m("/^(?:max-)?height$/.test(property) && LENGTH.test(value)", "/^height$/.test(property) && LENGTH.test(value)", 'styles: max-height with hidden overflow is not clipping'),
   m("const LENGTH = /^\\d*\\.?\\d+(?:px|pt|pc|cm|mm|in|em|rem|ex|ch)$/i;", "const LENGTH = /^\\d*\\.?\\d+(?:px|pt)$/i;", 'styles: only px and pt heights are clipping'),
-  m("const NO_MOTION = /^(?:none|0(?:\\.0*1?)?m?s?)$/i;", "const NO_MOTION = /^(?:none|0(?:\\.0*1?)?m?s?)$/i;", 'control: an identical text (must SURVIVE: proves the runner)', 'identical replacement, the program is unchanged'),
+  m("const NO_MOTION = /^(?:none|0(?:\\.0*1?)?m?s?)$/i;", "const NO_MOTION = /^(?:none|0(?:\\.0*1?)?m?s?)$/i;", 'control: an identical text (must SURVIVE: proves the runner)', 'IDENTITY: identical replacement, the program is unchanged'),
 ];

@@ -115,7 +115,7 @@ module.exports = [
   m(J, "    const problem = bindingProblem(body, expected);\n    if (problem) return rejectAnswer(problem);\n", '', 'journey: the binding problem is ignored'),
   m(J, "if (!verdict.ok) return rejectAnswer('ENVELOPE_INVALID', verdict.problems);", '', 'journey: the envelope shape is not validated'),
   m(J, "const REQUEST_DEADLINE_MS = 15000;", "const REQUEST_DEADLINE_MS = 15000000;", 'journey: the deadline is hours long'),
-  m(J, "const REQUEST_DEADLINE_MS = 15000;", "const REQUEST_DEADLINE_MS = 15000;", 'control: an identical text (must SURVIVE: proves the runner)', 'identical replacement, the program is unchanged'),
+  m(J, "const REQUEST_DEADLINE_MS = 15000;", "const REQUEST_DEADLINE_MS = 15000;", 'control: an identical text (must SURVIVE: proves the runner)', 'IDENTITY: identical replacement, the program is unchanged'),
   // The third review (Q3, Q7): the tables are deeply frozen, the answer is judged only against the request it answers, and a recorded exchange yields that request.
   m(J, "    if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {", "    if (false) {", 'journey: no table is frozen (review Q3)'),
   m(J, "      for (const item of Object.values(value)) freeze(item);\n", '', 'journey: a table is frozen only at its top level, its nested rows stay writable (review Q3)'),

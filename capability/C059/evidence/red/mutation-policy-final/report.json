@@ -1,0 +1,105 @@
+{
+  "schema": "C059-mutation-gen/2",
+  "total": 3,
+  "killed": 1,
+  "errors": 0,
+  "undecided": 0,
+  "undecidedMutants": [],
+  "crashLikeKills": 0,
+  "treeRepairs": 0,
+  "equivalent": [
+    {
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "reason": "DEMONSTRATED (tests\\node-equivalence.test.cjs): three gate-controlled wire-order cases pass on the real server and this exact mutant: an expectation alone, a queued invalid body, and a queued foreign Host; Node buffers the queued interim response behind the first response",
+      "proof": "demonstrated",
+      "status": "survived",
+      "survived": true
+    },
+    {
+      "label": "closeServer destroying every tracked socket",
+      "reason": "DEMONSTRATED (tests\\node-equivalence.test.cjs): closeAllConnections closes the same idle, partial and active connections on the real server and this exact mutant, with two owners in FIFO and LIFO order, repeated close and an unrelated live neighbour",
+      "proof": "demonstrated",
+      "status": "survived",
+      "survived": true
+    }
+  ],
+  "survivors": [],
+  "results": [
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "checkContinue: Node sends 100 Continue itself, also for a request that never runs",
+      "status": "survived",
+      "killed": false,
+      "stage": "fast",
+      "kinds": {
+        "assertion": 0,
+        "thrown": 0,
+        "timeout": 0,
+        "file": 0,
+        "cancelled": 0,
+        "hook": 0,
+        "parent": 0,
+        "other": 0
+      },
+      "reason": null,
+      "repaired": 0,
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "DEMONSTRATED (tests\\node-equivalence.test.cjs): three gate-controlled wire-order cases pass on the real server and this exact mutant: an expectation alone, a queued invalid body, and a queued foreign Host; Node buffers the queued interim response behind the first response",
+      "proof": "demonstrated"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "closeServer destroying every tracked socket",
+      "status": "survived",
+      "killed": false,
+      "stage": "fast",
+      "kinds": {
+        "assertion": 0,
+        "thrown": 0,
+        "timeout": 0,
+        "file": 0,
+        "cancelled": 0,
+        "hook": 0,
+        "parent": 0,
+        "other": 0
+      },
+      "reason": null,
+      "repaired": 0,
+      "crashLike": false,
+      "failingTests": [],
+      "equivalent": "DEMONSTRATED (tests\\node-equivalence.test.cjs): closeAllConnections closes the same idle, partial and active connections on the real server and this exact mutant, with two owners in FIFO and LIFO order, repeated close and an unrelated live neighbour",
+      "proof": "demonstrated"
+    },
+    {
+      "group": "server",
+      "file": "server.cjs",
+      "label": "decide() on a parse error: a request that waits behind the one in flight still starts and applies its effect (review D1: a queued cancel ended a step of another connection)",
+      "status": "killed",
+      "killed": true,
+      "stage": "fast",
+      "kinds": {
+        "assertion": 54,
+        "thrown": 0,
+        "timeout": 0,
+        "file": 0,
+        "cancelled": 0,
+        "hook": 0,
+        "parent": 0,
+        "other": 0
+      },
+      "reason": null,
+      "repaired": 0,
+      "crashLike": false,
+      "failingTests": [
+        "D1 FAMILY parser: a malformed HTTP version (clientError) / same write / completed GET",
+        "D1 FAMILY parser: a malformed HTTP version (clientError) / same write / gated step",
+        "D1 FAMILY parser: a malformed HTTP version (clientError) / later write after both earlier requests parsed / gated step"
+      ],
+      "equivalent": null,
+      "proof": null
+    }
+  ]
+}

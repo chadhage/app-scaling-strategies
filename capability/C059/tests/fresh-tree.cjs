@@ -17,7 +17,10 @@ const TEXT = new Set(['.js', '.cjs', '.mjs', '.json', '.md', '.html', '.css', '.
 
 if (!target || !['lf', 'crlf'].includes(mode)) throw new Error('usage: node tests\\fresh-tree.cjs <scratch folder> <lf|crlf> [--ref <commit>]');
 const resolved = path.resolve(target);
-if (resolved.toLowerCase().startsWith(repository.toLowerCase()) || fs.existsSync(resolved)) throw new Error('the scratch folder must be outside the repository and must not exist');
+const relative = path.relative(repository, resolved);
+const inside = relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+const owned = relative === 'fresh-work' || relative.startsWith(`fresh-work${path.sep}`);
+if ((inside && !owned) || fs.existsSync(resolved)) throw new Error('the scratch folder must be new and outside the source tree or under the explicitly owned fresh-work folder');
 fs.mkdirSync(resolved, { recursive: true });
 
 const tar = path.join(resolved, 'foreign.tar');
@@ -25,6 +28,10 @@ execFileSync('git', ['-C', repository, 'archive', '--format=tar', '-o', tar, ref
 execFileSync('tar', ['-xf', tar, '-C', resolved], { windowsHide: true });
 fs.rmSync(tar);
 fs.cpSync(path.join(repository, 'capability', 'C059'), path.join(resolved, 'capability', 'C059'), { recursive: true, filter: (source) => !/[\\/](?:scratch|data)$/.test(source) });
+const browser = path.join(repository, 'testing', 'browser');
+if (fs.existsSync(browser)) fs.cpSync(browser, path.join(resolved, 'testing', 'browser'), {
+  recursive: true, filter: (source) => !/[\\/](?:node_modules|evidence|fixtures|lifecycle)$/.test(source),
+});
 
 let seen = 0;
 let rewritten = 0;

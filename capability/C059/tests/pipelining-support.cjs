@@ -117,4 +117,4 @@ const ROWS = [
   row('CONNECT (Node destroys the socket without an answer)', (p, v) => `CONNECT 127.0.0.1:80 HTTP/${v}\r\nHost: 127.0.0.1:80\r\n\r\n`, null, null, { lenient: true }),
 ];
 
-module.exports = { JSON_TYPE, ROWS, bare, chunkedBody, chunkedHead, disposeShared, exchange, scenario, withBody };
+module.exports = { JSON_TYPE, ROWS, bare, chunkedBody, chunkedHead, disposeShared, exchange, parseResponses, scenario, withBody };

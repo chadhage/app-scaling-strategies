@@ -14,7 +14,7 @@ const server = require('../server.cjs');
 const OPTIONS = { timeout: 30000 };
 const root = path.resolve(__dirname, '..');
 const input = (over = {}) => ({ schemaVersion: 1, step: 'reserve-capacity', idempotencyKey: 'srv-key-0001', leaseId: 'synthetic-lease-001', units: 5, ...over });
-const request = (port, line, headers = [], body = 'abcd') => `${line} HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\n${headers.join('\r\n')}${headers.length ? '\r\n' : ''}Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`;
+const { NODE_OWN, TABLE, request } = require('./refusal-table.cjs');
 
 test('every page asset, pinned import and delivered lesson asset is served byte-exact with strict headers; lesson assets are framed under their own CSP', OPTIONS, async () => {
   const service = await startService();
@@ -90,29 +90,6 @@ test('a step in flight is inspected as in flight, cancelled explicitly, and a du
   }
 });
 
-const TABLE = [
-  ['a foreign Host', () => 'GET / HTTP/1.1\r\nHost: example.test\r\nContent-Length: 4\r\n\r\nabcd', 421, 'LOCAL_HOST_REQUIRED'],
-  ['a cross origin', (port) => request(port, 'GET /scope.json', ['Origin: http://evil.test']), 403, 'CROSS_ORIGIN_DENIED'],
-  ['a URL that is too long', (port) => request(port, `GET /${'a'.repeat(2100)}`), 414, 'URL_TOO_LONG'],
-  ['another authority in the target', (port) => request(port, 'GET //evil.test/x'), 400, 'INVALID_URL'],
-  ['a fragment', (port) => request(port, 'GET /scope.json#x'), 400, 'INVALID_URL'],
-  ['a query', (port) => request(port, 'GET /v1/leases?x=1'), 400, 'INVALID_QUERY'],
-  ['a GET with a body', (port) => request(port, 'GET /v1/leases', [], 'abcd'), 400, 'UNEXPECTED_BODY'],
-  ['PUT on the step route', (port) => request(port, 'PUT /v1/steps', [], 'abcd'), 405, 'METHOD_NOT_ALLOWED'],
-  ['DELETE on an asset', (port) => request(port, 'DELETE /scope.json', [], 'abcd'), 405, 'METHOD_NOT_ALLOWED'],
-  ['POST on an asset', (port) => request(port, 'POST /scope.json', [], 'abcd'), 405, 'METHOD_NOT_ALLOWED'],
-  ['HEAD', (port) => request(port, 'HEAD /'), 405, null],
-  ['an unknown route', (port) => request(port, 'POST /admin', [], 'abcd'), 404, 'NOT_FOUND'],
-  ['an upper-case action name', (port) => request(port, 'POST /v1/steps/srv-key-0001/Cancel', [], 'abcd'), 404, 'NOT_FOUND'],
-  ['no transcript configured (bodiless: nothing to leave unread)', (port) => request(port, 'GET /transcript.json', ['Connection: close'], ''), 404, 'NOT_FOUND'],
-  ['a wrong media type', (port) => request(port, 'POST /v1/steps', ['Content-Type: text/plain'], 'abcd'), 415, 'UNSUPPORTED_MEDIA_TYPE'],
-  ['a declared body that is too large', (port) => `POST /v1/steps HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nContent-Type: application/json\r\nContent-Length: 5000\r\n\r\nabcd`, 413, 'BODY_TOO_LARGE'],
-  ['a key that is not a key (inspect; bodiless)', (port) => request(port, 'GET /v1/steps/bad%20key', ['Connection: close'], ''), 400, 'INVALID_FORMAT'],
-  ['a key that is not a key (action)', (port) => request(port, 'POST /v1/steps/not%20a%20key/cancel'), 400, 'INVALID_FORMAT'],
-  ['an action with a body', (port) => request(port, 'POST /v1/steps/srv-key-0001/cancel', [], 'abcd'), 400, 'UNEXPECTED_BODY'],
-  ['a GET on an action route', (port) => request(port, 'GET /v1/steps/srv-key-0001/cancel'), 405, 'METHOD_NOT_ALLOWED'],
-];
-
 for (const [name, make, status, code] of TABLE) {
   test(`refusal table: ${name} is answered ${status} ${code} with Connection: close and the socket is destroyed`, OPTIONS, async () => {
     const service = await startService();
@@ -132,14 +109,7 @@ for (const [name, make, status, code] of TABLE) {
 }
 
 // The answers NODE would give by itself are the service's own typed answers on the same refusal rule (proved here in process, with real sockets, so that the
-// listeners are measured by the coverage run; tests\pipelining.test.cjs proves them, and that nothing runs behind them, in a separate process).
-const NODE_OWN = [
-  ['an unknown expectation', (port) => `GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nExpect: nonsense\r\n\r\n`, 417, 'EXPECTATION_NOT_SUPPORTED'],
-  ['a request without Host', () => 'GET /scope.json HTTP/1.1\r\n\r\n', 421, 'LOCAL_HOST_REQUIRED'],
-  ['a malformed HTTP version', (port) => `GET /scope.json HTTP/9.9\r\nHost: 127.0.0.1:${port}\r\n\r\n`, 400, 'MALFORMED_REQUEST'],
-  ['a header section that is too large', (port) => `GET /scope.json HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nX-Pad: ${'a'.repeat(9000)}\r\n\r\n`, 431, 'REQUEST_HEADERS_TOO_LARGE'],
-];
-
+// listeners are measured by the coverage run; tests\pipelining.test.cjs proves them, and that nothing runs behind them, in a separate process). The rows are in tests\refusal-table.cjs.
 for (const [name, make, status, code] of NODE_OWN) {
   test(`Node's own answer on the one refusal path: ${name} is answered ${status} ${code} with Connection: close and the socket is destroyed`, OPTIONS, async () => {
     const service = await startService();

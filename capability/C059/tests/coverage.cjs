@@ -15,7 +15,7 @@ const SUITES = Object.freeze({
   'a11y-check.js': ['checker', 'checker-reach', 'checker-kill', 'checker-fp', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
   'journey.js': ['journey', 'journey-freeze', 'bind-null', 'page', 'flow', 'tamper', 'page-bind', 'page-kill', 'transcript'],
   'page.js': ['page', 'flow', 'tamper', 'page-bind', 'page-kill', 'keyboard', 'property'],
-  'server.cjs': ['server', 'resources', 'pipelining', 'lane', 'lane-flood', 'pending', 'flood', 'transcript'],
+  'server.cjs': ['server', 'resources', 'pipelining', 'lane', 'lane-flood', 'pending', 'victim', 'queued-cancel', 'node-equivalence', 'flood', 'transcript'],
   'transcript.cjs': ['transcript', 'server'],
 });
 const requested = process.argv.slice(2);

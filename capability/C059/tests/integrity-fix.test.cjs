@@ -153,9 +153,13 @@ test('the latest full systematic mutation run killed every non-equivalent mutant
     assert.equal(report.errors, 0);
     assert.ok(report.results.filter((item) => item.killed).every((item) => item.failingTests.length > 0), `every kill of mutgen-${number} names a failing test`);
     if (number === fullNumber) {
-      assert.equal(manifest.exitCode, report.survivors.length === 0 ? 0 : 1, 'the generator verdict of the full run');
-      assert.equal(report.killed + report.equivalent.filter((item) => item.survived).length + report.survivors.length, report.total);
-      assert.ok(report.equivalent.every((item) => item.reason.length > 10), 'every equivalent mutant states its reason');
+      assert.equal(report.schema, 'C059-mutation-gen/2', 'the latest full run was made by the generator with the causal-kill rule: a kill is a named test that failed by an assertion or by a thrown error');
+      assert.equal(report.undecided, 0, 'no mutant is undecided (a timeout, a file-level failure, a crash or a run without a named failing test)');
+      assert.equal(manifest.exitCode, report.survivors.length === 0 && report.undecided === 0 ? 0 : 1, 'the generator verdict of the full run');
+      assert.equal(report.killed + report.equivalent.filter((item) => item.survived).length + report.survivors.length + report.undecided, report.total);
+      assert.ok(report.results.filter((item) => item.killed).every((item) => item.kinds.assertion + item.kinds.thrown > 0), 'every kill is an assertion failure or an error thrown inside a named test');
+      assert.ok(report.equivalent.every((item) => item.reason.length > 10 && ['identity', 'demonstrated', 'reasoning'].includes(item.proof)), 'every equivalent mutant states its reason and the kind of its proof');
+      assert.ok(report.equivalent.every((item) => item.status !== 'undecided'), 'an undecided mutant is never listed as an equivalent one');
     } else {
       assert.ok(report.total < 150 && manifest.exitCode === 0 && report.killed === report.total && report.survivors.length === 0, `mutgen-${number} is a targeted run that killed everything it applied`);
       for (const item of report.results) killedLater.add(`${item.file}: ${item.label}`);
