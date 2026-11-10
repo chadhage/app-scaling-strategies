@@ -1,0 +1,72 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { root, list, sha } = require('./seal.cjs');
+const repository = process.env.C011_GIT_REPOSITORY;
+const candidate = path.resolve(root, '..', '..');
+assert.ok(repository && path.isAbsolute(repository), 'the accepted dependency repository must be explicit');
+const destination = path.join(root, 'evidence', 'final');
+const target = path.join(destination, 'source-freeze.json');
+assert.equal(fs.existsSync(target), false, 'a source freeze is immutable, never repinned');
+const accepted = (bytes, convert = true) => {
+  const hashes = [sha(bytes)];
+  if (convert) {
+    const lf = Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
+    hashes.push(sha(lf), sha(Buffer.from(lf.toString('utf8').replace(/\n/g, '\r\n'))));
+  }
+  return [...new Set(hashes)];
+};
+const files = list().filter((file) => !file.startsWith('evidence/')).map((file) => {
+  const bytes = fs.readFileSync(path.join(root, ...file.split('/')));
+  return { path: file, bytes: bytes.length, sha256: sha(bytes), acceptedSha256: accepted(bytes) };
+});
+const PRODUCTION = ['codes.cjs', 'config.cjs', 'contract.js', 'json.cjs', 'page.js', 'server.cjs', 'store.cjs'];
+const actual = fs.readdirSync(root).filter((file) => /\.c?js$/.test(file)).sort();
+assert.deepEqual(actual, [...PRODUCTION].sort(), 'the whole production set is enumerated without exclusions');
+fs.mkdirSync(path.join(destination, 'subjects'), { recursive: true });
+const production = PRODUCTION.map((file) => {
+  const bytes = fs.readFileSync(path.join(root, file));
+  const subject = 'evidence/final/subjects/' + sha(bytes) + '.source.txt';
+  fs.writeFileSync(path.join(root, ...subject.split('/')), bytes, { flag: 'wx' });
+  return { path: file, subject, rawSha256: sha(bytes) };
+});
+const context = JSON.parse(fs.readFileSync(path.join(root, 'dependency-context.json')));
+const browser = JSON.parse(fs.readFileSync(path.join(candidate, 'private', 'browser-imports.json')));
+const inherited = JSON.parse(fs.readFileSync(path.join(candidate, 'private', 'inherited-manifest.json')));
+const paths = [...new Set([...context.sources.map((entry) => entry.path.replaceAll('\\', '/')), ...browser.files.map((entry) => entry.path.replaceAll('\\', '/'))])].sort();
+const gitEnv = { ...process.env };
+for (const name of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_COMMON_DIR']) delete gitEnv[name];
+const batch = execFileSync('git', ['-C', repository, '--no-pager', 'cat-file', '--batch'], {
+  env: gitEnv, input: paths.map((file) => inherited.parentHead + ':' + file).join('\n') + '\n', windowsHide: true, maxBuffer: 8 * 1024 * 1024
+});
+let at = 0;
+const gitObjects = new Map(paths.map((file) => {
+  const end = batch.indexOf('\n', at);
+  const [oid, type, length] = batch.subarray(at, end).toString('utf8').split(' ');
+  assert.equal(type, 'blob', 'every read-only dependency exists at the fixed accepted parent commit');
+  const bytes = batch.subarray(end + 1, end + 1 + Number(length));
+  at = end + 2 + Number(length);
+  return [file, { oid, bytes }];
+}));
+const dependencies = paths.map((file) => {
+  const bytes = fs.readFileSync(path.join(repository, ...file.split('/')));
+  const blob = gitObjects.get(file);
+  assert.equal(sha(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'))),
+    sha(Buffer.from(blob.bytes.toString('utf8').replace(/\r\n/g, '\n'))), 'current dependency content matches its accepted Git object');
+  const copied = path.join(candidate, ...file.split('/'));
+  if (fs.existsSync(copied)) assert.equal(sha(fs.readFileSync(copied)), sha(bytes), 'the private helper/dependency copy is the actual current accepted byte set');
+  return { path: file, bytes: bytes.length, sha256: sha(bytes), acceptedSha256: accepted(bytes, !/qualified\.(?:json|addendum\.jsonl)$/.test(file)),
+    gitCommit: inherited.parentHead, gitBlobOid: blob.oid, gitBlobSha256: sha(blob.bytes) };
+});
+fs.writeFileSync(path.join(destination, 'inherited-files.json'), JSON.stringify({
+  schema: 'C011-inherited-files/1', policy: 'Exact original untracked byte inventory, not rewritten or republished historical proof',
+  files: inherited.files
+}, null, 2) + '\n', { flag: 'wx' });
+fs.writeFileSync(target, JSON.stringify({
+  schema: 'C011-source-freeze/1', frozenAtUtc: new Date().toISOString(),
+  files, production, dependencies, gitIndexOrHeadWritten: false,
+  sourcePolicy: 'exact raw/LF/CRLF representations only; no mixed-ending normalization at acceptance'
+}, null, 2) + '\n', { flag: 'wx' });
+console.log(JSON.stringify({ frozenSourceFiles: files.length, production: production.length, readOnlyDependencies: dependencies.length, inheritedFiles: inherited.files.length }));

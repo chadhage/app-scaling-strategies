@@ -1,0 +1,266 @@
+'use strict';
+
+// The C011 server: wiring only. Identity, the role table, the refusal path and the lanes are the accepted C009 pieces and the audit ring is C010's
+// (imported read-only); who holds what is decided in store.cjs and nowhere else. Every request goes through ONE function, route(); every refusal
+// through ONE refuse(). The order of a request: guard (Host, Origin), URL, route (unknown, method), credential (always verified when presented),
+// role (deny by default), query (closed vocabulary), body (a strict reader, then the closed schema), the target of a release, and for a mutation the
+// decision AGAIN where the effect is committed: the token is verified again, a connection that was refused or ended while the request waited ends it
+// with no effect, no audit record and no answer, and the store checks every bound and commits in ONE synchronous step.
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const { AuthError, claimedHeaders: sharedClaims, createTokenRegistry, decide, parseBearer } = require('../C009/authz.cjs');
+const { createQueue } = require('../C009/queue.cjs');
+const { canStopReading, clientErrorCode, createLanes, createResponder, hasBody, isFinished, localGuard, readBody } = require('../C009/http-io.cjs');
+const { createAudit } = require('../C010/audit.cjs');
+const contract = require('./contract.js');
+const { CODES } = require('./codes.cjs');
+const { parseStrict } = require('./json.cjs');
+const { createStore } = require('./store.cjs');
+
+const scope = Object.freeze({
+  cardId: 'C011', businessData: 'synthetic', transport: '127.0.0.1 HTTP only', testRuntime: process.version,
+  approvedProductionTarget: 'Node.js 24 LTS / Express / Microsoft Entra ID', roles: contract.roles, priceVersion: contract.priceVersion,
+  leaseIsSubjectOfVerifiedToken: true, publicState: false, capacityUnits: 'synthetic', costUnits: 'synthetic', entraIntegrated: false, identityRegistered: false,
+  productionRuntimeValidated: false, nativeTargetQualified: false, liveAzureRuns: 0, authorizedCloudSpend: 0
+});
+const ASSETS = Object.freeze({
+  'asset.index': ['index.html', 'text/html; charset=utf-8'], 'asset.page': ['page.js', 'text/javascript; charset=utf-8'], 'asset.style': ['style.css', 'text/css; charset=utf-8']
+});
+const JSON_TYPE = /^application\/json\s*(;.*)?$/i;
+// Names a client may use to claim an owner, a lease, a pool, a cap, a price or a method; they are reported by name and never obeyed (C009 lists the role and subject ones).
+const MORE_CLAIMS = new Set(['x-lease', 'x-lease-id', 'lease', 'lease-id', 'x-tenant', 'x-resource-owner', 'x-pool', 'x-cap', 'x-price', 'x-spend', 'x-units', 'x-capacity',
+  'x-state', 'x-deadline', 'x-http-method-override', 'x-method-override', 'x-http-method']);
+const METHODS = new Set(['GET', 'POST', 'PATCH', 'DELETE']);
+const FIGURES = Object.freeze({ unitsBefore: null, unitsAfter: null, spendBefore: null, spendAfter: null, poolUnitsBefore: null, poolUnitsAfter: null, poolSpendBefore: null, poolSpendAfter: null });
+const BLANK = Object.freeze({ subject: null, role: null, route: null, method: 'OTHER', outcome: null, code: null, reservation: null, ...FIGURES });
+// What each audit view shows: the owner never sees the global sequence or a figure of the pool; the operator sees everything the ring holds.
+const OWNER_FIELDS = Object.freeze(['route', 'method', 'outcome', 'code', 'reservation', 'unitsBefore', 'unitsAfter', 'spendBefore', 'spendAfter']);
+const OPERATOR_FIELDS = Object.freeze(['seq', 'subject', 'role', ...OWNER_FIELDS, 'poolUnitsBefore', 'poolUnitsAfter', 'poolSpendBefore', 'poolSpendAfter']);
+const project = (entry, names) => Object.fromEntries(names.map((name) => [name, entry[name]]));
+
+function claimedHeaders(rawHeaders) {
+  const names = new Set(sharedClaims(rawHeaders));
+  for (let index = 0; index < rawHeaders.length; index += 2) if (MORE_CLAIMS.has(rawHeaders[index].toLowerCase())) names.add(rawHeaders[index].toLowerCase());
+  return [...names].sort();
+}
+
+// The figures of one decision, flat and made of numbers only, so that an audit record holds no object that anything else could change.
+function flat(figures) {
+  if (!figures?.before) return FIGURES;
+  const { before, after } = figures;
+  return {
+    unitsBefore: before.units, unitsAfter: after.units, spendBefore: before.spend, spendAfter: after.spend,
+    poolUnitsBefore: before.poolUnits, poolUnitsAfter: after.poolUnits, poolSpendBefore: before.poolSpend, poolSpendAfter: after.poolSpend
+  };
+}
+
+// What each route asks of the store. READS change nothing but time; WRITES run inside the queue and decide again where they commit.
+const READS = Object.freeze({
+  'reservation.list': ({ store, subject, query }) => store.list(subject, query),
+  'reservation.read': ({ store, subject, params }) => store.read(subject, params.id),
+  allowance: ({ store, subject }) => store.allowance(subject),
+  'operator.pool': ({ store }) => store.operatorPool()
+});
+const WRITES = Object.freeze({
+  'reservation.create': ({ store, subject, body }) => store.reserve(subject, body),
+  'reservation.release': ({ store, subject, params }) => store.release(subject, params.id),
+  batch: ({ store, subject, body }) => store.batch(subject, body.ops)
+});
+const OUTCOMES = Object.freeze({
+  'reservation.create': (value) => (value.replayed ? 'replayed' : 'admitted'),
+  'reservation.release': (value) => (value.replayed ? 'replayed' : 'released'),
+  batch: () => 'applied'
+});
+
+function createApp(options = {}) {
+  const config = contract.resolveConfig(options.config);
+  const { limits } = config;
+  const roleTable = options.roleTable || contract.roleTable;
+  const hooks = options.hooks || {};
+  const registry = createTokenRegistry({ now: options.now, randomBytes: options.randomBytes });
+  const store = createStore({ config, now: options.now, newId: options.newId });
+  const audit = createAudit({ perSubject: limits.auditEntries, anonymous: limits.anonymousEntries });
+  const queue = createQueue();
+  const record = (entry) => audit.record({ ...BLANK, ...entry });
+  // The reservations that expired while a request was being decided are decisions too: each one is recorded for its own lease, before the request's own record.
+  const noteExpired = (result) => {
+    for (const event of result?.expired ?? []) {
+      record({ subject: event.subject, role: 'conductor', route: 'expire', method: 'CLOCK', outcome: 'expired', code: 'ok', reservation: event.reservation, ...flat(event) });
+    }
+  };
+  const ownAudit = (subject, { limit, offset }) => {
+    const own = audit.log().filter((entry) => entry.subject === subject);
+    return { total: own.length, offset, limit, items: own.slice(offset, offset + limit).map((entry) => project(entry, OWNER_FIELDS)) };
+  };
+  const operatorAudit = ({ limit, offset }) => {
+    const log = audit.log();
+    return { total: log.length, offset, limit, items: log.slice(offset, offset + limit).map((entry) => project(entry, OPERATOR_FIELDS)) };
+  };
+
+  async function route(request, response, forced = null) {
+    const out = createResponder(response);
+    const claims = claimedHeaders(request.rawHeaders);
+    const ctx = { subject: null, role: null, route: null, method: METHODS.has(request.method) ? request.method : 'OTHER' };
+    // A connection that was refused (marked by C009) or ended (the client left, or the lane cut it) while this request waited: nothing is committed or answered.
+    const cancelled = () => isFinished(request.socket) || request.socket.destroyed;
+    const finish = (outcome, code, result) => {
+      noteExpired(result);
+      record({ ...ctx, outcome, code, reservation: result?.value?.reservation?.id ?? null, ...flat(result?.figures) });
+    };
+    // THE refusal: every error answer of this server is written here; the responder marks the socket, says Connection: close and stops reading.
+    const refuse = (code, extra = {}, headers = {}, result = null) => {
+      finish('refused', code, result);
+      const [status, message] = CODES[code];
+      return out.json(status, { outcome: code, error: { code, message }, ...extra, ignoredClaims: claims }, headers);
+    };
+    const refuseAuth = (error) => refuse(error.code, {}, { 'WWW-Authenticate': error.challenge });
+    const answer = (build, outcome, result = null) => {
+      finish(outcome, 'ok', result);
+      return out.json(200, { outcome: 'ok', ...build(), ignoredClaims: claims });
+    };
+    try {
+      if (forced !== null) return refuse(forced);
+      const guard = localGuard(request, server);
+      if (guard) return refuse(guard);
+      if (request.url.length > contract.fixed.urlChars) return refuse('URL_TOO_LONG');
+      if (!request.url.startsWith('/') || request.url.startsWith('//') || request.url.includes('#')) return refuse('INVALID_URL');
+      const cut = request.url.indexOf('?');
+      const pathname = cut === -1 ? request.url : request.url.slice(0, cut);
+      const rawQuery = cut === -1 ? '' : request.url.slice(cut + 1);
+      const found = contract.resolve(pathname);
+      if (found.routes.length === 0) return refuse(pathname.startsWith('/v1/reservations/') ? 'RESERVATION_NOT_FOUND' : 'NOT_FOUND');
+      const matched = found.routes.find((candidate) => candidate.method === request.method);
+      if (!matched) return refuse('METHOD_NOT_ALLOWED', {}, { Allow: contract.allowedMethods(found.routes) });
+      ctx.route = matched.name;
+
+      // A presented credential is always verified, on public routes too; it is never read as anonymous.
+      const token = parseBearer(request.rawHeaders);
+      const identity = token === null ? null : registry.verify(token);
+      if (matched.public) {
+        if (rawQuery !== '') return refuse('QUERY_NOT_ALLOWED');
+        if (hasBody(request)) return refuse('UNEXPECTED_BODY');
+        if (matched.name === 'scope') return out.json(200, scope);
+        const [file, type] = ASSETS[matched.name];
+        return out.file(fs.readFileSync(path.join(__dirname, file)), type);
+      }
+      if (identity === null) throw new AuthError('AUTHENTICATION_REQUIRED');
+      ctx.subject = identity.subject;
+      ctx.role = identity.role;
+      const decision = decide(roleTable, matched.name, identity.role);
+      if (!decision.allowed) return refuse(decision.code);
+      const query = contract.parseQuery(matched, rawQuery);
+      if (!query.ok) return refuse(query.code);
+      if (matched.body === null && hasBody(request)) return refuse('UNEXPECTED_BODY');
+
+      const context = { store, subject: identity.subject, params: found.params, query: query.value, body: null };
+      if (!matched.mutating) {
+        if (matched.name === 'me') return answer(() => ({ subject: identity.subject, role: identity.role }), 'read');
+        if (matched.name === 'audit') return answer(() => ownAudit(identity.subject, query.value), 'read');
+        if (matched.name === 'operator.audit') return answer(() => operatorAudit(query.value), 'read');
+        const result = READS[matched.name](context);
+        return result.ok ? answer(() => result.value, 'read', result) : refuse(result.code, {}, {}, result);
+      }
+
+      // The first decision of a mutation, before its body is read: the reservation named in the URL must be held by this subject.
+      if (matched.name === 'reservation.release' && !store.has(identity.subject, found.params.id)) return refuse('RESERVATION_NOT_FOUND');
+      if (matched.body !== null && !JSON_TYPE.test(request.headers['content-type'] || '')) return refuse('MEDIA_TYPE_UNSUPPORTED');
+      if (matched.body !== null) {
+        out.proceed();
+        const read = await readBody(request, limits.bodyBytes);
+        if (cancelled()) return undefined;
+        if (read.tooLarge) return refuse('BODY_TOO_LARGE');
+        const parsed = parseStrict(read.buffer.toString('utf8'), { depth: contract.fixed.depth });
+        if (!parsed.ok) return refuse('BODY_INVALID_JSON');
+        const checked = contract.validateBody(matched.body, parsed.value);
+        if (!checked.ok) return refuse(checked.code, checked.field === undefined ? {} : { field: checked.field });
+        context.body = checked.value;
+        const foreign = matched.name === 'batch' ? context.body.ops.findIndex((operation) => operation.op === 'release' && !store.has(identity.subject, operation.id)) : -1;
+        if (foreign !== -1) return refuse('RESERVATION_NOT_FOUND', { opIndex: foreign });
+      }
+
+      // The second decision, where the effect is committed: the hook may change the world while this request waits; the token is verified again and a
+      // connection that ended or was refused in the meantime ends the request with no effect, no audit record and no answer. The store then checks every
+      // bound and commits in one synchronous step: there is no await between the check and the commit.
+      const effect = async () => {
+        try {
+          await hooks.beforeCommit?.({ route: matched.name, subject: identity.subject });
+          if (cancelled()) return undefined;
+          registry.verify(token);
+          const result = WRITES[matched.name](context);
+          if (!result.ok) return refuse(result.code, result.opIndex === undefined ? {} : { opIndex: result.opIndex }, {}, result);
+          return answer(() => result.value, OUTCOMES[matched.name](result.value), result);
+        } catch (error) {
+          if (error instanceof AuthError) return refuseAuth(error);
+          throw error;
+        }
+      };
+      return await queue.run(effect);
+    } catch (error) {
+      if (error instanceof AuthError) return refuseAuth(error);
+      return refuse('INTERNAL_ERROR');
+    }
+  }
+
+  // The requests of one connection run one at a time, in order (C009 createLanes); everything Node would answer by itself goes through the same
+  // lanes and the same refusal (http-io.cjs rule 4). No `upgrade` listener exists: an Upgrade header is an ordinary request here.
+  const admit = createLanes({ depth: limits.pipelined });
+  const server = http.createServer({ connectionsCheckingInterval: limits.checkMs, requireHostHeader: false }, (request, response) => admit(request, response, route));
+  server.on('checkContinue', (request, response) => admit(request, response, route));
+  server.on('checkExpectation', (request, response) => admit(request, response, (queued, answered) => route(queued, answered, 'EXPECTATION_FAILED')));
+  const refuseSocket = (socket, code) => {
+    record({ outcome: 'refused', code });
+    admit.refuse(socket, code);
+  };
+  server.on('clientError', (error, socket) => refuseSocket(socket, clientErrorCode(error)));
+  server.on('connect', (request, socket) => refuseSocket(socket, 'METHOD_NOT_ALLOWED'));
+  server.requestTimeout = limits.headerMs;
+  server.headersTimeout = limits.headerMs;
+  server.keepAliveTimeout = 1000;
+  server.timeout = limits.idleMs;
+  server.maxConnections = limits.connections;
+  // A refusal stops reading with a Node internal (http-io.cjs rule 3): where it is missing nothing is served (fail closed).
+  let broken = null;
+  const failClosed = () => {
+    if (broken === null) process.emitWarning('C011 cannot stop reading a refused connection and serves nothing.', { code: 'C011_READ_STOP_UNAVAILABLE' });
+    broken = 'READ_STOP_UNAVAILABLE';
+  };
+  server.once('listening', () => {
+    if (canStopReading(server)) return;
+    failClosed();
+    server.emit('error', new Error('READ_STOP_UNAVAILABLE: this Node cannot stop reading a refused connection'));
+  });
+  const sockets = new Set();
+  server.on('connection', (socket) => {
+    if (broken === null && !canStopReading(socket)) failClosed();
+    if (broken !== null) {
+      socket.destroy();
+      return;
+    }
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+  });
+  const close = () => new Promise((resolve) => {
+    server.close(() => resolve());
+    server.closeAllConnections();
+    for (const socket of sockets) socket.destroy();
+  });
+  return {
+    server, close, queued: queue.size, snapshot: store.snapshot, auditLog: audit.log, stats: store.stats, config,
+    health: () => ({ ok: broken === null, reason: broken }), issueToken: (identity, tokenOptions) => registry.issue(identity, tokenOptions)
+  };
+}
+
+// A server on 127.0.0.1 and an automatic port with a token for each of the four synthetic identities (the page, the child process and the browser use it).
+async function startLocal(options = {}) {
+  const app = createApp(options);
+  await new Promise((resolve, reject) => {
+    app.server.once('error', reject);
+    app.server.listen(0, '127.0.0.1', resolve);
+  });
+  const { port } = app.server.address();
+  const tokens = Object.fromEntries(Object.keys(contract.identities).map((name) => [name, app.issueToken(name, { ttlMs: options.tokenMs })]));
+  return { app, port, origin: `http://127.0.0.1:${port}`, tokens, close: app.close };
+}
+
+module.exports = Object.freeze({ createApp, startLocal, scope });

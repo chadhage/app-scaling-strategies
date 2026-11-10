@@ -1,0 +1,485 @@
+{
+  "schema": "C011-public-capture/1",
+  "name": "final-loop",
+  "kind": "portable projection, private originals unchanged",
+  "privateOriginalRecordSha256": "11540dfafd6117c15bf94f667dcd2af87bccb9997166e91f3283daf50ad96104",
+  "purpose": "Final 20x4 load repetitions under four positively spawned burners, with per-child records and native PID/creation identities recorded before load; originals retained, all owned burners must exit",
+  "commandProjection": [
+    "node.exe",
+    "-e",
+    "'use strict';\r\nconst fs = require('node:fs'), path = require('node:path'), cp = require('node:child_process');\r\nconst assert = require('node:assert/strict');\r\nconst root = process.argv[1], directory = process.env.C011_LOOP_OWNERSHIP_DIR;\r\nassert.ok(directory && path.isAbsolute(directory));\r\nconst relative = path.relative(path.join(root, 'private'), directory);\r\nassert.ok(relative && relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative));\r\nfs.mkdirSync(directory, { recursive: false });\r\nprocess.chdir(root);\r\nconst original = cp.spawn;\r\nlet number = 0;\r\ncp.spawn = function (...args) {\r\n  const child = original.apply(this, args);\r\n  const id = String(++number).padStart(3, '0');\r\n  const record = {\r\n    owner: 'C011 current invocation positive ChildProcess handle', pid: child.pid, parentPid: process.pid,\r\n    command: args[0], args: args[1], createdByThisInvocation: true, startedAtUtc: new Date().toISOString()\r\n  };\r\n  let version = 0;\r\n  const save = () => fs.writeFileSync(path.join(directory, id + '.' + (++version) + '.json'), JSON.stringify(record, null, 2) + '\\n', { flag: 'wx' });\r\n  save();\r\n  child.once('close', (code, signal) => {\r\n    record.closed = true; record.code = code; record.signal = signal; save();\r\n  });\r\n  if (args[1]?.[0] === '-e' && args[1]?.[1] === 'for (;;) {}') {\r\n    record.burner = true;\r\n    try {\r\n      assert.ok(Number.isInteger(child.pid) && child.pid > 0);\r\n      const shell = path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');\r\n      const script = `$ErrorActionPreference='Stop';$p=Get-Process -Id ${child.pid};@{pid=$p.Id;createdAt=$p.StartTime.ToUniversalTime().ToFileTimeUtc().ToString()}|ConvertTo-Json -Compress`;\r\n      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'psmodulepath'));\r\n      const observed = cp.spawnSync(shell, ['-NoLogo','-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],\r\n        { env, windowsHide: true, timeout: 120000, maxBuffer: 1024 * 1024 });\r\n      assert.equal(observed.error, undefined);\r\n      assert.equal(observed.status, 0, String(observed.stderr));\r\n      const identity = JSON.parse(observed.stdout.toString('utf8'));\r\n      assert.equal(identity.pid, child.pid);\r\n      assert.match(identity.createdAt, /^\\d+$/);\r\n      record.nativeIdentity = identity;\r\n      save();\r\n    } catch (error) {\r\n      record.identityRefused = true; record.error = String(error.message); save();\r\n      child.kill();\r\n      throw error;\r\n    }\r\n  }\r\n  return child;\r\n};\r\nrequire(path.join(root, 'capability', 'C011', 'tests', 'loop.cjs'));\r\n",
+    "<PRIVATE-C011>"
+  ],
+  "nodeRuntime": "v22.23.4",
+  "startedAtUtc": "2026-11-10T14:47:40.813Z",
+  "completedAtUtc": "2026-11-10T14:53:44.963Z",
+  "execution": {
+    "exitCode": 0,
+    "expectedExitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "spawnError": null
+  },
+  "inputs": [
+    {
+      "path": "capability/C011/codes.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "codes.cjs"
+      },
+      "rawSha256": "11810d20d6a6daecbcb54947d368b196172704e74dcbb9217fd5445fe9c4c414",
+      "lfSha256": "12ab0305ac9f7aa56a7226fa4690bc6109680a8b41083013c1577a65c3354c0d",
+      "acceptedSha256": [
+        "11810d20d6a6daecbcb54947d368b196172704e74dcbb9217fd5445fe9c4c414",
+        "12ab0305ac9f7aa56a7226fa4690bc6109680a8b41083013c1577a65c3354c0d"
+      ],
+      "bytes": 2179
+    },
+    {
+      "path": "capability/C011/config.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "config.cjs"
+      },
+      "rawSha256": "b67dc791da44e42714660622f980d1e4cf8a42e12a9d729cf6fc684e9b180f31",
+      "lfSha256": "122dfa2066ca172b7dbea978956eac06e31eeb4a49e1ff872a2ad910fd06599c",
+      "acceptedSha256": [
+        "b67dc791da44e42714660622f980d1e4cf8a42e12a9d729cf6fc684e9b180f31",
+        "122dfa2066ca172b7dbea978956eac06e31eeb4a49e1ff872a2ad910fd06599c"
+      ],
+      "bytes": 5062
+    },
+    {
+      "path": "capability/C011/contract.js",
+      "subject": {
+        "scope": "C011",
+        "path": "contract.js"
+      },
+      "rawSha256": "798f1e744477584916dc3ed0b7c262e8adbda270d09b3adc0266608782e43165",
+      "lfSha256": "d2b93126d5ab9cdf4306e57ab31367dfb0d70fe6084b15c2f675d49b93989c07",
+      "acceptedSha256": [
+        "798f1e744477584916dc3ed0b7c262e8adbda270d09b3adc0266608782e43165",
+        "d2b93126d5ab9cdf4306e57ab31367dfb0d70fe6084b15c2f675d49b93989c07"
+      ],
+      "bytes": 8630
+    },
+    {
+      "path": "capability/C011/json.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "json.cjs"
+      },
+      "rawSha256": "e7f5d66661e0bc7c17ca45432e58509e1d8f1878208a8c45e0003d23c1b1ca7e",
+      "lfSha256": "ada478b8fb784e459b6c960861a7e5882004b4d78f2dab0dd2b3b677de5fc683",
+      "acceptedSha256": [
+        "e7f5d66661e0bc7c17ca45432e58509e1d8f1878208a8c45e0003d23c1b1ca7e",
+        "ada478b8fb784e459b6c960861a7e5882004b4d78f2dab0dd2b3b677de5fc683"
+      ],
+      "bytes": 3460
+    },
+    {
+      "path": "capability/C011/server.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "server.cjs"
+      },
+      "rawSha256": "1e7228f7055e9637633ed775cd560775ad8f403feb9f4f59c954887647569d9e",
+      "lfSha256": "39ba9d57f087114541563bca4d42126cc1dd11cb8f175060476b8c61274fbfee",
+      "acceptedSha256": [
+        "1e7228f7055e9637633ed775cd560775ad8f403feb9f4f59c954887647569d9e",
+        "39ba9d57f087114541563bca4d42126cc1dd11cb8f175060476b8c61274fbfee"
+      ],
+      "bytes": 17205
+    },
+    {
+      "path": "capability/C011/store.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "store.cjs"
+      },
+      "rawSha256": "ff08c210bf3b3c4841befd2b014d7afa04e0a231aa7397988c87fe2b577a20b9",
+      "lfSha256": "e324cce58370d24fb2ba219cc6ada7e2a334e87d6d38237dd2795cc8712133a7",
+      "acceptedSha256": [
+        "ff08c210bf3b3c4841befd2b014d7afa04e0a231aa7397988c87fe2b577a20b9",
+        "e324cce58370d24fb2ba219cc6ada7e2a334e87d6d38237dd2795cc8712133a7"
+      ],
+      "bytes": 10209
+    },
+    {
+      "path": "capability/C011/index.html",
+      "subject": {
+        "scope": "C011",
+        "path": "index.html"
+      },
+      "rawSha256": "478a99525ac733a45d501a99951866219d73b316ad08ea8621a3723edb78790f",
+      "lfSha256": "3a791b3ed3c6db962e9ec610da05f8640322b2e36db56ab4701d36d7821475a7",
+      "acceptedSha256": [
+        "478a99525ac733a45d501a99951866219d73b316ad08ea8621a3723edb78790f",
+        "3a791b3ed3c6db962e9ec610da05f8640322b2e36db56ab4701d36d7821475a7"
+      ],
+      "bytes": 3003
+    },
+    {
+      "path": "capability/C011/style.css",
+      "subject": {
+        "scope": "C011",
+        "path": "style.css"
+      },
+      "rawSha256": "4282bc8ec7e0664ae7ccd31971cad2ec9bf6e9723dc7b2cb6f395594d5c6af45",
+      "lfSha256": "2a96cb4385af99638bd26009c575c41b94b076fef1d7d4d5ee05de4f68726d5d",
+      "acceptedSha256": [
+        "4282bc8ec7e0664ae7ccd31971cad2ec9bf6e9723dc7b2cb6f395594d5c6af45",
+        "2a96cb4385af99638bd26009c575c41b94b076fef1d7d4d5ee05de4f68726d5d"
+      ],
+      "bytes": 853
+    },
+    {
+      "path": "capability/C011/imports.json",
+      "subject": {
+        "scope": "C011",
+        "path": "imports.json"
+      },
+      "rawSha256": "ffe220753a916de2587233605abb41caacbe3eed39c482b07c8bf7965124828e",
+      "lfSha256": "921575128ec4e3ef1ef2127e3d1f12ca3a866c47b59466f9b4daa80986aff025",
+      "acceptedSha256": [
+        "ffe220753a916de2587233605abb41caacbe3eed39c482b07c8bf7965124828e",
+        "921575128ec4e3ef1ef2127e3d1f12ca3a866c47b59466f9b4daa80986aff025"
+      ],
+      "bytes": 5038
+    },
+    {
+      "path": "capability/C011/dependency-context.json",
+      "subject": {
+        "scope": "C011",
+        "path": "dependency-context.json"
+      },
+      "rawSha256": "4766564cc5ce639e19f91bfdb230d55ca7d5287cbda71e50e8caf1b5f499a930",
+      "lfSha256": "4766564cc5ce639e19f91bfdb230d55ca7d5287cbda71e50e8caf1b5f499a930",
+      "acceptedSha256": [
+        "4766564cc5ce639e19f91bfdb230d55ca7d5287cbda71e50e8caf1b5f499a930",
+        "7eceadeb57dfe31280ac366ded19adbf30227f4a57317ce6e8821119600e3a5b"
+      ],
+      "bytes": 3451
+    },
+    {
+      "path": "capability/C009/authz.cjs",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C009/authz.cjs"
+      },
+      "rawSha256": "5cfaba37c478665f8fa20dab64db17ca606ef3315a3f0c7dd22b6ce58946724e",
+      "lfSha256": "fde03b80a393ea1f9ee5e01fc0eb8e06798c51ddbe765b81543ab1d945d34677",
+      "acceptedSha256": [
+        "5cfaba37c478665f8fa20dab64db17ca606ef3315a3f0c7dd22b6ce58946724e",
+        "fde03b80a393ea1f9ee5e01fc0eb8e06798c51ddbe765b81543ab1d945d34677"
+      ],
+      "bytes": 4541
+    },
+    {
+      "path": "capability/C009/codes.cjs",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C009/codes.cjs"
+      },
+      "rawSha256": "207054f990f799b06f1cb7ffd0adff8b7af80da3b10c98f9ef5a35d6356366ad",
+      "lfSha256": "488e1c0f675effc004ab41427a3d81a9ed959f5b949890c7e6f0b6de1ddded14",
+      "acceptedSha256": [
+        "207054f990f799b06f1cb7ffd0adff8b7af80da3b10c98f9ef5a35d6356366ad",
+        "488e1c0f675effc004ab41427a3d81a9ed959f5b949890c7e6f0b6de1ddded14"
+      ],
+      "bytes": 2724
+    },
+    {
+      "path": "capability/C009/contract.js",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C009/contract.js"
+      },
+      "rawSha256": "50926f3b6852489bafbc88a900f1c99c1fdf83da6993c53c2e2350de9bd69b58",
+      "lfSha256": "86f13e7e0374a91dd79582156199a1113b27705de09eb08e64e9c270562afa5a",
+      "acceptedSha256": [
+        "50926f3b6852489bafbc88a900f1c99c1fdf83da6993c53c2e2350de9bd69b58",
+        "86f13e7e0374a91dd79582156199a1113b27705de09eb08e64e9c270562afa5a"
+      ],
+      "bytes": 3785
+    },
+    {
+      "path": "capability/C009/http-io.cjs",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C009/http-io.cjs"
+      },
+      "rawSha256": "bda5672e4d7849829145211b5dfd6ace1f117de865cfc4ed246d4f48e47f02cc",
+      "lfSha256": "cc5b7df9ea93470d7be5d19bc8e6f8f33021637a38aa193e68ad3726a0695c78",
+      "acceptedSha256": [
+        "bda5672e4d7849829145211b5dfd6ace1f117de865cfc4ed246d4f48e47f02cc",
+        "cc5b7df9ea93470d7be5d19bc8e6f8f33021637a38aa193e68ad3726a0695c78"
+      ],
+      "bytes": 10630
+    },
+    {
+      "path": "capability/C009/queue.cjs",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C009/queue.cjs"
+      },
+      "rawSha256": "6dacc2ac1068caec109554c10b502381ba7ab8ca5571728627f4c324155e21af",
+      "lfSha256": "853db588a762a3d3e1390b6d5b85af3eb048ecf13dc2ccd84b17c9f12b356de4",
+      "acceptedSha256": [
+        "6dacc2ac1068caec109554c10b502381ba7ab8ca5571728627f4c324155e21af",
+        "853db588a762a3d3e1390b6d5b85af3eb048ecf13dc2ccd84b17c9f12b356de4"
+      ],
+      "bytes": 491
+    },
+    {
+      "path": "capability/C010/audit.cjs",
+      "subject": {
+        "scope": "readonly-repository",
+        "path": "capability/C010/audit.cjs"
+      },
+      "rawSha256": "74c8535bbd1dd440c8abb280e698650535bebba679bfb322f0609ea8b2776ac9",
+      "lfSha256": "1c500c4f3d8a4da64a3b551af67d55e6000ef4c610bd697146368b89420cc28a",
+      "acceptedSha256": [
+        "74c8535bbd1dd440c8abb280e698650535bebba679bfb322f0609ea8b2776ac9",
+        "1c500c4f3d8a4da64a3b551af67d55e6000ef4c610bd697146368b89420cc28a"
+      ],
+      "bytes": 1075
+    },
+    {
+      "path": "capability/C011/tests/loop.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/loop.cjs"
+      },
+      "rawSha256": "2d11e379f88b41150e5e8f4067c3aed4d33bf7755897fb47bc45f17b6a53c24d",
+      "lfSha256": "6a5d3ab30fd3ced10ef53c64cb50a161e50ce5a73d8a461eed965777da4fe977",
+      "acceptedSha256": [
+        "2d11e379f88b41150e5e8f4067c3aed4d33bf7755897fb47bc45f17b6a53c24d",
+        "6a5d3ab30fd3ced10ef53c64cb50a161e50ce5a73d8a461eed965777da4fe977"
+      ],
+      "bytes": 4467
+    },
+    {
+      "path": "capability/C011/tests/flood.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/flood.test.cjs"
+      },
+      "rawSha256": "00ce2d0fbbb7a07e2d66f84a9045e7e928208fef056c6be838e7362b22989f87",
+      "lfSha256": "67406eb3b3ad94601bfec3f28afa925f6ede59c3d35d45542f87802f19481555",
+      "acceptedSha256": [
+        "00ce2d0fbbb7a07e2d66f84a9045e7e928208fef056c6be838e7362b22989f87",
+        "67406eb3b3ad94601bfec3f28afa925f6ede59c3d35d45542f87802f19481555"
+      ],
+      "bytes": 6891
+    },
+    {
+      "path": "capability/C011/tests/flood-pending.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/flood-pending.test.cjs"
+      },
+      "rawSha256": "5ee2886682d2db2069059761bc66f97ba7165186329b11e6487c661518012403",
+      "lfSha256": "58d7644f94f6f52f5954208199c4678c6baf7817adb3d04e980de48f7e1bffe2",
+      "acceptedSha256": [
+        "5ee2886682d2db2069059761bc66f97ba7165186329b11e6487c661518012403",
+        "58d7644f94f6f52f5954208199c4678c6baf7817adb3d04e980de48f7e1bffe2"
+      ],
+      "bytes": 5383
+    },
+    {
+      "path": "capability/C011/tests/burst.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/burst.test.cjs"
+      },
+      "rawSha256": "0f63d9c88359ad7183e7b1f1f6df7fdaeaa9eeecdb91da08ceb6c6d5afce74e1",
+      "lfSha256": "aa53df29c67bed79a44166bb2fc59cd586a127151518c5774ec6d2635c179f4b",
+      "acceptedSha256": [
+        "0f63d9c88359ad7183e7b1f1f6df7fdaeaa9eeecdb91da08ceb6c6d5afce74e1",
+        "aa53df29c67bed79a44166bb2fc59cd586a127151518c5774ec6d2635c179f4b"
+      ],
+      "bytes": 3376
+    },
+    {
+      "path": "capability/C011/tests/pipeline-process-a.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/pipeline-process-a.test.cjs"
+      },
+      "rawSha256": "e369232d2a626f9221251bbc0751a53e76a842b7e33add3edf345bf27c5dbe49",
+      "lfSha256": "c1bc18e6025d450e529e4fef479efe5534cf39ab69426410ff1b810635568f5b",
+      "acceptedSha256": [
+        "e369232d2a626f9221251bbc0751a53e76a842b7e33add3edf345bf27c5dbe49",
+        "c1bc18e6025d450e529e4fef479efe5534cf39ab69426410ff1b810635568f5b"
+      ],
+      "bytes": 634
+    },
+    {
+      "path": "capability/C011/tests/pipeline-process-b.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/pipeline-process-b.test.cjs"
+      },
+      "rawSha256": "47e2a21f0449113885fa38cee17c3f4b12afddf2299b8667fd9a390cf72f6da3",
+      "lfSha256": "f71ecdec096e0d6fd3f04bf71753265d9e15183e3d2b2b1ec3d23d9bde2ede94",
+      "acceptedSha256": [
+        "47e2a21f0449113885fa38cee17c3f4b12afddf2299b8667fd9a390cf72f6da3",
+        "f71ecdec096e0d6fd3f04bf71753265d9e15183e3d2b2b1ec3d23d9bde2ede94"
+      ],
+      "bytes": 373
+    },
+    {
+      "path": "capability/C011/tests/pipeline-process-c.test.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/pipeline-process-c.test.cjs"
+      },
+      "rawSha256": "a1c475701515f28bd8c12609b1f0fe6965d6384455b4dfaedde9d7b941f4f083",
+      "lfSha256": "d4a17a70e35b4ef0e3cc3a7ab2f0f4157ff2128db96e5b3cb241b9bfda61e916",
+      "acceptedSha256": [
+        "a1c475701515f28bd8c12609b1f0fe6965d6384455b4dfaedde9d7b941f4f083",
+        "d4a17a70e35b4ef0e3cc3a7ab2f0f4157ff2128db96e5b3cb241b9bfda61e916"
+      ],
+      "bytes": 438
+    },
+    {
+      "path": "capability/C011/tests/attacker.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/attacker.cjs"
+      },
+      "rawSha256": "7e43976a21c6f8591640c3466a0638a70d4d87f1730c7e62d95c56988ecc2772",
+      "lfSha256": "c542f4630f2a9d12eff553ba0ad87515cbeb331a8905da8ac420164c7925beb0",
+      "acceptedSha256": [
+        "7e43976a21c6f8591640c3466a0638a70d4d87f1730c7e62d95c56988ecc2772",
+        "c542f4630f2a9d12eff553ba0ad87515cbeb331a8905da8ac420164c7925beb0"
+      ],
+      "bytes": 2495
+    },
+    {
+      "path": "capability/C011/tests/child-server.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/child-server.cjs"
+      },
+      "rawSha256": "7c4c561ed7c1c00edfec27fe8445383d3a0c8314c4743064180a258e5e8916d4",
+      "lfSha256": "82778b37ee51f1775005b47c778bdb21b980a5a30690ee61799e8553f43db2bd",
+      "acceptedSha256": [
+        "7c4c561ed7c1c00edfec27fe8445383d3a0c8314c4743064180a258e5e8916d4",
+        "82778b37ee51f1775005b47c778bdb21b980a5a30690ee61799e8553f43db2bd"
+      ],
+      "bytes": 3803
+    },
+    {
+      "path": "capability/C011/tests/targets.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/targets.cjs"
+      },
+      "rawSha256": "7ab49de471ed403224496c7b70a1473551283ce05322f5570771c509365ae103",
+      "lfSha256": "581ce16002785bd0ab0563c1a935d9b4c91bc53a157c9bf88c62d6642b794e3b",
+      "acceptedSha256": [
+        "7ab49de471ed403224496c7b70a1473551283ce05322f5570771c509365ae103",
+        "581ce16002785bd0ab0563c1a935d9b4c91bc53a157c9bf88c62d6642b794e3b"
+      ],
+      "bytes": 4729
+    },
+    {
+      "path": "capability/C011/tests/helpers.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/helpers.cjs"
+      },
+      "rawSha256": "3ba90f98778f2b024f6a582f90c70612085361757c5d84303ea8df5078f5b027",
+      "lfSha256": "b6d70290a4da8c4ffb8a63fad1dafc2168553774eecb50af6b84277a425fa70d",
+      "acceptedSha256": [
+        "3ba90f98778f2b024f6a582f90c70612085361757c5d84303ea8df5078f5b027",
+        "b6d70290a4da8c4ffb8a63fad1dafc2168553774eecb50af6b84277a425fa70d"
+      ],
+      "bytes": 8707
+    },
+    {
+      "path": "capability/C011/tests/matrix-suite.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/matrix-suite.cjs"
+      },
+      "rawSha256": "2ce3c17ca86de8300f2ecb0533c875ec30bd427cdfdb3b79dd39ac9de7371a23",
+      "lfSha256": "adc09eeab337f267b2eb25fb4d265c69053c76416e3e01d9cb44cae0472a1efe",
+      "acceptedSha256": [
+        "2ce3c17ca86de8300f2ecb0533c875ec30bd427cdfdb3b79dd39ac9de7371a23",
+        "adc09eeab337f267b2eb25fb4d265c69053c76416e3e01d9cb44cae0472a1efe"
+      ],
+      "bytes": 1408
+    },
+    {
+      "path": "capability/C011/tests/matrix.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/matrix.cjs"
+      },
+      "rawSha256": "53b8a0260c2d7a495585953d14e875f18a231aa72b6cc10f5cc4ff63a3012d0a",
+      "lfSha256": "3a717cf87716fd53276395e1929254ce4b99dee4d50a7e20f4d2e6b7d2e149b5",
+      "acceptedSha256": [
+        "53b8a0260c2d7a495585953d14e875f18a231aa72b6cc10f5cc4ff63a3012d0a",
+        "3a717cf87716fd53276395e1929254ce4b99dee4d50a7e20f4d2e6b7d2e149b5"
+      ],
+      "bytes": 11722
+    },
+    {
+      "path": "capability/C011/tests/rows.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/rows.cjs"
+      },
+      "rawSha256": "9bfc3bdb0a89b8baf3cedc6d4c563962a1c5ab257d01f2a78de97a78ec9eef4a",
+      "lfSha256": "a81c5e75982c27c492ae2a05c5b77b2fef223d20bb0e686d9d69d23b8373442b",
+      "acceptedSha256": [
+        "9bfc3bdb0a89b8baf3cedc6d4c563962a1c5ab257d01f2a78de97a78ec9eef4a",
+        "a81c5e75982c27c492ae2a05c5b77b2fef223d20bb0e686d9d69d23b8373442b"
+      ],
+      "bytes": 7868
+    },
+    {
+      "path": "capability/C011/tests/raw-http.cjs",
+      "subject": {
+        "scope": "C011",
+        "path": "tests/raw-http.cjs"
+      },
+      "rawSha256": "d43005bf93c2b8bdd4f417f580c3ef9ef4797e0470345ada743fc569f9bf9eb7",
+      "lfSha256": "90b0c58363e54c0e8afee69312df4f34a70f41aa69890380b034337665bd01df",
+      "acceptedSha256": [
+        "d43005bf93c2b8bdd4f417f580c3ef9ef4797e0470345ada743fc569f9bf9eb7",
+        "90b0c58363e54c0e8afee69312df4f34a70f41aa69890380b034337665bd01df"
+      ],
+      "bytes": 3599
+    }
+  ],
+  "summary": {
+    "thresholdErrors": [],
+    "coverageRows": []
+  },
+  "transcripts": {
+    "stdout": {
+      "kind": "public projection, NOT original raw",
+      "path": "evidence/final/streams/final-loop.stdout.projection.txt.gz",
+      "privateOriginalSha256": "dda6e0a810a4b43be009b8f68b077e3888f48cd53f66d790f562826e4317dc25",
+      "privateOriginalGzipSha256": "b49768e96c79a9958c67cc85cce0b331965b8802b5d9097c295f39fe4d2c49f0",
+      "privateOriginalBytes": 949,
+      "projectionBytes": 949,
+      "projectionSha256": "dda6e0a810a4b43be009b8f68b077e3888f48cd53f66d790f562826e4317dc25",
+      "projectionGzipSha256": "b49768e96c79a9958c67cc85cce0b331965b8802b5d9097c295f39fe4d2c49f0"
+    },
+    "stderr": {
+      "kind": "public projection, NOT original raw",
+      "path": "evidence/final/streams/final-loop.stderr.projection.txt.gz",
+      "privateOriginalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "privateOriginalGzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+      "privateOriginalBytes": 0,
+      "projectionBytes": 0,
+      "projectionSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "projectionGzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    }
+  }
+}

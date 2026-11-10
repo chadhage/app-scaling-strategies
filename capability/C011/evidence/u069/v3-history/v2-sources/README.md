@@ -1,0 +1,182 @@
+# C011 replay correction: U068 and U069
+
+This is the original local, synthetic Node-builtins reservation fixture, not a
+cloud control API. IPv4 loopback port zero, fake C009 identities, fictional
+capacity and cost units only. No real spend, Entra registration, deployment,
+package installation or Node 24/Express production qualification is authorized.
+The implementation remains original C011 authorship with explicit correction.
+U068/U069 are two intertwined zero-credit unblocks, not additional Kano units.
+
+## Server-lifetime replay identity
+
+Each verified conductor subject is one lease. Its visible reservation history
+and its replay ledger have different bounds:
+
+- `entries`: default 50, accepted range 2..200, strictly above `maxActive`.
+  The oldest ended visible row may be removed; active rows are never trimmed.
+- `keyEntries`: default 1000, accepted range 1..2000, per lease. A successfully
+  admitted unique key retains its original reservation, digest and terminal
+  state for this server's lifetime. History trimming never removes it.
+- Release and injected-clock expiry update that same retained reservation.
+  A same-body retry returns its original id, deadline, spend and current state
+  with `replayed: true`; it allocates nothing and consumes no extra key.
+  A different-body retry is `409 IDEMPOTENCY_CONFLICT`, including at key capacity.
+- A new unique key at capacity receives `409 IDEMPOTENCY_LIMIT_REACHED` with no
+  allocation, no key consumed, no successful audit and no other lease effect.
+  Neither release nor expiry frees replay protection. There is no silent key
+  eviction or unlimited-memory promise. Restart is a new in-memory lifetime;
+  no persistence or restart-replay guarantee is claimed.
+
+The key ledger contains references to the same records used by active/history
+accounting; private draft cloning preserves their alias relationship. Check and
+commit remain one synchronous operation without an intervening await. A failed
+batch drops both resource changes and attempted replay slots. Id generation
+checks all retained identities, not merely visible rows.
+
+Every lease receives only its own `replayKeys`, `maxReplayKeys` and
+`remainingReplayKeys`. Their arithmetic is validated by the inspection page
+and announced with its existing 21-row result. Another lease's identical key is
+independent and does not reveal or consume its replay identity.
+
+## Other unchanged authority and resource contracts
+
+Visitors read identity only; conductors act only on their own lease; operators
+have audited read-only pool/audit views and cannot reserve or release.
+Identity is derived from the verified C009 token, never client owner/lease/role
+claims. Prices are the closed server-side `p1` table (defaults standard 4,
+burst 8); body, query and header claims never set prices or limits.
+
+Active-count, own capacity/spend and shared capacity/spend refusals remain typed.
+Pool total is reserved plus free, after every operation. Expiry is an independent
+clock fact settled before store operations, including refusals. It is not
+displacement caused by a failed request.
+
+The C009 lanes/responder, C010 bounded audit and their original imports remain
+read-only and pinned. `dependency-context.json` separately acknowledges current
+accepted C009/C010 source, including C010 idle 10000/header 5000/check 1000;
+C010's contract/server are inspected, not imported into the C011 application.
+C011 retains its own idle 8000/header 5000/check 1000, explicitly read back and
+tested with real default stalled-header/body typed-408 cases.
+
+Cancellation is checked after body reading and before commit-time token
+revalidation. Cancelled non-auth failures have no new refusal audit or response;
+the established AuthError precedence and live typed INTERNAL_ERROR are retained.
+Every refusal closes/stops reading and no later pipelined effect runs. The full
+refusal family includes the new key-cap path, first/middle/async/Node-owned
+answers, HTTP/1.0, bodyless release, batches and separate-process probes.
+
+Bounds also include four in-flight requests per socket and 256 connections.
+The inherited Node parser may materialize one whole 64-KiB read before a lane
+cuts it; roughly 6 MiB of transient objects per pending socket is an inherited
+estimate, not a new peak-memory measurement. The three-pending-socket 48-MiB
+fixture is checked; no constant global-memory or arbitrary-concurrency
+qualification is claimed. Ledger work/memory is bounded by the validated
+per-lease key limit and the two fixed conductor subjects, not by an unbounded
+accumulation of retries.
+
+## Honest source and TDD epochs
+
+The original archive explicitly says its core was drafted before its first
+nine tests. That chronology remains **uncertified forever**. Its manifest,
+source, tests, streams, pins and the stopped C011 result are unchanged.
+
+The new attempt first installed only the retained BDD/core assertions, new
+history contract, read-only dependencies and a labelled deliberately naive
+noncompliant HTTP baseline. Actual fresh REDs then ran before any reused C011
+production file was installed: 65 core assertion failures and six history
+assertion failures, with no module, syntax or timeout failure. Only afterwards
+was the original implementation copied openly and corrected. The same six
+history assertions replay GREEN; the original core assertions are unchanged.
+U069 separately retains its four actual prior-census completion assertion REDs.
+This is a new acceptance anchor, never a retrospective time claim.
+
+`evidence/u068/history/predecessor-sources/` retains all 80 stopped-source
+files exactly. The old wrong assertion that an evicted key reserves again is
+explicitly versioned by `wrong-test-transition.json`; it is not called unchanged
+GREEN. The original source/evidence seals are verified through that declared
+historical view, not dishonestly recomputed against corrected production.
+
+The original coupled-page RED and its raw streams also remain unchanged. One
+old auxiliary `u069-probes.cjs` preimage was not retained (its exact input digest
+is retained); that old helper is **not** called source-certified. An explicitly
+new, source-complete page replay first runs the unchanged four assertions
+against the exact retained pre-correction page, then openly reapplies the
+already-existing corrected page to that replay subject. It records actual
+RED-before-reapplication times and unchanged GREEN, states that corrected code
+already existed outside that subject, and makes no new-authorship or
+retrospective chronology claim. Final current-source UI tests are separate.
+
+U069 regenerates the original systematic positions on current U068 source.
+Named semantic assertion kills, initialization-invalid specimens and specific
+source-bound paired equivalences are distinct. A module/syntax fault, timeout
+or signal never counts as a behavioral kill, and a passing old snapshot never
+certifies current positions. All survivors are real unfinished obligations
+until separately decided by the final current report.
+The original generator outputs are used exactly, including return-drop
+specimens whose masked replacement also changes string contents. Such a
+specimen is not silently repaired or presumed equivalent.
+
+## Reproduction and evidence
+
+Run in a private checkout-shaped tree with its accepted dependency fixtures.
+`C011_GIT_REPOSITORY` names the owning repository for fixed accepted Git-object
+reads, not its index or HEAD. Output directories must be new and caller-owned.
+
+```powershell
+$env:C011_GIT_REPOSITORY = '<OWNING-REPOSITORY>'
+$env:C011_ASSERTION_DIR = "$PWD\private\assertions-current"
+$env:U069_REPORT = "$PWD\capability\C011\evidence\u069\current-report-v2.json"
+node capability\C011\tests\suite.cjs core
+
+$env:C011_COVERAGE_OUT = "$PWD\private\coverage-originals"
+$env:C011_COVERAGE_REPORT = "$PWD\private\coverage.json"
+node capability\C011\tests\coverage.cjs
+
+$env:U069_CAMPAIGN_OUTPUT = "$PWD\private\current-campaign.json"
+node capability\C011\tests\u069-campaign.cjs
+# Counterfactual assertions naturally fail; audit the current report and
+# the exact named TAP evidence, not the campaign process exit alone.
+
+$env:NODE_PATH = '<EXISTING-CACHED-BROWSER-PACKAGE>\node_modules'
+$env:C011_BROWSER_OUTPUT = "$PWD\private\browser.json"
+node --test --test-concurrency=1 --test-timeout=900000 capability\C011\tests\browser.cjs
+```
+
+`evidence/current/` is the final additive source freeze, projections and seal.
+`evidence/joint/` is the preserved **failed first** frozen attempt, not current
+acceptance: fresh LF correctly exposed a raw-only transition check and actual
+Windows PID reuse colliding with PID-only assertion-report filenames. All 105
+first-frozen source files and every first-attempt byte remain exact history.
+The corrected transition permits only raw/LF/CRLF representations derived from
+its retained exact corrected preimage. Assertion reports use exclusive
+PID-plus-random invocation filenames; a genuine assertion RED precreated the
+old PID filename before this change. Every required gate is rerun after the
+new final freeze; no earlier-phase success substitutes for it.
+`evidence/final/` is the immutable **old incomplete** epoch. The strict current
+audit checks every generated position, exact actually read/executed bytes,
+natural named assertion failures, individually runnable scoped equivalences,
+and the three explicitly initialization-invalid specimens with zero kill
+credit. Unknown failures or equivalences are not accepted by default.
+
+Final evidence has one current source freeze followed by functional/history/
+completion/assertion/whole-file coverage, native browser, loaded loop,
+fresh-LF/CRLF, source/Git/consumer, historical append-only, tamper, privacy and
+owned-cleanup gates. Every changed production file is literally included by its
+whole path in its own 85/85/85 command; an unloaded file counts zero. There are
+no production exclusions or reduced thresholds.
+
+Real Microsoft-signed qualified Edge is checked through the current owning API,
+not a historical build/hash equality. Sealed major 156 and its one accepted
+157 append remain unchanged; unknown 158 is denied. Opaque profiles have
+positive invocation creation authority and native PID/creation binding; cleanup
+is own-only, including injected failure. The browser helper forwards GET only
+to the actual owned loopback service; POST effects are proved with real Node
+sockets, not browser writes or a simulated Edge.
+
+Original raw streams/manifests remain private and immutable. Portable public
+projections are distinctly labelled and linked to exact original hashes.
+Integrity is a consistency tripwire, not authentication against a coordinated
+rewrite; the parent independently compares accepted Git objects and originals.
+No global runtime cleanliness, foreign-neighbour adoption/deletion, live
+application, publication, individual Done or original C011 credit is claimed.
+The two logical unblocks close together only after parent review/publication.
