@@ -1,0 +1,30 @@
+Attempt 1 of the loop of resources.test.cjs under 8 CPU burners (order R11), kept as a retained record, never as evidence of the final bytes.
+
+What it recorded: 5 bad runs of 64 (8 in parallel x 8 rounds), the slowest run of every round 34 to 52 s against the 60 s of the runner:
+  4 x "the client saw the 431 or nothing, not HTTP/1.1 408 Request Timeout": under load the starved server child timed the slow
+      1 MB header flood out (its request timeout) before the 16 KB header limit, a typed refusal that closes the connection like the 431;
+  1 x "the attacks reached the server: 238 of 239 connections accepted": one of the 238 attacking connections did not reach the server
+      and the test required all of them.
+Both are defects of the TEST (a client-side expectation that was too narrow and a count that did not follow the connections that really
+connected), not of the server: the server-side facts (the connection closed by the server after at most 256 KB, the state unchanged, a
+normal client served, the retained heap small) held in every run that got that far. The test was changed (the answer may be the 431 or the
+408 or nothing; the attackers are connected in turn, tried again when a connection is dropped, and counted), the bytes changed, so every
+capture of the final bytes was taken again; this attempt pins the earlier bytes of resources.test.cjs and of the README.
+
+LATER ATTEMPTS ON THE FINAL BYTES (nothing was edited after them): loops under 8 CPU burners, one script under one heavy slot, 11:56 to 12:40.
+Every loop below FAILED, was moved here as loop-<file>-bad-<hhmm>, and is NO evidence that F9c is closed (each transcript holds the PIDs of
+its 8 burners, the slowest run of every round and every bad run with its reason):
+  resources.test.cjs                4 bad of 64   slowest run of each round 42 to 68 s   (loop-resources-bad-1203)
+  refusal-flood.test.cjs           64 bad of 64   69 to 81 s: the file hit the 60 s a FILE gets; in a run that got further the naive control
+                                                  alone took 33 to 43 s                    (loop-refusal-flood-bad-1213)
+  pipeline-process.test.cjs        63 bad of 64   67 to 74 s                              (loop-pipeline-process-bad-1223)
+  pipeline-refusal-mixed.test.cjs  21 bad of 64   44 to 74 s                              (loop-pipeline-refusal-mixed-bad-1232)
+  pipeline-refusal-http10.test.cjs 15 bad of 64   35 to 78 s                              (loop-pipeline-refusal-http10-bad-1239)
+The loop of pipeline-refusal.test.cjs was stopped by PID at 12:40 before it finished and is not retained. The whole suite under the burners, the
+coverage runs, the mutants and the Edge transcript were not taken (the time limit of the order, minute 180).
+The load in that period was far above the 8 burners: 80 to 94 node processes at 100% CPU (load tests and mutation campaigns of other agents at
+normal priority, controller note of 10:40) and a bare node -e 0 took 2 to 4 s. With the burners stopped (about 53 node processes) the whole
+suite of the same bytes passed 423 of 423 in 216 s (evidence\green-fix3\suite.json). So the heavy files are cheaper than before (about 4 to 7 s
+each when quiet) but still do not fit the 60 s a file gets at 8 burners plus that background load: F9c is NOT shown closed by this cycle.
+The README sentence "two loops of resources.test.cjs ... failed" names only the first two failed loops (its bytes are pinned by the RED archives
+and could not change); this note and the result file are complete.

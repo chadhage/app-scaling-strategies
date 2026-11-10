@@ -144,49 +144,39 @@ test('the check has teeth: a documented option, parameter, function, listener, f
   assert.deepEqual(importerProblems('# nothing'), ['the README has no importer section']);
 });
 
-// F15: the figures the README states are the figures of the evidence. The sentence names the capture directory (evidence\green-fixN) whose
-// suite manifest enumerates the test files in its command and counts the tests in its summary; the tests directory must hold exactly
-// those files. While the capture is still being taken the named directory does not exist yet and the check has nothing to compare with
-// (the suite run that creates it runs this test: fix3-evidence.test.cjs demands the directory once it is there). A README that names no
-// directory is compared with the newest capture and fails for that.
-const FIGURES = /the (?:fixed|final) namespace has (\d+) (?:test )?files and (\d+) tests(?: \(suite manifest `evidence\\(green-fix\d*)\\suite\.json`)?/;
-const newestCapture = () => {
-  const evidence = path.join(subject, 'evidence');
-  return fs.readdirSync(evidence).filter((name) => /^green-fix\d*$/.test(name) && fs.existsSync(path.join(evidence, name, 'suite.json')))
-    .sort((left, right) => Number(right.replace(/\D/g, '') || 1) - Number(left.replace(/\D/g, '') || 1))[0];
-};
+const FIGURES = /The historical R11 capture has (\d+) files and (\d+) tests(?: \(source record `([^`]+)`\))?/;
 
 function figureProblems(readme, forced) {
   const stated = FIGURES.exec(readme.replace(/\r\n/g, '\n'));
-  if (!stated) return ['the README states no figures for the test files and the tests'];
+  if (!stated) return ['the README states no historical test-file and test figures'];
   const problems = [];
   const named = forced || stated[3];
-  if (!named) problems.push('the README names no suite manifest (evidence\\green-fixN\\suite.json) for its figures');
-  const capture = named || newestCapture();
-  const file = capture && path.join(subject, 'evidence', capture, 'suite.json');
-  if (!file || !fs.existsSync(file)) return named ? problems : [...problems, 'there is no suite manifest'];
+  if (!named) return ['the README names no source record for its historical figures'];
+  const file = path.join(subject, named);
+  if (!fs.existsSync(file)) return ['the named historical source record does not exist'];
   const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const files = manifest.command.filter((argument) => /\.test\.cjs$/.test(argument));
-  const onDisk = fs.readdirSync(path.join(subject, 'tests')).filter((name) => name.endsWith('.test.cjs'));
-  if (Number(stated[1]) !== files.length) problems.push(`the README says ${stated[1]} test files, the suite manifest of ${capture} enumerates ${files.length}`);
-  if (Number(stated[2]) !== manifest.summary.tests) problems.push(`the README says ${stated[2]} tests, the suite manifest of ${capture} counts ${manifest.summary.tests}`);
-  if (files.length !== onDisk.length) problems.push(`the suite manifest of ${capture} enumerates ${files.length} files, the tests directory holds ${onDisk.length}`);
+  const files = manifest.originalCommand.filter((argument) => /\.test\.cjs$/.test(argument));
+  if (Number(stated[1]) !== files.length) problems.push(`the README says ${stated[1]} test files, the historical manifest enumerates ${files.length}`);
+  if (Number(stated[2]) !== manifest.summary.tests) problems.push(`the README says ${stated[2]} tests, the historical manifest counts ${manifest.summary.tests}`);
   return problems;
 }
 
-test('the test file and test counts of the README are the counts of the suite manifest it names and of the tests directory', () => {
+test('historical README figures match their named original capture and current test files match their current enumerator', () => {
   assert.deepEqual(figureProblems(read('README.md')), []);
+  const suite = require('./u053-suite.cjs');
+  assert.deepEqual(fs.readdirSync(path.join(subject, 'tests')).filter((name) => name.endsWith('.test.cjs')).sort(), [...suite.TESTS].sort());
+  assert.equal(suite.TESTS.length, 39);
 });
 
 test('the figure check has teeth: a stale count, an unstated count or an unnamed manifest fails', () => {
   const readme = read('README.md').replace(/\r\n/g, '\n');
   const match = FIGURES.exec(readme);
   assert.ok(match, 'the README states the figures');
-  const capture = match[3] && fs.existsSync(path.join(subject, 'evidence', match[3], 'suite.json')) ? match[3] : newestCapture();
-  assert.ok(capture, 'there is a suite manifest to compare with');
+  const capture = match[3];
+  assert.ok(capture, 'the historical capture is explicitly named');
   assert.match(figureProblems(readme.replace(match[0], match[0].replace(match[1], String(Number(match[1]) + 1))), capture).join('\n'), /test files/);
-  assert.match(figureProblems(readme.replace(match[0], match[0].replace(match[2], String(Number(match[2]) - 1))), capture).join('\n'), /tests, the suite manifest/);
-  assert.deepEqual(figureProblems(readme.replace(match[0], 'the namespace has some tests'), capture), ['the README states no figures for the test files and the tests']);
-  const unnamed = match[0].replace(/ \(suite manifest.*$/, '');
-  assert.match(figureProblems(readme.replace(match[0], unnamed)).join('\n'), /names no suite manifest/);
+  assert.match(figureProblems(readme.replace(match[0], match[0].replace(match[2], String(Number(match[2]) - 1))), capture).join('\n'), /tests, the historical manifest/);
+  assert.deepEqual(figureProblems(readme.replace(match[0], 'the namespace has some tests'), capture), ['the README states no historical test-file and test figures']);
+  const unnamed = match[0].replace(/ \(source record.*$/, '');
+  assert.match(figureProblems(readme.replace(match[0], unnamed)).join('\n'), /names no source record/);
 });

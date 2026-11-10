@@ -6,6 +6,7 @@
 const { createHash } = require('node:crypto');
 const path = require('node:path');
 const { gunzipSync } = require('node:zlib');
+const authority = require('./u053-authority.cjs');
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const lf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
@@ -30,14 +31,13 @@ function checkTranscripts({ directory, manifest, read }) {
 
 // pinned(input) decides which inputs are compared with the live files (the others are the caller's business).
 function checkInputs({ manifest, read, pinned = () => true }) {
-  const problems = [];
-  for (const input of manifest.inputs || []) {
-    if (!pinned(input)) continue;
-    let live;
-    try { live = read(input.path); } catch (error) { problems.push(`${input.path}: ${error.message}`); continue; }
-    if (sha(live) !== input.rawSha256 && sha(lf(live)) !== input.crlfToLfSha256) problems.push(`${input.path}: differs from the bytes the run saw`);
+  try {
+    chain ||= authority.readCurrentAuthority();
+    return authority.inputProblems({ chain, manifest, read, pinned });
+  } catch (error) {
+    return [`${error.code || 'AUTHORITY_ERROR'}: ${error.message}`];
   }
-  return problems;
 }
 
+let chain;
 module.exports = Object.freeze({ checkTranscripts, checkInputs, sha });

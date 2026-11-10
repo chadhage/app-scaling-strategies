@@ -1,0 +1,1064 @@
+U053 ACTUAL COMMAND ["node.exe","--require","<OWNED_ALIAS_ROOT>\capability\\C014\\tests\\scratch-cwd.cjs","--test","--test-concurrency=1","--test-timeout=170000","capability\\C014\\tests\\boundary.test.cjs","capability\\C014\\tests\\canon.test.cjs","capability\\C014\\tests\\cleanup.test.cjs","capability\\C014\\tests\\evidence.test.cjs","capability\\C014\\tests\\fragments.test.cjs","capability\\C014\\tests\\fuzz.test.cjs","capability\\C014\\tests\\health.test.cjs","capability\\C014\\tests\\hostile.test.cjs","capability\\C014\\tests\\integrity.test.cjs","capability\\C014\\tests\\page.test.cjs","capability\\C014\\tests\\patterns.test.cjs","capability\\C014\\tests\\pending-flood.test.cjs","capability\\C014\\tests\\process-flood.test.cjs","capability\\C014\\tests\\process-matrix-10.test.cjs","capability\\C014\\tests\\process-matrix.test.cjs","capability\\C014\\tests\\process-sweep.test.cjs","capability\\C014\\tests\\property.test.cjs","capability\\C014\\tests\\readme.test.cjs","capability\\C014\\tests\\redact.test.cjs","capability\\C014\\tests\\refusal.test.cjs","capability\\C014\\tests\\returns.test.cjs","capability\\C014\\tests\\scanner.test.cjs","capability\\C014\\tests\\server.test.cjs","capability\\C014\\tests\\service.test.cjs","capability\\C014\\tests\\sweep.test.cjs","capability\\C014\\tests\\vault.test.cjs"]
+TAP version 13
+# Subtest: the README table lists exactly the protected configuration fields of this sweep, with the minimum of each at or above the secret minimum
+ok 1 - the README table lists exactly the protected configuration fields of this sweep, with the minimum of each at or above the secret minimum
+  ---
+  duration_ms: 3.5106
+  type: 'test'
+  ...
+# Subtest: the boundary sweep: at min-1, min, min+1, max and max+1 of every protected field a refusal is a typed ConfigError on the field, and whatever is accepted is held by value and shows in no public byte after a normal flow
+ok 2 - the boundary sweep: at min-1, min, min+1, max and max+1 of every protected field a refusal is a typed ConfigError on the field, and whatever is accepted is held by value and shows in no public byte after a normal flow
+  ---
+  duration_ms: 809.4967
+  type: 'test'
+  ...
+# Subtest: the review reproduction: a name of 5 characters is refused at the door, and the same configuration with a 6-character name is accepted and shows nowhere
+ok 3 - the review reproduction: a name of 5 characters is refused at the door, and the same configuration with a 6-character name is accepted and shows nowhere
+  ---
+  duration_ms: 23.8894
+  type: 'test'
+  ...
+# Subtest: a leading plus extends a phone to 27 characters and no more, and the connection string keeps its parts: a short host, user, password or database in an otherwise valid string is refused
+ok 4 - a leading plus extends a phone to 27 characters and no more, and the connection string keeps its parts: a short host, user, password or database in an otherwise valid string is refused
+  ---
+  duration_ms: 1.4357
+  type: 'test'
+  ...
+# Subtest: the anchors: a line break before or after an otherwise valid value is refused for every protected field that has a pattern of its own
+ok 5 - the anchors: a line break before or after an otherwise valid value is refused for every protected field that has a pattern of its own
+  ---
+  duration_ms: 4.2541
+  type: 'test'
+  ...
+# Subtest: an e-mail address needs a local part of 3 to 64 characters and a domain of 3 to 128: each end of each part, on its own
+ok 6 - an e-mail address needs a local part of 3 to 64 characters and a domain of 3 to 128: each end of each part, on its own
+  ---
+  duration_ms: 2.5336
+  type: 'test'
+  ...
+# Subtest: fold: case, compatibility forms, format characters, combining marks, dash and space look-alikes
+ok 7 - fold: case, compatibility forms, format characters, combining marks, dash and space look-alikes
+  ---
+  duration_ms: 2.8031
+  type: 'test'
+  ...
+# Subtest: percentDecode: every run of %XX is decoded as bytes, so one invalid byte cannot protect the rest
+ok 8 - percentDecode: every run of %XX is decoded as bytes, so one invalid byte cannot protect the rest
+  ---
+  duration_ms: 0.4587
+  type: 'test'
+  ...
+# Subtest: htmlDecode: decimal, hex and named entities, with or without the semicolon; out-of-range and unknown ones stay
+ok 9 - htmlDecode: decimal, hex and named entities, with or without the semicolon; out-of-range and unknown ones stay
+  ---
+  duration_ms: 0.5096
+  type: 'test'
+  ...
+# Subtest: unicodeUnescape: \\uXXXX, \\u{...} and \\xHH; out-of-range stays
+ok 10 - unicodeUnescape: \\uXXXX, \\u{...} and \\xHH; out-of-range stays
+  ---
+  duration_ms: 0.3041
+  type: 'test'
+  ...
+# Subtest: views: the text and its URL (twice), HTML, escape and form-encoded (plus for space) decodings
+ok 11 - views: the text and its URL (twice), HTML, escape and form-encoded (plus for space) decodings
+  ---
+  duration_ms: 1.2888
+  type: 'test'
+  ...
+# Subtest: needlesFor: base64 and base64url are found at all three alignments inside a longer base64 text
+ok 12 - needlesFor: base64 and base64url are found at all three alignments inside a longer base64 text
+  ---
+  duration_ms: 0.6304
+  type: 'test'
+  ...
+# Subtest: encodedIn: any view of a text, folded or not, that holds any needle of any registered secret in a form other than as written; the secret itself, as written, is not a form
+ok 13 - encodedIn: any view of a text, folded or not, that holds any needle of any registered secret in a form other than as written; the secret itself, as written, is not a form
+  ---
+  duration_ms: 1.0446
+  type: 'test'
+  ...
+# Subtest: encodedIn sets aside a verbatim secret that CONTAINS the one it looks for (an address that holds a name in lower case) and a verbatim part never hides a form of the longer secret
+ok 14 - encodedIn sets aside a verbatim secret that CONTAINS the one it looks for (an address that holds a name in lower case) and a verbatim part never hides a form of the longer secret
+  ---
+  duration_ms: 0.3806
+  type: 'test'
+  ...
+# Subtest: the minimum lengths are 6 for a secret and 8 for a base64 needle: a text of exactly six characters is examined, and a shorter text never is
+ok 15 - the minimum lengths are 6 for a secret and 8 for a base64 needle: a text of exactly six characters is examined, and a shorter text never is
+  ---
+  duration_ms: 1.0096
+  type: 'test'
+  ...
+# Subtest: htmlDecode and unicodeUnescape decode the last code point U+10FFFF and leave the first one beyond it
+ok 16 - htmlDecode and unicodeUnescape decode the last code point U+10FFFF and leave the first one beyond it
+  ---
+  duration_ms: 0.404
+  type: 'test'
+  ...
+# Subtest: needlesFor: the base64 needles are exactly the characters the secret alone determines at each of the three alignments (derived by embedding it between neighbours), at least 8 of them, and each also in its base64url form
+ok 17 - needlesFor: the base64 needles are exactly the characters the secret alone determines at each of the three alignments (derived by embedding it between neighbours), at least 8 of them, and each also in its base64url form
+  ---
+  duration_ms: 9.6846
+  type: 'test'
+  ...
+# Subtest: an injected failure in a test that owns a child process still closes it: the child exits, its port refuses connections, a repeated close is harmless
+ok 18 - an injected failure in a test that owns a child process still closes it: the child exits, its port refuses connections, a repeated close is harmless
+  ---
+  duration_ms: 270.3734
+  type: 'test'
+  ...
+# Subtest: an injected failure in a test that owns an in-process service still closes it; a neighbour service of the same file is untouched and a repeated close is harmless
+ok 19 - an injected failure in a test that owns an in-process service still closes it; a neighbour service of the same file is untouched and a repeated close is harmless
+  ---
+  duration_ms: 49.9597
+  type: 'test'
+  ...
+# Subtest: attacker sockets opened by a failing check are destroyed in finally: the server holds no connection afterwards
+ok 20 - attacker sockets opened by a failing check are destroyed in finally: the server holds no connection afterwards
+  ---
+  duration_ms: 134.1892
+  type: 'test'
+  ...
+# Subtest: the trace and log rings keep the newest RING records, numbered by a sequence that never repeats
+ok 21 - the trace and log rings keep the newest RING records, numbered by a sequence that never repeats
+  ---
+  duration_ms: 6.637
+  type: 'test'
+  ...
+# Subtest: listBody shows the newest `limit` entries and reconciles shown against total
+ok 22 - listBody shows the newest `limit` entries and reconciles shown against total
+  ---
+  duration_ms: 1.9223
+  type: 'test'
+  ...
+# Subtest: a published item is reused until the redactor learns a new secret, then it is published again (and masked)
+ok 23 - a published item is reused until the redactor learns a new secret, then it is published again (and masked)
+  ---
+  duration_ms: 4.4554
+  type: 'test'
+  ...
+# Subtest: a record that cannot be read is published as nothing: shown excludes it, total counts it, and the items reconcile
+ok 24 - a record that cannot be read is published as nothing: shown excludes it, total counts it, and the items reconcile
+  ---
+  duration_ms: 1.1802
+  type: 'test'
+  ...
+# Subtest: errorSteps: the message of an error and of its causes, at most four deep, a cycle is cut, a message that is not text is empty, a non-object has none
+ok 25 - errorSteps: the message of an error and of its causes, at most four deep, a cycle is cut, a message that is not text is empty, a non-object has none
+  ---
+  duration_ms: 0.8577
+  type: 'test'
+  ...
+# Subtest: a raw error becomes failure steps next to the raw steps; the stack is never read
+ok 26 - a raw error becomes failure steps next to the raw steps; the stack is never read
+  ---
+  duration_ms: 0.7275
+  type: 'test'
+  ...
+# Subtest: runs come from the committed ledger state: files become a count, a refused commit leaves no phantom run, audit entries are typed
+ok 27 - runs come from the committed ledger state: files become a count, a refused commit leaves no phantom run, audit entries are typed
+  ---
+  duration_ms: 1.3809
+  type: 'test'
+  ...
+# Subtest: a run whose files are not an array counts none; a run item is reused by id
+ok 28 - a run whose files are not an array counts none; a run item is reused by id
+  ---
+  duration_ms: 0.5389
+  type: 'test'
+  ...
+# Subtest: the bundle: every kind through the item path, counts that equal the item counts, a signature over exactly the unsigned JSON text
+ok 29 - the bundle: every kind through the item path, counts that equal the item counts, a signature over exactly the unsigned JSON text
+  ---
+  duration_ms: 1.0987
+  type: 'test'
+  ...
+# Subtest: the bundle shows at most RING items per kind, newest last
+ok 30 - the bundle shows at most RING items per kind, newest last
+  ---
+  duration_ms: 5.3463
+  type: 'test'
+  ...
+# Subtest: the vault of this test lists the parts that used to hide a whole secret: a surname of ten characters and an e-mail local part of seven, while the given name has five
+ok 31 - the vault of this test lists the parts that used to hide a whole secret: a surname of ten characters and an e-mail local part of seven, while the given name has five
+  ---
+  duration_ms: 1.6237
+  type: 'test'
+  ...
+# Subtest: the cases of the review: the URL-encoded name and e-mail, the double URL-encoded e-mail, an entity and a JSON escape for the at sign, plus for space, a first letter as an entity or a JSON escape
+ok 32 - the cases of the review: the URL-encoded name and e-mail, the double URL-encoded e-mail, an entity and a JSON escape for the at sign, plus for space, a first letter as an entity or a JSON escape
+  ---
+  duration_ms: 3.1766
+  type: 'test'
+  ...
+# Subtest: every covered encoding of every secret the vault lists (nine characters or more) masks the WHOLE text; a verbatim occurrence is replaced in place and the rest stays
+ok 33 - every covered encoding of every secret the vault lists (nine characters or more) masks the WHOLE text; a verbatim occurrence is replaced in place and the rest stays
+  ---
+  duration_ms: 93.1387
+  type: 'test'
+  ...
+# Subtest: one character of a secret written in another form while the rest stands verbatim (percent, decimal and hex entity, JSON and hex escape) masks the whole text, at the first, second, middle and last positions
+ok 34 - one character of a secret written in another form while the rest stands verbatim (percent, decimal and hex entity, JSON and hex escape) masks the whole text, at the first, second, middle and last positions
+  ---
+  duration_ms: 36.5972
+  type: 'test'
+  ...
+# Subtest: an e-mail address that holds a name in lower case is replaced in place like any verbatim secret (the lower-case name parts inside it are explained by the address); the same parts alone are a form of the name
+ok 35 - an e-mail address that holds a name in lower case is replaced in place like any verbatim secret (the lower-case name parts inside it are explained by the address); the same parts alone are a form of the name
+  ---
+  duration_ms: 0.9471
+  type: 'test'
+  ...
+# Subtest: a secret that stands verbatim next to an encoded form of itself still masks the whole text; a verbatim part next to an encoded part of ANOTHER secret does too
+ok 36 - a secret that stands verbatim next to an encoded form of itself still masks the whole text; a verbatim part next to an encoded part of ANOTHER secret does too
+  ---
+  duration_ms: 0.4954
+  type: 'test'
+  ...
+# Subtest: verbatim occurrences are replaced in place, longest secret first, and nothing else of the sentence changes
+ok 37 - verbatim occurrences are replaced in place, longest secret first, and nothing else of the sentence changes
+  ---
+  duration_ms: 0.9114
+  type: 'test'
+  ...
+# Subtest: canon.encodedIn: a secret set aside where it stands verbatim; every other covered form counts, in any view of the text
+ok 38 - canon.encodedIn: a secret set aside where it stands verbatim; every other covered form counts, in any view of the text
+  ---
+  duration_ms: 2.1231
+  type: 'test'
+  ...
+# Subtest: the plus-for-space view: a form-encoded text is decoded like a URL, with the plus signs turned into spaces first
+ok 39 - the plus-for-space view: a form-encoded text is decoded like a URL, with the plus signs turned into spaces first
+  ---
+  duration_ms: 0.5731
+  type: 'test'
+  ...
+# Subtest: publish over a seeded fuzz of hostile documents: every kind ends in a public body of exactly the allow-listed shape, with no canary in any covered encoding, the same answer twice, and no more reads of a hostile proxy than the schema can visit
+ok 40 - publish over a seeded fuzz of hostile documents: every kind ends in a public body of exactly the allow-listed shape, with no canary in any covered encoding, the same answer twice, and no more reads of a hostile proxy than the schema can visit
+  ---
+  duration_ms: 1814.7727
+  type: 'test'
+  ...
+# Subtest: the oracles of the fuzz are not vacuous: an extra key, a value out of range, a required value missing, a list over its limit, and a canary in a covered encoding are each caught
+ok 41 - the oracles of the fuzz are not vacuous: an extra key, a value out of range, a required value missing, a list over its limit, and a canary in a covered encoding are each caught
+  ---
+  duration_ms: 84.3879
+  type: 'test'
+  ...
+# Subtest: a hostile container costs at most the reads its limit allows: a proxied array that claims a hundred thousand entries is read at most as often as the list limit, never as often as it claims
+ok 42 - a hostile container costs at most the reads its limit allows: a proxied array that claims a hundred thousand entries is read at most as often as the list limit, never as often as it claims
+  ---
+  duration_ms: 1.675
+  type: 'test'
+  ...
+# Subtest: maskText over seeded hostile text: always a string of bounded length, no canary in any covered encoding, the same answer twice
+ok 43 - maskText over seeded hostile text: always a string of bounded length, no canary in any covered encoding, the same answer twice
+  ---
+  duration_ms: 468.964
+  type: 'test'
+  ...
+# Subtest: createVault over seeded hostile configurations: built, or a typed ConfigError that names no secret, never another throw
+ok 44 - createVault over seeded hostile configurations: built, or a typed ConfigError that names no secret, never another throw
+  ---
+  duration_ms: 155.4133
+  type: 'test'
+  ...
+# Subtest: validateInput over seeded hostile bodies: a typed answer, never a throw, and only the known fields come out
+ok 45 - validateInput over seeded hostile bodies: a typed answer, never a throw, and only the known fields come out
+  ---
+  duration_ms: 19.421
+  type: 'test'
+  ...
+# Subtest: the evidence over seeded hostile raw records: a record that cannot be read is published as nothing, every list and the signed bundle are public bodies without a canary, and what is shown reconciles with the total
+ok 46 - the evidence over seeded hostile raw records: a record that cannot be read is published as nothing, every list and the signed bundle are public bodies without a canary, and what is shown reconciles with the total
+  ---
+  duration_ms: 1090.5564
+  type: 'test'
+  ...
+# Subtest: stated limits, pinned: a configuration with a Proxy or an accessor that throws escapes createVault as the throwing object's own error, validateInput does not handle a Proxy, and errorSteps is not total on a Proxy or on a getter that throws; their callers hand them the configuration of the process owner, the result of JSON.parse and a record the evidence reads inside a try block (the record is then published as nothing); a change that makes them total fails here by name
+ok 47 - stated limits, pinned: a configuration with a Proxy or an accessor that throws escapes createVault as the throwing object's own error, validateInput does not handle a Proxy, and errorSteps is not total on a Proxy or on a getter that throws; their callers hand them the configuration of the process owner, the result of JSON.parse and a record the evidence reads inside a try block (the record is then published as nothing); a change that makes them total fails here by name
+  ---
+  duration_ms: 1.1214
+  type: 'test'
+  ...
+# (node:25400) [C014_READ_STOP_UNAVAILABLE] Warning: C014 cannot stop reading a refused connection and serves nothing.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: fail closed at startup: where this Node cannot stop reading a refused connection, startLocal rejects, closes its listener and warns
+ok 48 - fail closed at startup: where this Node cannot stop reading a refused connection, startLocal rejects, closes its listener and warns
+  ---
+  duration_ms: 26.9537
+  type: 'test'
+  ...
+# (node:25400) [C014_READ_STOP_UNAVAILABLE] Warning: C014 cannot stop reading a refused connection and serves nothing.
+# Subtest: fail closed at the first connection: able at startup but not on a socket, the server serves nothing and says why
+ok 49 - fail closed at the first connection: able at startup but not on a socket, the server serves nothing and says why
+  ---
+  duration_ms: 11.6801
+  type: 'test'
+  ...
+# Subtest: two live servers in one process: separate secrets, separate state, closed in FIFO and in LIFO order, a repeated close, an unrelated neighbour untouched
+ok 50 - two live servers in one process: separate secrets, separate state, closed in FIFO and in LIFO order, a repeated close, an unrelated neighbour untouched
+  ---
+  duration_ms: 36.594
+  type: 'test'
+  ...
+# Subtest: service objects are separate too: a token issued by one instance is unknown to the other
+ok 51 - service objects are separate too: a token issued by one instance is unknown to the other
+  ---
+  duration_ms: 9.5293
+  type: 'test'
+  ...
+# Subtest: R15: the limit of every array of the schemas is checked BEFORE the loop: an array that claims a million entries is read at most as often as its limit allows (counted reads, no clock)
+ok 52 - R15: the limit of every array of the schemas is checked BEFORE the loop: an array that claims a million entries is read at most as often as its limit allows (counted reads, no clock)
+  ---
+  duration_ms: 26.5209
+  type: 'test'
+  ...
+# Subtest: R15: a list with exactly its limit of entries is read once per entry, and one entry more is cut and counted
+ok 53 - R15: a list with exactly its limit of entries is read once per entry, and one entry more is cut and counted
+  ---
+  duration_ms: 4.9022
+  type: 'test'
+  ...
+# Subtest: R29: only OWN properties are read: a document whose fields all stand on its prototype is the same as an empty document, in every kind
+ok 54 - R29: only OWN properties are read: a document whose fields all stand on its prototype is the same as an empty document, in every kind
+  ---
+  duration_ms: 1.8427
+  type: 'test'
+  ...
+# Subtest: R29: a polluted Object.prototype adds no field to any document: the required field that is missing still drops the item
+ok 55 - R29: a polluted Object.prototype adds no field to any document: the required field that is missing still drops the item
+  ---
+  duration_ms: 0.2839
+  type: 'test'
+  ...
+# Subtest: imports.json pins the C009 production files: the working bytes (raw or LF) equal the pin, and git at the pinned commit agrees
+ok 56 - imports.json pins the C009 production files: the working bytes (raw or LF) equal the pin, and git at the pinned commit agrees
+  ---
+  duration_ms: 11.7826
+  type: 'test'
+  ...
+# Subtest: C014 imports only what imports.json lists: every require of another namespace in a production file is a pinned C009 file
+ok 57 - C014 imports only what imports.json lists: every require of another namespace in a production file is a pinned C009 file
+  ---
+  duration_ms: 3.416
+  type: 'test'
+  ...
+# Subtest: every capture manifest of the evidence recomputes: transcripts, sizes, inputs and exit codes (a retained failed attempt only with its stated failure; its inputs are history)
+ok 58 - every capture manifest of the evidence recomputes: transcripts, sizes, inputs and exit codes (a retained failed attempt only with its stated failure; its inputs are history)
+  ---
+  duration_ms: 466.8356
+  type: 'test'
+  ...
+# Subtest: the REDs of the third fix ran on the bytes of the FIRST publication: every pinned input that existed there equals its blob, the new snapshots equal their working files, and the fix changed the three production files it was meant to change and no other
+ok 59 - the REDs of the third fix ran on the bytes of the FIRST publication: every pinned input that existed there equals its blob, the new snapshots equal their working files, and the fix changed the three production files it was meant to change and no other
+  ---
+  duration_ms: 246.7779
+  type: 'test'
+  ...
+# Subtest: tampering is detected BY NAME: a transcript byte, a missing transcript, an input byte, a missing input, an exit code
+ok 60 - tampering is detected BY NAME: a transcript byte, a missing transcript, an input byte, a missing input, an exit code
+  ---
+  duration_ms: 179.7303
+  type: 'test'
+  ...
+# Subtest: the systematic mutation campaign: every mutant the generator lists for the current production bytes was run and decided, every survivor is a written equivalence, nothing is undecided
+ok 61 - the systematic mutation campaign: every mutant the generator lists for the current production bytes was run and decided, every survivor is a written equivalence, nothing is undecided
+  ---
+  duration_ms: 93.7682
+  type: 'test'
+  ...
+# Subtest: tampering with the mutation evidence is detected BY NAME: a result removed, a kill turned into a survivor, an undecided run, a kill without a named test, other source bytes, no control, an equivalence without a reason or for another mutant
+ok 62 - tampering with the mutation evidence is detected BY NAME: a result removed, a kill turned into a survivor, an undecided run, a kill without a named test, other source bytes, no control, an equivalence without a reason or for another mutant
+  ---
+  duration_ms: 243.4216
+  type: 'test'
+  ...
+# Subtest: the load loop capture: 20 runs, 4 at a time, under 4 burners that the script started and stopped by PID; every run of every process-spawning test file passed
+ok 63 - the load loop capture: 20 runs, 4 at a time, under 4 burners that the script started and stopped by PID; every run of every process-spawning test file passed
+  ---
+  duration_ms: 77.7952
+  type: 'test'
+  ...
+# Subtest: the final real Edge observation: Microsoft-signed, a qualified major, every check printed, the browser run ended OK
+ok 64 - the final real Edge observation: Microsoft-signed, a qualified major, every check printed, the browser run ended OK
+  ---
+  duration_ms: 66.7734
+  type: 'test'
+  ...
+# Subtest: the cleanup proof of the real browser: an injected failure failed the run and its finally block still closed the real session (archived capture and the hook in browser.cjs)
+ok 65 - the cleanup proof of the real browser: an injected failure failed the run and its finally block still closed the real session (archived capture and the hook in browser.cjs)
+  ---
+  duration_ms: 67.2382
+  type: 'test'
+  ...
+# Subtest: the final per-file coverage capture: ONE command per enumerated production file, every file at or above 85/85/85, nothing unlisted or missing
+ok 66 - the final per-file coverage capture: ONE command per enumerated production file, every file at or above 85/85/85, nothing unlisted or missing
+  ---
+  duration_ms: 81.9882
+  type: 'test'
+  ...
+# Subtest: the final whole-suite capture: every test file of the namespace except the integrity and README tests ran, one per child process, every file passed and finished under the 60 s cap
+ok 67 - the final whole-suite capture: every test file of the namespace except the integrity and README tests ran, one per child process, every file passed and finished under the 60 s cap
+  ---
+  duration_ms: 64.1321
+  type: 'test'
+  ...
+# Subtest: the fresh-checkout captures: the whole suite, the integrity and README tests included, is green in a tree of git-archive blobs (LF) and in the same tree converted to CRLF
+ok 68 - the fresh-checkout captures: the whole suite, the integrity and README tests included, is green in a tree of git-archive blobs (LF) and in the same tree converted to CRLF
+  ---
+  duration_ms: 156.0545
+  type: 'test'
+  ...
+# Subtest: the seal pins the final bytes: every file of the namespace, the README included, equals its pin and nothing is unsealed; a changed byte, a removed file, an added file and a CRLF copy are told apart BY NAME
+ok 69 - the seal pins the final bytes: every file of the namespace, the README included, equals its pin and nothing is unsealed; a changed byte, a removed file, an added file and a CRLF copy are told apart BY NAME
+  ---
+  duration_ms: 1181.2709
+  type: 'test'
+  ...
+# Subtest: valid documents: every row is drawn from checked values, the count lines reconcile shown against total, and the status line adds them up
+ok 70 - valid documents: every row is drawn from checked values, the count lines reconcile shown against total, and the status line adds them up
+  ---
+  duration_ms: 8.4049
+  type: 'test'
+  ...
+# Subtest: forged documents are rejected whole with a fixed sentence: nothing of them is shown, the other sections still load
+ok 71 - forged documents are rejected whole with a fixed sentence: nothing of them is shown, the other sections still load
+  ---
+  duration_ms: 18.906
+  type: 'test'
+  ...
+# Subtest: forged steps and runs are rejected too, each in a document whose counts are right so that only the forgery can reject it: an unknown event, a detail that is not text, a missing or an extra field, a bad id, a non-array, too many steps
+ok 72 - forged steps and runs are rejected too, each in a document whose counts are right so that only the forgery can reject it: an unknown event, a detail that is not text, a missing or an extra field, a bad id, a non-array, too many steps
+  ---
+  duration_ms: 15.2127
+  type: 'test'
+  ...
+# Subtest: the limits of a valid document are inclusive: eight steps, fifty items, zero counts, shown equal to total
+ok 73 - the limits of a valid document are inclusive: eight steps, fifty items, zero counts, shown equal to total
+  ---
+  duration_ms: 3.0266
+  type: 'test'
+  ...
+# Subtest: every request arms its own abort timer for ten seconds and clears it when the answer is in, so that no timer is left pending
+ok 74 - every request arms its own abort timer for ten seconds and clears it when the answer is in, so that no timer is left pending
+  ---
+  duration_ms: 3.1223
+  type: 'test'
+  ...
+# Subtest: an answer that is not the evidence document: another HTTP status, text that is not JSON, a refusal, a failed or a stalled request
+ok 75 - an answer that is not the evidence document: another HTTP status, text that is not JSON, a refusal, a failed or a stalled request
+  ---
+  duration_ms: 9.5118
+  type: 'test'
+  ...
+# Subtest: the page never prints a string the server sent: canaries in every free text and in every field of a forged document are nowhere in the DOM
+ok 76 - the page never prints a string the server sent: canaries in every free text and in every field of a forged document are nowhere in the DOM
+  ---
+  duration_ms: 12.2871
+  type: 'test'
+  ...
+# Subtest: Reload evidence loads everything again
+ok 77 - Reload evidence loads everything again
+  ---
+  duration_ms: 2.0514
+  type: 'test'
+  ...
+# Subtest: the page vocabularies are the server vocabularies, field by field
+ok 78 - the page vocabularies are the server vocabularies, field by field
+  ---
+  duration_ms: 1.6113
+  type: 'test'
+  ...
+# Subtest: the markup: no inline script or style, no event attribute, one polite live region, native controls, the download is the fixed GET
+ok 79 - the markup: no inline script or style, no event attribute, one polite live region, native controls, the download is the fixed GET
+  ---
+  duration_ms: 0.691
+  type: 'test'
+  ...
+# Subtest: the closed list of shapes and its ORDER: the phone number comes last, so that it can never chew the digits of a hex run, a blob or a token and leave their letters visible
+ok 80 - the closed list of shapes and its ORDER: the phone number comes last, so that it can never chew the digits of a hex run, a blob or a token and leave their letters visible
+  ---
+  duration_ms: 4.5042
+  type: 'test'
+  ...
+# Subtest: shape management token /c009_[A-Za-z0-9_-]{43}/g: the quantifier 43, every class member, the g flag, and the exact number of characters it consumes (a token that the blob shape would also mask whole)
+ok 81 - shape management token /c009_[A-Za-z0-9_-]{43}/g: the quantifier 43, every class member, the g flag, and the exact number of characters it consumes (a token that the blob shape would also mask whole)
+  ---
+  duration_ms: 0.4664
+  type: 'test'
+  ...
+# Subtest: shape bearer credential /\\bBearer\\s+[a-z0-9._~+/-]{1,512}=*/gi: the word boundary, the case flag (which also makes the class hold the capitals), the whitespace run, the quantifier 1 to 512, every class member, the padding, the g flag
+ok 82 - shape bearer credential /\\bBearer\\s+[a-z0-9._~+/-]{1,512}=*/gi: the word boundary, the case flag (which also makes the class hold the capitals), the whitespace run, the quantifier 1 to 512, every class member, the padding, the g flag
+  ---
+  duration_ms: 0.5595
+  type: 'test'
+  ...
+# Subtest: shape connection string secret: each of the seven keys, the case flag, the word boundary, the spaces around the equals sign, the terminators, the quantifier 1 to 256, the g flag
+ok 83 - shape connection string secret: each of the seven keys, the case flag, the word boundary, the spaces around the equals sign, the terminators, the quantifier 1 to 256, the g flag
+  ---
+  duration_ms: 0.5266
+  type: 'test'
+  ...
+# Subtest: shape e-mail address: the local-part class and its quantifier 1 to 64, the domain label class and its quantifier 1 to 63 (twice), the number of labels 1 to 8, the g flag
+ok 84 - shape e-mail address: the local-part class and its quantifier 1 to 64, the domain label class and its quantifier 1 to 63 (twice), the number of labels 1 to 8, the g flag
+  ---
+  duration_ms: 0.5115
+  type: 'test'
+  ...
+# Subtest: shape json web token: the prefix, the two segments of 8 to 512 characters, the third of 0 to 512, every class member in each, the g flag
+ok 85 - shape json web token: the prefix, the two segments of 8 to 512 characters, the third of 0 to 512, every class member in each, the g flag
+  ---
+  duration_ms: 1.428
+  type: 'test'
+  ...
+# Subtest: shape long blob /[A-Za-z0-9+/_-]{40,}={0,2}/g: the quantifier 40 or more, every class member, the padding 0 to 2, the g flag
+ok 86 - shape long blob /[A-Za-z0-9+/_-]{40,}={0,2}/g: the quantifier 40 or more, every class member, the padding 0 to 2, the g flag
+  ---
+  duration_ms: 2.6175
+  type: 'test'
+  ...
+# Subtest: shape long hex /\\b[0-9a-fA-F]{32,}\\b/g: the quantifier 32 or more (an MD5-sized secret), both word boundaries, every class member, the g flag
+ok 87 - shape long hex /\\b[0-9a-fA-F]{32,}\\b/g: the quantifier 32 or more (an MD5-sized secret), both word boundaries, every class member, the g flag
+  ---
+  duration_ms: 0.3139
+  type: 'test'
+  ...
+# Subtest: shape phone number /\\+?\\d[\\d ().-]{7,18}\\d/g: the optional plus, the first and last digit, the quantifier 7 to 18, every class member, the g flag
+ok 88 - shape phone number /\\+?\\d[\\d ().-]{7,18}\\d/g: the optional plus, the first and last digit, the quantifier 7 to 18, every class member, the g flag
+  ---
+  duration_ms: 0.3614
+  type: 'test'
+  ...
+# Subtest: F24: 50,000 requests pipelined behind a pending first request on 3 sockets: the 48 MB server stays alive, its heap bounded, every socket ended, a legitimate GET answered
+ok 89 - F24: 50,000 requests pipelined behind a pending first request on 3 sockets: the 48 MB server stays alive, its heap bounded, every socket ended, a legitimate GET answered
+  ---
+  duration_ms: 294.6514
+  type: 'test'
+  ...
+# Subtest: flood of refused requests with endless one-byte chunks, attacker in another process: the server ends every socket, reads little, spends little CPU, and still serves; the naive control does none of that
+ok 90 - flood of refused requests with endless one-byte chunks, attacker in another process: the server ends every socket, reads little, spends little CPU, and still serves; the naive control does none of that
+  ---
+  duration_ms: 1309.587
+  type: 'test'
+  ...
+# Subtest: [GET][GET][Expect: nonsense] on 128 sockets (the third pipelining hole): the answers in order, the typed 417, every socket ended, the 128-connection cap not pinned; the bare control keeps them open
+ok 91 - [GET][GET][Expect: nonsense] on 128 sockets (the third pipelining hole): the answers in order, the typed 417, every socket ended, the 128-connection cap not pinned; the bare control keeps them open
+  ---
+  duration_ms: 1655.6854
+  type: 'test'
+  ...
+# Subtest: the matrix against a server in another process, refusal in HTTP/1.0 (mutation in 1.0 and in 1.1): the earlier answers in order, the typed refusal, the end; nothing runs behind a refusal
+ok 92 - the matrix against a server in another process, refusal in HTTP/1.0 (mutation in 1.0 and in 1.1): the earlier answers in order, the typed refusal, the end; nothing runs behind a refusal
+  ---
+  duration_ms: 713.4064
+  type: 'test'
+  ...
+# Subtest: the matrix against a server in another process, refusal in HTTP/1.1 (mutation in 1.1 and in 1.0): the earlier answers in order, the typed refusal, the end; nothing runs behind a refusal
+ok 93 - the matrix against a server in another process, refusal in HTTP/1.1 (mutation in 1.1 and in 1.0): the earlier answers in order, the typed refusal, the end; nothing runs behind a refusal
+  ---
+  duration_ms: 870.3312
+  type: 'test'
+  ...
+# Subtest: the sweep over a server in another process: zero canary hits in the answers and in everything the process printed
+ok 94 - the sweep over a server in another process: zero canary hits in the answers and in everything the process printed
+  ---
+  duration_ms: 1008.0126
+  type: 'test'
+  ...
+# Subtest: property, seed 11: after every operation no canary has been served, in any covered encoding
+ok 95 - property, seed 11: after every operation no canary has been served, in any covered encoding
+  ---
+  duration_ms: 357.4338
+  type: 'test'
+  ...
+# Subtest: property, seed 2027: after every operation no canary has been served, in any covered encoding
+ok 96 - property, seed 2027: after every operation no canary has been served, in any covered encoding
+  ---
+  duration_ms: 335.0006
+  type: 'test'
+  ...
+# Subtest: property, seed 90210: after every operation no canary has been served, in any covered encoding
+ok 97 - property, seed 90210: after every operation no canary has been served, in any covered encoding
+  ---
+  duration_ms: 249.0857
+  type: 'test'
+  ...
+# Subtest: property, seed 1234567: after every operation no canary has been served, in any covered encoding
+ok 98 - property, seed 1234567: after every operation no canary has been served, in any covered encoding
+  ---
+  duration_ms: 219.9073
+  type: 'test'
+  ...
+# Subtest: the generator is deterministic: the same seed draws the same sequence
+ok 99 - the generator is deterministic: the same seed draws the same sequence
+  ---
+  duration_ms: 0.5465
+  type: 'test'
+  ...
+# Subtest: the figures of the README prose are the figures of the stored evidence: each carries a marker, and the value behind the marker is the one derived from the evidence
+ok 100 - the figures of the README prose are the figures of the stored evidence: each carries a marker, and the value behind the marker is the one derived from the evidence
+  ---
+  duration_ms: 599.1893
+  type: 'test'
+  ...
+# Subtest: a drifting figure is caught BY NAME: a changed number, a removed marker, an unknown key, a new untagged figure, a changed coverage triple, a marker behind no figure
+ok 101 - a drifting figure is caught BY NAME: a changed number, a removed marker, an unknown key, a new untagged figure, a changed coverage triple, a marker behind no figure
+  ---
+  duration_ms: 0.5034
+  type: 'test'
+  ...
+# Subtest: every claim of the README claims table is backed by a test that exists: the named file holds a test whose title starts with the stated words
+ok 102 - every claim of the README claims table is backed by a test that exists: the named file holds a test whose title starts with the stated words
+  ---
+  duration_ms: 20.003
+  type: 'test'
+  ...
+# Subtest: every README paragraph that says pinned, every, whole, never or always cites a claim of the claims table, and every citation names a row that exists
+ok 103 - every README paragraph that says pinned, every, whole, never or always cites a claim of the claims table, and every citation names a row that exists
+  ---
+  duration_ms: 3.1888
+  type: 'test'
+  ...
+# Subtest: a README paragraph without its citation, a citation of a row that does not exist, and a citation behind a heading or a fence are told apart BY NAME
+ok 104 - a README paragraph without its citation, a citation of a row that does not exist, and a citation behind a heading or a fence are told apart BY NAME
+  ---
+  duration_ms: 0.2807
+  type: 'test'
+  ...
+# Subtest: the fresh-checkout lines of the README state the figures of the stored fresh-checkout captures (a fresh tree is a copy made before them: it has no such lines)
+ok 105 - the fresh-checkout lines of the README state the figures of the stored fresh-checkout captures (a fresh tree is a copy made before them: it has no such lines)
+  ---
+  duration_ms: 96.8902
+  type: 'test'
+  ...
+# Subtest: publish refuses an unknown kind and never reads a kind from the prototype chain
+ok 106 - publish refuses an unknown kind and never reads a kind from the prototype chain
+  ---
+  duration_ms: 2.7242
+  type: 'test'
+  ...
+# Subtest: a PublicBody is minted by publish alone, is frozen, and serialises through toJSON
+ok 107 - a PublicBody is minted by publish alone, is frozen, and serialises through toJSON
+  ---
+  duration_ms: 1.1954
+  type: 'test'
+  ...
+# Subtest: allow-list: a field no rule names is never copied (unknown fields, nested unknown subtrees, canary keys)
+ok 108 - allow-list: a field no rule names is never copied (unknown fields, nested unknown subtrees, canary keys)
+  ---
+  duration_ms: 1.028
+  type: 'test'
+  ...
+# Subtest: typed fields: a value outside its closed vocabulary or range becomes null and is counted; an item with an invalid REQUIRED field is dropped whole
+ok 109 - typed fields: a value outside its closed vocabulary or range becomes null and is counted; an item with an invalid REQUIRED field is dropped whole
+  ---
+  duration_ms: 1.8709
+  type: 'test'
+  ...
+# Subtest: text masking by value: a registered secret is replaced in place and the rest of the sentence stays
+ok 110 - text masking by value: a registered secret is replaced in place and the rest of the sentence stays
+  ---
+  duration_ms: 0.5997
+  type: 'test'
+  ...
+# Subtest: text masking by value: every covered encoding of a registered secret masks the whole value
+ok 111 - text masking by value: every covered encoding of a registered secret masks the whole value
+  ---
+  duration_ms: 2.1463
+  type: 'test'
+  ...
+# Subtest: longer secrets are replaced before the shorter secrets they contain (overlap)
+ok 112 - longer secrets are replaced before the shorter secrets they contain (overlap)
+  ---
+  duration_ms: 0.2724
+  type: 'test'
+  ...
+# Subtest: secret shapes are masked although the service never held them: token, bearer, connection secret, e-mail, phone, jwt, long blob, long hex
+ok 113 - secret shapes are masked although the service never held them: token, bearer, connection secret, e-mail, phone, jwt, long blob, long hex
+  ---
+  duration_ms: 0.4711
+  type: 'test'
+  ...
+# Subtest: the work is bounded: a text past the cap is masked unread, a long text is cut AFTER masking, and a secret across the cut is not left half
+ok 114 - the work is bounded: a text past the cap is masked unread, a long text is cut AFTER masking, and a secret across the cut is not left half
+  ---
+  duration_ms: 0.4982
+  type: 'test'
+  ...
+# Subtest: register: short and non-string values are refused, a duplicate changes nothing, a new secret changes the epoch
+ok 115 - register: short and non-string values are refused, a duplicate changes nothing, a new secret changes the epoch
+  ---
+  duration_ms: 0.4298
+  type: 'test'
+  ...
+# Subtest: arrays: every entry is walked, invalid entries are dropped, and a long array is cut and counted
+ok 116 - arrays: every entry is walked, invalid entries are dropped, and a long array is cut and counted
+  ---
+  duration_ms: 0.9559
+  type: 'test'
+  ...
+# Subtest: the list envelope accepts only PublicBody items: a plain object, however well formed, is dropped
+ok 117 - the list envelope accepts only PublicBody items: a plain object, however well formed, is dropped
+  ---
+  duration_ms: 0.2094
+  type: 'test'
+  ...
+# Subtest: hostile values never throw: throwing getters, proxies, sparse and huge arrays, cycles, prototype keys, wrong types
+ok 118 - hostile values never throw: throwing getters, proxies, sparse and huge arrays, cycles, prototype keys, wrong types
+  ---
+  duration_ms: 1.0754
+  type: 'test'
+  ...
+# Subtest: publish is deterministic and its result does not alias its input
+ok 119 - publish is deterministic and its result does not alias its input
+  ---
+  duration_ms: 0.2259
+  type: 'test'
+  ...
+# Subtest: the literal limits: 65,536 characters are examined and 65,537 masked unread, 4,096 are kept and the 4,097th starts a cut, 200 entries, 8 steps and 32 claims are kept and one more is dropped and counted
+ok 120 - the literal limits: 65,536 characters are examined and 65,537 masked unread, 4,096 are kept and the 4,097th starts a cut, 200 entries, 8 steps and 32 claims are kept and one more is dropped and counted
+  ---
+  duration_ms: 3.2116
+  type: 'test'
+  ...
+# Subtest: every integer field accepts exactly its literal range and nothing else: status 100 to 599, units 0 to 1,000,000, artifacts 0 to 1,000, counts 0 to 1,000,000,000, list limit 1 to 200, audit sequence 0 to 1,000,000,000, the scope numbers exactly 0
+ok 121 - every integer field accepts exactly its literal range and nothing else: status 100 to 599, units 0 to 1,000,000, artifacts 0 to 1,000, counts 0 to 1,000,000,000, list limit 1 to 200, audit sequence 0 to 1,000,000,000, the scope numbers exactly 0
+  ---
+  duration_ms: 1.8865
+  type: 'test'
+  ...
+# Subtest: the audit sequence is nullable and the run id is an id: a present invalid value costs one redaction, null costs none, and an invalid id is never kept
+ok 122 - the audit sequence is nullable and the run id is an id: a present invalid value costs one redaction, null costs none, and an invalid id is never kept
+  ---
+  duration_ms: 0.5977
+  type: 'test'
+  ...
+# Subtest: redaction counts: an absent or null field costs nothing, a present invalid value one, a dropped item one more; a document that is not an object is one, or none when it is null
+ok 123 - redaction counts: an absent or null field costs nothing, a present invalid value one, a dropped item one more; a document that is not an object is one, or none when it is null
+  ---
+  duration_ms: 0.531
+  type: 'test'
+  ...
+# Subtest: register: a secret needs six characters, the epoch counts the secrets the redactor learned (a repeat changes nothing), a short value is refused
+ok 124 - register: a secret needs six characters, the epoch counts the secrets the redactor learned (a repeat changes nothing), a short value is refused
+  ---
+  duration_ms: 0.128
+  type: 'test'
+  ...
+# Subtest: the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers in order, then the typed refusal, then the end; nothing runs behind it
+ok 125 - the matrix: every refusal row, every position, HTTP/1.1 and HTTP/1.0: the earlier answers in order, then the typed refusal, then the end; nothing runs behind it
+  ---
+  duration_ms: 679.5285
+  type: 'test'
+  ...
+# Subtest: an asynchronous refusal (the owner quota is full after the body was read) ends the connection and nothing queued behind it runs
+ok 126 - an asynchronous refusal (the owner quota is full after the body was read) ends the connection and nothing queued behind it runs
+  ---
+  duration_ms: 11.6931
+  type: 'test'
+  ...
+# Subtest: a request with an Expect: 100-continue is invited to send its body only when it is about to be read; a refused one is not
+ok 127 - a request with an Expect: 100-continue is invited to send its body only when it is about to be read; a refused one is not
+  ---
+  duration_ms: 1525.1758
+  type: 'test'
+  ...
+# Subtest: no public return is a shared mutable object: every reachable object of every return refuses a change or is a copy, and the next output equals that of an untouched control
+ok 128 - no public return is a shared mutable object: every reachable object of every return refuses a change or is a copy, and the next output equals that of an untouched control
+  ---
+  duration_ms: 36.5989
+  type: 'test'
+  ...
+# Subtest: what canon, vault and evidence export is frozen all the way down; the module-level vocabularies of redact, service and server are plain shared arrays and objects (the stated limit, pinned by name: a new one fails here)
+ok 129 - what canon, vault and evidence export is frozen all the way down; the module-level vocabularies of redact, service and server are plain shared arrays and objects (the stated limit, pinned by name: a new one fails here)
+  ---
+  duration_ms: 1.4629
+  type: 'test'
+  ...
+# Subtest: every encoder is found by the scanner, with the right canary id, and a different canary is not reported
+ok 130 - every encoder is found by the scanner, with the right canary id, and a different canary is not reported
+  ---
+  duration_ms: 152.127
+  type: 'test'
+  ...
+# Subtest: the stream scanner finds a canary split across one-byte chunks; the per-chunk control does not
+ok 131 - the stream scanner finds a canary split across one-byte chunks; the per-chunk control does not
+  ---
+  duration_ms: 2.9422
+  type: 'test'
+  ...
+# Subtest: the scanner reports ids and form names only, never a value
+ok 132 - the scanner reports ids and form names only, never a value
+  ---
+  duration_ms: 2.0048
+  type: 'test'
+  ...
+# Subtest: routeClass maps a path to a closed class and never returns the path
+ok 133 - routeClass maps a path to a closed class and never returns the path
+  ---
+  duration_ms: 1.9547
+  type: 'test'
+  ...
+# Subtest: every public route answers every valid identity the same; a bad credential is never read as anonymous (401 with its typed code and challenge)
+ok 134 - every public route answers every valid identity the same; a bad credential is never read as anonymous (401 with its typed code and challenge)
+  ---
+  duration_ms: 171.2406
+  type: 'test'
+  ...
+# Subtest: the management route is for the operator: 401 without a token, 403 for a visitor and a conductor, 200 booleans and counts for the operator
+ok 135 - the management route is for the operator: 401 without a token, 403 for a visitor and a conductor, 200 booleans and counts for the operator
+  ---
+  duration_ms: 12.5213
+  type: 'test'
+  ...
+# Subtest: every answer: no-store, nosniff, no referrer, the C009 CSP, no cookie, no CORS header, no redirect, no source map
+ok 136 - every answer: no-store, nosniff, no referrer, the C009 CSP, no cookie, no CORS header, no redirect, no source map
+  ---
+  duration_ms: 55.2316
+  type: 'test'
+  ...
+# Subtest: an operator reads the bundle as a download and the signature verifies; the content type and the file name are fixed
+ok 137 - an operator reads the bundle as a download and the signature verifies; the content type and the file name are fixed
+  ---
+  duration_ms: 6.0289
+  type: 'test'
+  ...
+# Subtest: run.create by a conductor and config.check by the operator: typed answers, the evidence shows facts only, claims are reported by name and never obeyed
+ok 138 - run.create by a conductor and config.check by the operator: typed answers, the evidence shows facts only, claims are reported by name and never obeyed
+  ---
+  duration_ms: 29.4088
+  type: 'test'
+  ...
+# Subtest: the limit parameter: 1 to 200, nothing else; any other query on any route is a typed 400 and no query is echoed
+ok 139 - the limit parameter: 1 to 200, nothing else; any other query on any route is a typed 400 and no query is echoed
+  ---
+  duration_ms: 39.6188
+  type: 'test'
+  ...
+# Subtest: createOut sends JSON only as a PublicBody: a plain object, a string or a buffer is a TypeError before anything is written
+ok 140 - createOut sends JSON only as a PublicBody: a plain object, a string or a buffer is a TypeError before anything is written
+  ---
+  duration_ms: 0.9923
+  type: 'test'
+  ...
+# Subtest: close ends an idle connection and may be called twice; a second server beside it is untouched
+ok 141 - close ends an idle connection and may be called twice; a second server beside it is untouched
+  ---
+  duration_ms: 12.8696
+  type: 'test'
+  ...
+# Subtest: the connection cap: past `connections` open sockets the server drops the next one and keeps the others
+ok 142 - the connection cap: past `connections` open sockets the server drops the next one and keeps the others
+  ---
+  duration_ms: 9.5948
+  type: 'test'
+  ...
+# Subtest: a connection that sends nothing is closed by the server (idle limit); a foreign Host is a typed 421 that closes too
+ok 143 - a connection that sends nothing is closed by the server (idle limit); a foreign Host is a typed 421 that closes too
+  ---
+  duration_ms: 311.0501
+  type: 'test'
+  ...
+# Subtest: a request target that URL parsing rejects is a typed 400, an absolute-form target for another origin is a typed 400, and 2,048 characters of URL are allowed but 2,049 are not
+ok 144 - a request target that URL parsing rejects is a typed 400, an absolute-form target for another origin is a typed 400, and 2,048 characters of URL are allowed but 2,049 are not
+  ---
+  duration_ms: 10.7769
+  type: 'test'
+  ...
+# Subtest: an unexpected failure inside a handler is a typed 500 INTERNAL_ERROR, never an authentication or URL answer
+ok 145 - an unexpected failure inside a handler is a typed 500 INTERNAL_ERROR, never an authentication or URL answer
+  ---
+  duration_ms: 5.3196
+  type: 'test'
+  ...
+# Subtest: every request is recorded with its route class, its status, its typed code and its role
+ok 146 - every request is recorded with its route class, its status, its typed code and its role
+  ---
+  duration_ms: 12.761
+  type: 'test'
+  ...
+# Subtest: a COMMAND request is recorded with the role of its caller as well: a conductor, a visitor that is refused, an anonymous caller and a forged token
+ok 147 - a COMMAND request is recorded with the role of its caller as well: a conductor, a visitor that is refused, an anonymous caller and a forged token
+  ---
+  duration_ms: 17.9348
+  type: 'test'
+  ...
+# Subtest: the three assets are served BYTE FOR BYTE: GET /, /page.js and /style.css return exactly index.html, page.js and style.css of the namespace, with their content types
+ok 148 - the three assets are served BYTE FOR BYTE: GET /, /page.js and /style.css return exactly index.html, page.js and style.css of the namespace, with their content types
+  ---
+  duration_ms: 11.1715
+  type: 'test'
+  ...
+# Subtest: the HTTP timeouts and the connection cap are configured on the server: header and request timeout, keep-alive one second, idle timeout, cap
+ok 149 - the HTTP timeouts and the connection cap are configured on the server: header and request timeout, keep-alive one second, idle timeout, cap
+  ---
+  duration_ms: 3.2986
+  type: 'test'
+  ...
+# Subtest: close ends an ACTIVE connection (an unfinished request) by two independent means: it calls closeAllConnections, and it destroys the tracked sockets even when that does nothing
+ok 150 - close ends an ACTIVE connection (an unfinished request) by two independent means: it calls closeAllConnections, and it destroys the tracked sockets even when that does nothing
+  ---
+  duration_ms: 8.267
+  type: 'test'
+  ...
+# Subtest: the evidence of real traffic carries its literal kinds and statuses (upstream 202, store 200, error 500, planted 200 and 500, the planted run with one unit), and the log level follows the status at every boundary
+ok 151 - the evidence of real traffic carries its literal kinds and statuses (upstream 202, store 200, error 500, planted 200 and 500, the planted run with one unit), and the log level follows the status at every boundary
+  ---
+  duration_ms: 14.9236
+  type: 'test'
+  ...
+# Subtest: validateInput: run.create keeps the C009 rules; config.check takes exactly one field, mode, with the same closed refusals
+ok 152 - validateInput: run.create keeps the C009 rules; config.check takes exactly one field, mode, with the same closed refusals
+  ---
+  duration_ms: 3.6259
+  type: 'test'
+  ...
+# Subtest: the permission table is deny by default and frozen: run.create is for conductors, config.check for the operator
+ok 153 - the permission table is deny by default and frozen: run.create is for conductors, config.check for the operator
+  ---
+  duration_ms: 0.3234
+  type: 'test'
+  ...
+# Subtest: createService refuses an invalid configuration with the typed ConfigError and nothing else
+ok 154 - createService refuses an invalid configuration with the typed ConfigError and nothing else
+  ---
+  duration_ms: 2.8603
+  type: 'test'
+  ...
+# Subtest: createService checks that the registry issues exactly the configured tokens (a registry that disagrees is a ConfigError)
+ok 155 - createService checks that the registry issues exactly the configured tokens (a registry that disagrees is a ConfigError)
+  ---
+  duration_ms: 5.7924
+  type: 'test'
+  ...
+# Subtest: plant puts a value in every position of the raw record of each place; the public items never show it
+ok 156 - plant puts a value in every position of the raw record of each place; the public items never show it
+  ---
+  duration_ms: 29.9628
+  type: 'test'
+  ...
+# Subtest: plant converts a non-string value to text first
+ok 157 - plant converts a non-string value to text first
+  ---
+  duration_ms: 1.5332
+  type: 'test'
+  ...
+# Subtest: recordRequest: a raw trace and a raw log, the level from the status, the console line is the redacted log item, a failing sink never fails a request
+ok 158 - recordRequest: a raw trace and a raw log, the level from the status, the console line is the redacted log item, a failing sink never fails a request
+  ---
+  duration_ms: 4.7035
+  type: 'test'
+  ...
+# Subtest: issueToken registers the new token by value before anyone holds it, and its identity and lifetime are checked by the C009 registry
+ok 159 - issueToken registers the new token by value before anyone holds it, and its identity and lifetime are checked by the C009 registry
+  ---
+  duration_ms: 2.469
+  type: 'test'
+  ...
+# Subtest: plant: the planted log, trace, error and run records of a fresh service carry their literal fields (status 200 or 500, the code, the role, run-9001 of one unit at revision 1)
+ok 160 - plant: the planted log, trace, error and run records of a fresh service carry their literal fields (status 200 or 500, the code, the role, run-9001 of one unit at revision 1)
+  ---
+  duration_ms: 2.45
+  type: 'test'
+  ...
+# Subtest: the scope and config bodies are published through the redactor and hold facts only
+ok 161 - the scope and config bodies are published through the redactor and hold facts only
+  ---
+  duration_ms: 3.2289
+  type: 'test'
+  ...
+# Subtest: THE SWEEP, real server: zero canary hits in every byte (whole, one byte at a time, console), over every route, identity and planting place
+ok 162 - THE SWEEP, real server: zero canary hits in every byte (whole, one byte at a time, console), over every route, identity and planting place
+  ---
+  duration_ms: 1495.5269
+  type: 'test'
+  ...
+# Subtest: the sweep is not vacuous: the same sweep over the naive stub of the RED finds canaries in raw, encoded and streamed form
+ok 163 - the sweep is not vacuous: the same sweep over the naive stub of the RED finds canaries in raw, encoded and streamed form
+  ---
+  duration_ms: 4606.2238
+  type: 'test'
+  ...
+# Subtest: place by place, encoding by encoding: every held canary planted in the raw store in ONE covered encoding never shows in a list or in the bundle
+ok 164 - place by place, encoding by encoding: every held canary planted in the raw store in ONE covered encoding never shows in a list or in the bundle
+  ---
+  duration_ms: 1417.4624
+  type: 'test'
+  ...
+# Subtest: a valid configuration builds a vault; every invalid shape is a typed ConfigError that names the field and never a value
+ok 165 - a valid configuration builds a vault; every invalid shape is a typed ConfigError that names the field and never a value
+  ---
+  duration_ms: 9.8344
+  type: 'test'
+  ...
+# Subtest: the vault keeps a private deep copy: changing the caller object afterwards changes nothing it holds
+ok 166 - the vault keeps a private deep copy: changing the caller object afterwards changes nothing it holds
+  ---
+  duration_ms: 1.7412
+  type: 'test'
+  ...
+# Subtest: secrets(): every leaf and the parts a driver message or a log line would reveal, each at least six characters, without duplicates
+ok 167 - secrets(): every leaf and the parts a driver message or a log line would reveal, each at least six characters, without duplicates
+  ---
+  duration_ms: 1.0003
+  type: 'test'
+  ...
+# Subtest: tokenSource hands out the configured tokens as 32-byte values in identity order, then null
+ok 168 - tokenSource hands out the configured tokens as 32-byte values in identity order, then null
+  ---
+  duration_ms: 0.4908
+  type: 'test'
+  ...
+# Subtest: status is booleans and counts only; sign is an HMAC-SHA256 hex digest of the signing key
+ok 169 - status is booleans and counts only; sign is an HMAC-SHA256 hex digest of the signing key
+  ---
+  duration_ms: 1.3594
+  type: 'test'
+  ...
+# Subtest: the fictional upstream carries the credential and the contact in its request and its steps (the raw material the redaction must clean)
+ok 170 - the fictional upstream carries the credential and the contact in its request and its steps (the raw material the redaction must clean)
+  ---
+  duration_ms: 0.5346
+  type: 'test'
+  ...
+# Subtest: the fictional store: ok names the server and the user; fail throws a StoreError whose message holds the connection string and whose cause holds the password
+ok 171 - the fictional store: ok names the server and the user; fail throws a StoreError whose message holds the connection string and whose cause holds the password
+  ---
+  duration_ms: 0.8005
+  type: 'test'
+  ...
+# Subtest: parseConnection: server, host without protocol and port, database, user and password; an absent part is undefined
+ok 172 - parseConnection: server, host without protocol and port, database, user and password; an absent part is undefined
+  ---
+  duration_ms: 0.2631
+  type: 'test'
+  ...
+# Subtest: the connection string: the server, the user and the password each need at least six characters (six is valid, five is not), and a string outside printable ASCII is refused even when its parts parse
+ok 173 - the connection string: the server, the user and the password each need at least six characters (six is valid, five is not), and a string outside printable ASCII is refused even when its parts parse
+  ---
+  duration_ms: 2.3878
+  type: 'test'
+  ...
+# Subtest: secrets() holds the local part of every e-mail address, its name parts and its phone digits
+ok 174 - secrets() holds the local part of every e-mail address, its name parts and its phone digits
+  ---
+  duration_ms: 0.7764
+  type: 'test'
+  ...
+# Subtest: parseConnection ignores a pair whose key is a single character: the four keys it reads are longer
+ok 175 - parseConnection ignores a pair whose key is a single character: the four keys it reads are longer
+  ---
+  duration_ms: 0.2727
+  type: 'test'
+  ...
+1..175
+# tests 175
+# suites 0
+# pass 175
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 66110.1077

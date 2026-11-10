@@ -1,0 +1,369 @@
+LOAD 8 burners started at 2026-11-06T16:02:04.545Z, PIDs 28248,37672,53872,18212,48056,52188,44872,2376
+round 1: 8/8 ok, max 48s
+BAD resources.test.cjs run 2.5 exit=1 52s failed=["one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected"] why=["'the attacks reached the server: 238 of 239 connections accepted'","'1 subtest failed'"]
+uration_ms: 12121.8834
+      type: 'test'
+      ...
+    # Subtest: a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+    ok 2 - a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+      ---
+      duration_ms: 12432.36
+      type: 'test'
+      ...
+    # Subtest: an endless chunked upload at a refused command is cut off
+    ok 3 - an endless chunked upload at a refused command is cut off
+      ---
+      duration_ms: 6906.9019
+      type: 'test'
+      ...
+    # Subtest: after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+    not ok 4 - after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+      ---
+      duration_ms: 20452.354
+      type: 'test'
+      location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:123:13'
+      failureType: 'testCodeFailure'
+      error: 'the attacks reached the server: 238 of 239 connections accepted'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        assertServiceable (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:37:10)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:126:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:123:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: the settled reading still fails for memory the server really retains
+    ok 5 - the settled reading still fails for memory the server really retains
+      ---
+      duration_ms: 970.9633
+      type: 'test'
+      ...
+    # Subtest: the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+    ok 6 - the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+      ---
+      duration_ms: 1027.3532
+      type: 'test'
+      ...
+    1..6
+not ok 1 - one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected
+  ---
+  duration_ms: 45807.168
+  type: 'test'
+  location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:70:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49221.6094
+
+round 2: 7/8 ok, max 52s
+round 3: 8/8 ok, max 36s
+BAD resources.test.cjs run 4.2 exit=1 32s failed=["one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected"] why=["'the client saw the 431 or nothing, not \"HTTP/1.1 408 Request Timeout\\\\r\\\\nCache-Control: no-store\\\\r\\\\nConte\"'","'1 subtest failed'"]
+t exhaust it
+    ok 1 - pipelined floods that are never read are cut off by the server and cannot exhaust it
+      ---
+      duration_ms: 9961.3061
+      type: 'test'
+      ...
+    # Subtest: a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+    not ok 2 - a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+      ---
+      duration_ms: 9504.6327
+      type: 'test'
+      location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:114:9'
+      failureType: 'testCodeFailure'
+      error: 'the client saw the 431 or nothing, not "HTTP/1.1 408 Request Timeout\\r\\nCache-Control: no-store\\r\\nConte"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:116:16)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 1)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:108:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: an endless chunked upload at a refused command is cut off
+    ok 3 - an endless chunked upload at a refused command is cut off
+      ---
+      duration_ms: 11557.7304
+      type: 'test'
+      ...
+    # Subtest: after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+    ok 4 - after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+      ---
+      duration_ms: 1069.5868
+      type: 'test'
+      ...
+    # Subtest: the settled reading still fails for memory the server really retains
+    ok 5 - the settled reading still fails for memory the server really retains
+      ---
+      duration_ms: 969.9656
+      type: 'test'
+      ...
+    # Subtest: the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+    ok 6 - the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+      ---
+      duration_ms: 2809.4798
+      type: 'test'
+      ...
+    1..6
+not ok 1 - one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected
+  ---
+  duration_ms: 23977.1487
+  type: 'test'
+  location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:70:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 28279.1021
+
+BAD resources.test.cjs run 4.8 exit=1 29s failed=["one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected"] why=["'the client saw the 431 or nothing, not \"HTTP/1.1 408 Request Timeout\\\\r\\\\nCache-Control: no-store\\\\r\\\\nConte\"'","'1 subtest failed'"]
+ot exhaust it
+    ok 1 - pipelined floods that are never read are cut off by the server and cannot exhaust it
+      ---
+      duration_ms: 8579.5366
+      type: 'test'
+      ...
+    # Subtest: a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+    not ok 2 - a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+      ---
+      duration_ms: 8268.7667
+      type: 'test'
+      location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:114:9'
+      failureType: 'testCodeFailure'
+      error: 'the client saw the 431 or nothing, not "HTTP/1.1 408 Request Timeout\\r\\nCache-Control: no-store\\r\\nConte"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:116:16)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 1)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:108:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: an endless chunked upload at a refused command is cut off
+    ok 3 - an endless chunked upload at a refused command is cut off
+      ---
+      duration_ms: 10041.1781
+      type: 'test'
+      ...
+    # Subtest: after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+    ok 4 - after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+      ---
+      duration_ms: 335.809
+      type: 'test'
+      ...
+    # Subtest: the settled reading still fails for memory the server really retains
+    ok 5 - the settled reading still fails for memory the server really retains
+      ---
+      duration_ms: 1093.5838
+      type: 'test'
+      ...
+    # Subtest: the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+    ok 6 - the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+      ---
+      duration_ms: 1657.0091
+      type: 'test'
+      ...
+    1..6
+not ok 1 - one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected
+  ---
+  duration_ms: 20813.7564
+  type: 'test'
+  location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:70:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25716.8415
+
+round 4: 6/8 ok, max 36s
+BAD resources.test.cjs run 5.5 exit=1 32s failed=["one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected"] why=["'the client saw the 431 or nothing, not \"HTTP/1.1 408 Request Timeout\\\\r\\\\nCache-Control: no-store\\\\r\\\\nConte\"'","'1 subtest failed'"]
+annot exhaust it
+    ok 1 - pipelined floods that are never read are cut off by the server and cannot exhaust it
+      ---
+      duration_ms: 9594.7668
+      type: 'test'
+      ...
+    # Subtest: a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+    not ok 2 - a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+      ---
+      duration_ms: 9590.845
+      type: 'test'
+      location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:114:9'
+      failureType: 'testCodeFailure'
+      error: 'the client saw the 431 or nothing, not "HTTP/1.1 408 Request Timeout\\r\\nCache-Control: no-store\\r\\nConte"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:116:16)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 1)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:108:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: an endless chunked upload at a refused command is cut off
+    ok 3 - an endless chunked upload at a refused command is cut off
+      ---
+      duration_ms: 10591.569
+      type: 'test'
+      ...
+    # Subtest: after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+    ok 4 - after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+      ---
+      duration_ms: 240.653
+      type: 'test'
+      ...
+    # Subtest: the settled reading still fails for memory the server really retains
+    ok 5 - the settled reading still fails for memory the server really retains
+      ---
+      duration_ms: 972.6293
+      type: 'test'
+      ...
+    # Subtest: the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+    ok 6 - the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+      ---
+      duration_ms: 3099.2568
+      type: 'test'
+      ...
+    1..6
+not ok 1 - one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected
+  ---
+  duration_ms: 20948.3284
+  type: 'test'
+  location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:70:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27151.9012
+
+round 5: 7/8 ok, max 34s
+round 6: 8/8 ok, max 36s
+BAD resources.test.cjs run 7.5 exit=1 46s failed=["one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected"] why=["'the client saw the 431 or nothing, not \"HTTP/1.1 408 Request Timeout\\\\r\\\\nCache-Control: no-store\\\\r\\\\nConte\"'","'1 subtest failed'"]
+ot exhaust it
+    ok 1 - pipelined floods that are never read are cut off by the server and cannot exhaust it
+      ---
+      duration_ms: 11296.3185
+      type: 'test'
+      ...
+    # Subtest: a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+    not ok 2 - a header flood is closed by the server after one read of at most 16 KB, not after the 1 MB offered
+      ---
+      duration_ms: 11059.4168
+      type: 'test'
+      location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:114:9'
+      failureType: 'testCodeFailure'
+      error: 'the client saw the 431 or nothing, not "HTTP/1.1 408 Request Timeout\\r\\nCache-Control: no-store\\r\\nConte"'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:116:16)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 1)
+        async TestContext.<anonymous> (<USERPROFILE>\repos\app-scaling-strategies\capability\C009\tests\resources.test.cjs:108:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: an endless chunked upload at a refused command is cut off
+    ok 3 - an endless chunked upload at a refused command is cut off
+      ---
+      duration_ms: 12663.535
+      type: 'test'
+      ...
+    # Subtest: after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+    ok 4 - after every attack the state is unchanged, a normal client and an authorized command are served, and the retained heap is small
+      ---
+      duration_ms: 735.0236
+      type: 'test'
+      ...
+    # Subtest: the settled reading still fails for memory the server really retains
+    ok 5 - the settled reading still fails for memory the server really retains
+      ---
+      duration_ms: 1274.7126
+      type: 'test'
+      ...
+    # Subtest: the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+    ok 6 - the CLI shutdown ends every socket and the process by itself, with the attackers still connected
+      ---
+      duration_ms: 2217.054
+      type: 'test'
+      ...
+    1..6
+not ok 1 - one small server process survives every attack at once, serves normal clients after them, keeps no memory, and shuts down with the attackers connected
+  ---
+  duration_ms: 30167.519
+  type: 'test'
+  location: '<USERPROFILE>\\repos\\app-scaling-strategies\\capability\\C009\\tests\\resources.test.cjs:70:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 5
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37888.2685
+
+round 7: 7/8 ok, max 46s
+round 8: 8/8 ok, max 37s
+FLAKE HUNT resources.test.cjs: 5 bad of 64
+LOAD 8 burners stopped by PID at 2026-11-06T16:07:43.104Z, PIDs 28248,37672,53872,18212,48056,52188,44872,2376

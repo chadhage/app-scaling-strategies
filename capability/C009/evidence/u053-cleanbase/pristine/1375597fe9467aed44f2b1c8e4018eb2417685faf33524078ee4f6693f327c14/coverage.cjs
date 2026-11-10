@@ -1,0 +1,62 @@
+'use strict';
+
+// Test tooling, not production code: per-file coverage gate. For EVERY production file it runs the L-0004 command on its own
+// (one command per file, so a weak file cannot hide in an aggregate), parses that file's row and enforces 85 lines,
+// 85 branches and 85 functions. A file that no test loads prints no row and counts as 0%. A root JavaScript file that is
+// not enumerated below fails the gate. Usage: node capability\C009\tests\coverage.cjs   (about 1-2 minutes, heavy slot)
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const PRODUCTION = ['authz.cjs', 'cli.cjs', 'codes.cjs', 'commands.cjs', 'contract.js', 'handlers.cjs', 'http-io.cjs', 'ledger.cjs', 'page.js', 'queue.cjs', 'server.cjs'];
+const FLOOR = Object.freeze({ lines: 85, branches: 85, functions: 85 });
+const PARALLEL = 3;
+const NUMBER = '(\\d+(?:\\.\\d+)?)';
+
+const rootScripts = fs.readdirSync(root).filter((name) => /\.c?js$/.test(name) && fs.statSync(path.join(root, name)).isFile()).sort();
+const unenumerated = rootScripts.filter((name) => !PRODUCTION.includes(name));
+const missing = PRODUCTION.filter((name) => !rootScripts.includes(name));
+const tests = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs')).sort().map((name) => path.join('capability', 'C009', 'tests', name));
+const environment = { ...process.env };
+for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE', 'C009_SUBJECT_DIR']) delete environment[key];
+
+function measure(file) {
+  const args = ['--test', '--test-concurrency=1', '--experimental-test-coverage', `--test-coverage-include=**/C009/${file}`,
+    '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, args, { cwd: repository, env: environment, windowsHide: true });
+    let out = '';
+    child.stdout.on('data', (chunk) => { out += chunk; });
+    child.stderr.on('data', (chunk) => { out += chunk; });
+    const timer = setTimeout(() => child.kill(), 600000);
+    child.on('close', (status) => {
+      clearTimeout(timer);
+      const row = new RegExp(`^#\\s+${file.replace('.', '\\.')}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|`, 'm').exec(out);
+      const values = row ? { lines: Number(row[1]), branches: Number(row[2]), functions: Number(row[3]) } : { lines: 0, branches: 0, functions: 0 };
+      const failures = row ? [] : ['UNLOADED_COUNTS_AS_ZERO'];
+      for (const metric of Object.keys(FLOOR)) if (values[metric] < FLOOR[metric]) failures.push(`${metric} ${values[metric]} < ${FLOOR[metric]}`);
+      if (status !== 0) failures.push(`nested runner exit ${status}`);
+      const failedTests = [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
+      resolve({ file, loaded: Boolean(row), ...values, nestedExit: status, failedTests, failures });
+    });
+  });
+}
+
+(async () => {
+  const results = [];
+  const queue = [...PRODUCTION];
+  await Promise.all(Array.from({ length: PARALLEL }, async () => {
+    while (queue.length) results.push(await measure(queue.shift()));
+  }));
+  results.sort((left, right) => left.file.localeCompare(right.file));
+  const passed = unenumerated.length === 0 && missing.length === 0 && results.every((item) => item.failures.length === 0);
+  console.log(JSON.stringify({ gate: 'C009 per-file coverage (85/85/85, one L-0004 command per file, unloaded counts as 0%)', tests: tests.length, files: results, unenumerated, missing, passed }, null, 2));
+  if (!passed) {
+    console.error(`C009 coverage RED: ${results.filter((item) => item.failures.length).length} of ${PRODUCTION.length} production files below their floors; unenumerated: ${unenumerated.join(', ') || 'none'}.`);
+    process.exitCode = 1;
+  } else {
+    console.log(`C009 coverage GREEN: ${PRODUCTION.length}/${PRODUCTION.length} production files at or above 85/85/85 each: ${PRODUCTION.join(', ')}.`);
+  }
+})();

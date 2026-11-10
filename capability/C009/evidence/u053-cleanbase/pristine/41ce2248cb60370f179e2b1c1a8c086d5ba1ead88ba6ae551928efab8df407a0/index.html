@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C009 mutation permission inspector</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+<h1>Who may change what?</h1>
+<p>Synthetic data · loopback HTTP only · every decision below is made by the server. This page only asks and shows the answer.</p>
+
+<section aria-labelledby="present-title">
+<h2 id="present-title">1. Present a token</h2>
+<p>
+<label for="token">Bearer token (a synthetic, in-memory token; leave it empty to send none)</label><br>
+<input id="token" type="text" size="60" autocomplete="off" spellcheck="false">
+</p>
+<p>
+<label for="claim">Claimed role header (the server must ignore it)</label><br>
+<select id="claim">
+<option value="">No claim</option>
+<option value="visitor">X-Role: visitor</option>
+<option value="conductor">X-Role: conductor</option>
+<option value="operator">X-Role: operator</option>
+</select>
+</p>
+<p><button id="check" type="button">Check every command</button></p>
+</section>
+
+<section aria-labelledby="decisions-title">
+<h2 id="decisions-title">2. What the server decided</h2>
+<p id="status" role="status">Not checked yet. Nothing is shown as allowed until the server says so.</p>
+<table>
+<caption>Authorization preview from the server, one row per command</caption>
+<thead>
+<tr><th scope="col">Command</th><th scope="col">Decision</th><th scope="col">HTTP</th><th scope="col">Code</th><th scope="col">Role the server saw</th></tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+<p>Server revision: <output id="revision">unknown</output></p>
+</section>
+
+<section aria-labelledby="send-title">
+<h2 id="send-title">3. Send a command</h2>
+<p>
+<label for="command">Command</label><br>
+<select id="command">
+<option value="run.create">run.create</option>
+<option value="scratch.create">scratch.create</option>
+<option value="pool.resize">pool.resize</option>
+<option value="experiment.approve">experiment.approve</option>
+<option value="native.execute">native.execute (not a command: denied by default)</option>
+</select>
+</p>
+<p><button id="send" type="button">Send with valid sample input</button></p>
+<p id="sent" role="status">Nothing sent.</p>
+</section>
+</main>
+<script src="/page.js"></script>
+</body>
+</html>

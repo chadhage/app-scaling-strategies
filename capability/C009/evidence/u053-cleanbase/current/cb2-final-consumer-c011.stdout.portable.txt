@@ -1,0 +1,1177 @@
+U053 ACTUAL COMMAND ["node.exe","--test","--test-concurrency=1","--test-timeout=170000","capability\\C011\\tests\\audit.test.cjs","capability\\C011\\tests\\batch.test.cjs","capability\\C011\\tests\\burst.test.cjs","capability\\C011\\tests\\commit.test.cjs","capability\\C011\\tests\\config.test.cjs","capability\\C011\\tests\\contract.test.cjs","capability\\C011\\tests\\flood-pending.test.cjs","capability\\C011\\tests\\flood.test.cjs","capability\\C011\\tests\\hostile.test.cjs","capability\\C011\\tests\\idempotency.test.cjs","capability\\C011\\tests\\imports.test.cjs","capability\\C011\\tests\\json.test.cjs","capability\\C011\\tests\\leaks.test.cjs","capability\\C011\\tests\\lifecycle.test.cjs","capability\\C011\\tests\\limits.test.cjs","capability\\C011\\tests\\page.test.cjs","capability\\C011\\tests\\pipeline-inproc-a.test.cjs","capability\\C011\\tests\\pipeline-inproc-b.test.cjs","capability\\C011\\tests\\pipeline-inproc-c.test.cjs","capability\\C011\\tests\\pipeline-process-a.test.cjs","capability\\C011\\tests\\pipeline-process-b.test.cjs","capability\\C011\\tests\\pipeline-process-c.test.cjs","capability\\C011\\tests\\property.test.cjs","capability\\C011\\tests\\public.test.cjs","capability\\C011\\tests\\race.test.cjs","capability\\C011\\tests\\reserve.test.cjs","capability\\C011\\tests\\roles.test.cjs","capability\\C011\\tests\\store-more.test.cjs","capability\\C011\\tests\\store.test.cjs","capability\\C011\\tests\\two-instances.test.cjs"]
+TAP version 13
+# Subtest: every decision of a lease is appended in order with the figures before and after, the expiry included
+ok 1 - every decision of a lease is appended in order with the figures before and after, the expiry included
+  ---
+  duration_ms: 82.5308
+  type: 'test'
+  ...
+# Subtest: an owner sees only its own records without the sequence, the subject or any pool figure, and never a record of the other lease
+ok 2 - an owner sees only its own records without the sequence, the subject or any pool figure, and never a record of the other lease
+  ---
+  duration_ms: 13.8377
+  type: 'test'
+  ...
+# Subtest: the operator sees every record with its sequence, subject, role and pool figures, and its own reads are audited
+ok 3 - the operator sees every record with its sequence, subject, role and pool figures, and its own reads are audited
+  ---
+  duration_ms: 14.1509
+  type: 'test'
+  ...
+# Subtest: every ring is bounded and a flood by one identity never evicts the records of another
+ok 4 - every ring is bounded and a flood by one identity never evicts the records of another
+  ---
+  duration_ms: 50.4063
+  type: 'test'
+  ...
+# Subtest: no record holds a token, an idempotency key or a client claim
+ok 5 - no record holds a token, an idempotency key or a client claim
+  ---
+  duration_ms: 9.7275
+  type: 'test'
+  ...
+# Subtest: a visitor and an anonymous client have no audit view and the operator has no conductor audit
+ok 6 - a visitor and an anonymous client have no audit view and the operator has no conductor audit
+  ---
+  duration_ms: 10.9392
+  type: 'test'
+  ...
+# Subtest: a batch applies its operations in order: a release frees the headroom for a later reserve of the same batch
+ok 7 - a batch applies its operations in order: a release frees the headroom for a later reserve of the same batch
+  ---
+  duration_ms: 69.6729
+  type: 'test'
+  ...
+# Subtest: a batch with an own reserve and an over-limit reserve is refused whole with the index and the code, and nothing was reserved
+ok 8 - a batch with an own reserve and an over-limit reserve is refused whole with the index and the code, and nothing was reserved
+  ---
+  duration_ms: 17.1578
+  type: 'test'
+  ...
+# Subtest: a batch that exceeds the pool with its second operation is refused whole and the first is not kept
+ok 9 - a batch that exceeds the pool with its second operation is refused whole and the first is not kept
+  ---
+  duration_ms: 12.7246
+  type: 'test'
+  ...
+# Subtest: a batch that releases a foreign or an absent reservation is refused whole with the same bytes and changes nothing
+ok 10 - a batch that releases a foreign or an absent reservation is refused whole with the same bytes and changes nothing
+  ---
+  duration_ms: 14.8467
+  type: 'test'
+  ...
+# Subtest: inside a batch the same key with the same body replays and with another body is a conflict that refuses the whole batch
+ok 11 - inside a batch the same key with the same body replays and with another body is a conflict that refuses the whole batch
+  ---
+  duration_ms: 8.775
+  type: 'test'
+  ...
+# Subtest: a malformed batch is refused: size, shape, unknown operations and claims
+ok 12 - a malformed batch is refused: size, shape, unknown operations and claims
+  ---
+  duration_ms: 33.0088
+  type: 'test'
+  ...
+# Subtest: two batches racing for the last two units: one is applied whole and the other refused whole
+ok 13 - two batches racing for the last two units: one is applied whole and the other refused whole
+  ---
+  duration_ms: 15.4639
+  type: 'test'
+  ...
+# Subtest: a batch is refused for every other identity and a released reservation inside it replays
+ok 14 - a batch is refused for every other identity and a released reservation inside it replays
+  ---
+  duration_ms: 11.8686
+  type: 'test'
+  ...
+# Subtest: 128 sockets of [G G Expect] against a cap of 128: every socket is answered in order and closed by the server, no connection remains, a legitimate GET is answered
+ok 15 - 128 sockets of [G G Expect] against a cap of 128: every socket is answered in order and closed by the server, no connection remains, a legitimate GET is answered
+  ---
+  duration_ms: 300.1689
+  type: 'test'
+  ...
+# Subtest: 128 sockets of [G G malformed] against a cap of 128: every socket is answered in order and closed by the server, no connection remains, a legitimate GET is answered
+ok 16 - 128 sockets of [G G malformed] against a cap of 128: every socket is answered in order and closed by the server, no connection remains, a legitimate GET is answered
+  ---
+  duration_ms: 279.7075
+  type: 'test'
+  ...
+# Subtest: a request that waited is decided against the books as they are at the commit: the last unit goes to the one that is first in the queue
+ok 17 - a request that waited is decided against the books as they are at the commit: the last unit goes to the one that is first in the queue
+  ---
+  duration_ms: 71.2771
+  type: 'test'
+  ...
+# Subtest: a release that waits sees an expiry that happened meanwhile: it replays and nothing returns twice
+ok 18 - a release that waits sees an expiry that happened meanwhile: it replays and nothing returns twice
+  ---
+  duration_ms: 17.87
+  type: 'test'
+  ...
+# Subtest: a token that expires while a reservation waits gives a typed 401 and no effect
+ok 19 - a token that expires while a reservation waits gives a typed 401 and no effect
+  ---
+  duration_ms: 6.1416
+  type: 'test'
+  ...
+# Subtest: a batch decides again at the commit: its release of a reservation that expired while it waited replays, and the batch is still whole
+ok 20 - a batch decides again at the commit: its release of a reservation that expired while it waited replays, and the batch is still whole
+  ---
+  duration_ms: 15.0672
+  type: 'test'
+  ...
+# Subtest: a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: a hook marks the connection (as C009's refusal does) while the reservation sits at the commit gate: the second guard drops it
+ok 21 - a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: a hook marks the connection (as C009's refusal does) while the reservation sits at the commit gate: the second guard drops it
+  ---
+  duration_ms: 23.5505
+  type: 'test'
+  ...
+# Subtest: a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the client leaves (its socket is destroyed) while the reservation is held at the commit gate: the second guard drops it
+ok 22 - a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the client leaves (its socket is destroyed) while the reservation is held at the commit gate: the second guard drops it
+  ---
+  duration_ms: 42.3566
+  type: 'test'
+  ...
+# Subtest: a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the lane cuts the connection (a complete reservation followed by four more requests in one write): the first guard drops it before the queue
+ok 23 - a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the lane cuts the connection (a complete reservation followed by four more requests in one write): the first guard drops it before the queue
+  ---
+  duration_ms: 11.3253
+  type: 'test'
+  ...
+# Subtest: a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the connection is marked while the body of the reservation is still being read: the first guard drops it before the queue
+ok 24 - a reservation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the connection is marked while the body of the reservation is still being read: the first guard drops it before the queue
+  ---
+  duration_ms: 16.4757
+  type: 'test'
+  ...
+# Subtest: control of the cases above: the same reservation on an untouched connection reaches the commit gate once, is applied and answered
+ok 25 - control of the cases above: the same reservation on an untouched connection reaches the commit gate once, is applied and answered
+  ---
+  duration_ms: 5.0676
+  type: 'test'
+  ...
+# Subtest: a release whose connection ended while it waited has no effect, so the retry still finds the reservation held
+ok 26 - a release whose connection ended while it waited has no effect, so the retry still finds the reservation held
+  ---
+  duration_ms: 51.4984
+  type: 'test'
+  ...
+# Subtest: the defaults are the documented ones and the resolved configuration is deeply frozen
+ok 27 - the defaults are the documented ones and the resolved configuration is deeply frozen
+  ---
+  duration_ms: 2.0189
+  type: 'test'
+  ...
+# Subtest: pool.units: the minimum and the maximum are accepted, everything else is refused with its path
+ok 28 - pool.units: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 1.2522
+  type: 'test'
+  ...
+# Subtest: pool.spend: the minimum and the maximum are accepted, everything else is refused with its path
+ok 29 - pool.spend: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 1.0308
+  type: 'test'
+  ...
+# Subtest: caps.conductor-a.units: the minimum and the maximum are accepted, everything else is refused with its path
+ok 30 - caps.conductor-a.units: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.5925
+  type: 'test'
+  ...
+# Subtest: caps.conductor-a.spend: the minimum and the maximum are accepted, everything else is refused with its path
+ok 31 - caps.conductor-a.spend: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.6548
+  type: 'test'
+  ...
+# Subtest: caps.conductor-b.units: the minimum and the maximum are accepted, everything else is refused with its path
+ok 32 - caps.conductor-b.units: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.6947
+  type: 'test'
+  ...
+# Subtest: caps.conductor-b.spend: the minimum and the maximum are accepted, everything else is refused with its path
+ok 33 - caps.conductor-b.spend: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7465
+  type: 'test'
+  ...
+# Subtest: prices.standard: the minimum and the maximum are accepted, everything else is refused with its path
+ok 34 - prices.standard: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.4859
+  type: 'test'
+  ...
+# Subtest: prices.burst: the minimum and the maximum are accepted, everything else is refused with its path
+ok 35 - prices.burst: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.6916
+  type: 'test'
+  ...
+# Subtest: ttlMs: the minimum and the maximum are accepted, everything else is refused with its path
+ok 36 - ttlMs: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.9357
+  type: 'test'
+  ...
+# Subtest: maxActive: the minimum and the maximum are accepted, everything else is refused with its path
+ok 37 - maxActive: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 1.1064
+  type: 'test'
+  ...
+# Subtest: entries: the minimum and the maximum are accepted, everything else is refused with its path
+ok 38 - entries: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 1.031
+  type: 'test'
+  ...
+# Subtest: limits.bodyBytes: the minimum and the maximum are accepted, everything else is refused with its path
+ok 39 - limits.bodyBytes: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7228
+  type: 'test'
+  ...
+# Subtest: limits.headerMs: the minimum and the maximum are accepted, everything else is refused with its path
+ok 40 - limits.headerMs: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7264
+  type: 'test'
+  ...
+# Subtest: limits.checkMs: the minimum and the maximum are accepted, everything else is refused with its path
+ok 41 - limits.checkMs: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.5861
+  type: 'test'
+  ...
+# Subtest: limits.idleMs: the minimum and the maximum are accepted, everything else is refused with its path
+ok 42 - limits.idleMs: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7604
+  type: 'test'
+  ...
+# Subtest: limits.connections: the minimum and the maximum are accepted, everything else is refused with its path
+ok 43 - limits.connections: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7903
+  type: 'test'
+  ...
+# Subtest: limits.pipelined: the minimum and the maximum are accepted, everything else is refused with its path
+ok 44 - limits.pipelined: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.8471
+  type: 'test'
+  ...
+# Subtest: limits.auditEntries: the minimum and the maximum are accepted, everything else is refused with its path
+ok 45 - limits.auditEntries: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.8903
+  type: 'test'
+  ...
+# Subtest: limits.anonymousEntries: the minimum and the maximum are accepted, everything else is refused with its path
+ok 46 - limits.anonymousEntries: the minimum and the maximum are accepted, everything else is refused with its path
+  ---
+  duration_ms: 0.7969
+  type: 'test'
+  ...
+# Subtest: a name outside the table and a value that is not a plain object are refused
+ok 47 - a name outside the table and a value that is not a plain object are refused
+  ---
+  duration_ms: 1.5118
+  type: 'test'
+  ...
+# Subtest: the cross-checks: a lease cap above the pool, a history no longer than the active bound and an idle timeout that cannot win the race
+ok 48 - the cross-checks: a lease cap above the pool, a history no longer than the active bound and an idle timeout that cannot win the race
+  ---
+  duration_ms: 0.3488
+  type: 'test'
+  ...
+# Subtest: everything the caller supplies is read exactly once: a getter and a Proxy cannot answer twice
+ok 49 - everything the caller supplies is read exactly once: a getter and a Proxy cannot answer twice
+  ---
+  duration_ms: 0.2474
+  type: 'test'
+  ...
+# Subtest: a refused configuration echoes nothing that the caller supplied
+ok 50 - a refused configuration echoes nothing that the caller supplied
+  ---
+  duration_ms: 0.8502
+  type: 'test'
+  ...
+# Subtest: a refused configuration leaves nothing behind: no server, no listener, no handle
+ok 51 - a refused configuration leaves nothing behind: no server, no listener, no handle
+  ---
+  duration_ms: 0.7951
+  type: 'test'
+  ...
+# Subtest: the route table is closed and frozen, and every non-public route has a role entry and nothing else has
+ok 52 - the route table is closed and frozen, and every non-public route has a role entry and nothing else has
+  ---
+  duration_ms: 1.5912
+  type: 'test'
+  ...
+# Subtest: resolve finds every route and its parameters, and nothing else
+ok 53 - resolve finds every route and its parameters, and nothing else
+  ---
+  duration_ms: 1.7341
+  type: 'test'
+  ...
+# Subtest: the query vocabulary is closed per route
+ok 54 - the query vocabulary is closed per route
+  ---
+  duration_ms: 0.872
+  type: 'test'
+  ...
+# Subtest: the reserve body: exactly key, tier and units, in closed shapes, with the claims and server fields named
+ok 55 - the reserve body: exactly key, tier and units, in closed shapes, with the claims and server fields named
+  ---
+  duration_ms: 1.4615
+  type: 'test'
+  ...
+# Subtest: the batch body: one to five operations, each a closed reserve or release
+ok 56 - the batch body: one to five operations, each a closed reserve or release
+  ---
+  duration_ms: 0.9166
+  type: 'test'
+  ...
+# \# pending-first flood: requests sent per socket 14040,10920,10920, heapUsed 8 MB, connections 0, held reservations that committed 0
+# Subtest: a PENDING first request with 64 KB blocks of GET /x pipelined behind it on 3 sockets (up to 50000 requests) in a 48 MB-heap child: alive, bounded, every socket closed, a legitimate GET answered
+ok 57 - a PENDING first request with 64 KB blocks of GET /x pipelined behind it on 3 sockets (up to 50000 requests) in a 48 MB-heap child: alive, bounded, every socket closed, a legitimate GET answered
+  ---
+  duration_ms: 339.187
+  type: 'test'
+  ...
+# Subtest: a refusal flood from ANOTHER process (30 sockets, endless chunked bodies, half of them queued behind a GET): the service is closed, bounded and answering (also a neighbour on a kept-alive connection), a NAIVE keep-alive control fails by name
+ok 58 - a refusal flood from ANOTHER process (30 sockets, endless chunked bodies, half of them queued behind a GET): the service is closed, bounded and answering (also a neighbour on a kept-alive connection), a NAIVE keep-alive control fails by name
+  ---
+  duration_ms: 2399.8337
+  type: 'test'
+  ...
+# {"reference":{"mode":"bare","closed":30,"answered":13,"bytesRead":263913,"cpuMsPerSocket":5.23,"lagMaxMs":93},"service":{"mode":"service","closed":30,"answered":29,"bytesRead":219100,"cpuMsPerSocket":5.23,"lagMaxMs":62},"naive":{"mode":"naive","closed":0,"answered":30,"bytesRead":4835913,"cpuMsPerSocket":38.53,"lagMaxMs":101}}
+# Subtest: a number that is not a plain integer inside the bounds is refused: syntax errors and wrong values each with a typed code
+ok 59 - a number that is not a plain integer inside the bounds is refused: syntax errors and wrong values each with a typed code
+  ---
+  duration_ms: 125.8259
+  type: 'test'
+  ...
+# Subtest: a string or number in the place of the tier, and a tier outside the price table, are refused
+ok 60 - a string or number in the place of the tier, and a tier outside the price table, are refused
+  ---
+  duration_ms: 38.1151
+  type: 'test'
+  ...
+# Subtest: a malformed or hostile body is a typed refusal that closes the connection and reserves nothing
+ok 61 - a malformed or hostile body is a typed refusal that closes the connection and reserves nothing
+  ---
+  duration_ms: 48.3445
+  type: 'test'
+  ...
+# Subtest: the media type, the size and a body where none belongs are refused
+ok 62 - the media type, the size and a body where none belongs are refused
+  ---
+  duration_ms: 12.7583
+  type: 'test'
+  ...
+# Subtest: no variant of an own id reaches the reservation: trailing characters, encodings, case, look-alikes and long ids are typed refusals
+ok 63 - no variant of an own id reaches the reservation: trailing characters, encodings, case, look-alikes and long ids are typed refusals
+  ---
+  duration_ms: 39.3441
+  type: 'test'
+  ...
+# Subtest: a retry with the same key and the same body returns the same reservation and reserves nothing more
+ok 64 - a retry with the same key and the same body returns the same reservation and reserves nothing more
+  ---
+  duration_ms: 81.6208
+  type: 'test'
+  ...
+# Subtest: the same key with another body is a typed conflict that closes the connection and changes nothing
+ok 65 - the same key with another body is a typed conflict that closes the connection and changes nothing
+  ---
+  duration_ms: 27.9514
+  type: 'test'
+  ...
+# Subtest: keys are scoped per lease: another lease with the same key is independent and nothing tells it that the key was used
+ok 66 - keys are scoped per lease: another lease with the same key is independent and nothing tells it that the key was used
+  ---
+  duration_ms: 21.6875
+  type: 'test'
+  ...
+# Subtest: the identical key and body of another lease never replays the reservation of the first
+ok 67 - the identical key and body of another lease never replays the reservation of the first
+  ---
+  duration_ms: 10.6051
+  type: 'test'
+  ...
+# Subtest: a retry after a release or an expiry answers the same reservation and reserves nothing
+ok 68 - a retry after a release or an expiry answers the same reservation and reserves nothing
+  ---
+  duration_ms: 26.9347
+  type: 'test'
+  ...
+# Subtest: a key of another shape or a missing key is refused and reserves nothing
+ok 69 - a key of another shape or a missing key is refused and reserves nothing
+  ---
+  duration_ms: 22.5957
+  type: 'test'
+  ...
+# Subtest: the pins match the git objects of the pinned commits and the working bytes (raw or LF-normalized)
+ok 70 - the pins match the git objects of the pinned commits and the working bytes (raw or LF-normalized)
+  ---
+  duration_ms: 119.7276
+  type: 'test'
+  ...
+# Subtest: a tampered blob, object id, tag or commit pin is named
+ok 71 - a tampered blob, object id, tag or commit pin is named
+  ---
+  duration_ms: 16.0633
+  type: 'test'
+  ...
+# Subtest: an LF pin that is not the blob, and working bytes that match neither pin, are named
+ok 72 - an LF pin that is not the blob, and working bytes that match neither pin, are named
+  ---
+  duration_ms: 5.731
+  type: 'test'
+  ...
+# Subtest: every require of another card in a production file is pinned, and the amended C010 contract is not imported
+ok 73 - every require of another card in a production file is pinned, and the amended C010 contract is not imported
+  ---
+  duration_ms: 14.0912
+  type: 'test'
+  ...
+# Subtest: valid documents of every kind are read, with whitespace and escapes
+ok 74 - valid documents of every kind are read, with whitespace and escapes
+  ---
+  duration_ms: 1.9315
+  type: 'test'
+  ...
+# Subtest: a duplicate member name is a failure at every level, whatever the values
+ok 75 - a duplicate member name is a failure at every level, whatever the values
+  ---
+  duration_ms: 0.3126
+  type: 'test'
+  ...
+# Subtest: a number is read only when it is a plain safe integer: everything else is UNSAFE
+ok 76 - a number is read only when it is a plain safe integer: everything else is UNSAFE
+  ---
+  duration_ms: 0.2112
+  type: 'test'
+  ...
+# Subtest: malformed text of every kind fails and never throws
+ok 77 - malformed text of every kind fails and never throws
+  ---
+  duration_ms: 1.1767
+  type: 'test'
+  ...
+# Subtest: nesting is limited by the depth option and deep hostile text cannot overflow the stack
+ok 78 - nesting is limited by the depth option and deep hostile text cannot overflow the stack
+  ---
+  duration_ms: 0.3213
+  type: 'test'
+  ...
+# Subtest: a member named like a prototype property is an ordinary own member of a prototype-less object
+ok 79 - a member named like a prototype property is an ordinary own member of a prototype-less object
+  ---
+  duration_ms: 0.1453
+  type: 'test'
+  ...
+# Subtest: long and wide inputs are read in one pass
+ok 80 - long and wide inputs are read in one pass
+  ---
+  duration_ms: 13.6465
+  type: 'test'
+  ...
+# Subtest: a foreign reservation, an absent one and a malformed id answer the same bytes, for a read and for a release
+ok 81 - a foreign reservation, an absent one and a malformed id answer the same bytes, for a read and for a release
+  ---
+  duration_ms: 86.8861
+  type: 'test'
+  ...
+# Subtest: a foreign release has no effect on the reservation, the pool or the books
+ok 82 - a foreign release has no effect on the reservation, the pool or the books
+  ---
+  duration_ms: 12.6293
+  type: 'test'
+  ...
+# Subtest: lists and counts show only the own reservations, in creation order
+ok 83 - lists and counts show only the own reservations, in creation order
+  ---
+  duration_ms: 15.0253
+  type: 'test'
+  ...
+# Subtest: the allowance is the own caps and holdings: it never moves with the activity of the other lease and shows no pool headroom
+ok 84 - the allowance is the own caps and holdings: it never moves with the activity of the other lease and shows no pool headroom
+  ---
+  duration_ms: 12.0406
+  type: 'test'
+  ...
+# Subtest: the pool headroom and the books of every lease belong to the operator alone
+ok 85 - the pool headroom and the books of every lease belong to the operator alone
+  ---
+  duration_ms: 11.0854
+  type: 'test'
+  ...
+# Subtest: every refusal of the identity and of the bounds closes the connection
+ok 86 - every refusal of the identity and of the bounds closes the connection
+  ---
+  duration_ms: 10.6038
+  type: 'test'
+  ...
+# Subtest: a release returns exactly the units and the spend that were reserved, to the pool and to the lease
+ok 87 - a release returns exactly the units and the spend that were reserved, to the pool and to the lease
+  ---
+  duration_ms: 81.7763
+  type: 'test'
+  ...
+# Subtest: a second release answers the same reservation, says replayed and returns nothing twice
+ok 88 - a second release answers the same reservation, says replayed and returns nothing twice
+  ---
+  duration_ms: 24.0108
+  type: 'test'
+  ...
+# Subtest: expiry returns the units at the deadline of the injected clock and not a millisecond before
+ok 89 - expiry returns the units at the deadline of the injected clock and not a millisecond before
+  ---
+  duration_ms: 22.215
+  type: 'test'
+  ...
+# Subtest: an expired reservation cannot be released again, reused or spent twice, and its capacity can be reserved again
+ok 90 - an expired reservation cannot be released again, reused or spent twice, and its capacity can be reserved again
+  ---
+  duration_ms: 21.5246
+  type: 'test'
+  ...
+# Subtest: the reservations of the other lease keep their units, spend, state and deadline across a release and an expiry
+ok 91 - the reservations of the other lease keep their units, spend, state and deadline across a release and an expiry
+  ---
+  duration_ms: 18.5937
+  type: 'test'
+  ...
+# Subtest: each reservation expires at its own deadline
+ok 92 - each reservation expires at its own deadline
+  ---
+  duration_ms: 16.9667
+  type: 'test'
+  ...
+# Subtest: the history of a lease is bounded: the oldest ended reservation goes first and its id becomes absent
+ok 93 - the history of a lease is bounded: the oldest ended reservation goes first and its id becomes absent
+  ---
+  duration_ms: 34.7092
+  type: 'test'
+  ...
+# Subtest: the shipped limits read back from the Node server: the idle timeout is above the header timeout plus the check interval
+ok 94 - the shipped limits read back from the Node server: the idle timeout is above the header timeout plus the check interval
+  ---
+  duration_ms: 5052.7918
+  type: 'test'
+  ...
+# Subtest: under the shipped limits a body cut short (Content-Length 100, 11 bytes sent): the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+ok 95 - under the shipped limits a body cut short (Content-Length 100, 11 bytes sent): the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+  ---
+  duration_ms: 0.4188
+  type: 'test'
+  ...
+# Subtest: under the shipped limits a chunked body cut inside a chunk: the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+ok 96 - under the shipped limits a chunked body cut inside a chunk: the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+  ---
+  duration_ms: 0.1885
+  type: 'test'
+  ...
+# Subtest: under the shipped limits half-sent headers: the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+ok 97 - under the shipped limits half-sent headers: the typed 408 REQUEST_TIMEOUT, Connection: close, and the server ends the connection
+  ---
+  duration_ms: 0.2367
+  type: 'test'
+  ...
+# Subtest: every stalled request left its audit record, and nothing was reserved by the cut requests
+ok 98 - every stalled request left its audit record, and nothing was reserved by the cut requests
+  ---
+  duration_ms: 20.5436
+  type: 'test'
+  ...
+# Subtest: the real server: 21 rows derived from facts, every conductor reaches its own, nobody reaches a foreign one, the books balance and agree
+ok 99 - the real server: 21 rows derived from facts, every conductor reaches its own, nobody reaches a foreign one, the books balance and agree
+  ---
+  duration_ms: 177.7311
+  type: 'test'
+  ...
+# Subtest: the markup: strict, no inline script, one live region, every id unique and every id the script asks for is declared
+ok 100 - the markup: strict, no inline script, one live region, every id unique and every id the script asks for is declared
+  ---
+  duration_ms: 2.661
+  type: 'test'
+  ...
+# Subtest: server prose never matters: every message is replaced and every outcome stays
+ok 101 - server prose never matters: every message is replaced and every outcome stays
+  ---
+  duration_ms: 135.6086
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a foreign reservation answered 200
+ok 102 - a forged answer is a violation, never shown as fine: a foreign reservation answered 200
+  ---
+  duration_ms: 69.9178
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a foreign answer that differs from the absent control
+ok 103 - a forged answer is a violation, never shown as fine: a foreign answer that differs from the absent control
+  ---
+  duration_ms: 70.4311
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a conductor answered the operator books
+ok 104 - a forged answer is a violation, never shown as fine: a conductor answered the operator books
+  ---
+  duration_ms: 71.7909
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a visitor answered the allowance
+ok 105 - a forged answer is a violation, never shown as fine: a visitor answered the allowance
+  ---
+  duration_ms: 65.7175
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: an anonymous request answered
+ok 106 - a forged answer is a violation, never shown as fine: an anonymous request answered
+  ---
+  duration_ms: 53.1846
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a visitor refused with the wrong code
+ok 107 - a forged answer is a violation, never shown as fine: a visitor refused with the wrong code
+  ---
+  duration_ms: 56.6916
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: the wrong subject in who am I
+ok 108 - a forged answer is a violation, never shown as fine: the wrong subject in who am I
+  ---
+  duration_ms: 66.5423
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: an allowance that shows the pool headroom
+ok 109 - a forged answer is a violation, never shown as fine: an allowance that shows the pool headroom
+  ---
+  duration_ms: 79.3776
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: an allowance whose remaining figure is wrong
+ok 110 - a forged answer is a violation, never shown as fine: an allowance whose remaining figure is wrong
+  ---
+  duration_ms: 67.2889
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a list with a wrong spend
+ok 111 - a forged answer is a violation, never shown as fine: a list with a wrong spend
+  ---
+  duration_ms: 56.8704
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a list whose total is below its items
+ok 112 - a forged answer is a violation, never shown as fine: a list whose total is below its items
+  ---
+  duration_ms: 58.0605
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a reservation in a state outside the three
+ok 113 - a forged answer is a violation, never shown as fine: a reservation in a state outside the three
+  ---
+  duration_ms: 79.4526
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: books that do not balance
+ok 114 - a forged answer is a violation, never shown as fine: books that do not balance
+  ---
+  duration_ms: 76.1993
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: a share the conductor does not report
+ok 115 - a forged answer is a violation, never shown as fine: a share the conductor does not report
+  ---
+  duration_ms: 74.2443
+  type: 'test'
+  ...
+# Subtest: a forged answer is a violation, never shown as fine: an answer that is not JSON
+ok 116 - a forged answer is a violation, never shown as fine: an answer that is not JSON
+  ---
+  duration_ms: 57.4769
+  type: 'test'
+  ...
+# Subtest: the same token for both conductors, a forged visitor token, a failing fetch and an empty world are shown as what they are
+ok 117 - the same token for both conductors, a forged visitor token, a failing fetch and an empty world are shown as what they are
+  ---
+  duration_ms: 204.5831
+  type: 'test'
+  ...
+# Subtest: every typed code of the server has a row, and every row names a code the server can answer
+ok 118 - every typed code of the server has a row, and every row names a code the server can answer
+  ---
+  duration_ms: 1.765
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 119 - the pipelining matrix in this process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 1055.5304
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config bounds: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 120 - the pipelining matrix in this process, config bounds: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 218.9204
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 121 - the pipelining matrix in this process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 712.8528
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 122 - the pipelining matrix in this process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 938.8159
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 123 - the pipelining matrix in this process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 1108.5019
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 124 - the pipelining matrix in this process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 46.6898
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 125 - the pipelining matrix in this process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 68.8847
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 126 - the pipelining matrix against a server process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 680.2998
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config bounds: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 127 - the pipelining matrix against a server process, config bounds: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 516.2791
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 128 - the pipelining matrix against a server process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 528.6187
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 129 - the pipelining matrix against a server process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 1233.578
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 130 - the pipelining matrix against a server process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 816.5519
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 131 - the pipelining matrix against a server process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 182.5921
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 132 - the pipelining matrix against a server process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 207.3321
+  type: 'test'
+  ...
+# Subtest: seeded random sequences keep the conservation and the ownership invariants after every single operation (store)
+ok 133 - seeded random sequences keep the conservation and the ownership invariants after every single operation (store)
+  ---
+  duration_ms: 899.3198
+  type: 'test'
+  ...
+# Subtest: seeded random sequences over real HTTP: the books balance and no lease ever sees or changes the other after every operation
+ok 134 - seeded random sequences over real HTTP: the books balance and no lease ever sees or changes the other after every operation
+  ---
+  duration_ms: 757.6525
+  type: 'test'
+  ...
+# Subtest: the page, its script and its style are served as the files of the namespace, with their own content type and the strict headers
+ok 135 - the page, its script and its style are served as the files of the namespace, with their own content type and the strict headers
+  ---
+  duration_ms: 44.3945
+  type: 'test'
+  ...
+# Subtest: the scope states what this fixture is and is not
+ok 136 - the scope states what this fixture is and is not
+  ---
+  duration_ms: 9.6251
+  type: 'test'
+  ...
+# Subtest: a public route takes no query, no body and only GET, and a presented credential is verified even there
+ok 137 - a public route takes no query, no body and only GET, and a presented credential is verified even there
+  ---
+  duration_ms: 54.4544
+  type: 'test'
+  ...
+# Subtest: a refusal carries the same strict headers and the challenge of the credential that failed
+ok 138 - a refusal carries the same strict headers and the challenge of the credential that failed
+  ---
+  duration_ms: 8.0592
+  type: 'test'
+  ...
+# Subtest: startLocal listens on 127.0.0.1 only, on an automatic port, with one token per synthetic identity and the token lifetime asked for
+ok 139 - startLocal listens on 127.0.0.1 only, on an automatic port, with one token per synthetic identity and the token lifetime asked for
+  ---
+  duration_ms: 9.5704
+  type: 'test'
+  ...
+# Subtest: many connections racing for the last unit: exactly one wins and every loser has a typed refusal and no effect
+ok 140 - many connections racing for the last unit: exactly one wins and every loser has a typed refusal and no effect
+  ---
+  duration_ms: 92.8536
+  type: 'test'
+  ...
+# Subtest: a lease cap is never over-admitted by simultaneous requests of one lease
+ok 141 - a lease cap is never over-admitted by simultaneous requests of one lease
+  ---
+  duration_ms: 27.1776
+  type: 'test'
+  ...
+# Subtest: a reserve racing a release is linearized: either order leaves the books balanced
+ok 142 - a reserve racing a release is linearized: either order leaves the books balanced
+  ---
+  duration_ms: 107.8632
+  type: 'test'
+  ...
+# Subtest: a reserve racing an expiry sees the capacity back at the deadline
+ok 143 - a reserve racing an expiry sees the capacity back at the deadline
+  ---
+  duration_ms: 12.9211
+  type: 'test'
+  ...
+# Subtest: two leases racing one pool: exactly one wins and neither consumes the other reservation
+ok 144 - two leases racing one pool: exactly one wins and neither consumes the other reservation
+  ---
+  duration_ms: 72.1128
+  type: 'test'
+  ...
+# Subtest: the same key sent by many connections at once reserves once and every answer is the same reservation
+ok 145 - the same key sent by many connections at once reserves once and every answer is the same reservation
+  ---
+  duration_ms: 18.3243
+  type: 'test'
+  ...
+# Subtest: the same key with different bodies sent at once: one body wins and the others are a typed conflict
+ok 146 - the same key with different bodies sent at once: one body wins and the others are a typed conflict
+  ---
+  duration_ms: 16.0143
+  type: 'test'
+  ...
+# Subtest: a conductor reserves units: the spend is the units times the price of the tier and the books balance
+ok 147 - a conductor reserves units: the spend is the units times the price of the tier and the books balance
+  ---
+  duration_ms: 97.0202
+  type: 'test'
+  ...
+# Subtest: RESERVATION_LIMIT_REACHED: a typed refusal that names the bound, closes the connection and changes nothing
+ok 148 - RESERVATION_LIMIT_REACHED: a typed refusal that names the bound, closes the connection and changes nothing
+  ---
+  duration_ms: 39.0173
+  type: 'test'
+  ...
+# Subtest: LEASE_CAP_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+ok 149 - LEASE_CAP_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+  ---
+  duration_ms: 20.054
+  type: 'test'
+  ...
+# Subtest: LEASE_SPEND_CAP_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+ok 150 - LEASE_SPEND_CAP_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+  ---
+  duration_ms: 16.0938
+  type: 'test'
+  ...
+# Subtest: CAPACITY_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+ok 151 - CAPACITY_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+  ---
+  duration_ms: 22.1214
+  type: 'test'
+  ...
+# Subtest: SPEND_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+ok 152 - SPEND_EXCEEDED: a typed refusal that names the bound, closes the connection and changes nothing
+  ---
+  duration_ms: 26.3186
+  type: 'test'
+  ...
+# Subtest: the bounds are decided in a fixed order and the lease own bounds come first
+ok 153 - the bounds are decided in a fixed order and the lease own bounds come first
+  ---
+  duration_ms: 11.2048
+  type: 'test'
+  ...
+# Subtest: over its own cap a caller gets the lease code even where the pool would refuse too
+ok 154 - over its own cap a caller gets the lease code even where the pool would refuse too
+  ---
+  duration_ms: 8.139
+  type: 'test'
+  ...
+# Subtest: the pool capacity is decided before the pool spend
+ok 155 - the pool capacity is decided before the pool spend
+  ---
+  duration_ms: 7.0011
+  type: 'test'
+  ...
+# Subtest: a reservation that fits exactly is admitted and the next unit is refused
+ok 156 - a reservation that fits exactly is admitted and the next unit is refused
+  ---
+  duration_ms: 17.6203
+  type: 'test'
+  ...
+# Subtest: a spend that fits the ceiling exactly is admitted and one more unit of cost is refused
+ok 157 - a spend that fits the ceiling exactly is admitted and one more unit of cost is refused
+  ---
+  duration_ms: 15.8053
+  type: 'test'
+  ...
+# Subtest: me: only visitor, conductor-a, operator may use it; every other identity is refused and nothing changes
+ok 158 - me: only visitor, conductor-a, operator may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 83.736
+  type: 'test'
+  ...
+# Subtest: reserve: only conductor-a may use it; every other identity is refused and nothing changes
+ok 159 - reserve: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 28.2098
+  type: 'test'
+  ...
+# Subtest: list: only conductor-a may use it; every other identity is refused and nothing changes
+ok 160 - list: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 21.3737
+  type: 'test'
+  ...
+# Subtest: read: only conductor-a may use it; every other identity is refused and nothing changes
+ok 161 - read: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 21.0006
+  type: 'test'
+  ...
+# Subtest: release: only conductor-a may use it; every other identity is refused and nothing changes
+ok 162 - release: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 13.7962
+  type: 'test'
+  ...
+# Subtest: allowance: only conductor-a may use it; every other identity is refused and nothing changes
+ok 163 - allowance: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 14.559
+  type: 'test'
+  ...
+# Subtest: audit: only conductor-a may use it; every other identity is refused and nothing changes
+ok 164 - audit: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 14.6261
+  type: 'test'
+  ...
+# Subtest: batch: only conductor-a may use it; every other identity is refused and nothing changes
+ok 165 - batch: only conductor-a may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 19.5707
+  type: 'test'
+  ...
+# Subtest: operator pool: only operator may use it; every other identity is refused and nothing changes
+ok 166 - operator pool: only operator may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 23.6797
+  type: 'test'
+  ...
+# Subtest: operator audit: only operator may use it; every other identity is refused and nothing changes
+ok 167 - operator audit: only operator may use it; every other identity is refused and nothing changes
+  ---
+  duration_ms: 19.7687
+  type: 'test'
+  ...
+# Subtest: the other conductor is a conductor but owns nothing of the first: the role does not open a foreign reservation
+ok 168 - the other conductor is a conductor but owns nothing of the first: the role does not open a foreign reservation
+  ---
+  duration_ms: 4.9999
+  type: 'test'
+  ...
+# Subtest: a body that names an owner, a lease, a pool, a cap, a price, a state or a deadline is refused by name and reserves nothing
+ok 169 - a body that names an owner, a lease, a pool, a cap, a price, a state or a deadline is refused by name and reserves nothing
+  ---
+  duration_ms: 39.0465
+  type: 'test'
+  ...
+# Subtest: claim headers are reported by name in ignoredClaims and never honoured
+ok 170 - claim headers are reported by name in ignoredClaims and never honoured
+  ---
+  duration_ms: 8.3014
+  type: 'test'
+  ...
+# Subtest: a query that names a lease, an owner, a pool or anything outside the vocabulary is refused
+ok 171 - a query that names a lease, an owner, a pool or anything outside the vocabulary is refused
+  ---
+  duration_ms: 20.1638
+  type: 'test'
+  ...
+# Subtest: other methods and a method override are refused with 405 and no effect
+ok 172 - other methods and a method override are refused with 405 and no effect
+  ---
+  duration_ms: 13.4806
+  type: 'test'
+  ...
+# Subtest: time is applied before every decision and each expiry is reported exactly once, with the figures around it
+ok 173 - time is applied before every decision and each expiry is reported exactly once, with the figures around it
+  ---
+  duration_ms: 2.6581
+  type: 'test'
+  ...
+# Subtest: an expiry that a failing step could not report stays queued and is reported by the next answer
+ok 174 - an expiry that a failing step could not report stays queued and is reported by the next answer
+  ---
+  duration_ms: 1.1882
+  type: 'test'
+  ...
+# Subtest: an id that is invalid or already used by either lease is refused by throwing, with no effect
+ok 175 - an id that is invalid or already used by either lease is refused by throwing, with no effect
+  ---
+  duration_ms: 1.9769
+  type: 'test'
+  ...
+# Subtest: the history is bounded: the oldest ended reservation goes first and an active one is never trimmed
+ok 176 - the history is bounded: the oldest ended reservation goes first and an active one is never trimmed
+  ---
+  duration_ms: 1.7514
+  type: 'test'
+  ...
+# Subtest: a subject without a lease owns nothing and can reserve nothing
+ok 177 - a subject without a lease owns nothing and can reserve nothing
+  ---
+  duration_ms: 1.0642
+  type: 'test'
+  ...
+# Subtest: the allowance and the operator view carry exactly the figures that were promised
+ok 178 - the allowance and the operator view carry exactly the figures that were promised
+  ---
+  duration_ms: 0.4154
+  type: 'test'
+  ...
+# Subtest: paging and the state filter of a list
+ok 179 - paging and the state filter of a list
+  ---
+  duration_ms: 0.4324
+  type: 'test'
+  ...
+# Subtest: every returned value is a copy: writing to everything reachable from an answer changes no later answer
+ok 180 - every returned value is a copy: writing to everything reachable from an answer changes no later answer
+  ---
+  duration_ms: 0.8662
+  type: 'test'
+  ...
+# Subtest: a foreign id costs the same counted work as an absent one, and a lookup scans the caller own records only
+ok 181 - a foreign id costs the same counted work as an absent one, and a lookup scans the caller own records only
+  ---
+  duration_ms: 0.5561
+  type: 'test'
+  ...
+# Subtest: a scripted sequence keeps the books balanced after every single operation
+ok 182 - a scripted sequence keeps the books balanced after every single operation
+  ---
+  duration_ms: 3.8304
+  type: 'test'
+  ...
+# Subtest: RESERVATION_LIMIT_REACHED: a refusal names the bound and changes nothing, not even a counter or a record
+ok 183 - RESERVATION_LIMIT_REACHED: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 1.377
+  type: 'test'
+  ...
+# Subtest: LEASE_CAP_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+ok 184 - LEASE_CAP_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.3319
+  type: 'test'
+  ...
+# Subtest: LEASE_SPEND_CAP_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+ok 185 - LEASE_SPEND_CAP_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.1841
+  type: 'test'
+  ...
+# Subtest: CAPACITY_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+ok 186 - CAPACITY_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.3807
+  type: 'test'
+  ...
+# Subtest: SPEND_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+ok 187 - SPEND_EXCEEDED: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.3124
+  type: 'test'
+  ...
+# Subtest: IDEMPOTENCY_CONFLICT: a refusal names the bound and changes nothing, not even a counter or a record
+ok 188 - IDEMPOTENCY_CONFLICT: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.3421
+  type: 'test'
+  ...
+# Subtest: RESERVATION_NOT_FOUND: a refusal names the bound and changes nothing, not even a counter or a record
+ok 189 - RESERVATION_NOT_FOUND: a refusal names the bound and changes nothing, not even a counter or a record
+  ---
+  duration_ms: 0.394
+  type: 'test'
+  ...
+# Subtest: the fixed order of the bounds, the lease own bounds first
+ok 190 - the fixed order of the bounds, the lease own bounds first
+  ---
+  duration_ms: 1.0829
+  type: 'test'
+  ...
+# Subtest: exact fits are admitted and the books reach their totals exactly
+ok 191 - exact fits are admitted and the books reach their totals exactly
+  ---
+  duration_ms: 1.0754
+  type: 'test'
+  ...
+# Subtest: a batch is all or nothing at the store: the first failure ends it with its index and the draft is dropped
+ok 192 - a batch is all or nothing at the store: the first failure ends it with its index and the draft is dropped
+  ---
+  duration_ms: 0.9157
+  type: 'test'
+  ...
+# Subtest: two live instances closed opened first, then opened last (FIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+ok 193 - two live instances closed opened first, then opened last (FIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+  ---
+  duration_ms: 90.3743
+  type: 'test'
+  ...
+# Subtest: two live instances closed opened last, then opened first (LIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+ok 194 - two live instances closed opened last, then opened first (LIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+  ---
+  duration_ms: 17.5652
+  type: 'test'
+  ...
+1..194
+# tests 194
+# suites 0
+# pass 194
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25717.2672

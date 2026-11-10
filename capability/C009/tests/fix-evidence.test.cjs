@@ -11,13 +11,7 @@ const { checkInputs, checkTranscripts, sha } = require('./evidence-check.cjs');
 // manifests and the bytes of the inputs. The tamper tests edit bytes in memory and demand that the check notices (C044 F9, L-0133).
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
-// Every pinned file is read once per test file (a file open costs about a millisecond on a loaded Windows machine, and the manifests pin
-// the same 65 files over and over: review F9c). The tamper tests pass their own readers and never see the cache.
-const cache = new Map();
-const read = (relative) => {
-  if (!cache.has(relative)) cache.set(relative, fs.readFileSync(path.join(repository, relative)));
-  return cache.get(relative);
-};
+const read = (relative) => fs.readFileSync(path.join(repository, relative));
 const inNamespace = (...parts) => path.relative(repository, path.join(root, ...parts));
 const redRoot = path.join(root, 'evidence', 'red');
 const finalRoot = path.join(root, 'evidence', 'green-fix');
@@ -34,16 +28,11 @@ const firstPublication = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 
 const pinOf = (inputPath) => firstPublication.find((entry) => path.basename(entry.path.replaceAll('\\', '/')) === path.basename(inputPath.replaceAll('\\', '/')));
 // The fix of order R9 changed some files after the R8 archives pinned them. Their R8 bytes are retained in evidence/red/snapshot-fix1 and
 // every R8 pin is recomputed against those bytes; every other pinned file must still equal the live file (a silent change is detected).
-// The fix of order R11 changed more files (the bytes of the second fix, which for a file R9 did not touch are also its R8 bytes, are
-// retained in evidence/red/snapshot-fix2): a file that is in neither snapshot must still equal the live file.
 const snapshotRoot = path.join(root, 'evidence', 'red', 'snapshot-fix1');
 const snapshotFiles = fs.readdirSync(snapshotRoot, { recursive: true }).map((name) => name.replaceAll('\\', '/')).filter((name) => fs.statSync(path.join(snapshotRoot, name)).isFile());
-const snapshotRoot2 = path.join(root, 'evidence', 'red', 'snapshot-fix2');
-const snapshotFiles2 = fs.readdirSync(snapshotRoot2, { recursive: true }).map((name) => name.replaceAll('\\', '/')).filter((name) => fs.statSync(path.join(snapshotRoot2, name)).isFile());
 const readFix1 = (relative) => {
   const name = path.relative(root, path.join(repository, relative)).replaceAll('\\', '/');
-  if (snapshotFiles.includes(name)) return fs.readFileSync(path.join(snapshotRoot, name));
-  return snapshotFiles2.includes(name) ? fs.readFileSync(path.join(snapshotRoot2, name)) : read(relative);
+  return snapshotFiles.includes(name) ? fs.readFileSync(path.join(snapshotRoot, name)) : read(relative);
 };
 
 test('the NEW RED archives are intact and failed for the specified behavior, not for a missing module', () => {

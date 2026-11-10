@@ -1,0 +1,1372 @@
+U053 ACTUAL COMMAND ["node.exe","--test","--test-concurrency=1","--test-timeout=170000","capability\\C010\\tests\\anonymous.test.cjs","capability\\C010\\tests\\audit.test.cjs","capability\\C010\\tests\\batch.test.cjs","capability\\C010\\tests\\commit.test.cjs","capability\\C010\\tests\\contract.test.cjs","capability\\C010\\tests\\evidence.test.cjs","capability\\C010\\tests\\flood-pending.test.cjs","capability\\C010\\tests\\flood.test.cjs","capability\\C010\\tests\\guard-boundaries.test.cjs","capability\\C010\\tests\\guard-close.test.cjs","capability\\C010\\tests\\guard-host.test.cjs","capability\\C010\\tests\\guard-requests.test.cjs","capability\\C010\\tests\\guard-server.test.cjs","capability\\C010\\tests\\hostile-fields.test.cjs","capability\\C010\\tests\\hostile-paths.test.cjs","capability\\C010\\tests\\idor.test.cjs","capability\\C010\\tests\\imports.test.cjs","capability\\C010\\tests\\lists.test.cjs","capability\\C010\\tests\\operator.test.cjs","capability\\C010\\tests\\oracle.test.cjs","capability\\C010\\tests\\page-learning.test.cjs","capability\\C010\\tests\\page.test.cjs","capability\\C010\\tests\\pipeline-inproc-a.test.cjs","capability\\C010\\tests\\pipeline-inproc-b.test.cjs","capability\\C010\\tests\\pipeline-inproc-c.test.cjs","capability\\C010\\tests\\pipeline-process-a.test.cjs","capability\\C010\\tests\\pipeline-process-b.test.cjs","capability\\C010\\tests\\pipeline-process-c.test.cjs","capability\\C010\\tests\\property.test.cjs","capability\\C010\\tests\\quota.test.cjs","capability\\C010\\tests\\server-units.test.cjs","capability\\C010\\tests\\store-order.test.cjs","capability\\C010\\tests\\store-revisions.test.cjs","capability\\C010\\tests\\store.test.cjs","capability\\C010\\tests\\two-instances.test.cjs","capability\\C010\\tests\\u057-auth-error.test.cjs","capability\\C010\\tests\\u057-boundaries.test.cjs","capability\\C010\\tests\\u057-connect.test.cjs","capability\\C010\\tests\\u057-defaults.test.cjs","capability\\C010\\tests\\u057-generator.test.cjs","capability\\C010\\tests\\u057-limits.test.cjs","capability\\C010\\tests\\u057-shutdown.test.cjs","capability\\C010\\tests\\u057-start-local.test.cjs","capability\\C010\\tests\\u057-startup.test.cjs","capability\\C010\\tests\\uniform.test.cjs"]
+TAP version 13
+# Subtest: there is no public state route and no anonymous API answer contains an owner subject or a resource id
+ok 1 - there is no public state route and no anonymous API answer contains an owner subject or a resource id
+  ---
+  duration_ms: 131.309
+  type: 'test'
+  ...
+# Subtest: the public assets and the fixed scope answer without a token and say that no state is public
+ok 2 - the public assets and the fixed scope answer without a token and say that no state is public
+  ---
+  duration_ms: 12.0796
+  type: 'test'
+  ...
+# Subtest: a missing, malformed, forged or expired credential is refused with its typed 401 on every route, public or not, and never read as anonymous
+ok 3 - a missing, malformed, forged or expired credential is refused with its typed 401 on every route, public or not, and never read as anonymous
+  ---
+  duration_ms: 51.1362
+  type: 'test'
+  ...
+# Subtest: the role table is deny by default: a visitor and the operator reach no lease route, a conductor and a visitor reach no operator route
+ok 4 - the role table is deny by default: a visitor and the operator reach no lease route, a conductor and a visitor reach no operator route
+  ---
+  duration_ms: 46.4668
+  type: 'test'
+  ...
+# Subtest: every identity may ask who the server thinks it is, and the answer is the verified subject and role, never a claim
+ok 5 - every identity may ask who the server thinks it is, and the answer is the verified subject and role, never a claim
+  ---
+  duration_ms: 13.5629
+  type: 'test'
+  ...
+# Subtest: each subject has its own ring and anonymous refusals have another: noise in one never evicts a record of another
+ok 6 - each subject has its own ring and anonymous refusals have another: noise in one never evicts a record of another
+  ---
+  duration_ms: 1.4941
+  type: 'test'
+  ...
+# Subtest: the ring keeps the LAST records, a record is frozen when stored, and the log hands out copies that cannot rewrite it
+ok 7 - the ring keeps the LAST records, a record is frozen when stored, and the log hands out copies that cannot rewrite it
+  ---
+  duration_ms: 0.2851
+  type: 'test'
+  ...
+# Subtest: a batch of own targets is applied as a whole, in order
+ok 8 - a batch of own targets is applied as a whole, in order
+  ---
+  duration_ms: 64.2844
+  type: 'test'
+  ...
+# Subtest: one foreign target anywhere in a batch refuses the whole batch with the uniform refusal and no effect, for every operation and every position
+ok 9 - one foreign target anywhere in a batch refuses the whole batch with the uniform refusal and no effect, for every operation and every position
+  ---
+  duration_ms: 40.6994
+  type: 'test'
+  ...
+# Subtest: a batch that fails on a conflict of its own targets is refused as a whole with 409 and no effect
+ok 10 - a batch that fails on a conflict of its own targets is refused as a whole with 409 and no effect
+  ---
+  duration_ms: 15.8614
+  type: 'test'
+  ...
+# Subtest: a batch may span several leases of the same conductor, and one foreign lease among them still refuses all
+ok 11 - a batch may span several leases of the same conductor, and one foreign lease among them still refuses all
+  ---
+  duration_ms: 18.0195
+  type: 'test'
+  ...
+# Subtest: a malformed batch is refused by its shape before any target is looked at
+ok 12 - a malformed batch is refused by its shape before any target is looked at
+  ---
+  duration_ms: 42.5519
+  type: 'test'
+  ...
+# Subtest: an export names a run of its own lease; a foreign run and a run of another own lease are refused, and deleting the run removes its exports
+ok 13 - an export names a run of its own lease; a foreign run and a run of another own lease are refused, and deleting the run removes its exports
+  ---
+  duration_ms: 21.7227
+  type: 'test'
+  ...
+# Subtest: cancel and update follow the state of the run: a second cancel and an update of a cancelled run are conflicts with no effect
+ok 14 - cancel and update follow the state of the run: a second cancel and an update of a cancelled run are conflicts with no effect
+  ---
+  duration_ms: 18.6104
+  type: 'test'
+  ...
+# Subtest: ending a lease removes it with every resource, answers like an absent lease afterwards and leaves the other conductor untouched
+ok 15 - ending a lease removes it with every resource, answers like an absent lease afterwards and leaves the other conductor untouched
+  ---
+  duration_ms: 21.7626
+  type: 'test'
+  ...
+# Subtest: a lease whose lifetime is over reaches nothing, although the token of its owner is still valid, and it answers like an absent lease
+ok 16 - a lease whose lifetime is over reaches nothing, although the token of its owner is still valid, and it answers like an absent lease
+  ---
+  duration_ms: 75.9612
+  type: 'test'
+  ...
+# Subtest: a token that expired is refused 401 with no effect, even for a lease that is still alive
+ok 17 - a token that expired is refused 401 with no effect, even for a lease that is still alive
+  ---
+  duration_ms: 16.9856
+  type: 'test'
+  ...
+# Subtest: a lease that ends while requests wait in the queue gives them no effect: ended first, refused after
+ok 18 - a lease that ends while requests wait in the queue gives them no effect: ended first, refused after
+  ---
+  duration_ms: 27.5144
+  type: 'test'
+  ...
+# Subtest: a lease that expires while a request waits gives that request no effect
+ok 19 - a lease that expires while a request waits gives that request no effect
+  ---
+  duration_ms: 16.5165
+  type: 'test'
+  ...
+# Subtest: a token that expires while a request waits gives a typed 401 and no effect
+ok 20 - a token that expires while a request waits gives a typed 401 and no effect
+  ---
+  duration_ms: 17.4956
+  type: 'test'
+  ...
+# Subtest: a lease that moves to another owner while a request waits gives that request no effect, and the new owner reaches it while the old owner does not
+ok 21 - a lease that moves to another owner while a request waits gives that request no effect, and the new owner reaches it while the old owner does not
+  ---
+  duration_ms: 24.5921
+  type: 'test'
+  ...
+# Subtest: concurrent creates, reads, ends and rival attempts on one lease settle consistently, and the other conductor never has an effect
+ok 22 - concurrent creates, reads, ends and rival attempts on one lease settle consistently, and the other conductor never has an effect
+  ---
+  duration_ms: 201.1802
+  type: 'test'
+  ...
+# Subtest: a batch that names a foreign target, alone or after an own one, is refused 404 before the queue (the commit gate is never reached, nothing changes); an own batch reaches the gate once
+ok 23 - a batch that names a foreign target, alone or after an own one, is refused 404 before the queue (the commit gate is never reached, nothing changes); an own batch reaches the gate once
+  ---
+  duration_ms: 18.2836
+  type: 'test'
+  ...
+# Subtest: a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: a hook marks the connection (as C009's refusal does) while the mutation sits at the commit gate: the second guard drops it
+ok 24 - a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: a hook marks the connection (as C009's refusal does) while the mutation sits at the commit gate: the second guard drops it
+  ---
+  duration_ms: 12.4607
+  type: 'test'
+  ...
+# Subtest: a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the client leaves (its socket is destroyed) while the mutation is held at the commit gate: the second guard drops it
+ok 25 - a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the client leaves (its socket is destroyed) while the mutation is held at the commit gate: the second guard drops it
+  ---
+  duration_ms: 46.986
+  type: 'test'
+  ...
+# Subtest: a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the lane cuts the connection (a complete mutation followed by four more requests in one write): the first guard drops it before the queue
+ok 26 - a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the lane cuts the connection (a complete mutation followed by four more requests in one write): the first guard drops it before the queue
+  ---
+  duration_ms: 12.1092
+  type: 'test'
+  ...
+# Subtest: a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the connection is marked while the body of the mutation is still being read: the first guard drops it before the queue
+ok 27 - a mutation whose connection ended or was refused while it waited has no effect, no audit record and no answer: the connection is marked while the body of the mutation is still being read: the first guard drops it before the queue
+  ---
+  duration_ms: 14.0106
+  type: 'test'
+  ...
+# Subtest: control of the cases above: the same mutation on an untouched connection reaches the commit gate once, is applied and answered
+ok 28 - control of the cases above: the same mutation on an untouched connection reaches the commit gate once, is applied and answered
+  ---
+  duration_ms: 13.9441
+  type: 'test'
+  ...
+# Subtest: U057 a held authorized mutation with both a cut connection and an expired token writes no audit record
+ok 29 - U057 a held authorized mutation with both a cut connection and an expired token writes no audit record
+  ---
+  duration_ms: 46.0476
+  type: 'test'
+  ...
+# Subtest: every route has a unique method and path, every API route has a role entry, and a role entry names a real route (deny by default)
+ok 30 - every route has a unique method and path, every API route has a role entry, and a role entry names a real route (deny by default)
+  ---
+  duration_ms: 5.1687
+  type: 'test'
+  ...
+# Subtest: a path resolves to every route that serves it and to nothing else: id shapes, kinds and prefixes must match exactly
+ok 31 - a path resolves to every route that serves it and to nothing else: id shapes, kinds and prefixes must match exactly
+  ---
+  duration_ms: 1.0917
+  type: 'test'
+  ...
+# Subtest: ids: a shape is a kind, a dash and 8 to 32 lowercase hex digits, nothing else
+ok 32 - ids: a shape is a kind, a dash and 8 to 32 lowercase hex digits, nothing else
+  ---
+  duration_ms: 0.3315
+  type: 'test'
+  ...
+# Subtest: the query is a closed vocabulary per route: defaults, bounds, repeats and every name outside it
+ok 33 - the query is a closed vocabulary per route: defaults, bounds, repeats and every name outside it
+  ---
+  duration_ms: 0.9653
+  type: 'test'
+  ...
+# Subtest: body schemas: valid values pass as a copy of the schema fields only; claims, server fields, unknown, missing and invalid fields are refused by name
+ok 34 - body schemas: valid values pass as a copy of the schema fields only; claims, server fields, unknown, missing and invalid fields are refused by name
+  ---
+  duration_ms: 0.6344
+  type: 'test'
+  ...
+# Subtest: a batch body is validated operation by operation before any target is looked at, and the validated copy holds the schema fields only
+ok 35 - a batch body is validated operation by operation before any target is looked at, and the validated copy holds the schema fields only
+  ---
+  duration_ms: 0.6441
+  type: 'test'
+  ...
+# Subtest: the typed codes: every code has a status and a fixed message, C009's wording is reused as is, the statuses are a closed set, and nothing is mutable
+ok 36 - the typed codes: every code has a status and a fixed message, C009's wording is reused as is, the statuses are a closed set, and nothing is mutable
+  ---
+  duration_ms: 0.3077
+  type: 'test'
+  ...
+# Subtest: U057 report.generated equals the generator OWN --list total, not a copied fixture count
+ok 37 - U057 report.generated equals the generator OWN --list total, not a copied fixture count
+  ---
+  duration_ms: 338.5313
+  type: 'test'
+  ...
+# Subtest: U057 the exact amendment, original captures, final gates and every current file verify together
+ok 38 - U057 the exact amendment, original captures, final gates and every current file verify together
+  ---
+  duration_ms: 0.6451
+  type: 'test'
+  ...
+# Subtest: U057 retained historical evidence is verified against its exact archived subjects, never current mutable sources
+ok 39 - U057 retained historical evidence is verified against its exact archived subjects, never current mutable sources
+  ---
+  duration_ms: 44.8293
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER the immutable original seal, an original transcript, an original subject and its index are detected by name
+ok 40 - U057 TAMPER the immutable original seal, an original transcript, an original subject and its index are detected by name
+  ---
+  duration_ms: 279.4514
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER every new source, feature, import, README, test and added file is anchored, and an unsealed file is rejected
+ok 41 - U057 TAMPER every new source, feature, import, README, test and added file is anchored, and an unsealed file is rejected
+  ---
+  duration_ms: 1317.4191
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER either the addendum or its independent head bytes breaks the chained authority
+ok 42 - U057 TAMPER either the addendum or its independent head bytes breaks the chained authority
+  ---
+  duration_ms: 254.0148
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER a raw final stream, its manifest summary and a captured input identity each fail by name
+ok 43 - U057 TAMPER a raw final stream, its manifest summary and a captured input identity each fail by name
+  ---
+  duration_ms: 846.5867
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER an understated generated total is rejected by the actual generator OWN --list, even without the seal check
+ok 44 - U057 TAMPER an understated generated total is rejected by the actual generator OWN --list, even without the seal check
+  ---
+  duration_ms: 399.6615
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER a survivor, an undecided position, a nameless kill and a missing raw kill are never accepted
+ok 45 - U057 TAMPER a survivor, an undecided position, a nameless kill and a missing raw kill are never accepted
+  ---
+  duration_ms: 1825.3955
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER a missing original position, a fabricated extension or changed equivalence proof cannot shrink the required set
+ok 46 - U057 TAMPER a missing original position, a fabricated extension or changed equivalence proof cannot shrink the required set
+  ---
+  duration_ms: 1528.5609
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER a changed campaign source or generator identity is not silently repinned
+ok 47 - U057 TAMPER a changed campaign source or generator identity is not silently repinned
+  ---
+  duration_ms: 907.3759
+  type: 'test'
+  ...
+# Subtest: U057 final default and combined-commit GREEN commands are unchanged from their genuine RED commands
+ok 48 - U057 final default and combined-commit GREEN commands are unchanged from their genuine RED commands
+  ---
+  duration_ms: 0.416
+  type: 'test'
+  ...
+# Subtest: U057 TAMPER current completion prose cannot contradict the measured campaign
+ok 49 - U057 TAMPER current completion prose cannot contradict the measured campaign
+  ---
+  duration_ms: 392.6178
+  type: 'test'
+  ...
+# Subtest: U057 no newly published file, including its original raw streams, carries a local user or session identifier
+ok 50 - U057 no newly published file, including its original raw streams, carries a local user or session identifier
+  ---
+  duration_ms: 158.3643
+  type: 'test'
+  ...
+# \# pending-first flood: requests sent per socket 17160,10920,10920, heapUsed 8 MB, connections 0, held mutations that committed 0
+# Subtest: a PENDING first request with 64 KB blocks of GET /x pipelined behind it on 3 sockets (up to 50000 requests) in a 48 MB-heap child: alive, bounded, every socket closed, a legitimate GET answered
+ok 51 - a PENDING first request with 64 KB blocks of GET /x pipelined behind it on 3 sockets (up to 50000 requests) in a 48 MB-heap child: alive, bounded, every socket closed, a legitimate GET answered
+  ---
+  duration_ms: 343.4399
+  type: 'test'
+  ...
+# Subtest: a refusal flood from ANOTHER process (30 sockets, endless chunked bodies, half of them queued behind a GET): the service is closed, bounded and answering (also a neighbour on a kept-alive connection), a NAIVE keep-alive control fails by name
+ok 52 - a refusal flood from ANOTHER process (30 sockets, endless chunked bodies, half of them queued behind a GET): the service is closed, bounded and answering (also a neighbour on a kept-alive connection), a NAIVE keep-alive control fails by name
+  ---
+  duration_ms: 2399.6114
+  type: 'test'
+  ...
+# {"reference":{"mode":"bare","closed":30,"answered":14,"bytesRead":220611,"cpuMsPerSocket":4.17,"lagMaxMs":49},"service":{"mode":"service","closed":30,"answered":30,"bytesRead":228598,"cpuMsPerSocket":4.67,"lagMaxMs":61},"naive":{"mode":"naive","closed":0,"answered":30,"bytesRead":4907811,"cpuMsPerSocket":40.1,"lagMaxMs":107}}
+# Subtest: a lease is alive one millisecond before its expiry and gone at the millisecond of its expiry, for the owner and for every route
+ok 53 - a lease is alive one millisecond before its expiry and gone at the millisecond of its expiry, for the owner and for every route
+  ---
+  duration_ms: 109.3938
+  type: 'test'
+  ...
+# Subtest: a batch whose ops is not an array (an object with a length and indexes, a string, a number, null, a boolean) is refused INPUT_INVALID on the field ops, never read as a list
+ok 54 - a batch whose ops is not an array (an object with a length and indexes, a string, a number, null, a boolean) is refused INPUT_INVALID on the field ops, never read as a list
+  ---
+  duration_ms: 48.479
+  type: 'test'
+  ...
+# Subtest: close ends its promise once the listener and the held connection are gone, and a repeated close ends too
+ok 55 - close ends its promise once the listener and the held connection are gone, and a repeated close ends too
+  ---
+  duration_ms: 61.4528
+  type: 'test'
+  ...
+# Subtest: a Host that is not this listener, a missing Host and a foreign Origin are refused with their typed code, no effect and a closed connection; the right Host and Origin are served
+ok 56 - a Host that is not this listener, a missing Host and a foreign Origin are refused with their typed code, no effect and a closed connection; the right Host and Origin are served
+  ---
+  duration_ms: 703.2388
+  type: 'test'
+  ...
+# Subtest: a request target that is not an origin-form path is 400 INVALID_URL, with no effect, one audit record and a closed connection
+ok 57 - a request target that is not an origin-form path is 400 INVALID_URL, with no effect, one audit record and a closed connection
+  ---
+  duration_ms: 113.9639
+  type: 'test'
+  ...
+# Subtest: a public route takes no query and no body: the page, its script, its style and the scope answer 400 for either, and 200 without
+ok 58 - a public route takes no query and no body: the page, its script, its style and the scope answer 400 for either, and 200 without
+  ---
+  duration_ms: 2492.2245
+  type: 'test'
+  ...
+# Subtest: a batch operation that names its verb with an array, an object, a number or another non-string is refused INPUT_INVALID on the field op, and nothing is applied
+ok 59 - a batch operation that names its verb with an array, an object, a number or another non-string is refused INPUT_INVALID on the field op, and nothing is applied
+  ---
+  duration_ms: 34.3311
+  type: 'test'
+  ...
+# Subtest: a limit is an integer of 1 or more: 0, a negative number, a fraction and a non-number are LIMITS_INVALID, and 1 is accepted
+ok 60 - a limit is an integer of 1 or more: 0, a negative number, a fraction and a non-number are LIMITS_INVALID, and 1 is accepted
+  ---
+  duration_ms: 12.225
+  type: 'test'
+  ...
+# (node:3252) [C010_READ_STOP_UNAVAILABLE] Warning: C010 cannot stop reading a refused connection and serves nothing.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the URL limit is exact: a target of the limit length is looked up (404 NOT_FOUND), one character more is 414 URL_TOO_LONG
+ok 61 - the URL limit is exact: a target of the limit length is looked up (404 NOT_FOUND), one character more is 414 URL_TOO_LONG
+  ---
+  duration_ms: 35.6888
+  type: 'test'
+  ...
+# Subtest: fail closed: a connection that cannot stop reading is destroyed before the handler returns, the first one warns, later checks do not warn again
+ok 62 - fail closed: a connection that cannot stop reading is destroyed before the handler returns, the first one warns, later checks do not warn again
+  ---
+  duration_ms: 1.9016
+  type: 'test'
+  ...
+# Subtest: a served public route writes no audit record and leaves the connection usable for the next request
+ok 63 - a served public route writes no audit record and leaves the connection usable for the next request
+  ---
+  duration_ms: 1255.3801
+  type: 'test'
+  ...
+# Subtest: the audit names the method of what it records (GET, POST, PATCH, DELETE, anything else is OTHER) and counts its records from 1 upward by one
+ok 64 - the audit names the method of what it records (GET, POST, PATCH, DELETE, anything else is OTHER) and counts its records from 1 upward by one
+  ---
+  duration_ms: 63.6182
+  type: 'test'
+  ...
+# Subtest: startLocal rejects when the listener cannot start, instead of an unhandled error on the server
+ok 65 - startLocal rejects when the listener cannot start, instead of an unhandled error on the server
+  ---
+  duration_ms: 1.0899
+  type: 'test'
+  ...
+# Subtest: an unexpected failure at the commit is one INTERNAL_ERROR audit record and no authentication challenge
+ok 66 - an unexpected failure at the commit is one INTERNAL_ERROR audit record and no authentication challenge
+  ---
+  duration_ms: 5.3377
+  type: 'test'
+  ...
+# Subtest: the limits are wired into the Node server: request and header timeouts, idle timeout, keep-alive, connection cap and checking interval
+ok 67 - the limits are wired into the Node server: request and header timeouts, idle timeout, keep-alive, connection cap and checking interval
+  ---
+  duration_ms: 0.4827
+  type: 'test'
+  ...
+# Subtest: the connection cap is applied by the server: the connection past it is dropped (a drop event), not merely left to the idle timeout
+ok 68 - the connection cap is applied by the server: the connection past it is dropped (a drop event), not merely left to the idle timeout
+  ---
+  duration_ms: 5.4285
+  type: 'test'
+  ...
+# Subtest: a connection that ended is released: nothing in the server keeps the socket of a closed connection alive
+ok 69 - a connection that ended is released: nothing in the server keeps the socket of a closed connection alive
+  ---
+  duration_ms: 18.7682
+  type: 'test'
+  ...
+# Subtest: a body that stalls is ended by the request timeout: 408 REQUEST_TIMEOUT, the connection closed by the server, nothing applied
+ok 70 - a body that stalls is ended by the request timeout: 408 REQUEST_TIMEOUT, the connection closed by the server, nothing applied
+  ---
+  duration_ms: 363.2321
+  type: 'test'
+  ...
+# Subtest: what Node refuses by itself is audited like any refusal: a malformed request and a CONNECT leave one anonymous record each
+ok 71 - what Node refuses by itself is audited like any refusal: a malformed request and a CONNECT leave one anonymous record each
+  ---
+  duration_ms: 4.7775
+  type: 'test'
+  ...
+# Subtest: mass assignment of an owner, a role, a lease or any server-owned field is refused by name on every route that takes a body, and no owner ever changes
+ok 72 - mass assignment of an owner, a role, a lease or any server-owned field is refused by name on every route that takes a body, and no owner ever changes
+  ---
+  duration_ms: 231.9341
+  type: 'test'
+  ...
+# Subtest: a lease cannot be transferred: no route, verb, body, query or header moves it, and every attempt is refused with no effect
+ok 73 - a lease cannot be transferred: no route, verb, body, query or header moves it, and every attempt is refused with no effect
+  ---
+  duration_ms: 49.2163
+  type: 'test'
+  ...
+# Subtest: a claimed owner, lease or subject in a header is ignored: the same request with and without them gives the same answer, and is reported by name
+ok 74 - a claimed owner, lease or subject in a header is ignored: the same request with and without them gives the same answer, and is reported by name
+  ---
+  duration_ms: 32.7396
+  type: 'test'
+  ...
+# Subtest: a raw request whose body claims an owner is refused before any effect, with the connection closed
+ok 75 - a raw request whose body claims an owner is refused before any effect, with the connection closed
+  ---
+  duration_ms: 15.3206
+  type: 'test'
+  ...
+# Subtest: path tricks (dot segments, encoded and double encoded slashes, case, trailing characters, look-alikes, long ids, absolute form) never reach another lease
+ok 76 - path tricks (dot segments, encoded and double encoded slashes, case, trailing characters, look-alikes, long ids, absolute form) never reach another lease
+  ---
+  duration_ms: 360.9948
+  type: 'test'
+  ...
+# Subtest: a plain foreign id answers the one uniform refusal that no trick may beat, and an absent id answers the same bytes
+ok 77 - a plain foreign id answers the one uniform refusal that no trick may beat, and an absent id answers the same bytes
+  ---
+  duration_ms: 25.58
+  type: 'test'
+  ...
+# Subtest: guessable sequential ids give an attacker nothing: every guessed id of every kind in the neighbouring range is refused or is its own
+ok 78 - guessable sequential ids give an attacker nothing: every guessed id of every kind in the neighbouring range is refused or is its own
+  ---
+  duration_ms: 252.7006
+  type: 'test'
+  ...
+# Subtest: method override headers are never obeyed: the real method decides, for an own and for a foreign target
+ok 79 - method override headers are never obeyed: the real method decides, for an own and for a foreign target
+  ---
+  duration_ms: 53.0666
+  type: 'test'
+  ...
+# Subtest: methods outside the route table are refused with the allowed list, for an own, a foreign and an absent target alike
+ok 80 - methods outside the route table are refused with the allowed list, for an own, a foreign and an absent target alike
+  ---
+  duration_ms: 66.099
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own lease with read (GET) and the answer shows only its own data
+ok 81 - the owner reaches its own lease with read (GET) and the answer shows only its own data
+  ---
+  duration_ms: 123.4997
+  type: 'test'
+  ...
+# Subtest: another conductor's lease cannot be reached with read (GET): the same request by every other identity changes nothing
+ok 82 - another conductor's lease cannot be reached with read (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 38.1827
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own runs with list (GET) and the answer shows only its own data
+ok 83 - the owner reaches its own runs with list (GET) and the answer shows only its own data
+  ---
+  duration_ms: 22.8621
+  type: 'test'
+  ...
+# Subtest: another conductor's runs cannot be reached with list (GET): the same request by every other identity changes nothing
+ok 84 - another conductor's runs cannot be reached with list (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 31.3349
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own scratches with list (GET) and the answer shows only its own data
+ok 85 - the owner reaches its own scratches with list (GET) and the answer shows only its own data
+  ---
+  duration_ms: 28.1639
+  type: 'test'
+  ...
+# Subtest: another conductor's scratches cannot be reached with list (GET): the same request by every other identity changes nothing
+ok 86 - another conductor's scratches cannot be reached with list (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 31.4095
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own exports with list (GET) and the answer shows only its own data
+ok 87 - the owner reaches its own exports with list (GET) and the answer shows only its own data
+  ---
+  duration_ms: 22.8571
+  type: 'test'
+  ...
+# Subtest: another conductor's exports cannot be reached with list (GET): the same request by every other identity changes nothing
+ok 88 - another conductor's exports cannot be reached with list (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 35.6054
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own run with create (POST) and the answer shows only its own data
+ok 89 - the owner reaches its own run with create (POST) and the answer shows only its own data
+  ---
+  duration_ms: 49.4339
+  type: 'test'
+  ...
+# Subtest: another conductor's run cannot be reached with create (POST): the same request by every other identity changes nothing
+ok 90 - another conductor's run cannot be reached with create (POST): the same request by every other identity changes nothing
+  ---
+  duration_ms: 25.0381
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own scratch with create (POST) and the answer shows only its own data
+ok 91 - the owner reaches its own scratch with create (POST) and the answer shows only its own data
+  ---
+  duration_ms: 20.7857
+  type: 'test'
+  ...
+# Subtest: another conductor's scratch cannot be reached with create (POST): the same request by every other identity changes nothing
+ok 92 - another conductor's scratch cannot be reached with create (POST): the same request by every other identity changes nothing
+  ---
+  duration_ms: 20.9639
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own export with create (POST) and the answer shows only its own data
+ok 93 - the owner reaches its own export with create (POST) and the answer shows only its own data
+  ---
+  duration_ms: 18.9697
+  type: 'test'
+  ...
+# Subtest: another conductor's export cannot be reached with create (POST): the same request by every other identity changes nothing
+ok 94 - another conductor's export cannot be reached with create (POST): the same request by every other identity changes nothing
+  ---
+  duration_ms: 24.0507
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own run with read (GET) and the answer shows only its own data
+ok 95 - the owner reaches its own run with read (GET) and the answer shows only its own data
+  ---
+  duration_ms: 18.127
+  type: 'test'
+  ...
+# Subtest: another conductor's run cannot be reached with read (GET): the same request by every other identity changes nothing
+ok 96 - another conductor's run cannot be reached with read (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 22.6263
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own scratch with read (GET) and the answer shows only its own data
+ok 97 - the owner reaches its own scratch with read (GET) and the answer shows only its own data
+  ---
+  duration_ms: 21.4835
+  type: 'test'
+  ...
+# Subtest: another conductor's scratch cannot be reached with read (GET): the same request by every other identity changes nothing
+ok 98 - another conductor's scratch cannot be reached with read (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 22.3327
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own export with read (GET) and the answer shows only its own data
+ok 99 - the owner reaches its own export with read (GET) and the answer shows only its own data
+  ---
+  duration_ms: 20.707
+  type: 'test'
+  ...
+# Subtest: another conductor's export cannot be reached with read (GET): the same request by every other identity changes nothing
+ok 100 - another conductor's export cannot be reached with read (GET): the same request by every other identity changes nothing
+  ---
+  duration_ms: 36.8939
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own run with update (PATCH) and the answer shows only its own data
+ok 101 - the owner reaches its own run with update (PATCH) and the answer shows only its own data
+  ---
+  duration_ms: 22.3271
+  type: 'test'
+  ...
+# Subtest: another conductor's run cannot be reached with update (PATCH): the same request by every other identity changes nothing
+ok 102 - another conductor's run cannot be reached with update (PATCH): the same request by every other identity changes nothing
+  ---
+  duration_ms: 18.3175
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own scratch with update (PATCH) and the answer shows only its own data
+ok 103 - the owner reaches its own scratch with update (PATCH) and the answer shows only its own data
+  ---
+  duration_ms: 17.3008
+  type: 'test'
+  ...
+# Subtest: another conductor's scratch cannot be reached with update (PATCH): the same request by every other identity changes nothing
+ok 104 - another conductor's scratch cannot be reached with update (PATCH): the same request by every other identity changes nothing
+  ---
+  duration_ms: 23.2852
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own run with cancel (POST) and the answer shows only its own data
+ok 105 - the owner reaches its own run with cancel (POST) and the answer shows only its own data
+  ---
+  duration_ms: 17.9301
+  type: 'test'
+  ...
+# Subtest: another conductor's run cannot be reached with cancel (POST): the same request by every other identity changes nothing
+ok 106 - another conductor's run cannot be reached with cancel (POST): the same request by every other identity changes nothing
+  ---
+  duration_ms: 23.4352
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own run with delete (DELETE) and the answer shows only its own data
+ok 107 - the owner reaches its own run with delete (DELETE) and the answer shows only its own data
+  ---
+  duration_ms: 16.8829
+  type: 'test'
+  ...
+# Subtest: another conductor's run cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+ok 108 - another conductor's run cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+  ---
+  duration_ms: 18.6947
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own scratch with delete (DELETE) and the answer shows only its own data
+ok 109 - the owner reaches its own scratch with delete (DELETE) and the answer shows only its own data
+  ---
+  duration_ms: 12.6095
+  type: 'test'
+  ...
+# Subtest: another conductor's scratch cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+ok 110 - another conductor's scratch cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+  ---
+  duration_ms: 22.1112
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own export with delete (DELETE) and the answer shows only its own data
+ok 111 - the owner reaches its own export with delete (DELETE) and the answer shows only its own data
+  ---
+  duration_ms: 12.8315
+  type: 'test'
+  ...
+# Subtest: another conductor's export cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+ok 112 - another conductor's export cannot be reached with delete (DELETE): the same request by every other identity changes nothing
+  ---
+  duration_ms: 17.4307
+  type: 'test'
+  ...
+# Subtest: the owner reaches its own lease with end (DELETE) and the answer shows only its own data
+ok 113 - the owner reaches its own lease with end (DELETE) and the answer shows only its own data
+  ---
+  duration_ms: 15.519
+  type: 'test'
+  ...
+# Subtest: another conductor's lease cannot be reached with end (DELETE): the same request by every other identity changes nothing
+ok 114 - another conductor's lease cannot be reached with end (DELETE): the same request by every other identity changes nothing
+  ---
+  duration_ms: 18.5497
+  type: 'test'
+  ...
+# Subtest: the owner of a lease is the subject of the verified token: a lease created by conductor-b is not reachable by conductor-a
+ok 115 - the owner of a lease is the subject of the verified token: a lease created by conductor-b is not reachable by conductor-a
+  ---
+  duration_ms: 15.1911
+  type: 'test'
+  ...
+# Subtest: every pin of every imported C009 production file matches the pinned commit and tag in git and the working bytes (raw CRLF or LF-normalized)
+ok 116 - every pin of every imported C009 production file matches the pinned commit and tag in git and the working bytes (raw CRLF or LF-normalized)
+  ---
+  duration_ms: 122.1478
+  type: 'test'
+  ...
+# Subtest: the same pins hold for a fresh LF checkout of the working tree: the LF-normalized bytes alone are enough
+ok 117 - the same pins hold for a fresh LF checkout of the working tree: the LF-normalized bytes alone are enough
+  ---
+  duration_ms: 5.7675
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a flipped working byte -> WORKING_BYTES_DIFFER_FROM_THE_PINS
+ok 118 - tampering is caught by name: a flipped working byte -> WORKING_BYTES_DIFFER_FROM_THE_PINS
+  ---
+  duration_ms: 2.1457
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a flipped blob byte -> GIT_BLOB_SHA256_DIFFERS
+ok 119 - tampering is caught by name: a flipped blob byte -> GIT_BLOB_SHA256_DIFFERS
+  ---
+  duration_ms: 2.0533
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a forged blob pin -> GIT_BLOB_SHA256_DIFFERS
+ok 120 - tampering is caught by name: a forged blob pin -> GIT_BLOB_SHA256_DIFFERS
+  ---
+  duration_ms: 2.5677
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a forged LF pin -> LF_PIN_DIFFERS_FROM_THE_BLOB
+ok 121 - tampering is caught by name: a forged LF pin -> LF_PIN_DIFFERS_FROM_THE_BLOB
+  ---
+  duration_ms: 1.8426
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a forged raw pin with changed working bytes -> WORKING_BYTES_DIFFER_FROM_THE_PINS
+ok 122 - tampering is caught by name: a forged raw pin with changed working bytes -> WORKING_BYTES_DIFFER_FROM_THE_PINS
+  ---
+  duration_ms: 2.348
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a forged object id -> GIT_OBJECT_ID_DIFFERS
+ok 123 - tampering is caught by name: a forged object id -> GIT_OBJECT_ID_DIFFERS
+  ---
+  duration_ms: 2.1548
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: another commit in one dependency -> COMMIT_OR_TAG_PIN_DIFFERS
+ok 124 - tampering is caught by name: another commit in one dependency -> COMMIT_OR_TAG_PIN_DIFFERS
+  ---
+  duration_ms: 2.2152
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: another tag in one dependency -> COMMIT_OR_TAG_PIN_DIFFERS
+ok 125 - tampering is caught by name: another tag in one dependency -> COMMIT_OR_TAG_PIN_DIFFERS
+  ---
+  duration_ms: 2.3625
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a tag that points at another commit -> TAG_DOES_NOT_POINT_AT_THE_COMMIT
+ok 126 - tampering is caught by name: a tag that points at another commit -> TAG_DOES_NOT_POINT_AT_THE_COMMIT
+  ---
+  duration_ms: 2.737
+  type: 'test'
+  ...
+# Subtest: tampering is caught by name: a tag that is not annotated -> TAG_NOT_ANNOTATED
+ok 127 - tampering is caught by name: a tag that is not annotated -> TAG_NOT_ANNOTATED
+  ---
+  duration_ms: 2.6936
+  type: 'test'
+  ...
+# Subtest: the production files import exactly the pinned C009 files and nothing else of another namespace
+ok 128 - the production files import exactly the pinned C009 files and nothing else of another namespace
+  ---
+  duration_ms: 3.283
+  type: 'test'
+  ...
+# Subtest: a conductor lists only its own leases and the total counts only them
+ok 129 - a conductor lists only its own leases and the total counts only them
+  ---
+  duration_ms: 88.0259
+  type: 'test'
+  ...
+# Subtest: lists of every kind, pages, searches, filters and sorts contain only the caller's items and its own totals
+ok 130 - lists of every kind, pages, searches, filters and sorts contain only the caller's items and its own totals
+  ---
+  duration_ms: 79.0937
+  type: 'test'
+  ...
+# Subtest: the answers to one conductor do not change when the other conductor changes its own resources
+ok 131 - the answers to one conductor do not change when the other conductor changes its own resources
+  ---
+  duration_ms: 55.1753
+  type: 'test'
+  ...
+# Subtest: a list query that names an owner, a lease, a method or anything outside the closed vocabulary is refused with no effect
+ok 132 - a list query that names an owner, a lease, a method or anything outside the closed vocabulary is refused with no effect
+  ---
+  duration_ms: 126.9293
+  type: 'test'
+  ...
+# Subtest: a route that takes no query refuses one, whoever asks
+ok 133 - a route that takes no query refuses one, whoever asks
+  ---
+  duration_ms: 17.7143
+  type: 'test'
+  ...
+# Subtest: the operator reads the metadata of every live lease and nothing else: owner, expiry and counts, never an id, a name or a content of a resource
+ok 134 - the operator reads the metadata of every live lease and nothing else: owner, expiry and counts, never an id, a name or a content of a resource
+  ---
+  duration_ms: 89.1998
+  type: 'test'
+  ...
+# Subtest: the operator view lists only live leases, pages them and refuses every other query
+ok 135 - the operator view lists only live leases, pages them and refuses every other query
+  ---
+  duration_ms: 37.3763
+  type: 'test'
+  ...
+# Subtest: every operator read is itself audited, and a refused attempt by the operator is audited with the server-derived subject
+ok 136 - every operator read is itself audited, and a refused attempt by the operator is audited with the server-derived subject
+  ---
+  duration_ms: 22.0781
+  type: 'test'
+  ...
+# Subtest: the audit view is for the operator only and never shows client-supplied text
+ok 137 - the audit view is for the operator only and never shows client-supplied text
+  ---
+  duration_ms: 25.5523
+  type: 'test'
+  ...
+# Subtest: one identity cannot evict another identity's audit records: every subject has its own ring and anonymous refusals have a separate one
+ok 138 - one identity cannot evict another identity's audit records: every subject has its own ring and anonymous refusals have a separate one
+  ---
+  duration_ms: 54.3448
+  type: 'test'
+  ...
+# Subtest: every route does the same amount of work for a foreign lease, an expired lease and a lease that never existed (elements looked at, counted)
+ok 139 - every route does the same amount of work for a foreign lease, an expired lease and a lease that never existed (elements looked at, counted)
+  ---
+  duration_ms: 119.6153
+  type: 'test'
+  ...
+# Subtest: a remote attacker measures no difference between a foreign and an absent lease from another process, and the same measurement does see a naive server's difference
+ok 140 - a remote attacker measures no difference between a foreign and an absent lease from another process, and the same measurement does see a naive server's difference
+  ---
+  duration_ms: 1519.0348
+  type: 'test'
+  ...
+# {"serviceRatio":1.023,"naiveRatio":3.739,"pairs":120}
+# Subtest: a lease list that is not a clean 200 of well-formed lease ids teaches the page nothing: as that conductor it asks for the list and nothing else
+ok 141 - a lease list that is not a clean 200 of well-formed lease ids teaches the page nothing: as that conductor it asks for the list and nothing else
+  ---
+  duration_ms: 222.0034
+  type: 'test'
+  ...
+# Subtest: a list of runs, scratch resources or exports whose first item is not a well-formed id OF THAT KIND teaches the page nothing: the inspection is refused as a whole
+ok 142 - a list of runs, scratch resources or exports whose first item is not a well-formed id OF THAT KIND teaches the page nothing: the inspection is refused as a whole
+  ---
+  duration_ms: 472.8805
+  type: 'test'
+  ...
+# Subtest: an own read that is answered 200 with a body naming ANOTHER resource, or a list holding a malformed id, is a violation: every check of a probe needs both of its halves
+ok 143 - an own read that is answered 200 with a body naming ANOTHER resource, or a list holding a malformed id, is a violation: every check of a probe needs both of its halves
+  ---
+  duration_ms: 412.6163
+  type: 'test'
+  ...
+# Subtest: the absent-control must be a 404 with the typed code: without a trustworthy control no foreign refusal is accepted, and the page says so
+ok 144 - the absent-control must be a 404 with the typed code: without a trustworthy control no foreign refusal is accepted, and the page says so
+  ---
+  duration_ms: 368.2875
+  type: 'test'
+  ...
+# Subtest: the outcome of a row is its LAST cell only, and a probe that got no answer is shown as "no answer" with dashes (not as a violation)
+ok 145 - the outcome of a row is its LAST cell only, and a probe that got no answer is shown as "no answer" with dashes (not as a violation)
+  ---
+  duration_ms: 276.921
+  type: 'test'
+  ...
+# Subtest: an inspection that learns nothing clears the table: no row of an earlier inspection stays on screen
+ok 146 - an inspection that learns nothing clears the table: no row of an earlier inspection stays on screen
+  ---
+  duration_ms: 82.0983
+  type: 'test'
+  ...
+# Subtest: every typed refusal code the page knows is shown as such; only AUTHENTICATION_REQUIRED is what an anonymous probe must get
+ok 147 - every typed refusal code the page knows is shown as such; only AUTHENTICATION_REQUIRED is what an anonymous probe must get
+  ---
+  duration_ms: 396.5527
+  type: 'test'
+  ...
+# Subtest: with the four real tokens the page shows 30 rows: every owner reaches its own resources, nobody reaches a foreign one, nothing is shown by itself
+ok 148 - with the four real tokens the page shows 30 rows: every owner reaches its own resources, nobody reaches a foreign one, nothing is shown by itself
+  ---
+  duration_ms: 196.2973
+  type: 'test'
+  ...
+# Subtest: before the first click nothing is shown as allowed, and without a complete lease for both conductors nothing is inspected
+ok 149 - before the first click nothing is shown as allowed, and without a complete lease for both conductors nothing is inspected
+  ---
+  duration_ms: 50.9452
+  type: 'test'
+  ...
+# Subtest: a tampered answer is a violation on screen, counted, and never announced as allowed: ten kinds of forgery, the DOM invariants after each
+ok 150 - a tampered answer is a violation on screen, counted, and never announced as allowed: ten kinds of forgery, the DOM invariants after each
+  ---
+  duration_ms: 162.7265
+  type: 'test'
+  ...
+# Subtest: the page derives the table from facts, not from the wording of the server: another message with the same code and status is the same row
+ok 151 - the page derives the table from facts, not from the wording of the server: another message with the same code and status is the same row
+  ---
+  duration_ms: 113.4085
+  type: 'test'
+  ...
+# Subtest: the markup: no inline script, no inline handler or style, one polite status region, every input labelled, native focusable controls only
+ok 152 - the markup: no inline script, no inline handler or style, one polite status region, every input labelled, native focusable controls only
+  ---
+  duration_ms: 4.7082
+  type: 'test'
+  ...
+# Subtest: every typed code of the server has a row, and every row names a code the server can answer
+ok 153 - every typed code of the server has a row, and every row names a code the server can answer
+  ---
+  duration_ms: 1.7177
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 154 - the pipelining matrix in this process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 399.4598
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config quota: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 155 - the pipelining matrix in this process, config quota: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 110.5178
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 156 - the pipelining matrix in this process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 370.6589
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 157 - the pipelining matrix in this process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 302.5428
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 158 - the pipelining matrix in this process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 17.3992
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 159 - the pipelining matrix in this process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 28.0083
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix in this process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 160 - the pipelining matrix in this process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 438.5091
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 161 - the pipelining matrix against a server process, config default, rows 1 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 506.0677
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config quota: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 162 - the pipelining matrix against a server process, config quota: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 376.669
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 163 - the pipelining matrix against a server process, config timeout: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 538.7441
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 164 - the pipelining matrix against a server process, config default, rows 2 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 782.299
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 165 - the pipelining matrix against a server process, config closed: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 304.2805
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 166 - the pipelining matrix against a server process, config ids: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 511.9575
+  type: 'test'
+  ...
+# Subtest: the pipelining matrix against a server process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+ok 167 - the pipelining matrix against a server process, config default, rows 3 of 3: nothing runs behind any refusal, earlier requests are answered in order, the connection ends
+  ---
+  duration_ms: 726.6544
+  type: 'test'
+  ...
+# Subtest: store level: 15 seeds of 200 random operations by both conductors and a stranger keep the global invariant after every single one
+ok 168 - store level: 15 seeds of 200 random operations by both conductors and a stranger keep the global invariant after every single one
+  ---
+  duration_ms: 265.383
+  type: 'test'
+  ...
+# Subtest: HTTP level: 2 seeds of 60 random requests by all five identities over real sockets keep the global invariant after every single one
+ok 169 - HTTP level: 2 seeds of 60 random requests by all five identities over real sockets keep the global invariant after every single one
+  ---
+  duration_ms: 354.5693
+  type: 'test'
+  ...
+# Subtest: a conductor that fills its share gets 409 OWNER_QUOTA_FULL with no effect, and the other conductor and the operator are not affected
+ok 170 - a conductor that fills its share gets 409 OWNER_QUOTA_FULL with no effect, and the other conductor and the operator are not affected
+  ---
+  duration_ms: 160.8226
+  type: 'test'
+  ...
+# Subtest: the shares of all conductors always fit: whatever one holds, the state never exceeds the sum of the shares and the others keep theirs
+ok 171 - the shares of all conductors always fit: whatever one holds, the state never exceeds the sum of the shares and the others keep theirs
+  ---
+  duration_ms: 52.6482
+  type: 'test'
+  ...
+# Subtest: an expired lease and an ended lease give their share back
+ok 172 - an expired lease and an ended lease give their share back
+  ---
+  duration_ms: 34.1404
+  type: 'test'
+  ...
+# Subtest: the limits are checked when the server is built: a share that is not a positive integer or an unknown limit is refused
+ok 173 - the limits are checked when the server is built: a share that is not a positive integer or an unknown limit is refused
+  ---
+  duration_ms: 1.0989
+  type: 'test'
+  ...
+# Subtest: deny by default: a route without roles is 403 for everyone, a route missing from the table is 404 COMMAND_UNKNOWN, and a conductor still reaches the others
+ok 174 - deny by default: a route without roles is 403 for everyone, a route missing from the table is 404 COMMAND_UNKNOWN, and a conductor still reaches the others
+  ---
+  duration_ms: 115.0157
+  type: 'test'
+  ...
+# Subtest: an id generator that fails is an INTERNAL_ERROR with no effect, and the server keeps serving
+ok 175 - an id generator that fails is an INTERNAL_ERROR with no effect, and the server keeps serving
+  ---
+  duration_ms: 13.5332
+  type: 'test'
+  ...
+# Subtest: exactly one place writes an error answer: every JSON answer goes through refuse or answer, Node-own answers go through refuseSocket, and no upgrade listener exists
+ok 176 - exactly one place writes an error answer: every JSON answer goes through refuse or answer, Node-own answers go through refuseSocket, and no upgrade listener exists
+  ---
+  duration_ms: 4.1997
+  type: 'test'
+  ...
+# Subtest: an Upgrade request is an ordinary request: no 101, the normal answer, and the connection is not switched
+ok 177 - an Upgrade request is an ordinary request: no 101, the normal answer, and the connection is not switched
+  ---
+  duration_ms: 340.5452
+  type: 'test'
+  ...
+# Subtest: Expect: 100-continue: a request that is going to be read is invited with 100, one that is refused never is
+ok 178 - Expect: 100-continue: a request that is going to be read is invited with 100, one that is refused never is
+  ---
+  duration_ms: 334.4068
+  type: 'test'
+  ...
+# Subtest: the body bound is exact: 4096 bytes are read, 4097 are 413; the media type must be JSON, with or without a charset, in any case
+ok 179 - the body bound is exact: 4096 bytes are read, 4097 are 413; the media type must be JSON, with or without a charset, in any case
+  ---
+  duration_ms: 1280.1966
+  type: 'test'
+  ...
+# (node:4984) [C010_READ_STOP_UNAVAILABLE] Warning: C010 cannot stop reading a refused connection and serves nothing.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the limits are wired: a connection past the cap is cut, a client past the pipelining bound is cut, a silent socket is dropped, close ends every socket
+# (node:4984) [C010_READ_STOP_UNAVAILABLE] Warning: C010 cannot stop reading a refused connection and serves nothing.
+ok 180 - the limits are wired: a connection past the cap is cut, a client past the pipelining bound is cut, a silent socket is dropped, close ends every socket
+  ---
+  duration_ms: 742.6145
+  type: 'test'
+  ...
+# Subtest: fail closed: where the read stop is missing, a connection is destroyed, nothing is served and the app says why
+ok 181 - fail closed: where the read stop is missing, a connection is destroyed, nothing is served and the app says why
+  ---
+  duration_ms: 3.9598
+  type: 'test'
+  ...
+# Subtest: the scope, the page assets and the local server: startLocal serves a token for every identity, and close is final and repeatable
+ok 182 - the scope, the page assets and the local server: startLocal serves a token for every identity, and close is final and repeatable
+  ---
+  duration_ms: 9.3461
+  type: 'test'
+  ...
+# Subtest: items with the same name are ordered by id, ascending, although their ids fall in the order they were created; leases follow the same rule
+ok 183 - items with the same name are ordered by id, ascending, although their ids fall in the order they were created; leases follow the same rule
+  ---
+  duration_ms: 4.4852
+  type: 'test'
+  ...
+# Subtest: each successful change raises the lease revision by one, an update or a cancel raises the resource revision by one, a refusal raises nothing
+ok 184 - each successful change raises the lease revision by one, an update or a cancel raises the resource revision by one, a refusal raises nothing
+  ---
+  duration_ms: 4.7469
+  type: 'test'
+  ...
+# Subtest: every read answers the owner and nobody else: the same call by another subject is the one refusal
+ok 185 - every read answers the owner and nobody else: the same call by another subject is the one refusal
+  ---
+  duration_ms: 4.9254
+  type: 'test'
+  ...
+# Subtest: a foreign target, an expired one, an ended one and one that never existed are the same refusal and cost the same work
+ok 186 - a foreign target, an expired one, an ended one and one that never existed are the same refusal and cost the same work
+  ---
+  duration_ms: 1.349
+  type: 'test'
+  ...
+# Subtest: creating: the owner is the subject, ids are server-made and checked, and the quota and every bound refuse without an effect
+ok 187 - creating: the owner is the subject, ids are server-made and checked, and the quota and every bound refuse without an effect
+  ---
+  duration_ms: 1.9842
+  type: 'test'
+  ...
+# Subtest: the id generator is not trusted: a malformed or a used id throws and changes nothing
+ok 188 - the id generator is not trusted: a malformed or a used id throws and changes nothing
+  ---
+  duration_ms: 4.1141
+  type: 'test'
+  ...
+# Subtest: updating, cancelling and deleting follow the state of the run, and deleting a run removes its exports
+ok 189 - updating, cancelling and deleting follow the state of the run, and deleting a run removes its exports
+  ---
+  duration_ms: 2.177
+  type: 'test'
+  ...
+# Subtest: a batch is atomic: any refusal or conflict discards every operation, and foreign targets are refused wherever they stand
+ok 190 - a batch is atomic: any refusal or conflict discards every operation, and foreign targets are refused wherever they stand
+  ---
+  duration_ms: 2.7981
+  type: 'test'
+  ...
+# Subtest: lists page, filter and sort the caller's own items only: totals count the same items
+ok 191 - lists page, filter and sort the caller's own items only: totals count the same items
+  ---
+  duration_ms: 1.3882
+  type: 'test'
+  ...
+# Subtest: ended, expired and moved leases: reaping frees the share, the operator sees only live leases, a move changes who owns it
+ok 192 - ended, expired and moved leases: reaping frees the share, the operator sees only live leases, a move changes who owns it
+  ---
+  duration_ms: 1.1004
+  type: 'test'
+  ...
+# Subtest: nothing the store returns is shared with its state: every reachable object of every public answer can be rewritten without a later answer changing
+ok 193 - nothing the store returns is shared with its state: every reachable object of every public answer can be rewritten without a later answer changing
+  ---
+  duration_ms: 1.5593
+  type: 'test'
+  ...
+# Subtest: deleting a run removes the exports of THAT run only: the exports of the lease's other runs and of the owner's other leases stay, and so do the other conductor's
+ok 194 - deleting a run removes the exports of THAT run only: the exports of the lease's other runs and of the owner's other leases stay, and so do the other conductor's
+  ---
+  duration_ms: 1.6921
+  type: 'test'
+  ...
+# Subtest: updating a resource changes that resource only: the lease keeps its name, owner, expiry and creation time, and the other resources of the lease and of the owner are unchanged
+ok 195 - updating a resource changes that resource only: the lease keeps its name, owner, expiry and creation time, and the other resources of the lease and of the owner are unchanged
+  ---
+  duration_ms: 3.0861
+  type: 'test'
+  ...
+# Subtest: two live instances closed opened first, then opened last (FIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+ok 196 - two live instances closed opened first, then opened last (FIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+  ---
+  duration_ms: 146.6131
+  type: 'test'
+  ...
+# Subtest: two live instances closed opened last, then opened first (LIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+ok 197 - two live instances closed opened last, then opened first (LIFO): each close ends only its own listener and connections, a repeated close is harmless, the neighbour is untouched
+  ---
+  duration_ms: 60.4743
+  type: 'test'
+  ...
+# Subtest: U057 original AuthError equivalence: cancellation during the controlled token-clock read preserves the one original TOKEN_EXPIRED audit
+ok 198 - U057 original AuthError equivalence: cancellation during the controlled token-clock read preserves the one original TOKEN_EXPIRED audit
+  ---
+  duration_ms: 60.8999
+  type: 'test'
+  ...
+# Subtest: U057 default ownerEntries: the actual default server accepts entry 100 and refuses entry 101
+ok 199 - U057 default ownerEntries: the actual default server accepts entry 100 and refuses entry 101
+  ---
+  duration_ms: 310.4478
+  type: 'test'
+  ...
+# Subtest: U057 default urlChars: a target of 2048 characters is routed and 2049 is URL_TOO_LONG
+ok 200 - U057 default urlChars: a target of 2048 characters is routed and 2049 is URL_TOO_LONG
+  ---
+  duration_ms: 9.379
+  type: 'test'
+  ...
+# Subtest: U057 run units boundary: 100 is accepted and 101 is INPUT_INVALID
+ok 201 - U057 run units boundary: 100 is accepted and 101 is INPUT_INVALID
+  ---
+  duration_ms: 3.1415
+  type: 'test'
+  ...
+# Subtest: U057 visited starts at exactly zero before any actual store pass
+ok 202 - U057 visited starts at exactly zero before any actual store pass
+  ---
+  duration_ms: 0.7049
+  type: 'test'
+  ...
+# Subtest: U057 visited counts actual elements on each lease and resource pass, not just equality of lookups
+ok 203 - U057 visited counts actual elements on each lease and resource pass, not just equality of lookups
+  ---
+  duration_ms: 1.5966
+  type: 'test'
+  ...
+# Subtest: U057 claimedHeaders reads header names only: Accept x-lease is not an ignored claim
+ok 204 - U057 claimedHeaders reads header names only: Accept x-lease is not an ignored claim
+  ---
+  duration_ms: 7.1033
+  type: 'test'
+  ...
+# Subtest: U057 startLocal requests port zero on loopback and returns the actual responsive automatic port
+ok 205 - U057 startLocal requests port zero on loopback and returns the actual responsive automatic port
+  ---
+  duration_ms: 5.2712
+  type: 'test'
+  ...
+# Subtest: U057 the actual CONNECT event writes the typed 405 and its audit without an uncaught refusal-code fault
+ok 206 - U057 the actual CONNECT event writes the typed 405 and its audit without an uncaught refusal-code fault
+  ---
+  duration_ms: 56.5969
+  type: 'test'
+  ...
+# Subtest: U057 actual default server readback: idleMs exceeds headerMs plus checkMs
+ok 207 - U057 actual default server readback: idleMs exceeds headerMs plus checkMs
+  ---
+  duration_ms: 21.38
+  type: 'test'
+  ...
+# {"kind":"default-readback","limits":{"idleMs":10000,"headerMs":5000,"requestMs":5000,"checkMs":1000}}
+# Subtest: U057 actual default stalled header: typed 408 REQUEST_TIMEOUT and its proper audit record
+ok 208 - U057 actual default stalled header: typed 408 REQUEST_TIMEOUT and its proper audit record
+  ---
+  duration_ms: 5086.2145
+  type: 'test'
+  ...
+# {"kind":"default-stall","shape":"header","limits":{"idleMs":10000,"headerMs":5000,"requestMs":5000,"checkMs":1000},"answers":[{"status":408,"code":"REQUEST_TIMEOUT"}],"ended":true,"closed":true,"bytes":524,"audit":[{"seq":1,"subject":null,"role":null,"route":null,"method":"OTHER","outcome":"refused","code":"REQUEST_TIMEOUT"}]}
+# Subtest: U057 actual default stalled body: typed 408 REQUEST_TIMEOUT and its proper audit record
+ok 209 - U057 actual default stalled body: typed 408 REQUEST_TIMEOUT and its proper audit record
+  ---
+  duration_ms: 5071.7799
+  type: 'test'
+  ...
+# {"kind":"default-stall","shape":"body","limits":{"idleMs":10000,"headerMs":5000,"requestMs":5000,"checkMs":1000},"answers":[{"status":408,"code":"REQUEST_TIMEOUT"}],"ended":true,"closed":true,"bytes":524,"audit":[{"seq":1,"subject":null,"role":null,"route":null,"method":"OTHER","outcome":"refused","code":"REQUEST_TIMEOUT"}]}
+# Subtest: U057 mutation kill classification accepts a named ERR_ASSERTION
+ok 210 - U057 mutation kill classification accepts a named ERR_ASSERTION
+  ---
+  duration_ms: 1.5493
+  type: 'test'
+  ...
+# Subtest: U057 a named behavioral limit-contract violation is not a file-level or environment fault
+ok 211 - U057 a named behavioral limit-contract violation is not a file-level or environment fault
+  ---
+  duration_ms: 0.2412
+  type: 'test'
+  ...
+# Subtest: U057 a timeout is undecided, never a kill
+ok 212 - U057 a timeout is undecided, never a kill
+  ---
+  duration_ms: 0.1131
+  type: 'test'
+  ...
+# Subtest: U057 a missing module is not a kill
+ok 213 - U057 a missing module is not a kill
+  ---
+  duration_ms: 0.0901
+  type: 'test'
+  ...
+# Subtest: U057 a syntax fault is not a kill
+ok 214 - U057 a syntax fault is not a kill
+  ---
+  duration_ms: 0.1527
+  type: 'test'
+  ...
+# Subtest: U057 a file-level failure is not a kill
+ok 215 - U057 a file-level failure is not a kill
+  ---
+  duration_ms: 0.0766
+  type: 'test'
+  ...
+# Subtest: U057 generator extension preserves every original 806 position and its replacement, plus four explicitly enumerated positions
+ok 216 - U057 generator extension preserves every original 806 position and its replacement, plus four explicitly enumerated positions
+  ---
+  duration_ms: 189.9191
+  type: 'test'
+  ...
+# Subtest: U057 chosen actual default idle timeout is 10000 and exactly twice the actual 5000 header timeout
+ok 217 - U057 chosen actual default idle timeout is 10000 and exactly twice the actual 5000 header timeout
+  ---
+  duration_ms: 40.1116
+  type: 'test'
+  ...
+# Subtest: U057 close invokes the actual listener close once before returning its completion promise
+ok 218 - U057 close invokes the actual listener close once before returning its completion promise
+  ---
+  duration_ms: 39.8683
+  type: 'test'
+  ...
+# Subtest: U057 startLocal synchronously requests exactly one automatic loopback listener with its error handler installed
+ok 219 - U057 startLocal synchronously requests exactly one automatic loopback listener with its error handler installed
+  ---
+  duration_ms: 32.5505
+  type: 'test'
+  ...
+# Subtest: U057 actual default startup reaches a healthy owned loopback listener without a read-stop error
+ok 220 - U057 actual default startup reaches a healthy owned loopback listener without a read-stop error
+  ---
+  duration_ms: 32.4376
+  type: 'test'
+  ...
+# Subtest: lease routes: a foreign lease, an absent lease and a lease that never existed get byte-identical refusals on every verb
+ok 221 - lease routes: a foreign lease, an absent lease and a lease that never existed get byte-identical refusals on every verb
+  ---
+  duration_ms: 112.4584
+  type: 'test'
+  ...
+# Subtest: item routes: foreign, absent and mismatched targets (lease and resource each foreign or absent, own lease with a foreign or absent resource) are indistinguishable
+ok 222 - item routes: foreign, absent and mismatched targets (lease and resource each foreign or absent, own lease with a foreign or absent resource) are indistinguishable
+  ---
+  duration_ms: 110.5573
+  type: 'test'
+  ...
+# Subtest: a reference to a foreign run, to a run of another own lease and to a run that exists nowhere gets the same refusal
+ok 223 - a reference to a foreign run, to a run of another own lease and to a run that exists nowhere gets the same refusal
+  ---
+  duration_ms: 31.1587
+  type: 'test'
+  ...
+# Subtest: a batch naming a foreign target is refused with the same bytes as a batch naming an absent target
+ok 224 - a batch naming a foreign target is refused with the same bytes as a batch naming an absent target
+  ---
+  duration_ms: 24.2252
+  type: 'test'
+  ...
+# Subtest: conditional headers change nothing: a foreign target stays the same refusal, an own target is never answered 304, and no validator is ever sent
+ok 225 - conditional headers change nothing: a foreign target stays the same refusal, an own target is never answered 304, and no validator is ever sent
+  ---
+  duration_ms: 33.3153
+  type: 'test'
+  ...
+1..225
+# tests 225
+# suites 0
+# pass 225
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56707.5166
