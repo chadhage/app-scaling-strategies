@@ -45,7 +45,7 @@ const matchesRaw = (file, hash) => { const found = hashesOf(file); return found.
 // The names (from the namespace root) a capture must pin, sorted.
 function inputFiles(root) {
   const tests = fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name) && !EVIDENCE_ONLY.test(name)).map((name) => `tests/${name}`);
-  return [...PRODUCTION, ...ASSETS, 'C010.feature', 'imports.json', ...tests].sort();
+  return [...PRODUCTION, ...ASSETS, 'C010.feature', ...(fs.existsSync(path.join(root, 'U057.feature')) ? ['U057.feature'] : []), 'imports.json', ...tests].sort();
 }
 
 function pinInputs(root, names = inputFiles(root)) {

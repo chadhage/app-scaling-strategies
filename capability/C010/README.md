@@ -5,9 +5,9 @@ and decides it **again where the effect is committed**. Another conductor's leas
 foreign target is indistinguishable from an absent one. It is **not** the approved Node 24 / Express / Entra control API and not an identity service:
 no Entra, no cloud, no registration, no spend; all data is synthetic and the server listens on `127.0.0.1` only.
 
-This is the **fix publication** of C010 after the independent review rejected the first publication (`3f219a81af4f`, tag `kanban/C010/3f219a81af4f`) on two majors
-(a batch ownership decision that no test killed, a flood test that failed under load) and eight minors, with no ownership bypass found. The captures of the
-first publication stay in `evidence\` as retained history; every figure below comes from captures made on the bytes of THIS tree.
+This **U057 maintenance amendment** retains the accepted C010 fix, commit `e22b94da118bfe7f62fc8849b783adf14c36ae9d`, tag `kanban/C010/e22b94da118b`.
+That fix followed the rejected first publication (`3f219a81af4f`, tag `kanban/C010/3f219a81af4f`). Every earlier capture and seal remains immutable.
+The historical figures below describe their original subjects; the separate U057 block describes the measured maintenance campaign. This earns no additional Kano credit.
 
 ## Built on C009 (read-only import, pinned)
 
@@ -46,7 +46,7 @@ Start one by hand: `node -e "require('./capability/C010/server.cjs').startLocal(
 | m3 | the local user name in this README | `<REPO>` placeholders; `tests\evidence.test.cjs` scans every file of the namespace for a user-profile path and a session folder (the sealed transcript of the first RED is the one known exception) |
 | m4 | a false README figure, a changed test and a changed manifest field passed the evidence test | `tests\seal.cjs` + `tests\evidence-verify.cjs` + `tests\evidence-figures.cjs` + `tests\evidence.test.cjs`: see "Evidence mechanism" |
 | m6 | the commit repeated the role decision and re-read the subject from the token, which cannot differ | removed; the real commit-time protections (the token verification and the store's owner check) stay and are killed by `commit.test.cjs` |
-| m7 | the mutation campaign was partial | the complete systematic campaign on these bytes (every survivor killed by a named test or listed with a proof of equivalence in `tests\mutants-equivalent.cjs`) plus the 66 targeted guard mutants (`tests\guard-mutants.cjs`) |
+| m7 | the accepted fix left a declared mutation gap | U057 decides every original position and the explicitly enumerated extension; see the measured U057 block. The 66 targeted guard mutants remain historical evidence on their original subjects, not a new run. |
 | m8 | the timing oracle is inconclusive by measurement | excluded by construction: the store does identical counted work for a foreign, an expired and an absent target (`oracle.test.cjs`, `store.test.cjs`); no new ratio test with a band was added |
 
 ## Commands (repository root `<REPO>`, Node v22.23.4)
@@ -69,10 +69,10 @@ Start one by hand: `node -e "require('./capability/C010/server.cjs').startLocal(
 Evidence is recorded with the run folder's `archive-run.cjs` from the repository root (raw stdout/stderr as gzip, SHA-256 of every transcript and input, exit code, Node version);
 `evidence\.gitattributes` keeps the transcripts byte-exact. Scratch folders for the campaigns and the fresh trees are short neutral paths outside the repository.
 
-## Evidence
+## Historical accepted-fix evidence
 
-The figures of every final capture are in the block below; `tests\evidence.test.cjs` recomputes the block from the manifests and fails by name when one number differs.
-This prose carries no figure of the evidence.
+This block is retained history, not the current U057 result. The original verifier recomputes it against the exact original subjects archived under
+`evidence\u057\original\capability\C010`; the current checker also verifies the append-only amendment and its separate current evidence.
 
 <!-- figures:begin -->
 ```json
@@ -195,7 +195,7 @@ This prose carries no figure of the evidence.
 | Every test file alone, one after another (per-file times against the 60 s cap) | `evidence\loop\perfile-01.json` |
 | The load loop: the process-spawning files under CPU burners that the loop started | `evidence\loop\loop-01.json` |
 | Fresh trees built from the bytes of the namespace and git blobs of the imports, in LF and in CRLF | `evidence\fresh\fresh-lf-01.json`, `evidence\fresh\fresh-crlf-01.json` |
-| The declared gap of the mutation campaign (what was not executed, why; the block prints it as `UNCAPTURED`) | `evidence\uncaptured.json` |
+| The original declared gap (retained byte-exact; superseded only after the actual campaign completed) | `evidence\u057\original\capability\C010\evidence\uncaptured.json` |
 | The seal over the final bytes (written last) | `evidence\seal.json` |
 
 **Retained captures of the first publication** (not re-pinned, kept exactly as archived; they pin the bytes of that time and are no evidence for this tree): `red\red-01-ownership-behavior.json`,
@@ -204,13 +204,11 @@ This prose carries no figure of the evidence.
 
 ### Evidence mechanism
 
-- Every recorder manifest of a final capture pins the SHA-256 of **every** production file, the feature, `imports.json` and every test file except the evidence tooling (`evidence*`, `seal*`), and the
-  tree must still match those pins; the mutation campaign records the same at its start and the test checks that no old test file changed since (new test files may be added to kill survivors: `--retest`).
-- `seal.json` pins the raw and LF-normalized SHA-256 of the README, the feature, `imports.json`, every production file, every test file and every evidence file that no manifest pins by itself;
-  an unsealed new file is a problem too. The seal is written last and cannot be rewritten (`wx`).
-- The checks read the meaning of the captures (the RED failed on assertions, not on a missing module; the replay is the same command; every test file is enumerated; the coverage floors;
-  the campaign is complete and every kill names a test; every equivalent has its proof; the loop and fresh runs passed) and a **tamper test per branch** alters a copy and expects the failure by name,
-  also with the seal rebuilt over the altered copy, so that the semantic checks do not lean on the seal.
+- Original manifests and `seal.json` are checked against their exact archived subjects, never repinned to new source bytes. Their raw streams, reports and seal are not rewritten.
+- `evidence\u057\amendment-1.json` names every exact predecessor and replacement, pins every added file, and is anchored by `evidence\u057\head.sha256`.
+  The original `imports.json` remains the unchanged C009 authority. Current captures pin their actual execution subjects; raw final subjects and LF digests are both retained.
+- The checker reads the meaning as well as hashes: genuine named assertion REDs and unchanged GREEN commands, the actual default timeout/audit observations, the entire generator-owned position set,
+  named kills with green controls, unchanged equivalence proofs, individual loaded-file coverage floors, and LF/CRLF results. Tamper controls reject false counts, sources, inputs, streams and authority.
 - Not detectable here: a consistent rewrite of a capture together with its inputs and the seal. The published commit and tag are the anchor.
 
 ## What the tests prove (scenario to file)
@@ -244,15 +242,63 @@ all answered in order with the typed 417 and closed, so no C009 reproduction is 
   A foreign-versus-absent timing difference was measured as inconclusive by the reviewer and is excluded by construction (identical counted store work), not by a timing band.
 - **Coverage** is measured for the in-process suites; the process-spawning suites (`pipeline-process`, `flood`, `flood-pending`, `oracle`, `imports`) cannot report coverage of the child and are covered by their in-process twins.
 - **Mutation** covers the six production files by a generator over every condition, operand, comparison, negation, call statement, return, code string, compared literal and number; HTML and CSS are not mutated, and the mutants of `page.js` display wording are decided by the DOM-stub tests, not by a real browser.
-- **The campaign is NOT complete (declared, not hidden).** It ran on the final production bytes and the pinned test bytes, was resumed once with more workers, and was STOPPED on the time budget of the fix with part of the generated
-  mutants never executed. `evidence\uncaptured.json` states the reason and the exact number, the figures block prints `"status": "UNCAPTURED"` with the counts, and `tests\evidence.test.cjs` accepts a gap only when it is declared,
-  matches the report, and leaves no executed mutant undecided: every EXECUTED mutant is killed by a named test or listed in `tests\mutants-equivalent.cjs` with its proof. The mutants not executed are not claimed killed.
-  To finish it: `node capability\C010\tests\mutate-gen.cjs --scratch <dir> --out evidence\mutation\mutation-02.report.json --workers 4` resumes at the first mutant without a record (the start record keeps the pinned inputs), a survivor then needs a NEW test file and
-  `--retest --extra-tests`, and `--finalize` rebuilds the report; delete the `mutation` entry of `evidence\uncaptured.json` when `notExecuted` is 0.
+- **Historical mutation gap:** the accepted fix stopped with unexecuted positions. Its original declaration, partial report, inputs and raw evidence remain preserved.
+  U057 separately completes the original set and its explicit extension; only the current declaration's mutation entry is removed, after actual completion. Earlier partial, uncaught, timed-out and mistaken-fixture attempts remain unqualified history.
+- **Default timeouts:** actual server readback is idle 10000, header/request 5000 and checking interval 1000 ms. One real stalled-header and one 100-byte-declared/13-byte-sent body probe each require typed 408 `REQUEST_TIMEOUT` and one `OTHER/refused/REQUEST_TIMEOUT` audit.
+  Polling is bounded; no assertion claims an exact duration. Inconsistent caller overrides can still preempt a typed timeout and are not qualified by the default-limit tests.
+- **Browser and load scope:** no new browser or load-loop qualification is claimed here. The page and imported production bytes are unchanged; earlier Edge and timing captures retain only their historical scope.
+- **C009:** the separate owned-loopback diagnostic uses C009's own accepted defaults and records its actual response, audit and cleanup. It does not change C009 or repin its authority; any C009 follow-up is parent-owned.
 - **Local identifiers**: the sealed transcript of the first publication's RED (`evidence\red\raw\red-01-ownership-behavior.stdout.raw.gz`) carries stack-trace paths with the user name of the machine it ran on; sealed evidence cannot be scrubbed without breaking its pins.
   Every file added or changed by the fix uses `<REPO>`-style placeholders and neutral scratch paths (a test scans for the rest).
 - C009's `X-C009-Scope` response header appears on C010 answers because the responder is C009's.
 - A consistent rewrite of a capture together with its pinned inputs and the seal is not detectable by the tests; the anchor is the published commit and tag.
+
+## U057 measured maintenance result
+
+The **806 original positions** are all decided: 789 named kills and **17 equivalents**, with the original proof bytes retained.
+The actual generator owns **810 generated positions**: four additional positions are the idle multiplier's two numeric mutations and the cancelled-read guard's two conditions.
+`tests\evidence.test.cjs` executes the generator's own `--list` and compares its total, rather than trusting a copied count. Every kill has a named behavioral failure and a green control; none is a timeout or file-level failure.
+
+<!-- u057:begin -->
+```json
+{
+ "originalPositions": 806,
+ "generated": 810,
+ "executed": 810,
+ "killed": 793,
+ "equivalents": 17,
+ "survived": 0,
+ "undecided": 0,
+ "notExecuted": 0,
+ "limits": {
+  "idleMs": 10000,
+  "headerMs": 5000,
+  "requestMs": 5000,
+  "checkMs": 1000
+ },
+ "kanoCredit": 0
+}
+```
+<!-- u057:end -->
+
+`U057.feature` is the behavior specification. `u057-boundaries` proves actual default owner entries 100/101, target characters 2048/2049, both run schemas at 100/101,
+actual visited counts, header names versus values, and automatic local ports. `commit` holds a genuinely authorized mutation at its real commit gate, observes its cut socket,
+expires its token with the injected clock, then releases the gate and requires no effect, answer or audit. `u057-defaults` supplies the two real default-limit probes.
+
+An idle-only correction exposed a duplicate `INTERNAL_ERROR` audit after a typed body timeout. The cancelled-read guard removes it without changing AuthError handling:
+the guard is in the AuthError handler's ELSE branch. A controlled token-clock cancellation first broke, then re-proved, the original inner/outer AuthError equivalence.
+Startup events, synchronous listener/close-call counts and a real-socket CONNECT handler assertion decide formerly uncaught or waiting fixtures by named assertions, not by accepting a timeout.
+
+Current evidence is selected by the amendment's `finalPhase`: the complete report is `evidence\u057\campaign-04\mutation-03.report.json`, with original incremental records,
+raw per-run streams, controls, retests and the full position-extension proof. Final captures include the actual `--list`, `--retest`, `--finalize`, full non-evidence suite,
+unchanged default/commit replays, individual coverage commands, the C009 diagnostic, LF/CRLF runs, a final-source cancellation-order re-kill and paired original-equivalence witnesses.
+Read-only post-seal full-suite and LF/CRLF checks, including this evidence checker, are retained in the private worker result; they never append files to a sealed public namespace.
+
+Verification is read-only: `node --test --test-concurrency=3 --test-timeout=170000 capability\C010\tests\*.test.cjs`.
+For a new campaign use a NEW owned scratch/report/raw directory and one worker:
+`node capability\C010\tests\mutate-gen.cjs --scratch <OWNED_SCRATCH> --out <NEW_REPORT> --raw-dir <NEW_RAW> --workers 1`,
+then `--retest --extra-tests u057-connect,u057-start-local,u057-startup,u057-shutdown,guard-boundaries,guard-host,guard-requests,guard-server,store-order,store-revisions,two-instances,guard-close,u057-boundaries,u057-defaults,u057-limits,u057-auth-error`,
+and `--finalize`. Never record over retained reports, streams or seals. Coverage remains EACH-file 85/85/85 with unloaded files counted as zero; this is synthetic Node 22 tooling, not production Node 24, Entra, Azure or spending qualification.
 
 ## Layout
 

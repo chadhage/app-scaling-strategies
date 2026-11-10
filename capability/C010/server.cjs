@@ -180,7 +180,7 @@ function createApp(options = {}) {
       };
       return await queue.run(effect);
     } catch (error) {
-      if (error instanceof AuthError) return refuseAuth(error);
+      if (error instanceof AuthError) return refuseAuth(error); else if (cancelled()) return undefined;
       return refuse('INTERNAL_ERROR');
     }
   }

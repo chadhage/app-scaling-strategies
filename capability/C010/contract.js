@@ -6,7 +6,7 @@
 const base = require('../C009/contract.js');
 
 const LIMITS = Object.freeze({
-  bodyBytes: base.limits.bodyBytes, idleMs: base.limits.idleMs, connections: base.limits.connections, pipelined: base.limits.pipelined,
+  bodyBytes: base.limits.bodyBytes, idleMs: 2 * base.limits.headerMs, connections: base.limits.connections, pipelined: base.limits.pipelined,
   headerMs: base.limits.headerMs, checkMs: base.limits.checkMs, auditEntries: base.limits.auditEntries, anonymousEntries: base.limits.anonymousEntries,
   maxTtlMs: base.limits.maxTtlMs,
   // One identity holds at most ownerEntries leases and resources in all. Nothing else bounds the state: the shares of all conductors

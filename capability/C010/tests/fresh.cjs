@@ -9,11 +9,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
+const zlib = require('node:zlib');
+const crypto = require('node:crypto');
 const { pinInputs } = require('./evidence-pins.cjs');
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => (value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs), []));
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
+const gitRepository = process.env.C010_GIT_REPOSITORY || repository;
 const imports = require('../imports.json');
 const tree = path.resolve(args.tree);
 if (tree.toLowerCase().startsWith(repository.toLowerCase())) throw new Error('--tree must be outside the repository');
@@ -37,12 +40,14 @@ const inputs = pinInputs(root);
 fs.rmSync(tree, { recursive: true, force: true });
 copy(root, path.join(tree, 'capability', 'C010'), false);
 for (const dep of imports.dependencies) {
-  const blob = execFileSync('git', ['-C', repository, 'show', `${dep.commit}:${dep.path.replaceAll('\\', '/')}`], { maxBuffer: 1 << 26 });
+  const gitEnv = { ...process.env };
+  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_COMMON_DIR']) delete gitEnv[key];
+  const blob = execFileSync('git', ['-C', gitRepository, '--no-pager', 'cat-file', 'blob', `${dep.commit}:${dep.path.replaceAll('\\', '/')}`], { env: gitEnv, maxBuffer: 1 << 26 });
   const target = path.join(tree, dep.path);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, convert(blob, dep.path));
 }
-const env = { ...process.env, C010_GIT_REPOSITORY: repository };
+const env = { ...process.env, C010_GIT_REPOSITORY: gitRepository };
 delete env.NODE_TEST_CONTEXT;
 delete env.NODE_V8_COVERAGE;
 delete env.C010_SUBJECT_DIR;
@@ -50,13 +55,26 @@ const all = fs.readdirSync(path.join(tree, 'capability', 'C010', 'tests')).filte
 const selected = args.only ? all.filter((name) => name === args.only) : all.filter((name) => !('without-evidence' in args) || name !== 'evidence.test.cjs');
 const tests = selected.map((name) => path.join('capability', 'C010', 'tests', name));
 const started = Date.now();
-const run = spawnSync(process.execPath, ['--test', '--test-concurrency=3', '--test-timeout=170000', ...tests], { cwd: tree, env, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, timeout: 1500000 });
+const run = spawnSync(process.execPath, ['--test', '--test-concurrency=3', '--test-timeout=170000', ...tests], { cwd: tree, env, maxBuffer: 256 * 1024 * 1024, timeout: 1500000 });
 const out = `${run.stdout}${run.stderr}`;
 const count = (key) => Number((new RegExp(`^# ${key} (\\d+)$`, 'm').exec(out) || [])[1] || 0);
 const document = {
   tool: 'tests/fresh.cjs', mode: args.mode, node: process.version, evidenceTest: selected.includes('evidence.test.cjs'), ms: Date.now() - started, exit: run.status, tests: count('tests'), pass: count('pass'), fail: count('fail'),
   cancelled: count('cancelled'), skipped: count('skipped'), files: tests.length, inputs, failed: [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).slice(0, 20)
 };
+if (args['raw-dir']) {
+  const directory = path.resolve(args['raw-dir']);
+  fs.mkdirSync(path.join(directory, 'raw'), { recursive: true });
+  const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+  document.command = ['node.exe', '--test', '--test-concurrency=3', '--test-timeout=170000', ...tests];
+  document.transcripts = Object.fromEntries(['stdout', 'stderr'].map((stream) => {
+    const bytes = Buffer.from(run[stream] || Buffer.alloc(0));
+    const compressed = zlib.gzipSync(bytes, { level: 9 });
+    const name = `raw/fresh-${args.mode}.${stream}.raw.gz`;
+    fs.writeFileSync(path.join(directory, name), compressed, { flag: 'wx' });
+    return [stream, { path: path.relative(path.dirname(path.resolve(args.out)), path.join(directory, name)).split(path.sep).join('/'), bytes: bytes.length, sha256: digest(bytes), gzipBytes: compressed.length, gzipSha256: digest(compressed) }];
+  }));
+}
 fs.writeFileSync(path.resolve(args.out), `${JSON.stringify(document, null, 1)}\n`, { flag: 'wx' });
 console.log(JSON.stringify({ mode: document.mode, exit: document.exit, tests: document.tests, pass: document.pass, fail: document.fail, files: document.files, ms: document.ms }));
 fs.rmSync(tree, { recursive: true, force: true });

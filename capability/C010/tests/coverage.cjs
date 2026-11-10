@@ -8,16 +8,20 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const zlib = require('node:zlib');
+const crypto = require('node:crypto');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
 const PRODUCTION = ['audit.cjs', 'codes.cjs', 'contract.js', 'page.js', 'server.cjs', 'store.cjs'];
 const TESTS = ['anonymous', 'audit', 'batch', 'commit', 'contract', 'guard-boundaries', 'guard-close', 'guard-host', 'guard-requests', 'guard-server', 'hostile-fields', 'hostile-paths', 'idor', 'lists', 'operator',
-  'page', 'page-learning', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c', 'property', 'quota', 'server-units', 'store', 'store-order', 'store-revisions', 'two-instances', 'uniform']
+  'page', 'page-learning', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c', 'property', 'quota', 'server-units', 'store', 'store-order', 'store-revisions', 'two-instances', 'uniform', 'u057-boundaries', 'u057-defaults']
   .map((name) => path.join('capability', 'C010', 'tests', `${name}.test.cjs`));
 const FLOOR = Object.freeze({ lines: 85, branches: 85, functions: 85 });
 const PARALLEL = 3;
 const NUMBER = '(\\d+(?:\\.\\d+)?)';
+const rawAt = process.argv.indexOf('--raw-dir');
+const rawDir = rawAt < 0 ? null : path.resolve(process.argv[rawAt + 1]);
 
 const rootScripts = fs.readdirSync(root).filter((name) => /\.c?js$/.test(name) && fs.statSync(path.join(root, name)).isFile()).sort();
 const unenumerated = rootScripts.filter((name) => !PRODUCTION.includes(name));
@@ -30,19 +34,38 @@ function measure(file) {
     '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...TESTS];
   return new Promise((resolve) => {
     const child = spawn(process.execPath, args, { cwd: repository, env: environment, windowsHide: true });
-    let out = '';
-    child.stdout.on('data', (chunk) => { out += chunk; });
-    child.stderr.on('data', (chunk) => { out += chunk; });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on('data', (chunk) => stdout.push(chunk));
+    child.stderr.on('data', (chunk) => stderr.push(chunk));
     const timer = setTimeout(() => child.kill(), 1500000);
     child.on('close', (status) => {
       clearTimeout(timer);
+      const output = Buffer.concat(stdout);
+      const errors = Buffer.concat(stderr);
+      const out = output.toString('utf8') + errors.toString('utf8');
       const row = new RegExp(`^#\\s+${file.replace('.', '\\.')}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|\\s+${NUMBER}\\s+\\|`, 'm').exec(out);
       const values = row ? { lines: Number(row[1]), branches: Number(row[2]), functions: Number(row[3]) } : { lines: 0, branches: 0, functions: 0 };
       const failures = row ? [] : ['UNLOADED_COUNTS_AS_ZERO'];
       for (const metric of Object.keys(FLOOR)) if (values[metric] < FLOOR[metric]) failures.push(`${metric} ${values[metric]} < ${FLOOR[metric]}`);
       if (status !== 0) failures.push(`nested runner exit ${status}`);
       const failedTests = [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
-      resolve({ file, loaded: Boolean(row), ...values, nestedExit: status, failedTests, failures });
+      let rawCapture = null;
+      if (rawDir) {
+        fs.mkdirSync(path.join(rawDir, 'raw'), { recursive: true });
+        const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+        const stream = (name, bytes) => {
+          const compressed = zlib.gzipSync(bytes, { level: 9 });
+          const nameAt = `raw/${file}.${name}.raw.gz`;
+          fs.writeFileSync(path.join(rawDir, nameAt), compressed, { flag: 'wx' });
+          return { path: nameAt, bytes: bytes.length, sha256: digest(bytes), gzipBytes: compressed.length, gzipSha256: digest(compressed) };
+        };
+        const name = `${file}.json`;
+        fs.writeFileSync(path.join(rawDir, name), JSON.stringify({ schema: 'C010-coverage-raw/1', file, command: ['node.exe', ...args], node: process.version, exitCode: status,
+          loaded: Boolean(row), ...values, transcripts: { stdout: stream('stdout', output), stderr: stream('stderr', errors) } }, null, 2) + '\n', { flag: 'wx' });
+        rawCapture = path.relative(root, path.join(rawDir, name)).split(path.sep).join('/');
+      }
+      resolve({ file, loaded: Boolean(row), ...values, nestedExit: status, failedTests, failures, rawCapture });
     });
   });
 }

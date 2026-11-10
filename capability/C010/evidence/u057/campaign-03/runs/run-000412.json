@@ -1,0 +1,47 @@
+{
+ "schema": "C010-mutation-raw/1",
+ "mode": "mutant",
+ "stage": "unit",
+ "mutant": {
+  "file": "store.cjs",
+  "label": "operator === @130:99"
+ },
+ "test": "store",
+ "command": [
+  "node.exe",
+  "--test",
+  "--test-concurrency=1",
+  "--test-timeout=170000",
+  "capability\\C010\\tests\\store.test.cjs"
+ ],
+ "node": "v22.23.4",
+ "code": 1,
+ "timedOut": false,
+ "failingTests": [
+  "every read answers the owner and nobody else: the same call by another subject is the one refusal",
+  "a foreign target, an expired one, an ended one and one that never existed are the same refusal and cost the same work",
+  "updating, cancelling and deleting follow the state of the run, and deleting a run removes its exports",
+  "ended, expired and moved leases: reaping frees the share, the operator sees only live leases, a move changes who owns it",
+  "nothing the store returns is shared with its state: every reachable object of every public answer can be rewritten without a later answer changing",
+  "updating a resource changes that resource only: the lease keeps its name, owner, expiry and creation time, and the other resources of the lease and of the owner are unchanged"
+ ],
+ "assertionFailures": [
+  "ended, expired and moved leases: reaping frees the share, the operator sees only live leases, a move changes who owns it"
+ ],
+ "transcripts": {
+  "stdout": {
+   "path": "raw/run-000412.stdout.raw.gz",
+   "bytes": 8299,
+   "sha256": "f1082c66f805e129f4642c4a0761fc032696a11f8356162b1c6a7a566f045d17",
+   "gzipBytes": 1603,
+   "gzipSha256": "acc81ffe0e36c00825d8d0060368d56c101d9cd058662f8994e332acd57b2ea1"
+  },
+  "stderr": {
+   "path": "raw/run-000412.stderr.raw.gz",
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "gzipBytes": 20,
+   "gzipSha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+  }
+ }
+}

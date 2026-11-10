@@ -14,6 +14,7 @@ const crypto = require('node:crypto');
 const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
+const zlib = require('node:zlib');
 const { spawn, spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
@@ -27,18 +28,20 @@ const listOnly = process.argv.includes('--list');
 const finalizeOnly = process.argv.includes('--finalize');
 const retestOnly = process.argv.includes('--retest');
 const extraTests = (argument('--extra-tests') ?? '').split(',').filter(Boolean);
+const rawDir = argument('--raw-dir');
 const workers = Number(argument('--workers') ?? 2);
 const limit = Number(argument('--limit') ?? Infinity);
 if (!listOnly && (!out || (!finalizeOnly && (!scratch || path.resolve(scratch).toLowerCase().startsWith(repository.toLowerCase()))))) throw new Error('--scratch must be outside the repository and --out a report file');
 
 const PRODUCTION = ['store.cjs', 'server.cjs', 'contract.js', 'audit.cjs', 'codes.cjs', 'page.js'];
 const STAGES = {
+  probe: ['u057-startup', 'u057-shutdown'],
   unit: ['contract', 'store', 'audit'], core: ['idor', 'anonymous', 'server-units', 'hostile-fields', 'commit'], rest: ['uniform', 'lists', 'hostile-paths', 'batch', 'operator', 'quota'],
   late: ['property', 'pipeline-inproc-a', 'pipeline-inproc-b', 'pipeline-inproc-c'], page: ['page', 'page-learning'],
   // Test files that were ADDED after the first pass of a run to kill its survivors (--retest --extra-tests a,b): old test files are never edited, so every earlier kill stays valid.
   added: []
 };
-const PLAN = { 'audit.cjs': ['unit', 'core', 'rest'], 'codes.cjs': ['unit', 'core', 'rest'], 'contract.js': ['unit', 'core', 'rest', 'late'], 'page.js': ['page'], 'server.cjs': ['core', 'rest', 'late'], 'store.cjs': ['unit', 'core', 'rest', 'late'] };
+const PLAN = { 'audit.cjs': ['unit', 'core', 'rest'], 'codes.cjs': ['unit', 'core', 'rest'], 'contract.js': ['unit', 'core', 'rest', 'late'], 'page.js': ['page'], 'server.cjs': ['probe', 'core', 'rest', 'late'], 'store.cjs': ['unit', 'core', 'rest', 'late'] };
 STAGES.added = extraTests;
 const MATRIX_QUICK =  '^(TARGET_NOT_FOUND|ROLE_FORBIDDEN|QUERY_REJECTED|EXPECTATION_FAILED|REQUEST_MALFORMED|URL_TOO_LONG|METHOD_NOT_ALLOWED|BODY_TOO_LARGE|INVALID_URL|UNEXPECTED_BODY|TOKEN_EXPIRED|INTERNAL_ERROR) \\[(R M7|G G R M7|M6 G R|R \\| M7)\\] (HTTP/1\\.1|refusal then HTTP/1\\.0)$';
 
@@ -160,7 +163,7 @@ const equivalent = fs.existsSync(path.join(__dirname, 'mutants-equivalent.cjs'))
 if (listOnly) {
   const counts = {};
   for (const mutant of all) counts[mutant.file] = (counts[mutant.file] ?? 0) + 1;
-  console.log(JSON.stringify({ total: all.length, perFile: counts }));
+  console.log(JSON.stringify({ total: all.length, perFile: counts, ...(process.argv.includes('--positions') ? { positions: all.map((item) => ({ ...item, original: sources.get(item.file).slice(item.start, item.end) })) } : {}) }));
   process.exit(0);
 }
 
@@ -174,31 +177,71 @@ function buildTree(target) {
 
 // One test file in its own process. A stage runs its files one after the other and stops at the first file that fails: a killed mutant costs the
 // time of the first file that sees it, not of the whole stage, and a survivor still runs every file.
-function runFile(tree, name, matrixQuick) {
+let rawSequence = 0;
+function captureRun(scope, name, args, code, timedOut, stdout, stderr) {
+  if (!rawDir || (scope.mode !== 'baseline' && code === 0 && !timedOut)) return null;
+  fs.mkdirSync(path.join(rawDir, 'raw'), { recursive: true });
+  while (fs.existsSync(path.join(rawDir, `run-${String(rawSequence + 1).padStart(6, '0')}.json`))) rawSequence += 1;
+  const stem = `run-${String(++rawSequence).padStart(6, '0')}`;
+  const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+  const stream = (kind, bytes) => {
+    const compressed = zlib.gzipSync(bytes, { level: 9 });
+    const relative = `raw/${stem}.${kind}.raw.gz`;
+    fs.writeFileSync(path.join(rawDir, relative), compressed, { flag: 'wx' });
+    return { path: relative, bytes: bytes.length, sha256: digest(bytes), gzipBytes: compressed.length, gzipSha256: digest(compressed) };
+  };
+  const document = { schema: 'C010-mutation-raw/1', ...scope, test: name, command: ['node.exe', ...args], node: process.version, code, timedOut,
+    failingTests: failing(stdout.toString('utf8')), assertionFailures: failing(stdout.toString('utf8'), true), transcripts: { stdout: stream('stdout', stdout), stderr: stream('stderr', stderr) } };
+  const file = path.join(rawDir, `${stem}.json`);
+  fs.writeFileSync(file, JSON.stringify(document, null, 1) + '\n', { flag: 'wx' });
+  return path.relative(path.dirname(out), file).split(path.sep).join('/');
+}
+
+function runFile(tree, name, matrixQuick, scope) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE', 'C010_SUBJECT_DIR']) delete env[key];
     env.C010_SETTLE_MS = '400';
     if (matrixQuick) env.C010_MATRIX_ONLY = MATRIX_QUICK;
     const file = path.join('capability', 'C010', 'tests', `${name}.test.cjs`);
-    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', '--test-timeout=170000', file], { cwd: tree, env, windowsHide: true });
-    const chunks = [];
-    child.stdout.on('data', (chunk) => chunks.push(chunk));
-    child.stderr.on('data', (chunk) => chunks.push(chunk));
+    const args = ['--test', '--test-concurrency=1', '--test-timeout=170000', file];
+    const child = spawn(process.execPath, args, { cwd: tree, env, windowsHide: true });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on('data', (chunk) => stdout.push(chunk));
+    child.stderr.on('data', (chunk) => stderr.push(chunk));
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }); }, 600000);
-    child.on('close', (code) => { clearTimeout(timer); resolve({ code, timedOut, text: Buffer.concat(chunks).toString('utf8') }); });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      const output = Buffer.concat(stdout);
+      const errors = Buffer.concat(stderr);
+      const capture = captureRun(scope, name, args, code, timedOut, output, errors);
+      resolve({ code, timedOut, text: output.toString('utf8') + errors.toString('utf8'), capture });
+    });
   });
 }
-async function runTests(tree, names, matrixQuick) {
+async function runTests(tree, names, matrixQuick, scope) {
   let last = { code: 0, timedOut: false, text: '' };
+  const captures = [];
   for (const name of names) {
-    last = await runFile(tree, name, matrixQuick);
-    if (last.code !== 0 || last.timedOut) return last;
+    last = await runFile(tree, name, matrixQuick, scope);
+    if (last.capture) captures.push(last.capture);
+    if (last.code !== 0 || last.timedOut) return { ...last, captures };
   }
-  return last;
+  return { ...last, captures };
 }
-const failing = (text) => [...new Set([...text.matchAll(/^\s*not ok \d+ - (?!(?:[A-Za-z]:)?[\\/\w.-]*capability[\\/])(.+)$/gm)].map((match) => match[1].trim()))];
+const failing = (text, assertionsOnly = false) => {
+  const lines = [...text.matchAll(/^[ \t]*not ok \d+ - (.+)$/gm)];
+  return [...new Set(lines.filter((match) => {
+    if (/^(?:[A-Za-z]:)?[\\/\w.-]*capability[\\/]/.test(match[1])) return false;
+    const after = text.slice(match.index + match[0].length);
+    const next = after.search(/^(?:[ \t]*(?:not )?ok \d+ - |# Subtest: |# tests )/m);
+    const block = after.slice(0, next < 0 ? undefined : next);
+    return /failureType: ['"]testCodeFailure['"]/.test(block) && (!assertionsOnly || /code: ['"]ERR_ASSERTION['"]/.test(block))
+      && !/testTimeoutFailure|cancelledByParent|MODULE_NOT_FOUND|Cannot find module|SyntaxError/.test(`${match[1]}\n${block}`);
+  }).map((match) => match[1].trim()))];
+};
 
 async function worker(name, queue, results) {
   const tree = path.join(scratch, name);
@@ -211,19 +254,21 @@ async function worker(name, queue, results) {
     let stage = null;
     let named = [];
     let undecided = null;
+    let capture = null;
     for (const step of retestOnly ? ['added'] : PLAN[mutant.file]) {
       // The late stage runs the property test and a quick selection of the pipelining cells (C010_MATRIX_ONLY): a mutant that keeps connections open would make every cell wait.
-      let run = await runTests(tree, STAGES[step], step === 'late');
-      for (let attempt = 0; attempt < 2 && run.code !== 0 && !run.timedOut && failing(run.text).length === 0; attempt += 1) run = await runTests(tree, STAGES[step], step === 'late');
+      const scope = { mode: 'mutant', stage: step, mutant: { file: mutant.file, label: mutant.label } };
+      let run = await runTests(tree, STAGES[step], step === 'late', scope);
+      for (let attempt = 0; attempt < 2 && run.code !== 0 && !run.timedOut && failing(run.text).length === 0; attempt += 1) run = await runTests(tree, STAGES[step], step === 'late', scope);
       named = failing(run.text);
-      if (run.code !== 0 && named.length > 0) { stage = step; break; }
+      if (run.code !== 0 && !run.timedOut && named.length > 0) { stage = step; capture = run.capture; break; }
       // A timeout is UNDECIDED, never a kill and never a survivor: the run fails until the mutant is decided.
-      if (run.timedOut) undecided = step;
+      if (run.timedOut || run.code !== 0) undecided = step;
     }
     fs.writeFileSync(target, original);
     const killed = stage !== null;
     const reason = equivalent[`${mutant.file}: ${mutant.label}`] ?? null;
-    const entry = { file: mutant.file, label: mutant.label, killed, stage, failingTests: named.slice(0, 3), equivalent: reason, undecided: killed ? null : undecided, retest: retestOnly };
+    const entry = { file: mutant.file, label: mutant.label, killed, stage, failingTests: named.slice(0, 3), equivalent: reason, undecided: killed ? null : undecided, retest: retestOnly, capture };
     results.push(entry);
     fs.appendFileSync(`${out}.jsonl`, `${JSON.stringify(entry)}\n`);
     console.log(`${killed ? 'KILLED  ' : entry.undecided ? 'UNDECIDED' : 'SURVIVED'} [${stage ?? '-'}] ${mutant.file}: ${mutant.label}${killed ? ` <- ${named.slice(0, 2).map((item) => item.slice(0, 80)).join(' | ')}` : reason ? ` (equivalent: ${reason})` : ''}`);
@@ -271,8 +316,8 @@ async function baseline(stages) {
   buildTree(tree);
   const steps = [];
   for (const step of stages) {
-    const run = await runTests(tree, STAGES[step], step === 'late');
-    const entry = { stage: step, exitCode: run.code, failing: failing(run.text) };
+    const run = await runTests(tree, STAGES[step], step === 'late', { mode: 'baseline', stage: step });
+    const entry = { stage: step, exitCode: run.code, failing: failing(run.text), captures: run.captures };
     steps.push(entry);
     fs.appendFileSync(`${out}.baseline.jsonl`, `${JSON.stringify(entry)}\n`);
     console.log(`BASELINE ${step} exit ${run.code}${run.code === 0 ? '' : ` ${entry.failing.join(' | ').slice(0, 300)}`}`);
@@ -316,7 +361,8 @@ async function main() {
     stages = [...new Set(mutants.flatMap((mutant) => PLAN[mutant.file]))];
   }
   const results = [...finished];
-  await Promise.all([baseline(stages), ...Array.from({ length: workers }, (_, index) => worker(`gen-${index}`, queue, results))]);
+  await baseline(stages);
+  await Promise.all(Array.from({ length: workers }, (_, index) => worker(`gen-${index}`, queue, results)));
   const report = summarize(results, all.length, latestControls());
   writeReport(report);
   const green = latestControls().every((step) => step.exitCode === 0);

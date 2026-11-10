@@ -1,5 +1,16 @@
 'use strict';
 
+if (require('node:fs').existsSync(require('node:path').join(__dirname, '..', 'evidence', 'u057', 'original-subjects.json'))) {
+  const assert = require('node:assert/strict');
+  const test = require('node:test');
+  const evidence = require('./evidence-u057.cjs');
+  const root = require('node:path').resolve(__dirname, '..');
+  test('U057 report.generated equals the generator OWN --list total, not a copied fixture count', () => {
+    assert.equal(evidence.json(root, evidence.CAMPAIGN).generated, evidence.ownList(root).total);
+  });
+  require('./evidence-u057.check.cjs');
+} else {
+
 // The archived evidence of C010 (rev-C010 m4): every manifest of every capture is recomputed (transcripts, counts, exit codes, the pinned inputs: a
 // final capture pins EVERY input file), the final captures are read for what they mean (the RED failed on assertions against the retained stub and
 // replays unchanged, the suite enumerates every file, per-file coverage, the complete mutation campaign, the 66 guard mutants, the load loop, the
@@ -169,3 +180,4 @@ test('the README names every command the reviewer re-runs, and no file of the na
   assert.deepEqual(hits.filter((name) => name !== 'evidence/red/raw/red-01-ownership-behavior.stdout.raw.gz'), []);
   assert.equal(sha(lf(Buffer.from('a\r\nb'))), sha(Buffer.from('a\nb')));
 });
+}

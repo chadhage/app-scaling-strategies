@@ -261,3 +261,44 @@ test('control of the cases above: the same mutation on an untouched connection r
     assert.equal(leaseOf(context, ids.a.lease).scratches.length, 2, 'the scratch resource was added');
   });
 });
+
+test('U057 a held authorized mutation with both a cut connection and an expired token writes no audit record', async () => {
+  const hold = gate();
+  let armed = false;
+  let arrivals = 0;
+  let serverSocket;
+  let response;
+  await withApp({ app: { hooks: { beforeCommit: async () => {
+    if (!armed) return;
+    arrivals += 1;
+    await hold.closed;
+  } } } }, async (context) => {
+    const { ids } = await seed(context);
+    const token = context.app.issueToken('conductor-a', { ttlMs: 1000 });
+    const before = same(context.app.snapshot());
+    const auditBefore = context.app.auditLog().length;
+    armed = true;
+    context.app.server.on('request', (request, outgoing) => { serverSocket = request.socket; response = outgoing; });
+    const client = net.connect({ host: '127.0.0.1', port: context.port });
+    const received = [];
+    client.on('data', (chunk) => received.push(chunk));
+    client.on('error', () => {});
+    try {
+      client.write(withBody(context.port, 'POST', `/v1/leases/${ids.a.lease}/scratches`, [bearer(token), JSON_TYPE], JSON.stringify({ name: 'cut-and-expired' })));
+      await until(() => arrivals === 1 && context.app.queued() === 1, 'the authorized mutation is held inside the real commit hook');
+      client.destroy();
+      await until(() => serverSocket?.destroyed === true, 'the server observed the cut connection before the hook is released');
+      context.clock.advance(1001);
+      hold.open();
+      await until(() => context.app.queued() === 0, 'the held mutation has passed the released commit barrier');
+      assert.equal(arrivals, 1);
+      assert.equal(context.app.auditLog().length, auditBefore, 'a cut AND token-expired mutation writes NO audit record');
+      assert.equal(response.headersSent, false, 'no answer was written for the cut socket');
+      assert.equal(Buffer.concat(received).length, 0, 'the cut client received no answer');
+      noEffect(context, before);
+    } finally {
+      hold.open();
+      client.destroy();
+    }
+  });
+});
