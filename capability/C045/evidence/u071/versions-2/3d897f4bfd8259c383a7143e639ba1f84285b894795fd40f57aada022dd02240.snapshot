@@ -1,0 +1,201 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const path = require('node:path');
+const { test } = require('node:test');
+const { startPair, startClient, limits, csp } = require('../server.cjs');
+const { readRegular, readDependency, sha256 } = require('../source-integrity.cjs');
+const { request } = require('./http.cjs');
+const contract = require(path.join(__dirname, '..', '..', 'C020', 'contract.js'));
+const inspector = require(path.join(__dirname, '..', '..', 'C020', 'inspector.js'));
+const providers = require(path.join(__dirname, '..', '..', 'C020', 'profiles.cjs'));
+const json = response => JSON.parse(response.bytes.toString('utf8'));
+
+test('actual owned C045 servers preserve C020 and refuse boundary overrides', async t => {
+  const pair = await startPair({ ttlMs: 60000 });
+  const { ga, preview } = pair.clients;
+  try {
+    await t.test('actual separate ephemeral IPv4 listeners and exact own entry bytes', async () => {
+      assert.notEqual(ga.server, preview.server);
+      assert.notEqual(ga.url, preview.url);
+      for (const client of [ga, preview]) {
+        assert.equal(client.server instanceof http.Server, true);
+        assert.equal(client.server.address().address, '127.0.0.1');
+        assert.equal(client.server.address().family, 'IPv4');
+        assert.ok(client.server.address().port > 0);
+        const entry = await request(client);
+        assert.equal(entry.status, 200);
+        assert.equal(sha256(entry.bytes), sha256(readRegular('capability\\C045\\index.html')));
+        assert.equal(entry.headers['content-security-policy'], csp);
+        assert.equal(entry.headers['x-frame-options'], 'DENY');
+        assert.equal(entry.headers['access-control-allow-origin'], undefined);
+        assert.equal(entry.headers['set-cookie'], undefined);
+        assert.match(entry.bytes.toString(), /Training rehearsal - synthetic data - not a live Azure result/);
+      }
+    });
+    await t.test('scope describes actual origins and explicitly unqualified identities and Azure labels', async () => {
+      for (const client of [ga, preview]) {
+        const response = await request(client, { target: '/client.json' });
+        const scope = json(response);
+        assert.equal(scope.client, client.client);
+        assert.equal(scope.origin, new URL(client.url).origin);
+        assert.equal(scope.fixturePath, `/fixtures/${client.implementation}/getProfile`);
+        assert.equal(scope.apiContract, 'getProfile/1');
+        assert.equal(scope.dataKind, 'synthetic');
+        for (const flag of ['identityVerified', 'previewEntitlementVerified', 'signedAttestation', 'actualAzureGA',
+          'deploymentQualified', 'authorizationQualified', 'productionRuntimeValidated', 'nativeTransportQualified']) {
+          assert.equal(scope[flag], false);
+        }
+        assert.equal(scope.liveAzureRuns, 0);
+        assert.equal(scope.authorizedCloudSpend, 0);
+        assert.equal(scope.ttlMs, 60000);
+        assert.equal(response.headers['x-c045-client'], client.client);
+      }
+    });
+    await t.test('served C020 inspection dependencies remain exact accepted bytes, not a duplicated catalog', async () => {
+      for (const [route, relative] of [
+        ['/c020-contract.js', 'capability\\C020\\contract.js'],
+        ['/c020-inspector.js', 'capability\\C020\\inspector.js']
+      ]) {
+        const response = await request(ga, { target: route });
+        assert.equal(response.status, 200);
+        assert.equal(sha256(response.bytes), sha256(readDependency(relative)));
+      }
+    });
+    await t.test('both unchanged implementations preserve all immutable profiles and old-consumer semantics', async () => {
+      for (const profile of contract.profiles) {
+        const observed = [];
+        for (const client of [ga, preview]) {
+          const target = `/fixtures/${client.implementation}/getProfile?profileId=${profile.id}`;
+          const response = await request(client, { target });
+          const body = json(response);
+          const expected = client === ga ? providers.getProfileV1({ profileId: profile.id }) : providers.getProfileV2({ profileId: profile.id });
+          assert.equal(response.status, 200);
+          assert.deepEqual(body, expected);
+          assert.deepEqual(body.profile, profile);
+          assert.equal(body.apiContract, 'getProfile/1');
+          assert.equal(response.headers['x-c020-api-contract'], body.apiContract);
+          assert.equal(response.headers['x-c020-implementation-version'], contract.stamps[client.implementation].implementationVersion);
+          assert.equal(response.headers['x-c020-deployment-stamp'], contract.stamps[client.implementation].deploymentStamp);
+          assert.equal(inspector.inspect(body, client.implementation, profile.id).verified, true);
+          observed.push(body);
+          body.profile.preferences.theme = 'client-copy-only';
+          body.stamp.deploymentStamp = 'client-copy-only';
+          assert.deepEqual(json(await request(client, { target })), expected);
+          const head = await request(client, { target, method: 'HEAD' });
+          assert.equal(head.status, 200);
+          assert.equal(head.bytes.length, 0);
+          assert.equal(Number(head.headers['content-length']), response.bytes.length);
+          assert.equal(head.headers['x-c020-deployment-stamp'], expected.stamp.deploymentStamp);
+        }
+        const v1 = providers.getProfileV1({ profileId: profile.id });
+        const v2 = providers.getProfileV2({ profileId: profile.id });
+        assert.deepEqual(inspector.oldConsumer(v1), inspector.oldConsumer(v2));
+        assert.equal(inspector.compare(v1, v2, profile.id).compatible, true);
+        assert.deepEqual(contract.profiles.find(entry => entry.id === profile.id), profile);
+        assert.equal(observed.length, 2);
+      }
+    });
+    for (const client of [ga, preview]) {
+      const base = `/fixtures/${client.implementation}/getProfile`;
+      for (const [name, target, expectedStatus] of [
+        ['missing profile', base, 400], ['empty profile', `${base}?profileId=`, 400],
+        ['malformed identifier', `${base}?profileId=real-001`, 400],
+        ['unknown synthetic profile', `${base}?profileId=synthetic-999`, 404],
+        ['duplicate profile field', `${base}?profileId=synthetic-001&profileId=synthetic-002`, 400],
+        ['stamp query override', `${base}?profileId=synthetic-001&deploymentStamp=forged`, 400],
+        ['encoded profile', `${base}?profileId=synthetic-%30%30%31`, 400],
+        ['encoded traversal', '/%2e%2e/.git/config', 400], ['raw traversal', '/../.git/config', 400],
+        ['backslash traversal', '/..\\server.cjs', 400], ['absolute target', `http://127.0.0.1:${client.server.address().port}/`, 400],
+        ['foreign implementation', `/fixtures/${client === ga ? 'v2' : 'v1'}/getProfile?profileId=synthetic-001`, 404],
+        ['repository data', '/.docs/wiki/flow-state.json', 404], ['private git', '/.git/config', 404],
+        ['closed evidence', '/evidence/dependency-pins.json', 404], ['unreviewed lesson', '/c041-lessons/A-S001/index.html', 404],
+        ['unknown own file', '/server.cjs', 404], ['query-selected asset', '/?target=synthetic-001', 404]
+      ]) await t.test(`${client.client}: actual HTTP refuses ${name}`, async () => {
+        const response = await request(client, { target });
+        assert.equal(response.status, expectedStatus);
+        assert.equal(json(response).localOnly, true);
+        assert.equal(response.headers['x-c020-deployment-stamp'], undefined);
+        if (name === 'unknown synthetic profile') assert.equal(json(response).error.code, 'UNKNOWN_PROFILE');
+      });
+      for (const [name, headers, expectedStatus] of [
+        ['foreign Host', { Host: 'localhost:1234' }, 421],
+        ['foreign Origin', { Origin: 'http://127.0.0.1:1' }, 403],
+        ['opaque Origin', { Origin: 'null' }, 403],
+        ['synthetic cookie session', { Cookie: 'synthetic-test=refused' }, 403],
+        ['synthetic authorization header', { Authorization: 'synthetic-placeholder-refused' }, 403],
+        ['implementation override', { 'X-C020-Implementation-Version': 'forged' }, 400],
+        ['deployment override', { 'X-C020-Deployment-Stamp': 'forged' }, 400],
+        ['client identity override', { 'X-C045-Client': 'forged' }, 400],
+        ['unknown caller override', { 'X-Target': 'forged' }, 400]
+      ]) await t.test(`${client.client}: actual HTTP refuses ${name}`, async () => {
+        const response = await request(client, { target: `${base}?profileId=synthetic-001`, headers });
+        assert.equal(response.status, expectedStatus);
+        assert.equal(response.headers['x-c020-implementation-version'], undefined);
+        assert.equal(response.headers['x-c020-deployment-stamp'], undefined);
+        assert.equal(response.headers['set-cookie'], undefined);
+      });
+      for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) await t.test(`${client.client}: actual ${method} is refused`, async () => {
+        const response = await request(client, { method, target: `${base}?profileId=synthetic-001` });
+        assert.equal(response.status, 405);
+        assert.equal(response.headers.allow, 'GET, HEAD');
+        assert.equal(json(response).error.code, 'READ_ONLY');
+      });
+      await t.test(`${client.client}: actual GET with body is refused`, async () => {
+        const response = await request(client, { target: `${base}?profileId=synthetic-001`, headers: { 'Content-Length': '2' }, body: '{}' });
+        assert.equal(response.status, 400);
+        assert.equal(json(response).error.code, 'BODY_FORBIDDEN');
+      });
+      await t.test(`${client.client}: actual chunked GET body is refused`, async () => {
+        const response = await request(client, { target: `${base}?profileId=synthetic-001`, headers: { 'Transfer-Encoding': 'chunked' }, body: '{}' });
+        assert.equal(response.status, 400);
+        assert.equal(json(response).error.code, 'BODY_FORBIDDEN');
+      });
+      await t.test(`${client.client}: raw header budget cannot truncate a forbidden Origin into an allowed omission`, async () => {
+        const headers = Object.fromEntries(Array.from({ length: 25 }, (_value, index) => [`C045-Test-${index}`, 'synthetic']));
+        headers.Origin = 'null';
+        const response = await request(client, { target: `${base}?profileId=synthetic-001`, headers });
+        assert.equal(response.status, 431);
+        assert.equal(json(response).error.code, 'HEADER_LIMIT');
+      });
+      await t.test(`${client.client}: duplicate actual Origin headers fail explicitly`, async () => {
+        const response = await request(client, { target: `${base}?profileId=synthetic-001`,
+          headers: { Origin: [new URL(client.url).origin, 'null'] } });
+        assert.equal(response.status, 400);
+        assert.equal(json(response).error.code, 'DUPLICATE_AUTHORITY');
+      });
+    }
+    await t.test('error in GA does not change preview audit or immutable provider values', async () => {
+      const before = preview.audit();
+      const response = await request(ga, { target: '/fixtures/v1/getProfile?profileId=synthetic-999' });
+      assert.equal(response.status, 404);
+      assert.deepEqual(preview.audit(), before);
+      assert.deepEqual(providers.getProfileV1({ profileId: contract.profiles[0].id }).profile,
+        providers.getProfileV2({ profileId: contract.profiles[0].id }).profile);
+    });
+  } finally {
+    await pair.close();
+    await pair.close();
+    assert.equal(ga.server.listening, false);
+    assert.equal(preview.server.listening, false);
+  }
+});
+
+test('actual listener lifetime and request allowance are bounded', async () => {
+  const client = await startClient('ga', { ttlMs: 1000 });
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    assert.equal(client.server.listening, false);
+  } finally { await client.close(); }
+  const bounded = await startClient('preview', { ttlMs: 30000 });
+  try {
+    for (let count = 0; count < limits.maximumRequests; count++) assert.equal((await request(bounded, { method: 'HEAD' })).status, 200);
+    const refused = await request(bounded);
+    assert.equal(refused.status, 429);
+    assert.equal(json(refused).error.code, 'REQUEST_LIMIT');
+    assert.equal(bounded.audit().entries.length, limits.maximumRequests);
+    assert.equal(bounded.audit().overLimit, 1);
+  } finally { await bounded.close(); }
+  assert.equal(bounded.server.listening, false);
+});

@@ -1,0 +1,213 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const { spawnSync } = require('node:child_process');
+const { test } = require('node:test');
+const { sha256, verifyDependencies, readDependency } = require('../source-integrity.cjs');
+const owned = path.resolve(__dirname, '..');
+const repo = path.resolve(owned, '..', '..');
+const read = relative => fs.readFileSync(path.join(owned, relative));
+const json = relative => JSON.parse(read(relative));
+const genuineSlot = 'red-20261104T044625758Z-1f442a9b-2007-438c-959c-47dd5e7178bb';
+const browserSlot = 'browser-20261104T050314691Z-e7b2868f-3383-44c7-9915-7f4fd9208fed';
+
+test('all completed captures preserve exact raw bytes and distinct readable representations', () => {
+  const captures = path.join(owned, 'evidence', 'captures');
+  let checked = 0;
+  for (const slot of fs.readdirSync(captures).sort()) {
+    const directory = path.join(captures, slot);
+    const file = path.join(directory, 'run.json');
+    if (!fs.existsSync(file)) continue;
+    const run = JSON.parse(fs.readFileSync(file));
+    assert.equal(run.cardId, 'C045');
+    assert.equal(run.kano, 'S');
+    assert.equal(run.slot, slot);
+    assert.ok(run.command.every(argument => typeof argument === 'string'));
+    assert.equal(run.runtime, 'v22.23.4');
+    for (const name of ['stdout', 'stderr']) {
+      const gzip = fs.readFileSync(path.join(directory, `${name}.raw.gz`));
+      const bytes = zlib.gunzipSync(gzip);
+      const readable = fs.readFileSync(path.join(directory, `${name}.txt`));
+      assert.equal(sha256(gzip), run[name].gzipSha256);
+      assert.equal(bytes.length, run[name].rawBytes);
+      assert.equal(sha256(bytes), run[name].rawSha256);
+      assert.equal(sha256(readable), run[name].readableSha256);
+      assert.equal(readable.toString(), bytes.toString('utf8').replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, ''));
+    }
+    for (const source of run.sources) {
+      assert.match(source.rawCheckoutSha256, /^[a-f0-9]{64}$/);
+      assert.match(source.gitCanonicalBlob, /^[a-f0-9]{40}$/);
+    }
+    checked++;
+  }
+  assert.ok(checked >= 8, 'Original successes and failures must remain present.');
+});
+
+test('authentic stub RED follows BDD/load and precedes implementation without replacing tooling failures', () => {
+  const manifest = json('evidence.json');
+  assert.equal(manifest.cardId, 'C045');
+  assert.equal(manifest.kano, 'S');
+  assert.equal(manifest.kanoUnit, 'C045');
+  assert.equal(manifest.packet, 'H008');
+  const load = json('evidence\\captures\\stub-load-20261104T044538931Z-d626f67e-5139-4421-a0eb-691d35cde2a0\\run.json');
+  const tooling = json('evidence\\captures\\red-20261104T044542322Z-4d01aeb8-dc51-45fc-b5b1-c9281d203395\\run.json');
+  const red = json(`evidence\\captures\\${genuineSlot}\\run.json`);
+  assert.equal(load.exitCode, 0);
+  assert.equal(tooling.exitCode, 1);
+  assert.equal(red.exitCode, 1);
+  assert.ok(load.finishedAtUtc < red.startedAtUtc);
+  const output = zlib.gunzipSync(read(`evidence\\captures\\${genuineSlot}\\stdout.raw.gz`)).toString();
+  assert.match(output, /actual-stub-loaded/);
+  assert.match(output, /156\.0\.4314\.50/);
+  assert.match(output, /GA and preview still alias the same actual page/);
+  assert.match(output, /Both purported clients still reach one actual listener/);
+  assert.match(output, /no HTTP profile result/);
+  assert.equal((output.match(/name: 'AssertionError'/g) || []).length, 3);
+  assert.match(output, /actual-stub-cleanup.*"actualPageClosed":true.*"ownedListenerClosed":true/);
+  assert.doesNotMatch(output, /MODULE_NOT_FOUND|SyntaxError/);
+  for (const relative of ['capability\\C045\\C045.feature', 'capability\\C045\\evidence\\red\\clients.stub.cjs',
+    'capability\\C045\\evidence\\red\\browser.initial.snapshot.cjs']) {
+    const source = red.sources.find(entry => entry.path === relative);
+    assert.equal(source.rawCheckoutSha256, sha256(fs.readFileSync(path.join(repo, relative))));
+  }
+  const iac = json('evidence\\iac-na.json');
+  assert.equal(iac.status, 'N/A');
+  assert.equal(iac.orderedAfterGenuineBehavioralRed, genuineSlot);
+  assert.equal(iac.orderedBeforeFirstClientImplementation, true);
+  assert.equal(json('evidence\\header-budget-refinement.json').failedEvidencePreserved, true);
+});
+
+test('exact original C045/H008 acceptance and immutable accepted dependency provenance are retained', () => {
+  const snapshot = json('evidence\\accepted-source-snapshot.json');
+  assert.match(snapshot.source, /Local\\AppScalingStrategies_KanbanState_v1/);
+  assert.equal(snapshot.originalC045Source.length, 1);
+  assert.equal(snapshot.originalC045Source[0], '| C045 | H008 | S | Open isolated GA/preview client windows; verify identities and destinations remain separately observable. | C020, C041 |');
+  assert.equal(snapshot.originalH008Source.length, 1);
+  assert.match(snapshot.originalH008Source[0], /sample-client windows work without CLI setup/);
+  for (const id of ['C020', 'C041']) {
+    const card = snapshot.cards.find(entry => entry.id === id);
+    assert.equal(card.state, 'Done');
+    assert.equal(card.review.accepted, true);
+    assert.equal(card.review.browserObserved, true);
+  }
+  const original = snapshot.cards.find(entry => entry.id === 'C045');
+  assert.equal(original.kano, 'S');
+  assert.equal(original.kanoUnit, 'C045');
+  assert.equal(original.packet, 'H008');
+  assert.equal(original.owner, 'worker-C045');
+  const pins = json('evidence\\dependency-pins.json').pins;
+  assert.equal(verifyDependencies().length, pins.length);
+  for (const pin of pins) {
+    assert.match(pin.acceptedSourceRef, /^[a-f0-9]{40}$/);
+    const bytes = readDependency(pin.path);
+    assert.equal(sha256(bytes), pin.rawCheckoutSha256);
+    const canonical = spawnSync('git', ['hash-object', '--path', pin.path, '--stdin'], { cwd: repo, input: bytes });
+    assert.equal(canonical.status, 0);
+    assert.equal(canonical.stdout.toString().trim(), pin.gitCanonicalBlob);
+    const accepted = spawnSync('git', ['rev-parse', `${pin.acceptedSourceRef}:${pin.path.replaceAll('\\', '/')}`], { cwd: repo });
+    assert.equal(accepted.status, 0);
+    assert.equal(accepted.stdout.toString().trim(), pin.gitCanonicalBlob);
+  }
+});
+
+test('actual browser evidence retains actual references, HTTP/DOM bodies, independence and exact cleanup', () => {
+  const directory = `evidence\\captures\\${browserSlot}`;
+  const run = json(`${directory}\\run.json`);
+  const browser = json(`${directory}\\browser.json`);
+  assert.equal(run.exitCode, 0);
+  assert.equal(browser.outcome, 'passed');
+  assert.equal(browser.checks.length, 15);
+  assert.equal(browser.preflight.edge.status, 'Valid');
+  assert.equal(browser.preflight.edge.fileVersion, '156.0.4314.50');
+  assert.equal(browser.preflight.playwrightVersion, '1.56.1');
+  assert.equal(browser.preflight.helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
+  assert.notEqual(browser.clients.ga.actualURL, browser.clients.preview.actualURL);
+  assert.equal(browser.clients.ga.actualURL, browser.clients.ga.serverURL);
+  assert.equal(browser.clients.preview.actualURL, browser.clients.preview.serverURL);
+  assert.ok(browser.clients.ga.listenerPid > 0);
+  for (const key of ['awaitedFinally', 'pagesClosed', 'browsersDisconnected', 'listenersClosed']) assert.equal(browser.cleanup[key], true);
+  for (const client of ['ga', 'preview']) {
+    const screenshot = read(`${directory}\\${client}.png`);
+    assert.equal(sha256(screenshot), browser.clients[client].screenshot.sha256);
+    assert.equal(screenshot.length, browser.clients[client].screenshot.bytes);
+    assert.ok(browser.states[`${client}-dom`].includes('Training rehearsal - synthetic data - not a live Azure result'));
+    const response = browser.httpResponses.find(entry => entry.client === client && entry.status === 200 && entry.url.includes('/fixtures/'));
+    assert.ok(response);
+    assert.equal(sha256(Buffer.from(response.bodyText)), response.rawBodySha256);
+    assert.equal(response.headers.apiContract, 'getProfile/1');
+    assert.equal(response.cookieSent, false);
+    assert.equal(response.authorizationSent, false);
+    assert.equal(browser.serverAudit[client].entries.some(entry => entry.bodySha256 === response.rawBodySha256 && entry.status === response.status), true);
+  }
+  assert.equal(browser.nativeTargetQualified, false);
+  assert.equal(browser.productionNode24Validated, false);
+  assert.equal(browser.c041AuthorityExpanded, false);
+  for (const relative of ['capability\\C045\\server.cjs', 'capability\\C045\\clients.cjs',
+    'capability\\C045\\client.js', 'capability\\C045\\index.html', 'capability\\C045\\source-integrity.cjs']) {
+    assert.equal(run.sources.find(source => source.path === relative).rawCheckoutSha256, sha256(fs.readFileSync(path.join(repo, relative))));
+  }
+});
+
+test('normal capture refusal is exact, read-only and launches no selected test command', () => {
+  const directory = path.join(owned, 'evidence', 'captures');
+  const before = fs.readdirSync(directory).sort();
+  for (const value of ['', 'true', 'yes', '0', '01']) {
+    const environment = { ...process.env, CAPTURE_BROWSER_EVIDENCE: value };
+    delete environment.C045_CAPTURE_SLOT;
+    const run = spawnSync(process.execPath, [path.join(__dirname, 'capture.cjs'), 'green'], {
+      cwd: repo, encoding: 'utf8', timeout: 10000, env: environment
+    });
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /exact CAPTURE_BROWSER_EVIDENCE=1/);
+    assert.doesNotMatch(run.stdout, /TAP|listening|capture-started/);
+  }
+  assert.deepEqual(fs.readdirSync(directory).sort(), before);
+});
+
+test('final HTTP GREEN, actual CLI and normal read-only browser evidence are exact observations', () => {
+  const manifest = json('evidence.json');
+  const stage = name => manifest.sequence.find(entry => entry.stage === name);
+  const green = json(stage('final focused GREEN').run);
+  const greenOutput = zlib.gunzipSync(fs.readFileSync(path.join(owned, path.dirname(stage('final focused GREEN').run), 'stdout.raw.gz'))).toString();
+  assert.equal(green.exitCode, 0);
+  assert.match(greenOutput, /# tests 83/);
+  assert.match(greenOutput, /# pass 83/);
+  assert.match(greenOutput, /# fail 0/);
+  const cliStage = stage('actual bounded CLI');
+  const cli = json(cliStage.run);
+  assert.equal(cli.exitCode, 0);
+  assert.ok(Date.parse(cli.finishedAtUtc) - Date.parse(cli.startedAtUtc) >= 120000);
+  assert.ok(Date.parse(cli.finishedAtUtc) - Date.parse(cli.startedAtUtc) < 180000, 'This actual observed CLI run must have completed within its measured bounded envelope.');
+  const output = zlib.gunzipSync(read(path.join(path.dirname(cliStage.run), 'stdout.raw.gz'))).toString();
+  const events = output.trim().split(/\r?\n/).map(line => JSON.parse(line));
+  const opened = events.find(event => event.event === 'C045-actual-isolated-client-pages-open');
+  const closed = events.find(event => event.event === 'C045-exact-clients-closed');
+  assert.equal(opened.independentPages, true);
+  assert.equal(opened.independentContexts, true);
+  assert.ok(opened.pid > 0);
+  assert.notEqual(opened.clients.ga.actualURL, opened.clients.preview.actualURL);
+  for (const client of ['ga', 'preview']) {
+    assert.equal(new URL(opened.clients[client].actualURL).hostname, '127.0.0.1');
+    assert.equal(opened.clients[client].actualURL, opened.clients[client].serverURL);
+    assert.equal(opened.clients[client].listenerPid, opened.pid);
+    assert.equal(opened.clients[client].browserVersion, '156.0.4314.50');
+  }
+  assert.match(opened.browserPid, /not exposed/);
+  assert.equal(closed.pid, opened.pid);
+  assert.equal(closed.pagesClosed, true);
+  assert.equal(closed.listenersClosed, true);
+  const normalStage = stage('actual read-only normal browser command');
+  const normal = json(normalStage.run);
+  assert.equal(normal.exitCode, 0);
+  assert.equal(normal.evidenceReadOnly.identicalBytesAndModificationTimes, true);
+  assert.equal(normal.evidenceReadOnly.beforeSha256, normal.evidenceReadOnly.afterSha256);
+  assert.ok(normal.evidenceReadOnly.filesChecked > 30);
+  const normalOutput = zlib.gunzipSync(read(path.join(path.dirname(normalStage.run), 'stdout.raw.gz'))).toString();
+  assert.match(normalOutput, /"checks":15/);
+  assert.match(normalOutput, /"capture":"read-only; no evidence rewritten"/);
+  assert.match(normalOutput, /"listenersClosed":true/);
+  assert.match(normalOutput, /"browsersDisconnected":true/);
+});

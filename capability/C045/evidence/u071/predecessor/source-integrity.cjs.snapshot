@@ -1,0 +1,55 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+
+const root = path.resolve(__dirname, '..', '..');
+const fixedDependencies = Object.freeze([
+  'capability\\C001\\approved-contract.js', 'capability\\C001\\contract-guard.js',
+  'capability\\C020\\contract.js', 'capability\\C020\\profiles.cjs', 'capability\\C020\\inspector.js',
+  'capability\\C041\\accepted-catalog.js', 'capability\\C041\\host-policy.js',
+  'capability\\C041\\lesson-host.js', 'capability\\C041\\serve.cjs', 'capability\\C041\\index.html',
+  'testing\\browser\\isolated.cjs'
+]);
+const helperSha256 = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055';
+const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+
+function readRegular(relative) {
+  const expected = path.join(root, relative);
+  const actual = fs.realpathSync(expected);
+  const comparable = value => process.platform === 'win32' ? value.toLowerCase() : value;
+  if (comparable(actual) !== comparable(expected) || !fs.statSync(actual).isFile()) {
+    throw new Error('Only exact reviewed regular files are supported; redirected assets are refused.');
+  }
+  return fs.readFileSync(actual);
+}
+
+function readPins() {
+  const value = JSON.parse(readRegular('capability\\C045\\evidence\\dependency-pins.json'));
+  if (!Array.isArray(value.pins) || value.pins.length !== fixedDependencies.length
+    || fixedDependencies.some(relative => value.pins.filter(pin => pin.path === relative).length !== 1)) {
+    throw new Error('Exact reviewed dependency pins are unavailable.');
+  }
+  return value.pins;
+}
+
+function readDependency(relative) {
+  if (!fixedDependencies.includes(relative)) throw new Error('Not an approved fixed dependency.');
+  const pin = readPins().find(entry => entry.path === relative);
+  const bytes = readRegular(relative);
+  if (bytes.length !== pin.bytes || sha256(bytes) !== pin.rawCheckoutSha256
+    || (relative === 'testing\\browser\\isolated.cjs' && sha256(bytes) !== helperSha256)) {
+    throw new Error(`Reviewed dependency bytes changed: ${relative}. No silent repinning is allowed.`);
+  }
+  return bytes;
+}
+
+function verifyDependencies() {
+  return Object.freeze(fixedDependencies.map(relative => {
+    const bytes = readDependency(relative);
+    return Object.freeze({ path: relative, rawCheckoutSha256: sha256(bytes), bytes: bytes.length });
+  }));
+}
+
+module.exports = Object.freeze({ verifyDependencies, readDependency, readRegular, helperSha256, sha256 });

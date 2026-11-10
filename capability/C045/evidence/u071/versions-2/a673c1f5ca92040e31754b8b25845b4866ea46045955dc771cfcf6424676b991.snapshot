@@ -1,0 +1,34 @@
+'use strict';
+
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { guardOperation } = require(path.join(__dirname, '..', 'C001', 'contract-guard.js'));
+
+const expectedGates = Object.freeze({
+  C020: '2dc471daab3ffa202d83aba2df443e280cad3656',
+  C041: '286f3d7f261144ff165262107bb2b7afe749a754'
+});
+
+async function recheckConsent() {
+  if (process.platform !== 'win32') throw new Error('Only the reviewed Windows local tooling is supported.');
+  const executable = path.join(process.env.ProgramFiles, 'PowerShell', '7', 'pwsh.exe');
+  const result = spawnSync(executable, [
+    '-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'consent.ps1')
+  ], { cwd: path.resolve(__dirname, '..', '..'), encoding: 'utf8', timeout: 8000, maxBuffer: 32768, windowsHide: true });
+  if (result.error || result.status !== 0) throw new Error('Current C001 consent could not be read under the state mutex; no listener was started.');
+  let current;
+  try { current = JSON.parse(result.stdout.replace(/^\uFEFF/, '')); }
+  catch { throw new Error('Current consent is unreadable; no listener was started.'); }
+  const decision = await guardOperation('local.probe', current.approval);
+  if (!decision.allowed) throw new Error(`Current C001 local.probe denied: ${decision.reasons.map(reason => reason.code).join(', ')}.`);
+  if (!Array.isArray(current.gates) || current.gates.length !== 2 || Object.keys(expectedGates).some(id => {
+    const matching = current.gates.filter(gate => gate.id === id);
+    const gate = matching[0];
+    return matching.length !== 1 || gate.state !== 'Done' || gate.commit !== expectedGates[id]
+      || gate.tag !== `kanban/${id}/${gate.commit.slice(0, 12)}`
+      || ['accepted', 'focusedTestsPassed', 'browserObserved', 'remoteVerified'].some(key => gate[key] !== true);
+  })) throw new Error('Exact accepted C020/C041 prerequisites are unavailable; no listener was started.');
+  return Object.freeze({ allowed: true, action: decision.action, currentGates: Object.freeze(current.gates) });
+}
+
+module.exports = Object.freeze({ recheckConsent });

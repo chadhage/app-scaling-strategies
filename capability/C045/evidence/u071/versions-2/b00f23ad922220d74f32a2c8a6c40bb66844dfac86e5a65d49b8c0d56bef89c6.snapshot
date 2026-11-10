@@ -1,0 +1,237 @@
+'use strict';
+
+const http = require('node:http');
+const path = require('node:path');
+const { verifyDependencies, readDependency, readRegular, sha256 } = require('./source-integrity.cjs');
+
+verifyDependencies();
+const { recheckConsent } = require('./consent.cjs');
+const providers = require(path.join(__dirname, '..', 'C020', 'profiles.cjs'));
+const contract = require(path.join(__dirname, '..', 'C020', 'contract.js'));
+
+const lanes = Object.freeze({ ga: Object.freeze({ label: 'GA', implementation: 'v1' }),
+  preview: Object.freeze({ label: 'preview', implementation: 'v2' }) });
+const limits = Object.freeze({ startupMs: 5000, requestMs: 4000, ttlMs: 120000, maximumRequests: 256, maximumConnections: 16 });
+const csp = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; font-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+const permissions = 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-read=(), clipboard-write=(), fullscreen=(), display-capture=()';
+
+function optionsLifetime(options) {
+  if (options === undefined) return limits.ttlMs;
+  if (!options || typeof options !== 'object' || Array.isArray(options)
+    || ![Object.prototype, null].includes(Object.getPrototypeOf(options))) throw new TypeError('Only an own ttlMs data option is supported.');
+  const fields = Object.getOwnPropertyDescriptors(options);
+  const keys = Reflect.ownKeys(fields);
+  if (keys.some(key => key !== 'ttlMs' || !fields[key].enumerable || !Object.hasOwn(fields[key], 'value'))) {
+    throw new TypeError('Host, port, origin, profile, provider, stamp, consent and asset overrides are forbidden.');
+  }
+  const ttlMs = fields.ttlMs ? fields.ttlMs.value : limits.ttlMs;
+  if (!Number.isInteger(ttlMs) || ttlMs < 1000 || ttlMs > limits.ttlMs) throw new RangeError('Lifetime must be 1–120 seconds.');
+  return ttlMs;
+}
+
+function assets() {
+  const routes = new Map();
+  for (const [route, file, type] of [
+    ['/', 'index.html', 'text/html; charset=utf-8'],
+    ['/client.js', 'client.js', 'text/javascript; charset=utf-8'],
+    ['/client.css', 'client.css', 'text/css; charset=utf-8']
+  ]) routes.set(route, { bytes: readRegular(`capability\\C045\\${file}`), type });
+  routes.set('/c020-contract.js', { bytes: readDependency('capability\\C020\\contract.js'), type: 'text/javascript; charset=utf-8' });
+  routes.set('/c020-inspector.js', { bytes: readDependency('capability\\C020\\inspector.js'), type: 'text/javascript; charset=utf-8' });
+  return routes;
+}
+
+function scopeFor(client, origin, ttlMs) {
+  const lane = lanes[client];
+  return Object.freeze({
+    cardId: 'C045', mode: 'synthetic-loopback-client', client, label: lane.label,
+    implementation: lane.implementation, apiContract: contract.apiContract,
+    fixturePath: `/fixtures/${lane.implementation}/getProfile`, origin,
+    dataKind: 'synthetic', runtime: process.version, ttlMs,
+    identityVerified: false, previewEntitlementVerified: false, signedAttestation: false,
+    actualAzureGA: false, deploymentQualified: false, authorizationQualified: false,
+    productionRuntimeValidated: false, nativeTransportQualified: false,
+    liveAzureRuns: 0, authorizedCloudSpend: 0
+  });
+}
+
+async function startClient(client, options) {
+  if (arguments.length > 2 || typeof client !== 'string' || !Object.hasOwn(lanes, client)) {
+    throw new TypeError('Choose exactly ga or preview; these are synthetic local labels.');
+  }
+  const ttlMs = optionsLifetime(options);
+  verifyDependencies();
+  const routes = assets();
+  await recheckConsent();
+  let authority;
+  let deadline;
+  let closing;
+  let requestsUsed = 0;
+  let overLimit = 0;
+  const entries = [];
+  const fixturePath = `/fixtures/${lanes[client].implementation}/getProfile`;
+  const provider = client === 'ga' ? providers.getProfileV1 : providers.getProfileV2;
+  const server = http.createServer({ maxHeaderSize: 8192 }, (request, response) => {
+    const headers = {
+      'Cache-Control': 'no-store', 'Content-Security-Policy': csp, 'Permissions-Policy': permissions,
+      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY',
+      'X-C045-Client': client, 'X-C045-Scope': 'synthetic-local-readonly', Connection: 'close'
+    };
+    function send(status, value, type = 'application/json; charset=utf-8', extra = {}) {
+      const bytes = Buffer.isBuffer(value) ? value : Buffer.from(JSON.stringify(value));
+      const outgoing = { ...headers, 'Content-Type': type, 'Content-Length': bytes.length, ...extra };
+      if (entries.length < limits.maximumRequests) entries.push(Object.freeze({
+        sequence: requestsUsed, client, method: request.method, path: String(request.url).slice(0, 1024),
+        status, bodySha256: sha256(bytes), bytes: bytes.length,
+        implementationVersion: outgoing['X-C020-Implementation-Version'] || null,
+        deploymentStamp: outgoing['X-C020-Deployment-Stamp'] || null
+      }));
+      response.writeHead(status, outgoing);
+      response.end(request.method === 'HEAD' ? undefined : bytes);
+    }
+    function fail(status, code, message, extra) {
+      send(status, { error: { code, message }, dataKind: 'synthetic', localOnly: true }, undefined, extra);
+    }
+    try {
+      requestsUsed++;
+      if (requestsUsed > limits.maximumRequests) {
+        overLimit++;
+        return fail(429, 'REQUEST_LIMIT', 'This bounded local client request allowance is exhausted.');
+      }
+      if (request.socket.remoteAddress !== '127.0.0.1' || request.headers.host !== authority) {
+        return fail(421, 'OWN_LISTENER_REQUIRED', 'Only this actual literal IPv4 loopback listener is supported.');
+      }
+      const rawNames = request.rawHeaders.filter((_value, index) => index % 2 === 0).map(name => name.toLowerCase());
+      if (['host', 'origin', 'content-length'].some(name => rawNames.filter(value => value === name).length > 1)) {
+        return fail(400, 'DUPLICATE_AUTHORITY', 'Duplicate authority or body headers are forbidden.');
+      }
+      if (request.headers.origin !== undefined && request.headers.origin !== `http://${authority}`) {
+        return fail(403, 'FOREIGN_ORIGIN', 'Foreign and opaque origins are refused.');
+      }
+      if (!['GET', 'HEAD'].includes(request.method)) return fail(405, 'READ_ONLY', 'Only fixed GET/HEAD requests are supported.', { Allow: 'GET, HEAD' });
+      if (request.headers['transfer-encoding'] !== undefined
+        || (request.headers['content-length'] !== undefined && request.headers['content-length'] !== '0')) {
+        return fail(400, 'BODY_FORBIDDEN', 'Read-only client requests cannot contain a body.');
+      }
+      if (['cookie', 'authorization', 'proxy-authorization'].some(name => request.headers[name] !== undefined)) {
+        return fail(403, 'CREDENTIALS_FORBIDDEN', 'No cookie, authentication or credential session is supported.');
+      }
+      if (rawNames.some(name => name.startsWith('x-'))) {
+        return fail(400, 'OVERRIDE_FORBIDDEN', 'Caller-owned identity, implementation, destination and stamp headers are forbidden.');
+      }
+      if (typeof request.url !== 'string' || request.url.length > 512
+        || !/^\/[A-Za-z0-9/._?=-]*$/.test(request.url)
+        || /(?:^|\/)\.{1,2}(?:\/|$)|\/\//.test(request.url)) {
+        return fail(400, 'RAW_TARGET_FORBIDDEN', 'Only exact unencoded fixed local targets are supported.');
+      }
+      if (request.url === '/client.json') return send(200, scopeFor(client, `http://${authority}`, ttlMs));
+      const asset = routes.get(request.url);
+      if (asset) return send(200, asset.bytes, asset.type);
+      if (request.url === fixturePath || request.url.startsWith(`${fixturePath}?`)) {
+        const match = new RegExp(`^${fixturePath.replaceAll('/', '\\/')}\\?profileId=(synthetic-\\d{3})$`).exec(request.url);
+        if (!match) return fail(400, 'EXACT_PROFILE_QUERY_REQUIRED', 'Exactly one explicit unencoded synthetic-NNN profileId is required; overrides are forbidden.');
+        const result = provider({ profileId: match[1] });
+        return send(200, result, undefined, {
+          'X-C020-Api-Contract': result.apiContract,
+          'X-C020-Implementation-Version': result.stamp.implementationVersion,
+          'X-C020-Deployment-Stamp': result.stamp.deploymentStamp
+        });
+      }
+      return fail(404, 'FIXED_ROUTE_ONLY', 'No asset, provider or reviewed lesson is available at that target.');
+    } catch (error) {
+      if (error instanceof providers.FixtureError) return fail(error.status, error.code, error.message);
+      return fail(500, 'LOCAL_FIXTURE_UNAVAILABLE', 'No successful local profile observation was made.');
+    }
+  });
+  server.requestTimeout = limits.requestMs;
+  server.headersTimeout = limits.requestMs;
+  server.keepAliveTimeout = 1000;
+  server.maxConnections = limits.maximumConnections;
+  server.maxHeadersCount = 24;
+  server.maxRequestsPerSocket = 32;
+  server.on('clientError', (_error, socket) => socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'));
+  const close = () => {
+    if (!closing) closing = (async () => {
+      clearTimeout(deadline);
+      if (server.listening) {
+        const stopped = new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+        server.closeAllConnections();
+        await stopped;
+      }
+    })();
+    return closing;
+  };
+  try {
+    await new Promise((resolve, reject) => {
+      let expired = false;
+      const timer = setTimeout(() => { expired = true; reject(new Error('Owned loopback startup deadline exceeded.')); }, limits.startupMs);
+      function failed(error) { clearTimeout(timer); reject(error); }
+      server.once('error', failed);
+      server.listen(0, '127.0.0.1', () => {
+        clearTimeout(timer);
+        server.removeListener('error', failed);
+        if (expired) { close().catch(() => {}); return; }
+        authority = `127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+    deadline = setTimeout(() => { close().catch(() => { process.exitCode = 1; }); }, ttlMs);
+    deadline.unref();
+    return Object.freeze({ client, implementation: lanes[client].implementation, server, url: `http://${authority}/`, ttlMs, close,
+      audit: () => Object.freeze({ client, requestsUsed, overLimit, entries: Object.freeze([...entries]) }) });
+  } catch (error) {
+    await close();
+    throw error;
+  }
+}
+
+async function startPair(options) {
+  if (arguments.length > 1) throw new TypeError('Only a bounded lifetime option is supported.');
+  optionsLifetime(options);
+  const owned = {};
+  let closing;
+  const close = () => {
+    if (!closing) closing = (async () => {
+      const outcomes = await Promise.allSettled(Object.values(owned).map(client => client.close()));
+      const errors = outcomes.filter(outcome => outcome.status === 'rejected').map(outcome => outcome.reason);
+      if (errors.length) throw new AggregateError(errors, 'Exact owned listener cleanup failed.');
+    })();
+    return closing;
+  };
+  try {
+    owned.ga = await startClient('ga', options);
+    owned.preview = await startClient('preview', options);
+    return Object.freeze({ clients: Object.freeze(owned), close });
+  } catch (error) {
+    await close();
+    throw error;
+  }
+}
+
+async function cli() {
+  await recheckConsent();
+  if (process.argv.length !== 2) throw new Error('C045 server accepts no host, port, target, profile, stamp, identity or consent arguments.');
+  const pair = await startPair();
+  let timer;
+  let stop;
+  try {
+    console.log(JSON.stringify({ event: 'C045-owned-servers-listening', pid: process.pid,
+      actualBrowserWindows: 'UNKNOWN - this server CLI does not open browser clients',
+      urls: Object.fromEntries(Object.entries(pair.clients).map(([lane, client]) => [lane, client.url])),
+      ttlMs: limits.ttlMs, labelScope: 'GA/preview are synthetic local lanes, not identities or Azure destinations' }));
+    await new Promise(resolve => {
+      stop = () => resolve();
+      timer = setTimeout(stop, limits.ttlMs);
+      process.once('SIGINT', stop);
+      process.once('SIGTERM', stop);
+    });
+  } finally {
+    clearTimeout(timer);
+    if (stop) { process.removeListener('SIGINT', stop); process.removeListener('SIGTERM', stop); }
+    await pair.close();
+    console.log(JSON.stringify({ event: 'C045-owned-servers-closed', pid: process.pid, listenersClosed: Object.values(pair.clients).every(client => !client.server.listening) }));
+  }
+}
+
+module.exports = Object.freeze({ startClient, startPair, optionsLifetime, csp, permissions, limits });
+if (require.main === module) cli().catch(error => { console.error(error.message); process.exitCode = 1; });

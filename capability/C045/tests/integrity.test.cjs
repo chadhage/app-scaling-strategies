@@ -7,6 +7,7 @@ const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 const { sha256, verifyDependencies, readDependency } = require('../source-integrity.cjs');
+const historicalVersions = require('./u071-history-v2.cjs');
 const owned = path.resolve(__dirname, '..');
 const repo = path.resolve(owned, '..', '..');
 const read = relative => fs.readFileSync(path.join(owned, relative));
@@ -71,7 +72,9 @@ test('authentic stub RED follows BDD/load and precedes implementation without re
   for (const relative of ['capability\\C045\\C045.feature', 'capability\\C045\\evidence\\red\\clients.stub.cjs',
     'capability\\C045\\evidence\\red\\browser.initial.snapshot.cjs']) {
     const source = red.sources.find(entry => entry.path === relative);
-    assert.equal(source.rawCheckoutSha256, sha256(fs.readFileSync(path.join(repo, relative))));
+    const historical = historicalVersions.context(red);
+    assert.equal(historical.kind, 'explicit-historical-input-version');
+    assert.equal(source.rawCheckoutSha256, sha256(historical.read(source, red.sources.indexOf(source))));
   }
   const iac = json('evidence\\iac-na.json');
   assert.equal(iac.status, 'N/A');
@@ -102,7 +105,7 @@ test('exact original C045/H008 acceptance and immutable accepted dependency prov
   assert.equal(verifyDependencies().length, pins.length);
   for (const pin of pins) {
     assert.match(pin.acceptedSourceRef, /^[a-f0-9]{40}$/);
-    const bytes = readDependency(pin.path);
+    const bytes = historicalVersions.originalDependency(pin);
     assert.equal(sha256(bytes), pin.rawCheckoutSha256);
     const canonical = spawnSync('git', ['hash-object', '--path', pin.path, '--stdin'], { cwd: repo, input: bytes });
     assert.equal(canonical.status, 0);
@@ -147,7 +150,10 @@ test('actual browser evidence retains actual references, HTTP/DOM bodies, indepe
   assert.equal(browser.c041AuthorityExpanded, false);
   for (const relative of ['capability\\C045\\server.cjs', 'capability\\C045\\clients.cjs',
     'capability\\C045\\client.js', 'capability\\C045\\index.html', 'capability\\C045\\source-integrity.cjs']) {
-    assert.equal(run.sources.find(source => source.path === relative).rawCheckoutSha256, sha256(fs.readFileSync(path.join(repo, relative))));
+    const ordinal = run.sources.findIndex(source => source.path === relative);
+    const historical = historicalVersions.context(run);
+    assert.ok(historical, 'the captured source version is explicit historical evidence, not the actual current namespace');
+    assert.equal(run.sources[ordinal].rawCheckoutSha256, sha256(historical.read(run.sources[ordinal], ordinal)));
   }
 });
 

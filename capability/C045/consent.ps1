@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(5))
     if (-not $held) { throw 'Current consent mutex timed out.' }
-    $state = Get-Content -LiteralPath (Join-Path $root '.docs\wiki\flow-state.json') -Raw | ConvertFrom-Json
+    $state = Get-Content -LiteralPath (Join-Path $root '.docs\wiki\flow-state.json') -Raw | ConvertFrom-Json -AsHashtable
     $gates = @()
     foreach ($id in @('C020', 'C041')) {
         $cards = @($state.cards | Where-Object { $_.id -eq $id })
