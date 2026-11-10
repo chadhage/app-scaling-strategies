@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1478,
+  "revision": 1479,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T18:34:36.1959375Z",
+  "updatedAtUtc": "2026-11-10T20:08:32.8039495Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -218,13 +218,13 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
-    "L": 2,
+    "D": 14,
     "S": 177,
-    "D": 14
+    "L": 2
   },
   "reservations": {
-    "L": 0,
-    "D": 3
+    "D": 3,
+    "L": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -62108,14 +62108,14 @@
     },
     {
       "deliver": "Reserve bounded lease capacity and spend; reject concurrent over-admission without consuming another lease's reservation.",
-      "owner": null,
+      "owner": "worker-C011",
       "localScope": "Bounded capacity and spend reservations of fictional leases on one loopback server (Node built-ins), built on the accepted C009 and C010 fixtures imported read-only: one shared pool of synthetic capacity units and one spend ceiling in synthetic cost units with per-lease caps and a server-side price table, an atomic reserve decision at the single place where the reservation is committed (check and commit with no await between them, repeated where the effect is committed), concurrent over-admission refused with a typed code that names the bound and no effect, a refused or failed reservation never consuming, shrinking, evicting or releasing another lease reservation or the shared headroom, idempotent retries by key, release and expiry (injected clock) returning exactly what was reserved, a conservation invariant after every operation, every decision audited and visible to its owner and the operator only; fake identities and synthetic units only; no real service, no native Azure, no Entra, no real spend.",
-      "state": "To Do",
+      "state": "In Progress",
       "priority": "P0",
       "admittedAtUtc": "2026-11-07T02:07:03Z",
       "result": null,
       "blocker": null,
-      "readiness": false,
+      "readiness": true,
       "hints": [
         {
           "confidence": 4,
@@ -62192,12 +62192,30 @@
           "from": "In Progress",
           "kind": "actual-unblock-entry-gate",
           "previousOwner": "worker-C011"
+        },
+        {
+          "atUtc": "2026-11-10T20:08:31Z",
+          "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+          "actualDoneBeforePull": [
+            "C002",
+            "C010",
+            "U034",
+            "U068",
+            "U069"
+          ],
+          "sourcePublication": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "to": "In Progress",
+          "from": "To Do",
+          "by": "parent-execution-coordinator",
+          "kind": "actual-gates-done-original-reservation-repull",
+          "noCreditYet": true,
+          "reason": "Original C011 D unit only, never re-awarded for the two zero-credit unblocks. Remaining original self-review/resource64x8 and published-source acceptance must be honest; no code or historical chronology change is authorized."
         }
       ],
       "inheritedTechnicalEntryGate": "C002, C010",
-      "heartbeatUtc": null,
+      "heartbeatUtc": "2026-11-10T20:08:31Z",
       "parentLiveApplicationAuthorized": false,
-      "executionBudgetUntilUtc": "2026-11-10T15:46:40.4618788Z"
+      "executionBudgetUntilUtc": "2026-11-10T21:38:31.4213797Z"
     }
   ],
   "workers": [
@@ -63768,11 +63786,12 @@
       "reportedAtUtc": "2026-11-10T14:31:45Z"
     },
     {
-      "status": "checkpointed",
+      "status": "running",
       "id": "worker-C011",
       "cardId": "C011",
       "dispatchedAtUtc": "2026-11-07T02:07:28.822577Z",
-      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680"
+      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+      "reportedAtUtc": "2026-11-10T20:08:31Z"
     }
   ],
   "completedParents": [],
@@ -69588,6 +69607,40 @@
         "guards"
       ],
       "by": "execution-coordinator"
+    },
+    {
+      "atUtc": "2026-11-10T20:08:31Z",
+      "text": "Bound visible history separately from server-lifetime idempotency. At a full key ledger replay or conflict existing keys and refuse only new keys without effects.",
+      "tags": [
+        "source-bound",
+        "no-waiver"
+      ],
+      "confidence": 5,
+      "evidence": "capability/C011/README.md",
+      "id": "L-0293",
+      "by": "parent-execution-coordinator",
+      "kind": "design",
+      "status": "active",
+      "cards": [
+        "U068"
+      ]
+    },
+    {
+      "atUtc": "2026-11-10T20:08:31Z",
+      "text": "A valid-JavaScript initialization mutation needs a named startup/export contract, a passing pristine control and pinned modules. An initialization fault alone is not closure.",
+      "tags": [
+        "source-bound",
+        "no-waiver"
+      ],
+      "confidence": 5,
+      "evidence": "capability/C011/README.md",
+      "id": "L-0294",
+      "by": "parent-execution-coordinator",
+      "kind": "design",
+      "status": "active",
+      "cards": [
+        "U069"
+      ]
     }
   ],
   "coverageBaseline": {
@@ -72119,6 +72172,17 @@
         "C022"
       ],
       "id": "ACCEPT-20261108-C022"
+    },
+    {
+      "reason": "Exact shared C011 publication is remotely verified; both logical operational deliverables pass individually and close atomically. Original C011 re-enters only after their actual Done.",
+      "timestampUtc": "2026-11-10T20:08:31Z",
+      "id": "ACCEPT-20261110-U068-U069",
+      "by": "parent-execution-coordinator",
+      "cards": [
+        "U068",
+        "U069"
+      ],
+      "kanoCredit": 0
     }
   ],
   "verificationMaintenance": [
@@ -78938,11 +79002,11 @@
       "kind": "hardening",
       "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
       "readiness": false,
-      "state": "In Progress",
+      "state": "Done",
       "source": "<RUN>/results/C011-final.json actual obstacles and original orders/C011.md",
       "parentLiveApplicationAuthorized": false,
       "acceptance": "Same-lease same-key retries never reserve twice after retained-history eviction, release or expiry; different bodies still conflict and foreign leases remain independent. Maintain bounded per-lease replay identity with typed no-effect refusal for new unique keys at capacity, never silent eviction or unbounded memory. Preserve all old evidence and explicitly uncertified original chronology; a genuine fresh BDD/RED-before-reused-implementation attempt provides the new acceptance anchor.",
-      "heartbeatUtc": "2026-11-10T15:26:31Z",
+      "heartbeatUtc": "2026-11-10T20:08:31Z",
       "title": "C011 bounded server-lifetime idempotency beyond history eviction with an honest fresh TDD epoch",
       "executionBudgetUntilUtc": "2026-11-10T19:26:31.5660389Z",
       "hints": [
@@ -78960,6 +79024,20 @@
           ],
           "kind": "process",
           "evidence": "<RUN>/GO/C011-unblock-decision.json"
+        },
+        {
+          "kind": "design",
+          "cards": [
+            "U068",
+            "C011"
+          ],
+          "tags": [
+            "source-bound",
+            "no-waiver"
+          ],
+          "text": "Bound visible history separately from server-lifetime idempotency. At a full key ledger replay or conflict existing keys and refuse only new keys without effects.",
+          "evidence": "capability/C011/README.md",
+          "confidence": 5
         }
       ],
       "startedAtUtc": "2026-11-10T15:26:31Z",
@@ -78974,7 +79052,219 @@
         "C011"
       ],
       "id": "U068",
-      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff."
+      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff.",
+      "completedAtUtc": "2026-11-10T20:08:31Z",
+      "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+      "tag": "kanban/C011/cbd45aa88753",
+      "publishedUnder": "C011",
+      "result": "<RUN>/results/U068-parent-published.json",
+      "review": {
+        "cardId": "U068",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "remoteVerified": true,
+        "browserObserved": true,
+        "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+        "tag": "kanban/C011/cbd45aa88753",
+        "publicationScope": "C011",
+        "resultPath": "<RUN>/results/U068-parent-published.json",
+        "liveWhole": {
+          "tests": 314,
+          "passed": 314,
+          "assertions": 619143,
+          "zeroAssertionTests": []
+        },
+        "actualUnchangedLiveC009Consumer": {
+          "tests": 462,
+          "passed": 462
+        },
+        "independentCoverage": [
+          {
+            "file": "codes.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "config.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "contract.js",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "json.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "page.js",
+            "loaded": true,
+            "lines": 100,
+            "branches": 94.19,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "server.cjs",
+            "loaded": true,
+            "lines": 95.13,
+            "branches": 97.14,
+            "functions": 98.18,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "store.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 99.06,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          }
+        ],
+        "actualQualifiedBrowser": {
+          "major": 157,
+          "signature": "Valid",
+          "renderedRows": [
+            21,
+            21
+          ],
+          "allowed": 12,
+          "denied": 9,
+          "injectedFailureOwnCleanup": true
+        },
+        "currentMutation": {
+          "generated": 1839,
+          "freshlyExecuted": 1839,
+          "naturalNamedAssertions": 1815,
+          "specificPairedEquivalents": 24,
+          "invalid": 0,
+          "undecided": 0,
+          "sourceInputs": 98
+        },
+        "originalChronologyCertified": false,
+        "unavailableOldUiHelperCertified": false,
+        "qualifyingEpoch": "Retained actual new source-complete BDD/behavioral RED-before-reapplication with open reuse; never retrospective certification.",
+        "sourceFreezeSha256": "d94ba2ee411b9866218cdd3101daceb151d21391158237c547e3267e6c2c50fa",
+        "committedSource": {
+          "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "tag": "kanban/C011/cbd45aa88753",
+          "files": 5745,
+          "rawExact": 5638,
+          "qualifiedLf": 107,
+          "historicalExact": 5373,
+          "scopeExact": true,
+          "originalChronologyCertified": false
+        },
+        "readerCoordination": "<RUN>/GO/U068-U069-parent-apply.json",
+        "originalReservationConsumed": false,
+        "reviewedAtUtc": "2026-11-10T20:08:30.9Z"
+      },
+      "attemptHistory": [
+        null,
+        {
+          "atUtc": "2026-11-10T20:08:31Z",
+          "reason": "Both individual private/live/source/native/coverage/mutation/consumer/publication gates reviewed and remotely verified before either Done.",
+          "tag": "kanban/C011/cbd45aa88753",
+          "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "to": "Done",
+          "from": "In Progress",
+          "by": "parent-execution-coordinator",
+          "kind": "joint-independent-acceptance",
+          "kanoCredit": 0,
+          "cards": [
+            "U068",
+            "U069"
+          ]
+        }
+      ]
     },
     {
       "entryGate": "C002, C010, U034, U068",
@@ -78982,11 +79272,11 @@
       "kind": "hardening",
       "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
       "readiness": false,
-      "state": "In Progress",
+      "state": "Done",
       "source": "<RUN>/results/C011-final.json actual obstacles and original orders/C011.md",
       "parentLiveApplicationAuthorized": false,
       "acceptance": "Recompute the original systematic corpus against the final U068 source and complete every required position. Every valid variant is killed by a natural named assertion or has a specific runnable source-bound scoped equivalence; no survivors, undecided, unexecuted or timeout/module/syntax-fault kill credit. Preserve the prior incomplete54/15/1197 census and all actual streams as history; final completion/integrity tests and whole-source per-file85 gates must pass.",
-      "heartbeatUtc": "2026-11-10T15:26:31Z",
+      "heartbeatUtc": "2026-11-10T20:08:31Z",
       "title": "C011 strict current-source mutation and completion-proof closure",
       "executionBudgetUntilUtc": "2026-11-10T19:26:31.5702059Z",
       "hints": [
@@ -79004,6 +79294,20 @@
           ],
           "kind": "process",
           "evidence": "<RUN>/GO/C011-unblock-decision.json"
+        },
+        {
+          "kind": "design",
+          "cards": [
+            "U069",
+            "C011"
+          ],
+          "tags": [
+            "source-bound",
+            "no-waiver"
+          ],
+          "text": "A valid-JavaScript initialization mutation needs a named startup/export contract, a passing pristine control and pinned modules. An initialization fault alone is not closure.",
+          "evidence": "capability/C011/README.md",
+          "confidence": 5
         }
       ],
       "startedAtUtc": "2026-11-10T15:26:31Z",
@@ -79018,7 +79322,219 @@
         "C011"
       ],
       "id": "U069",
-      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff."
+      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff.",
+      "completedAtUtc": "2026-11-10T20:08:31Z",
+      "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+      "tag": "kanban/C011/cbd45aa88753",
+      "publishedUnder": "C011",
+      "result": "<RUN>/results/U069-parent-published.json",
+      "review": {
+        "cardId": "U069",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "remoteVerified": true,
+        "browserObserved": true,
+        "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+        "tag": "kanban/C011/cbd45aa88753",
+        "publicationScope": "C011",
+        "resultPath": "<RUN>/results/U069-parent-published.json",
+        "liveWhole": {
+          "tests": 314,
+          "passed": 314,
+          "assertions": 619143,
+          "zeroAssertionTests": []
+        },
+        "actualUnchangedLiveC009Consumer": {
+          "tests": 462,
+          "passed": 462
+        },
+        "independentCoverage": [
+          {
+            "file": "codes.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "config.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "contract.js",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "json.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 100,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "page.js",
+            "loaded": true,
+            "lines": 100,
+            "branches": 94.19,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "server.cjs",
+            "loaded": true,
+            "lines": 95.13,
+            "branches": 97.14,
+            "functions": 98.18,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          },
+          {
+            "file": "store.cjs",
+            "loaded": true,
+            "lines": 100,
+            "branches": 99.06,
+            "functions": 100,
+            "nestedExit": 0,
+            "summary": {
+              "tests": 211,
+              "pass": 211,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "failedTests": [],
+            "failures": []
+          }
+        ],
+        "actualQualifiedBrowser": {
+          "major": 157,
+          "signature": "Valid",
+          "renderedRows": [
+            21,
+            21
+          ],
+          "allowed": 12,
+          "denied": 9,
+          "injectedFailureOwnCleanup": true
+        },
+        "currentMutation": {
+          "generated": 1839,
+          "freshlyExecuted": 1839,
+          "naturalNamedAssertions": 1815,
+          "specificPairedEquivalents": 24,
+          "invalid": 0,
+          "undecided": 0,
+          "sourceInputs": 98
+        },
+        "originalChronologyCertified": false,
+        "unavailableOldUiHelperCertified": false,
+        "qualifyingEpoch": "Retained actual new source-complete BDD/behavioral RED-before-reapplication with open reuse; never retrospective certification.",
+        "sourceFreezeSha256": "d94ba2ee411b9866218cdd3101daceb151d21391158237c547e3267e6c2c50fa",
+        "committedSource": {
+          "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "tag": "kanban/C011/cbd45aa88753",
+          "files": 5745,
+          "rawExact": 5638,
+          "qualifiedLf": 107,
+          "historicalExact": 5373,
+          "scopeExact": true,
+          "originalChronologyCertified": false
+        },
+        "readerCoordination": "<RUN>/GO/U068-U069-parent-apply.json",
+        "originalReservationConsumed": false,
+        "reviewedAtUtc": "2026-11-10T20:08:30.905Z"
+      },
+      "attemptHistory": [
+        null,
+        {
+          "atUtc": "2026-11-10T20:08:31Z",
+          "reason": "Both individual private/live/source/native/coverage/mutation/consumer/publication gates reviewed and remotely verified before either Done.",
+          "tag": "kanban/C011/cbd45aa88753",
+          "commit": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "to": "Done",
+          "from": "In Progress",
+          "by": "parent-execution-coordinator",
+          "kind": "joint-independent-acceptance",
+          "kanoCredit": 0,
+          "cards": [
+            "U068",
+            "U069"
+          ]
+        }
+      ]
     },
     {
       "startedAtUtc": "2026-11-10T15:39:04Z",
