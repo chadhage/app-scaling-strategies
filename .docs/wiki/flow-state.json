@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1479,
+  "revision": 1480,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T20:08:32.8039495Z",
+  "updatedAtUtc": "2026-11-10T20:36:59.2905760Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -218,13 +218,13 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
+    "L": 2,
     "D": 14,
-    "S": 177,
-    "L": 2
+    "S": 177
   },
   "reservations": {
-    "D": 3,
-    "L": 0
+    "L": 0,
+    "D": 3
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -69641,6 +69641,57 @@
       "cards": [
         "U069"
       ]
+    },
+    {
+      "cards": [
+        "U054"
+      ],
+      "atUtc": "2026-11-10T20:36:56Z",
+      "status": "active",
+      "evidence": "capability/C041/U054.md",
+      "by": "parent-execution-coordinator",
+      "text": "Pin both raw and CRLF-to-LF asset forms and observe actual browser response bytes. Accept no changed semantic byte and never silently repin.",
+      "id": "L-0295",
+      "kind": "design",
+      "tags": [
+        "source-forms",
+        "no-waiver"
+      ],
+      "confidence": 5
+    },
+    {
+      "cards": [
+        "U070"
+      ],
+      "atUtc": "2026-11-10T20:36:56Z",
+      "status": "active",
+      "evidence": "capability/C059/U070.md",
+      "by": "parent-execution-coordinator",
+      "text": "Audit old captures against their exact immutable source versions and verify the actual current namespace separately; a historical view is never current filesystem proof.",
+      "id": "L-0296",
+      "kind": "design",
+      "tags": [
+        "source-forms",
+        "no-waiver"
+      ],
+      "confidence": 5
+    },
+    {
+      "cards": [
+        "U071"
+      ],
+      "atUtc": "2026-11-10T20:36:56Z",
+      "status": "active",
+      "evidence": "capability/C045/U071.md",
+      "by": "parent-execution-coordinator",
+      "text": "Preserve legitimate case-distinct JSON keys when reading the whole ledger. Keep exact prerequisite/output/mutex behavior and bind every approved dependency form.",
+      "id": "L-0297",
+      "kind": "design",
+      "tags": [
+        "source-forms",
+        "no-waiver"
+      ],
+      "confidence": 5
     }
   ],
   "coverageBaseline": {
@@ -72183,6 +72234,18 @@
         "U069"
       ],
       "kanoCredit": 0
+    },
+    {
+      "cards": [
+        "U054",
+        "U070",
+        "U071"
+      ],
+      "id": "ACCEPT-20261110-U054-U070-U071",
+      "kanoCredit": 0,
+      "reason": "Three individually qualified producer/consumer scopes published through unchanged approved routes; all three become Done atomically, no repeated C059/C045 or new S/D credit.",
+      "by": "parent-execution-coordinator",
+      "timestampUtc": "2026-11-10T20:36:56Z"
     }
   ],
   "verificationMaintenance": [
@@ -78921,7 +78984,7 @@
       "id": "U054",
       "owner": "worker-U054",
       "kanoCredit": 0,
-      "heartbeatUtc": "2026-11-10T15:39:04Z",
+      "heartbeatUtc": "2026-11-10T20:36:56Z",
       "kind": "hardening",
       "readiness": false,
       "title": "C041 lesson assets: serve() verifyAsset accepts the LF-normalized form of each pinned asset (record raw and LF like the import pins) so a Linux or LF checkout can start the service of every consumer",
@@ -78929,7 +78992,7 @@
       "executionBudgetUntilUtc": "2026-11-10T19:39:04.6053453Z",
       "coverage": "85/85/85 per file on every first-party production file of capability/C041 that is changed or added.",
       "createdAtUtc": "2026-11-06T19:59:39Z",
-      "state": "In Progress",
+      "state": "Done",
       "parentLiveApplicationAuthorized": false,
       "acceptance": "In capability/C041 verifyAsset (called from serve.cjs, and by C059 server.cjs loadAssets) accepts a lesson asset whose raw SHA-256 OR whose CRLF-to-LF canonical SHA-256 equals the pin, the catalog records both hashes for each of the 8 pinned lesson assets, a tampered asset (a changed byte in either line-ending form) is still refused by name and a test per branch proves it; the services of C041 and of its consumers (C059 and any other importer) start from a git-archive tree whose text files were converted to LF, proved by running the service-starting suites of C041 and C059 in an LF tree; the changes reach the sealed card only through a chained append-only addendum or NEW files without editing a pinned file in place; per-file 85/85/85 still holds for every changed production file.",
       "serves": "C041",
@@ -78945,6 +79008,19 @@
           "confidence": 5,
           "text": "C041 is an accepted sealed card: amend only through the addendum chain (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). PUBLISHER ROUTE (check the map of the publisher BEFORE you order a worker to use it: the U040 order named the wrong one): C041 (class S) is NOT in the closed map of publish-ext.ps1 and has no GO file, but it IS in the map of the legacy publish.ps1 (localCapabilityClasses: C041='S'): publish with the legacy publisher, `publish.ps1 -CardId C041 -WorkerId worker-U054 -Paths ... -Message '[C041][S] U054 ...'`, one amendment commit. Add no local Windows user name and no session id to any added file (rule 15).",
           "evidence": "orders/U032.md; orders/_CONTROLLER-UPDATE.md rule 15; .git/kanban-orchestrator/publish.ps1 line 24"
+        },
+        {
+          "kind": "design",
+          "cards": [
+            "U054"
+          ],
+          "tags": [
+            "source-forms",
+            "no-waiver"
+          ],
+          "text": "Pin both raw and CRLF-to-LF asset forms and observe actual browser response bytes. Accept no changed semantic byte and never silently repin.",
+          "evidence": "capability/C041/U054.md",
+          "confidence": 5
         }
       ],
       "lineage": "OP-C041-LF-ASSETS",
@@ -78987,6 +79063,22 @@
           "to": "In Progress",
           "batchId": "U054-C041-C059-C045-producer-closure-20261110",
           "atUtc": "2026-11-10T15:39:04Z"
+        },
+        {
+          "cards": [
+            "U054",
+            "U070",
+            "U071"
+          ],
+          "kanoCredit": 0,
+          "atUtc": "2026-11-10T20:36:56Z",
+          "commit": "9f28988e1e4b8d7a856e6f6f2888c7dce77e371b",
+          "by": "parent-execution-coordinator",
+          "from": "In Progress",
+          "reason": "Every member has separate causal RED, actual live suite/native/coverage/scope review and verified scoped publication before any member Done.",
+          "kind": "joint-independent-acceptance",
+          "to": "Done",
+          "tag": "kanban/C041/9f28988e1e4b"
         }
       ],
       "source": "reviews/C059.fix2.verdict.json (Q9, M2)",
@@ -78994,7 +79086,144 @@
       "entryGate": "C059 Done (its README states the limit until this item lands), U070, U071",
       "unblocks": [],
       "originalFunctionalExecutionBudgetUntilUtc": "2026-11-10T17:26:47.7191642Z",
-      "intertwinedBatch": "U054-C041-C059-C045-producer-closure-20261110"
+      "intertwinedBatch": "U054-C041-C059-C045-producer-closure-20261110",
+      "completedAtUtc": "2026-11-10T20:36:56Z",
+      "commit": "9f28988e1e4b8d7a856e6f6f2888c7dce77e371b",
+      "tag": "kanban/C041/9f28988e1e4b",
+      "publishedUnder": "C041",
+      "result": "<RUN>/results/U054-parent-published.json",
+      "review": {
+        "cardId": "U054",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "remoteVerified": true,
+        "browserObserved": true,
+        "commit": "9f28988e1e4b8d7a856e6f6f2888c7dce77e371b",
+        "tag": "kanban/C041/9f28988e1e4b",
+        "publicationScope": "C041",
+        "resultPath": "<RUN>/results/U054-parent-published.json",
+        "independentLiveWhole": {
+          "tests": 120,
+          "passed": 120,
+          "skipped": 0
+        },
+        "actualQualifiedCurrentNativeFixture": {
+          "tests": 1,
+          "passed": 1,
+          "ownOnlyCleanup": true
+        },
+        "sourceFreezeSha256": "0decfc6878377232b27e7e507fb7ed30fd6acf03c266f71684bd3ab178a053a1",
+        "exactChangedPaths": 60,
+        "committedSource": {
+          "card": "C041",
+          "commit": "9f28988e1e4b8d7a856e6f6f2888c7dce77e371b",
+          "tag": "kanban/C041/9f28988e1e4b",
+          "files": 94,
+          "reviewedChanges": 60,
+          "rawExact": 51,
+          "qualifiedLf": 43,
+          "scopeExact": true,
+          "coauthorNumericExactlyOnce": true
+        },
+        "productionScope": [
+          "serve.cjs",
+          "accepted-catalog.js"
+        ],
+        "causalReds": [
+          {
+            "capture": "private\\red-02\\red-02.json",
+            "manifestSha256": "496eb14cebde8cc31503d1db2de091888aa75cc6cb3ef07e171b548d675dd35e",
+            "tests": 44,
+            "failed": 35,
+            "actualNamedAssertionBlocks": 35,
+            "otherNamed": []
+          }
+        ],
+        "historicalAuthority": "Immutable historical input versions and actual current physical namespace are verified separately; no historical capture is re-labelled current.",
+        "oldResultsRawPinsAndSealsRewritten": 0,
+        "additionalCredit": 0,
+        "reviewedAtUtc": "2026-11-10T20:36:53.772Z",
+        "mutation": {
+          "cases": 10,
+          "proof": [
+            {
+              "id": "M01",
+              "sourceMutationSha256": "6d763828a76aaed9234b4868b0e66de030a97f9bf9bf361e7856c882675b6564",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 18,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M02",
+              "sourceMutationSha256": "37978d3136607f517d61c87c5281d2ca4e9f2497f04d627ddf61c11cae1c48cb",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 11,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M03",
+              "sourceMutationSha256": "581ae804e362af328a939bab66b97d6d18e100ab7aaf7f2525cf2362b74f3a84",
+              "historicalClassification": "killed-by-named-thrown-test-error",
+              "actualOriginalAssertions": 0,
+              "parentNamedAssertionSupplement": true
+            },
+            {
+              "id": "M04",
+              "sourceMutationSha256": "769f68b6e46277115c141a1a36b9a9b62f39b4d204e4ee01662abf98cf2fc8b4",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 18,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M05",
+              "sourceMutationSha256": "27f9a44ec09fa5b890f0ad80a43982f467c0a1b6fc3f0ce9cea150986817c6d6",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 1,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M06",
+              "sourceMutationSha256": "296e08c92495b029c16a4c569e54ed211b4fb90b608d4334c982505c0d4531e0",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 1,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M07",
+              "sourceMutationSha256": "b41201abde5c469c6a9ac10f638fe7e5a2eeaefe6fc5bc261e2cb194e1a3a30a",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 16,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M08",
+              "sourceMutationSha256": "826b97a0ec2e2f4aa692085d05a5655b0300224794a41510a2a1cce6357546aa",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 28,
+              "parentNamedAssertionSupplement": false
+            },
+            {
+              "id": "M09",
+              "sourceMutationSha256": "f00a3bd55bc50ae083048ac221a75fae643566a1e2cf0f1dd21a3982e35eb69c",
+              "historicalClassification": "killed-by-named-thrown-test-error",
+              "actualOriginalAssertions": 0,
+              "parentNamedAssertionSupplement": true
+            },
+            {
+              "id": "M10",
+              "sourceMutationSha256": "88d5c01df5e8447442a5eca09ef7ac4ec68bdd4f4d1c3fc98cbdb9d6307b29e0",
+              "historicalClassification": "killed-by-named-assertion",
+              "actualOriginalAssertions": 3,
+              "parentNamedAssertionSupplement": false
+            }
+          ],
+          "undecided": 0,
+          "policy": "Eight original named assertions plus two independently executed exact named assertion supplements. The old two named thrown-test classifications remain unchanged history."
+        }
+      }
     },
     {
       "entryGate": "C002, C010, U034, U069",
@@ -79564,10 +79793,23 @@
           ],
           "text": "Actual separate consumer scope, not a waiver. Exact old/new producer witnesses, historical versus actual-current checks, no unknown hashes or skipped assertions; all three batch members need individual proof and atomic parent acceptance.",
           "confidence": 5
+        },
+        {
+          "kind": "design",
+          "cards": [
+            "U070"
+          ],
+          "tags": [
+            "source-forms",
+            "no-waiver"
+          ],
+          "text": "Audit old captures against their exact immutable source versions and verify the actual current namespace separately; a historical view is never current filesystem proof.",
+          "evidence": "capability/C059/U070.md",
+          "confidence": 5
         }
       ],
       "coverage": "Every changed/added first-party production file individually85/85/85; unloaded0. Consumer tooling-only N/A requires explicit diff.",
-      "state": "In Progress",
+      "state": "Done",
       "kanoCredit": 0,
       "source": "<RUN>/results/U054-final.json actual consumer obstacles",
       "entryGate": "C059, C045, U054",
@@ -79576,9 +79818,91 @@
       "parentLiveApplicationAuthorized": false,
       "owner": "worker-U070",
       "agentId": "31693848-7789-47dc-bceb-35700370f690",
-      "heartbeatUtc": "2026-11-10T15:39:04Z",
+      "heartbeatUtc": "2026-11-10T20:36:56Z",
       "tdd": "Retain the actual final-consumer-pin-red-03 and freeze refusals as genuine pre-bridge assertion REDs, plus positive and negative controls for exact old/new versions. Replay the same behavioral assertions GREEN, not a virtual current-reader or deleted test.",
-      "lineage": "OP-C059-C041-LF-PRODUCER-BRIDGE"
+      "lineage": "OP-C059-C041-LF-PRODUCER-BRIDGE",
+      "completedAtUtc": "2026-11-10T20:36:56Z",
+      "commit": "3bf036fbc45f7f710ea4de5e3404449485d753ac",
+      "tag": "kanban/C059/3bf036fbc45f",
+      "publishedUnder": "C059",
+      "result": "<RUN>/results/U070-parent-published.json",
+      "review": {
+        "cardId": "U070",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "remoteVerified": true,
+        "browserObserved": true,
+        "commit": "3bf036fbc45f7f710ea4de5e3404449485d753ac",
+        "tag": "kanban/C059/3bf036fbc45f",
+        "publicationScope": "C059",
+        "resultPath": "<RUN>/results/U070-parent-published.json",
+        "independentLiveWhole": {
+          "tests": 931,
+          "passed": 931,
+          "skipped": 0
+        },
+        "actualQualifiedCurrentNativeFixture": {
+          "tests": 1,
+          "passed": 1,
+          "ownOnlyCleanup": true
+        },
+        "sourceFreezeSha256": "0decfc6878377232b27e7e507fb7ed30fd6acf03c266f71684bd3ab178a053a1",
+        "exactChangedPaths": 54,
+        "committedSource": {
+          "card": "C059",
+          "commit": "3bf036fbc45f7f710ea4de5e3404449485d753ac",
+          "tag": "kanban/C059/3bf036fbc45f",
+          "files": 1901,
+          "reviewedChanges": 54,
+          "rawExact": 1901,
+          "qualifiedLf": 0,
+          "scopeExact": true,
+          "coauthorNumericExactlyOnce": true
+        },
+        "productionScope": [],
+        "causalReds": [
+          {
+            "capture": "private\\u070-producers-red-01\\u070-producers-red-01.json",
+            "manifestSha256": "33527b6a09b96c9f61969f753a08cb2a8e2e3a1a735ecb48c66926ea1aad78a0",
+            "tests": 19,
+            "failed": 10,
+            "actualNamedAssertionBlocks": 10,
+            "otherNamed": []
+          }
+        ],
+        "historicalAuthority": "Immutable historical input versions and actual current physical namespace are verified separately; no historical capture is re-labelled current.",
+        "oldResultsRawPinsAndSealsRewritten": 0,
+        "additionalCredit": 0,
+        "reviewedAtUtc": "2026-11-10T20:36:53.788Z",
+        "productionUnchanged": {
+          "modules": 5,
+          "htmlCssImports": true,
+          "original94SourceFreeze": true,
+          "historicalInputChecks": 5743
+        }
+      },
+      "attemptHistory": [
+        null,
+        {
+          "cards": [
+            "U054",
+            "U070",
+            "U071"
+          ],
+          "kanoCredit": 0,
+          "atUtc": "2026-11-10T20:36:56Z",
+          "commit": "3bf036fbc45f7f710ea4de5e3404449485d753ac",
+          "by": "parent-execution-coordinator",
+          "from": "In Progress",
+          "reason": "Every member has separate causal RED, actual live suite/native/coverage/scope review and verified scoped publication before any member Done.",
+          "kind": "joint-independent-acceptance",
+          "to": "Done",
+          "tag": "kanban/C059/3bf036fbc45f"
+        }
+      ]
     },
     {
       "startedAtUtc": "2026-11-10T15:39:04Z",
@@ -79608,10 +79932,23 @@
           ],
           "text": "Actual separate consumer scope, not a waiver. Exact old/new producer witnesses, historical versus actual-current checks, no unknown hashes or skipped assertions; all three batch members need individual proof and atomic parent acceptance.",
           "confidence": 5
+        },
+        {
+          "kind": "design",
+          "cards": [
+            "U071"
+          ],
+          "tags": [
+            "source-forms",
+            "no-waiver"
+          ],
+          "text": "Preserve legitimate case-distinct JSON keys when reading the whole ledger. Keep exact prerequisite/output/mutex behavior and bind every approved dependency form.",
+          "evidence": "capability/C045/U071.md",
+          "confidence": 5
         }
       ],
       "coverage": "Every changed/added first-party production file individually85/85/85; unloaded0. Consumer tooling-only N/A requires explicit diff.",
-      "state": "In Progress",
+      "state": "Done",
       "kanoCredit": 0,
       "source": "<RUN>/results/U054-final.json actual consumer obstacles",
       "entryGate": "C045, C059, U054",
@@ -79620,7 +79957,7 @@
       "parentLiveApplicationAuthorized": false,
       "owner": "worker-U071",
       "agentId": "31693848-7789-47dc-bceb-35700370f690",
-      "heartbeatUtc": "2026-11-10T18:13:10Z",
+      "heartbeatUtc": "2026-11-10T20:36:56Z",
       "tdd": "Archive the actual readDependency refusal of both U054 producer files before integration; specify exact old/new accepted and unknown/tampered refused branches first, then replay unchanged GREEN. Missing modules, environmental faults, skips and pin bypasses are not proof.",
       "lineage": "OP-C045-C041-LF-PRODUCER-BRIDGE",
       "productionScopeExtensions": [
@@ -79642,8 +79979,124 @@
           "by": "parent-execution-coordinator",
           "publicationPermission": false,
           "reason": "Actual remaining four C045 checks fail before current producer consent because valid full ledger has M1/m1. Exact one-flag parser compatibility is part of U071 current-consumer integration; PowerShell7 already declared, Pester5.7.1 installed. All whole-file metrics/negative controls remain mandatory; no fourth card, production gate deletion or new live permission."
+        },
+        {
+          "cards": [
+            "U054",
+            "U070",
+            "U071"
+          ],
+          "kanoCredit": 0,
+          "atUtc": "2026-11-10T20:36:56Z",
+          "commit": "ee7a2208c72c68499951495daa2b67e16f1a757a",
+          "by": "parent-execution-coordinator",
+          "from": "In Progress",
+          "reason": "Every member has separate causal RED, actual live suite/native/coverage/scope review and verified scoped publication before any member Done.",
+          "kind": "joint-independent-acceptance",
+          "to": "Done",
+          "tag": "kanban/C045/ee7a2208c72c"
         }
-      ]
+      ],
+      "completedAtUtc": "2026-11-10T20:36:56Z",
+      "commit": "ee7a2208c72c68499951495daa2b67e16f1a757a",
+      "tag": "kanban/C045/ee7a2208c72c",
+      "publishedUnder": "C045",
+      "result": "<RUN>/results/U071-parent-published.json",
+      "review": {
+        "cardId": "U071",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "remoteVerified": true,
+        "browserObserved": true,
+        "commit": "ee7a2208c72c68499951495daa2b67e16f1a757a",
+        "tag": "kanban/C045/ee7a2208c72c",
+        "publicationScope": "C045",
+        "resultPath": "<RUN>/results/U071-parent-published.json",
+        "independentLiveWhole": {
+          "tests": 197,
+          "passed": 197,
+          "skipped": 0
+        },
+        "actualQualifiedCurrentNativeFixture": {
+          "tests": 1,
+          "passed": 1,
+          "ownOnlyCleanup": true
+        },
+        "sourceFreezeSha256": "0decfc6878377232b27e7e507fb7ed30fd6acf03c266f71684bd3ab178a053a1",
+        "exactChangedPaths": 48,
+        "committedSource": {
+          "card": "C045",
+          "commit": "ee7a2208c72c68499951495daa2b67e16f1a757a",
+          "tag": "kanban/C045/ee7a2208c72c",
+          "files": 162,
+          "reviewedChanges": 48,
+          "rawExact": 113,
+          "qualifiedLf": 49,
+          "scopeExact": true,
+          "coauthorNumericExactlyOnce": true
+        },
+        "productionScope": [
+          "source-integrity.cjs",
+          "consent.ps1"
+        ],
+        "causalReds": [
+          {
+            "capture": "private\\u071-forms-red-01\\u071-forms-red-01.json",
+            "manifestSha256": "5004cdf52faced2f2a6d9b82e838c91a8e253f02f01608bf44f38974c0ae7eec",
+            "tests": 100,
+            "failed": 27,
+            "actualNamedAssertionBlocks": 26,
+            "otherNamed": [
+              {
+                "name": "only the eleven fixed dependency paths can be selected",
+                "assertion": false,
+                "code": "'ERR_TEST_FAILURE'"
+              }
+            ]
+          },
+          {
+            "capture": "private\\u071-consent-mixed-red-01\\u071-consent-mixed-red-01.json",
+            "manifestSha256": "9de9f54b44eaaa94224b31cafaf6da893e4002b0427ab5bed5cd21f6ca95d62c",
+            "tests": 2,
+            "failed": 2,
+            "actualNamedAssertionBlocks": 2,
+            "otherNamed": []
+          }
+        ],
+        "historicalAuthority": "Immutable historical input versions and actual current physical namespace are verified separately; no historical capture is re-labelled current.",
+        "oldResultsRawPinsAndSealsRewritten": 0,
+        "additionalCredit": 0,
+        "reviewedAtUtc": "2026-11-10T20:36:53.813Z",
+        "coverageMethod": {
+          "javascript": {
+            "file": "source-integrity.cjs",
+            "lines": 97.4,
+            "branches": 97.06,
+            "functions": 100
+          },
+          "powershell": {
+            "source": "consent.ps1",
+            "lines": 100,
+            "branchSides": 100,
+            "scriptEntries": 100,
+            "denominators": [
+              25,
+              12,
+              2
+            ],
+            "cases": 6,
+            "actualDebuggerTraceRows": 133,
+            "namedFunctionsDeclared": 0,
+            "method": "Exact-source debugger plus completed AST dictionary values; owned contended-mutex substitution only."
+          },
+          "historicalInputChecks": 421,
+          "original11DependencyPinsUnchanged": true,
+          "exactConsentDelta": "-AsHashtable only"
+        }
+      }
     },
     {
       "state": "In Progress",
