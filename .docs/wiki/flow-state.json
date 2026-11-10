@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1483,
+  "revision": 1484,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T22:06:44.3231899Z",
+  "updatedAtUtc": "2026-11-10T22:27:29.4883559Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -219,12 +219,12 @@
   },
   "kanoDone": {
     "L": 2,
-    "D": 14,
+    "D": 15,
     "S": 177
   },
   "reservations": {
     "L": 0,
-    "D": 3
+    "D": 2
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -60328,11 +60328,31 @@
           "kind": "process",
           "confidence": 5,
           "text": "The inherited piece returned to To Do with U034 as a real entry gate. Preserve its original worker ID, publication and dirty evidence; resume only after installed Edge 157 is genuinely requalified."
+        },
+        {
+          "kind": "test",
+          "tags": [
+            "refusal-oracle",
+            "reset"
+          ],
+          "confidence": 5,
+          "text": "Count typed refusals on the server under reset-prone floods. Bind writes and quiescence to the actual cohort; a minimum client-read count is not an invariant.",
+          "evidence": "capability/C014/tests/process-flood.test.cjs"
+        },
+        {
+          "kind": "design",
+          "tags": [
+            "redaction",
+            "overlap"
+          ],
+          "confidence": 5,
+          "text": "Mask the union of overlapping secret occurrences before clipping or shape masking. Test literal-plus form variants and padded numeric escapes by decoded value.",
+          "evidence": "capability/C014/canon.cjs"
         }
       ],
       "publication": {
-        "tag": "kanban/C014/0abdcb716c70",
-        "commit": "0abdcb716c708cc47873b594c4d88bac1f997607"
+        "tag": "kanban/C014/818318140c80",
+        "commit": "818318140c807413883d8c5286cdfd5b7988bdbd"
       },
       "parents": [
         "H003",
@@ -60341,290 +60361,217 @@
         "H012"
       ],
       "priority": "P0",
-      "blocker": "Rejected by independent review (rev-C014, third publication 0abdcb716c70): FOUR majors, G1 (tests/process-flood.test.cjs line 104 is flaky: the unexplained run-04 failure reproduced, 4 failures in 120 runs, the client counts typed 403 answers that the Windows reset after the server close discards), G2 (overlapping registered secrets leave a fragment: maskText of abcdefghijkl with secrets abcdefgh and efghijkl gives [redacted]ijkl, and the README step 2 and rows C56 and C58 are false), G3 (the README lists form-encoded plus-for-space as covered but a phone with a literal plus written +1+(555)+013-5244 is visible whole in the anonymous trace), G9 (zero-padded numeric entities and braced escapes are not decoded and the canon.cjs decoder bounds are unpinned: 20 regex mutants survive), plus seven minors (G4 to G8, G10, G11); the F1 refusal, F2 for the reported forms and F3 held; a third and last fix by w2-C014 under orders/R4-C014.md goes back to the same reviewer.",
+      "blocker": null,
       "packet": "H003",
       "id": "C014",
-      "state": "In Progress",
+      "state": "Done",
       "kano": "D",
       "owner": "worker-C014",
       "deliver": "Keep management secrets server-side and redact public evidence; seeded credentials/PII never reach browser exports.",
       "localScope": "Management secrets held and used only server-side, public evidence produced through one redaction function (allow-list of fields plus value-based masking), seeded FICTIONAL canary credentials and PII never reaching any public byte, browser storage, export, log, header or error in any covered encoding (raw, URL, base64, hex, JSON-escaped, HTML-escaped, case-folded, NFKC, chunk-split), built on the accepted C009 fixture imported read-only; no real credential or person, no real service, no native Azure, no Entra, no spend.",
       "result": {
-        "schemaVersion": 1,
+        "schema": "C014-parent-published-original-reservation-result/1",
         "cardId": "C014",
         "workerId": "worker-C014",
+        "actorId": "d622aefc-a1d2-43cf-b70a-0754817d911b",
         "outcome": "published",
-        "commit": "0abdcb716c708cc47873b594c4d88bac1f997607",
-        "tag": "kanban/C014/0abdcb716c70",
-        "round": "third fix after the independent REJECT of c7ec58a79f0d (three majors F1 to F3, minors F4 to F6, information F7); remote main, the tag and its peeled commit were compared by hand: all 0abdcb716c70",
-        "paths": [
-          "capability\\C014"
-        ],
-        "reviewFindingsAddressed": {
-          "F1": "the validator REFUSES every protected value shorter than MIN_SECRET (6; not lowered): NAME 6 to 61, connection host, user, password and database at least 6, secrets() lists only values of 6 or more; tests\\boundary.test.cjs sweeps min-1, min, min+1, max and max+1 of all 12 fields read from the README table and checks that whatever is accepted is held by value and shows in no public byte after a real flow (plus anchors, e-mail parts, plus-phone); RED evidence\\red\\red-03 (a 5-character name leaks to trace, runs and bundle), replay evidence\\green\\replay-04; named mutant X7",
-          "F2": "canon.encodedIn runs on the ORIGINAL text BEFORE any in-place replacement and sets aside, per secret, the verbatim occurrences of every registered secret that contains it; a plus-for-space view was added; any non-raw form masks the WHOLE text, so the README claim is now true and cited; the phone shape runs last (it chewed hex digits); tests\\fragments.test.cjs (every encoder x every vault secret, the reviewer cases, one-character forms, a raw e-mail with a lower-case name stays in place), canon.test.cjs; RED red-03, replay-04; named mutants R4 and X6",
-          "F3": "tests\\patterns.test.cjs: one test per shape (every quantifier, class member, alternative, escape, anchor and flag, exact outputs) and the shape ORDER; tests\\mutants.cjs generates regex-literal mutants (184 of redact.cjs PATTERNS, 45 quantifier and anchor mutants of the vault validator), all killed or listed equivalent; RED evidence\\red\\red-04 (both reviewer mutants survive every in-process suite, exit 1), replay evidence\\green\\replay-05 (both killed, exit 0); named mutants X2 and X3",
-          "F4": "(a) server.test.cjs serves /, /page.js and /style.css byte for byte (X8); (b) tests\\hostile.test.cjs bounds R15 by counted reads (a proxy that claims a million entries; X4) and tests\\fuzz.test.cjs no longer builds 2^32-1 arrays; (c) R29 by prototype fields and a polluted Object.prototype (X5), H12 by a command-role test (X9); (d) R02 by the token granularity case and the deleted-shape named mutant X1",
-          "F5": "README Honest limits rewritten: quoted-printable, separators, UTF-16LE base64, base64 of hex, reversed, ROT13, base32, base64 of URL-encoded, Cyrillic homoglyphs, parts of a token, key, password or credential, 6 and 7 character secrets, Punycode and non-ASCII not probed, generator gaps, the unexplained loop-04 failure",
-          "F6": "(a) tests\\readme.test.cjs: every figure of the prose carries a marker and is recomputed from the stored evidence, an untagged figure fails by name; a claims table with ids (98 rows) and a citation lint for pinned, every, whole, never, always; (b) tests\\integrity.test.cjs asks git once (cat-file --batch) and shares one scratch copy: 163 s to 56 s under the same heavy load (its imports test 115 s to 0.02 s), 5.7 s on a quiet machine (readme.test.cjs 2.6 s); (c) tests\\seal.cjs writes evidence\\seal.json LAST, integrity recomputes it (raw or LF) with tamper cases by name",
-          "F7": "no added file carries the local Windows user name or the session id (tests\\sanitized-run.cjs prints the repository path as <REPO> in failing transcripts, a subst drive was used for the commands); the five archived transcripts of the first build and publication that carry the user name are unchanged, sealed and listed in notChecked"
-        },
-        "focusedTests": {
-          "run": 155,
-          "passed": 155,
-          "failed": 0,
-          "command": "node capability\\C014\\tests\\suite.cjs (one test file per child process, 24 files, exit 0; evidence\\green\\suite-03; slowest files under load: sweep 26.0 s, fuzz 20.7 s, process-matrix-10 17.3 s, server 16.9 s, refusal 15.4 s; on a quiet machine the same suite took 76.9 s and refusal 11.6 s was the slowest) then node --test capability\\C014\\tests\\integrity.test.cjs capability\\C014\\tests\\readme.test.cjs (20 of 20 with the seal); fresh trees LF and CRLF: 175 of 175 each (evidence\\fresh\\lf-03, crlf-03)"
-        },
-        "coverage": [
-          {
-            "file": "canon.cjs",
-            "lines": 100,
-            "branches": 100,
-            "functions": 100
-          },
-          {
-            "file": "redact.cjs",
-            "lines": 100,
-            "branches": 100,
-            "functions": 100
-          },
-          {
-            "file": "vault.cjs",
-            "lines": 100,
-            "branches": 98.04,
-            "functions": 100
-          },
-          {
-            "file": "evidence.cjs",
-            "lines": 100,
-            "branches": 100,
-            "functions": 100
-          },
-          {
-            "file": "service.cjs",
-            "lines": 100,
-            "branches": 100,
-            "functions": 100
-          },
-          {
-            "file": "server.cjs",
-            "lines": 100,
-            "branches": 100,
-            "functions": 100
-          },
-          {
-            "file": "page.js",
-            "lines": 100,
-            "branches": 98.57,
-            "functions": 100
-          }
-        ],
-        "red": {
-          "archive": "capability\\C014\\evidence\\red\\red-03 (F1, F2: 10 of 10 fail on behavior) and red-04 (F3: both reviewer mutants survive every in-process suite, exit 1), on the bytes of c7ec58a79f0d, snapshots in evidence\\red\\fix3",
-          "command": "node capability\\C014\\tests\\sanitized-run.cjs -- --require .\\capability\\C014\\tests\\scratch-cwd.cjs --test --test-concurrency=1 capability\\C014\\evidence\\red\\fix3\\f1.snapshot.cjs capability\\C014\\evidence\\red\\fix3\\f2.snapshot.cjs ; node capability\\C014\\evidence\\red\\fix3\\f3-survivors.snapshot.cjs",
-          "exit": 1
-        },
-        "green": {
-          "command": "the same two commands replay the unchanged snapshot bytes against the final files: evidence\\green\\replay-04 (10 of 10 pass) and replay-05 (both reviewer mutants killed), plus replay-03 (the first RED, red-02 snapshots); whole suite evidence\\green\\suite-03",
-          "exit": 0
-        },
-        "browser": {
-          "observed": true,
-          "how": "tests\\browser.cjs through testing\\browser\\isolated.cjs openIsolatedLoopback under a heavy slot, evidence\\browser\\run-06 (exit 0): real Edge 156.0.4314.58, Microsoft-signed, session closed in finally; the real service and a forging server; DOM, storage, cookies, console and every request and response scanned for every canary; injected-failure cleanup proof evidence\\browser\\cleanup-03 (exit 0)"
-        },
-        "mutants": {
-          "generated": 831,
-          "killed": 813,
-          "crashKills": 0,
-          "equivalent": 18,
-          "undecided": 0,
-          "timeoutsCountedAsKills": 0,
-          "named": "37 of 37 killed (evidence\\mutants\\named-mutants-03.json)",
-          "regexLiteralMutants": "184 of redact.cjs and 45 of vault.cjs, inside the totals",
-          "files": "canon, vault and redact campaigns of the third fix inside a MUTATION SLOT (systematic-03-*.json); evidence, service, page and server were run again with the final tests (systematic-04-*.json, same results: 7 equivalents, 0 undecided); 2 workers, normal priority, a timeout is undecided and fails the run"
-        },
-        "loop": {
-          "capture": "evidence\\loop\\run-05 (120 of 120, 20 runs x 4 parallel x 4 burners started and stopped by PID, inside the single LOOP SLOT, slowest run 32.7 s, no file over the 60 s cap)",
-          "failedAttempt": "evidence\\loop\\run-04 failed 1 of 120 (process-flood, first run, while the named-mutant campaign ran); its report did not name the assertion (loop.cjs now records it); cause unexplained, capture retained, the loop was taken again on identical bytes"
-        },
-        "consumersRerun": [],
-        "hints": [
-          {
-            "kind": "trap",
-            "text": "Run the encoded-form check on the ORIGINAL text before replacing registered parts in place: a part inside an encoded whole leaves fragments. Test every encoder x every secret the vault lists.",
-            "evidence": "capability/C014/canon.cjs encodedIn, tests/fragments.test.cjs",
-            "confidence": 5,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "redaction",
-              "review"
-            ]
-          },
-          {
-            "kind": "decision",
-            "text": "A validator minimum must equal the registry minimum: refuse every protected value below MIN_SECRET and sweep min-1..max+1 of every field from a README table, so accepted implies held by value.",
-            "evidence": "capability/C014/tests/boundary.test.cjs",
-            "confidence": 5,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "vault",
-              "validation"
-            ]
-          },
-          {
-            "kind": "test",
-            "text": "Generate regex-literal mutants (quantifier bounds, class items, alternatives, escapes, anchors, flags) for every shape table; with the i flag keep one half of [A-Za-z] or its mutants are equivalent.",
-            "evidence": "capability/C014/tests/mutants.cjs, tests/patterns.test.cjs",
-            "confidence": 4,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "mutation",
-              "regex"
-            ]
-          },
-          {
-            "kind": "process",
-            "text": "Pin README claims: ids in a table, a lint that every paragraph with pinned/every/whole/never/always cites a row, and figures recomputed from evidence via markers (tests/readme.test.cjs).",
-            "evidence": "capability/C014/tests/readme.test.cjs",
-            "confidence": 4,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "readme",
-              "claims"
-            ]
-          },
-          {
-            "kind": "command",
-            "text": "An integrity test that spawns git 45 times took 2 minutes under load: ask once with git cat-file --batch and share one scratch copy per file.",
-            "evidence": "capability/C014/tests/integrity.test.cjs",
-            "confidence": 5,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "integrity",
-              "performance"
-            ]
-          },
-          {
-            "kind": "trap",
-            "text": "A loop under a mutation campaign and burners failed 1 of 120 once with no assertion text; make the loop record the neutral failing assertion so a flake can be diagnosed, and retain the failed capture.",
-            "evidence": "capability/C014/tests/loop.cjs, evidence/loop/run-04",
-            "confidence": 3,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "loop",
-              "flake"
-            ]
-          },
-          {
-            "kind": "command",
-            "text": "Seal last: node tests/seal.cjs writes evidence/seal.json (flag wx) over README, production, tests and the rest of the evidence; fresh-tree copies are made before it; integrity accepts raw or LF hashes.",
-            "evidence": "capability/C014/tests/seal.cjs",
-            "confidence": 4,
-            "cards": [
-              "C014"
-            ],
-            "tags": [
-              "seal",
-              "evidence"
-            ]
-          }
-        ],
-        "notes": "Production: canon.cjs (encodedIn replaces leaksIn, plus-for-space view), redact.cjs (check on the original text first, phone shape last, bearer class [a-z] under /i), vault.cjs (every protected value at least 6, connection parts checked); evidence.cjs, service.cjs, server.cjs, page.js, index.html and style.css are byte-identical to the first publication (checked by the integrity test against c7ec58a79f0d). The eight C009 production files are unchanged and pinned. New: tests boundary, fragments, patterns, hostile, readme, seal, suite, sanitized-run; the regex-literal generator in mutants.cjs; the README rewritten (claims ids and citations, figures by marker, Honest limits). Timing: every capture was taken while other agents and my own mutation campaign used the machine; quiet-machine figures were measured afterwards and are not archived.",
+        "commit": "818318140c807413883d8c5286cdfd5b7988bdbd",
+        "tag": "kanban/C014/818318140c80",
+        "actualPublicationWorkerId": "worker-U072",
+        "publicationReusedFromAcceptedU072": true,
+        "originalReservationOnly": true,
+        "newCreditUnits": 0,
+        "immutableWorkerResult": "<RUN>/results/C014-original-acceptance-v2.json",
+        "immutableWorkerResultSha256": "407ef7c857a82f26bbdb965425f32155de82f21e81f05b4bf9d1659c78fd3682",
         "selfReview": {
           "1": {
             "status": "pass",
-            "evidence": "tests\\health.test.cjs: two live servers in one process (separate secrets and state, closed in FIFO and in LIFO order, a repeated close, an unrelated neighbour untouched) and separate service objects; tests\\server.test.cjs: close ends an idle and an ACTIVE connection, may be called twice; unchanged by the third fix, green in evidence\\green\\suite-03 and in both fresh trees"
+            "evidence": [
+              "current-lf-01/result.json and current-crlf-01/result.json: actual unchanged health.test.cjs named two-live-server test verifies separate state/signing keys, FIFO, LIFO, repeated close, untouched neighbour; separate token identity test.",
+              "current-extra-01/result.json: supplemental three-instance closure/ephemeral-loopback observation also passes."
+            ],
+            "limits": [
+              "Untrusted process ownership is not inferred from PPID. No new browser process was started in original acceptance; current parent-native and owning-helper witnesses are separate."
+            ]
           },
           "2": {
             "status": "pass",
-            "evidence": "evidence\\fresh\\lf-03 and crlf-03: 175 of 175 tests each (the whole suite plus the integrity and README tests) in a scratch tree of git archive blobs (LF) and in the same tree converted to CRLF (tests\\fresh.cjs); imports.json pins record raw and LF hashes and the integrity test accepts either; the seal accepts raw or LF as well. The trees are copies of the working files, not a clone of the published commit (it did not exist yet)"
+            "evidence": [
+              "source-prepared.json and git-8183.tar: actual git archive of current scoped HEAD namespace tree,3590 exact blobs; C009 is the actual accepted f95 archive with unchanged canonical/raw import pins.",
+              "current-lf-01/result.json:206/206,0skip,120355 actual assertions; current-crlf-01/result.json:same206/206,0skip,120355 assertions; no vacuous callback."
+            ],
+            "limits": [
+              "Only explicitly pinned owning/qualifier files are imported; no false whole-HEAD dependency or copied-working-tree-as-archive claim. Historical U072 fresh203+3 named observations remain history, not substituted for these new zero-skip observations."
+            ]
           },
           "3": {
             "status": "pass",
-            "evidence": "tests\\integrity.test.cjs iterates every manifest of every capture (red, green incl. the three replays, coverage, browser, loop, fresh) and recomputes transcripts, sizes, inputs and exit codes, compares the two REDs of this fix with the blobs of c7ec58a79f0d, recomputes the mutation evidence and the seal over README, .feature, production, tests and the rest of the evidence; tests\\readme.test.cjs recomputes every prose figure from the stored evidence; tamper cases by name for captures, mutation evidence, seal and README figures and citations"
+            "evidence": [
+              "U072 verification:62 explicitly role-qualified public manifests; actual complete3589-entry seal plus its own file; nine private-document projections;14 public-transport tamper cases and35 post-freeze source/seal controls.",
+              "Actual latest committed3590-source archive satisfies unchanged verifySource/verifyCurrentSeal. All current public requirements physically exist."
+            ],
+            "limits": [
+              "Historical private inputs are explicit digest/role history, never assumed current filesystem files. Consistent verifier+authority rewriting requires the independent commit/tag anchor."
+            ]
           },
           "4": {
             "status": "pass",
-            "evidence": "tests\\mutants.cjs: every if condition and operand, operators, literals, single-line statements and (new) the regex literals of redact.cjs PATTERNS and the quantifiers and anchors of the vault validator: 831 mutants, 813 killed by a named failing test, 18 equivalent with a written proof each (evidence\\mutants\\equivalents.json, proofs by the author alone), 0 undecided, 37 of 37 named mutants killed; limits listed in the README (no arithmetic, strings, ?:, loops, multi-line statements, other regex literals, vault classes)"
+            "evidence": [
+              "Source-exact actual systematic1078:1043 natural named kills+35 current runnable paired equivalents; actual curated127:126 named kills+1 paired equivalent. No invalid/crash/timeout kill; no undecided.",
+              "Current generator includes canon regex and actual named tests close R4 decoder/shape/route/MIME/validator variants. Every actually consumed production/test/helper hash is source-exact."
+            ],
+            "limits": [
+              "This is retained actual campaign evidence against identical canonical source, not a new original-acceptance mutation campaign or a claim about all conceivable JavaScript mutations."
+            ]
           },
           "5": {
             "status": "pass",
-            "evidence": "tests\\returns.test.cjs (generic walker over every public return, strict mode) green in suite-03; the new canon.encodedIn returns a boolean and the redactor and vault exports are unchanged in shape"
+            "evidence": [
+              "returns.test.cjs generic strict-mode reachable-object walker covers19 actual public function-return families; later outputs compared against untouched control instances; vault contact aliasing separately checked."
+            ],
+            "limits": [
+              "Documented module-level mutable vocabularies/schemas/asset table are trusted in-process exports, not public function returns. RegExp lastIndex and caller-consumed Buffers are explicit exceptions; no arbitrary in-process plugin safety claim."
+            ]
           },
           "6": {
             "status": "pass",
-            "evidence": "tests\\boundary.test.cjs fails when the README table of the protected fields differs from the fields of the sweep, so a new protected field fails until it is compared; tests\\page.test.cjs compares the page vocabularies with the server schemas; the sweep enumerates routes, identities and places"
+            "evidence": [
+              "current-extra-01/result.json, self-review-extra.test.cjs SR6: complete16 real markup ids equal the independent literal compared set; all28 rendered cells and four header-row vocabularies; status/count wording and all static id text checked.",
+              "Existing published page.test.cjs closed shapes/vocabulary/request binding and forged-answer cases ran unchanged in both actual archive forms."
+            ],
+            "limits": [
+              "The oracle covers the actual16-id page and its actual table cells/headers; it does not claim arbitrary DOM/widget conformance or assistive-technology certification."
+            ]
           },
           "7": {
             "status": "pass",
-            "evidence": "tests\\fuzz.test.cjs (three fixed seeds) and tests\\hostile.test.cjs: arrays that claim a million entries are read at most as often as their limit allows, counted by a proxy and never by a clock (the 2^32-1 arrays of the fuzz pool are now 100,000 so that a removed limit is decided by a number, not by a hang); the limits of createVault, validateInput and errorSteps on a Proxy are pinned by name and stated in the README"
+            "evidence": [
+              "fuzz.test.cjs seeded holes/undefined/null/NaN/cycles/prototype keys/throwing traps; real schema-read counters and non-vacuous oracle controls.",
+              "final-work.test.cjs and final-canon.test.cjs actual capped/work witnesses; boundary sweep for every held protected field; current full suite120355 actual assertions."
+            ],
+            "limits": [
+              "Total public JSON/redactor boundary only. Trusted process-owner createVault input and internal validateInput/errorSteps are explicitly not total on arbitrary hostile Proxy/accessors; named stated-limits test pins this. No blanket JavaScript/runtime-input claim."
+            ]
           },
           "8": {
-            "status": "n/a",
-            "evidence": "no cancellable multi-await operation and no sequential phase defaults in this namespace (in-memory service, fixed server timeouts); the page's fetch arms a ten-second abort timer (tests\\page.test.cjs); unchanged by the third fix"
+            "status": "pass",
+            "evidence": [
+              "page.test.cjs arms four concurrent10000ms per-request abort budgets before fetch; clears each in finally; virtual timer covers an already-aborted fetch.",
+              "Prepared SR8 separately observes cancellation at both native fetch and native response-json awaits.",
+              "current-extra-01/result.json SR8 passes both actual fetch and response-json await cancellation contracts with virtual timer barriers; all four requests concurrent, timers cleared, no elapsed-time pass."
+            ],
+            "limits": [
+              "No caller-supplied arbitrary cancellation adapter or general workflow cancellation API. Four requests are concurrent, not four sequential40s phases. Browser lifecycle cancellation belongs to unchanged pinned owning helper."
+            ]
           },
           "9": {
             "status": "pass",
-            "evidence": "evidence\\browser\\run-06 (real Edge 156.0.4314.58, exit 0, heavy slot) and evidence\\browser\\cleanup-03 (injected failing assertion, the finally block still closed the real session, exit 0); tests\\integrity.test.cjs checks both and the hook"
+            "evidence": [
+              "Actual latest parent LIVE verification: qualified Microsoft-signed Edge157, real-service and forging-server observations, TWO invocation-owned cleanups plus injected failure; current3590-source scope verified.",
+              "U072 exact retained C014 browser-run07 and browser-cleanup04 source-bound witnesses and unchanged owning/qualifier Git imports."
+            ],
+            "limits": [
+              "Parent latest LIVE observation is the current end-run; historical C014 six-PASS observation is separately labelled reused, not relabeled new or confused with C011 native21. No unowned browser cleanup is authorized."
+            ]
           },
           "10": {
             "status": "pass",
-            "evidence": "the redactor is an allow-list per public kind with closed vocabularies and the shapes are a closed list; the vault validator accepts closed patterns with closed length bounds and refuses everything else with a typed ConfigError; the only deny-list is the naive stub of the RED"
+            "evidence": [
+              "redact.SCHEMAS closed keys/kinds and positive scalar vocabularies; server fixed route/credential/query/body tables; vault typed acceptance/refusal boundary.",
+              "full current206 assertions include hostile inputs, keys/arrays/errors, unknown shapes and all canary sink/encoding families."
+            ],
+            "limits": [
+              "No external az/cloud command interpreter exists in this local synthetic fixture."
+            ]
           },
           "11": {
             "status": "pass",
-            "evidence": "the failure of this line in the first publication (a claim that no test pinned and that was false) is answered mechanically for the five words: tests\\readme.test.cjs requires every README paragraph that says pinned, every, whole, never or always to cite a row of the 98-row claims table (a test that exists), and recomputes every figure of the prose; the whole README was also read once for other phrasings (all, nothing, no X can), which no test checks; one false number was found and fixed in that read (the flood reads were stated as half, the test asserts three quarters). Limits not probed are in the README (Honest limits)"
+            "evidence": [
+              "Current PUBLIC-TRANSPORT.md and transport-contract.json explicitly label unchanged README historical figures; readme.test.cjs checks claims/figures from actual retained evidence; source/seal pins cover all current prose.",
+              "Latest R4 G4/G5 wording and G1/G2/G3/G9 scope have named tests and explicit unsupported encodings."
+            ],
+            "limits": [
+              "No universal privacy claim for unsupported quoted-printable, separated characters, UTF16LE-base64, base64hex, reverse, ROT13, base32, homoglyphs or token-parts. New resource facts will be private result evidence, not an unauthorized README/seal edit."
+            ]
           },
           "12": {
             "status": "pass",
-            "evidence": "no assertion decides by a wall-clock bound: counts, ratios, CPU time against a naive control, counted reads; hang guards only. The loop is the controller's 20 runs x 4 parallel x 4 burners (evidence\\loop\\run-05, 120 of 120); the standing 64 x 8 loop was NOT run. evidence\\loop\\run-04 is a retained failed attempt (1 of 120, process-flood, unexplained, see notChecked)"
+            "evidence": [
+              "resource-64-v2-01/final.json: requested corrected protocol, exactly64TOTAL complete groups at concurrency8,384 files and576/576 actual leaves, zero additional standalone CPU burners.",
+              "resource-raw-census-audit-v2.json: all768 new original streams recomputed;576 actually executed non-vacuous test callbacks and actual assertion count;64 server-side12-write/quiescence facts; same-run canonical naive body/CPU controls and F24 bounded heap/closure facts.",
+              "Eight actual invocation-owned live job-root readiness barriers per batch, eight batches; --additional-cpu-burners=0 is the only admitted runner option. No production/source/leaf/negative-control change."
+            ],
+            "limits": [
+              "V1 is true separately preserved diagnostics but did not comply with the requested no-additional-burner protocol. Its earlier selfReview12 does not establish protocol qualification.",
+              "V2 starts zero standalone CPU spin workers; canonical naive/flood subject workloads remain unchanged. Durations are diagnostic only. No incomplete group, observed failure, timeout, skipped/vacuous case or extra row was selected out."
+            ]
           },
           "13": {
             "status": "pass",
-            "evidence": "CRLF run evidence\\fresh\\crlf-03; every test starts in a scratch cwd (tests\\scratch-cwd.cjs) so no stray file lands in the repository root; tests\\sanitized-run.cjs keeps the Windows user name out of failing transcripts; no user folders, device names or persistence. Not done: a bounded EBUSY retry in the cleanup of tests\\fresh.cjs"
+            "evidence": [
+              "Actual current Git archive uses exact LF blobs; live3492 raw+98 explicitly qualified CRLF forms; Node tests preload scratch-cwd and all new runtime/evidence paths are owned private paths.",
+              "No first-party C014 user-folder/Desktop resolution or user-supplied OS filename operation; source and recorder paths are controlled private paths."
+            ],
+            "limits": []
           },
           "14": {
             "status": "pass",
-            "evidence": "C009's lanes imported byte for byte and pinned; tests\\refusal.test.cjs, process-matrix(-10).test.cjs, process-flood.test.cjs (flood and the third hole [GET][GET][Expect: nonsense] on 128 sockets), pending-flood.test.cjs (F24) unchanged and green in suite-03, loop-05 and both fresh trees"
+            "evidence": [
+              "process-matrix.test.cjs and process-matrix-10.test.cjs: independent-server raw one-write pipelines, both framings, refusal/state-effect checks, Node-own parse/Expect/continue/clientError and preceding-request families.",
+              "process-flood.test.cjs includes128 sockets [GET][GET][Expect] and server-side typed403 write counter; pending-flood.test.cjs includes3x50000 requests under48MiB."
+            ],
+            "limits": [
+              "Protocol support is local HTTP/1.x. Raw h2 preface/Upgrade rejection probes do not claim HTTP/2, TLS or WebSocket service support."
+            ]
           },
           "15": {
             "status": "pass",
-            "evidence": "evidence\\red\\red-03 (F1, F2: 10 of 10 fail) and red-04 (F3: both reviewer mutants survive, exit 1) archived on the bytes of c7ec58a79f0d; evidence\\green\\replay-04 and replay-05 replay the unchanged snapshot bytes against the final files (pass; both mutants killed), replay-03 the first RED; every finding has a test that fails on the old bytes: boundary sweep and red-03 (F1), fragments tests and red-03 (F2), patterns tests and the named mutants X1 to X3 (F3), the asset, command-role, counted-read and prototype tests and X4 to X9 (F4)"
+            "evidence": [
+              "Current U072 actual clean producer family:13 tests against actual rejected bytes =>6pass+7 genuine assertion failures; byte-identical tests on current source=>13pass,29 genuine fixture inputs each, no manufactured README input.",
+              "Original first-publication immutable snapshots and both original reviewer-redact quantifier mutants retain actual replay witnesses; all current R4 findings map to named assertions or current runnable equivalence."
+            ],
+            "limits": [
+              "The first private runner barrier preflight failed before any C014 behavior or burner; protocol-selfcheck.json remains intact and protocol-selfcheck-02.json retains the corrected wrapper check with the same assertions. It is not a feature RED or a behavioral failure hidden as a pass."
+            ]
           },
           "16": {
             "status": "pass",
-            "evidence": "evidence\\green\\suite-03 is 155 of 155, both fresh trees are 175 of 175 and the final gate on the sealed tree was 155 of 155 plus 20 of 20 of the integrity and README tests: no test is committed red; every added file and every new transcript was scanned for the Windows user name and the session id (text files by search, transcripts after decompression): no hit; the only hits are the five archived transcripts of the earlier rounds, listed in notChecked"
+            "evidence": [
+              "U072 actual current frozen whole206/206 and parent latest LIVE206 with120355 assertions; current3590 Git-source archive exact; source-exact fresh/census/proof roles explicit.",
+              "All3365 proposed new/changed public files and2952 decoded streams scanned0 new local-identifier findings; five inherited tracked raw streams byte-exact at original paths."
+            ],
+            "limits": [
+              "No public file or decoded stream is added by this read-only original acceptance. Private original raw/campaign diagnostics remain private; no whole-history privacy claim."
+            ]
           }
         },
-        "notChecked": [
-          "a quiet machine for the captures: every capture was taken while other agents and my own mutation campaign used the machine (loaded timings); quiet figures were measured separately and are not archived: whole suite 76.9 s, integrity test 5.7 s, readme test 2.6 s",
-          "the cause of the single process-flood failure in evidence\\loop\\run-04 (1 of 120): its report did not record the assertion; the loop on the same bytes passed 120 of 120; a flake of that test under load is possible and was not reproduced",
-          "a clone of the published commit: the fresh trees are copies of the working files at the time (git archive of the eight C009 blobs only)",
-          "the standing 64 x 8 loop of the self-review: only the controller's 20 x 4 loop under 4 burners was run",
-          "mutation gaps: arithmetic operators, string literals, ?: conditions, while and for, multi-line statements, removed return values and default parameters, regular expressions outside redact PATTERNS and the quantifiers and anchors of the vault validator, the vault validator character classes; the 18 equivalence proofs were written by the author alone",
-          "transformations not covered and not probed (README Honest limits): quoted-printable, separators between characters, UTF-16LE base64, base64 of hex, reversed text, ROT13, base32, base64 of URL-encoded values, Cyrillic homoglyphs, parts of a token, key, password or credential, 6 and 7 character secrets, Punycode and non-ASCII canaries, base85, compression, XOR",
-          "README sentences that use other words than pinned, every, whole, never and always (all, nothing, no X can) have no mechanical citation check: they were read once by the author",
-          "five archived transcripts carry the Windows user name (evidence\\red\\red-01, red-02, browser\\run-01, run-02, green\\suite-01): immutable history from the earlier rounds, sealed with the rest",
-          "one real browser (Edge 156.0.4314.58, no other browser, no assistive technology); h2c, TLS, real signals and a redirected Desktop are inherited limits and were not probed",
-          "the seal cannot detect a consistent rewrite of the seal together with the files: the published commit and its tag are the anchor"
+        "hints": [
+          {
+            "kind": "test",
+            "tags": [
+              "refusal-oracle",
+              "reset"
+            ],
+            "confidence": 5,
+            "text": "Count typed refusals on the server under reset-prone floods. Bind writes and quiescence to the actual cohort; a minimum client-read count is not an invariant.",
+            "evidence": "capability/C014/tests/process-flood.test.cjs"
+          },
+          {
+            "kind": "design",
+            "tags": [
+              "redaction",
+              "overlap"
+            ],
+            "confidence": 5,
+            "text": "Mask the union of overlapping secret occurrences before clipping or shape masking. Test literal-plus form variants and padded numeric escapes by decoded value.",
+            "evidence": "capability/C014/canon.cjs"
+          }
         ]
       },
       "technicalEntryGate": "C001, C009, U034, U072",
-      "readiness": true,
+      "readiness": false,
       "claimedAtUtc": "2026-11-10T14:35:26Z",
-      "heartbeatUtc": "2026-11-10T22:06:42Z",
+      "heartbeatUtc": "2026-11-10T22:27:28Z",
       "attemptHistory": [
         {
           "verdictFile": "reviews/C014.verdict.json",
@@ -60739,7 +60686,500 @@
       ],
       "inheritedTechnicalEntryGate": "C001, C009",
       "parentLiveApplicationAuthorized": false,
-      "executionBudgetUntilUtc": "2026-11-10T22:54:57.4601684Z"
+      "executionBudgetUntilUtc": "2026-11-10T22:54:57.4601684Z",
+      "review": {
+        "cardId": "C014",
+        "accepted": true,
+        "focusedTestsPassed": true,
+        "browserObserved": true,
+        "remoteVerified": true,
+        "redObserved": true,
+        "coveragePassed": true,
+        "scopeVerified": true,
+        "commit": "818318140c807413883d8c5286cdfd5b7988bdbd",
+        "tag": "kanban/C014/818318140c80",
+        "publicationScope": "C014",
+        "resultPath": "<RUN>/results/C014-parent-original-published.json",
+        "originalUnitOnly": 1,
+        "originalRejectedPublicationNotAccepted": true,
+        "actualScmPublisherWorkerId": "worker-U072",
+        "accountableOriginalWorkerId": "worker-C014",
+        "fullCurrentAndLive": {
+          "tests": 206,
+          "passed": 206,
+          "actualAssertions": 120355,
+          "vacuous": 0,
+          "skipped": 0
+        },
+        "actualCommittedLfAndCrlf": {
+          "testsEach": 206,
+          "passedEach": 206,
+          "actualAssertionsEach": 120355,
+          "skippedEach": 0,
+          "supplemental": 3
+        },
+        "independentWholeProductionCoverage": [
+          {
+            "file": "canon.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 100,
+              "functions": 100
+            },
+            "tests": 58,
+            "pass": 58,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "redact.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 100,
+              "functions": 100
+            },
+            "tests": 82,
+            "pass": 82,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "vault.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 98.04,
+              "functions": 100
+            },
+            "tests": 41,
+            "pass": 41,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "evidence.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 100,
+              "functions": 100
+            },
+            "tests": 39,
+            "pass": 39,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "service.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 100,
+              "functions": 100
+            },
+            "tests": 29,
+            "pass": 29,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "server.cjs",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 100,
+              "functions": 100
+            },
+            "tests": 26,
+            "pass": 26,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          },
+          {
+            "file": "page.js",
+            "exit": 0,
+            "row": {
+              "lines": 100,
+              "branches": 98.57,
+              "functions": 100
+            },
+            "tests": 10,
+            "pass": 10,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "ok": true
+          }
+        ],
+        "mutation": {
+          "role": "source-exact reused actual campaign, not a fresh run",
+          "systematic": {
+            "generated": 1078,
+            "namedKills": 1043,
+            "pairedEquivalents": 35,
+            "undecided": 0
+          },
+          "curated": {
+            "role": "source-exact reused actual campaign, not a fresh run",
+            "total": 127,
+            "namedKills": 126,
+            "pairedEquivalent": 1,
+            "undecided": 0
+          }
+        },
+        "actualNative": "Signed qualified Edge157; real and forging server inspections, two authenticated own-only cleanups, separate post-open injected-failure cleanup.",
+        "currentConsumer": {
+          "actualParentCurrentHeadIntegration": 462,
+          "actualParentLive": 462,
+          "workerLf": 462,
+          "workerCrlf": 462,
+          "workerBare": {
+            "passed": 460,
+            "namedSkips": 2
+          },
+          "committedC011": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "exactC011SourceFiles": 5745,
+          "unchangedC009SourceFiles": 750
+        },
+        "all16ScopedSelfReview": {
+          "1": {
+            "status": "pass",
+            "evidence": [
+              "current-lf-01/result.json and current-crlf-01/result.json: actual unchanged health.test.cjs named two-live-server test verifies separate state/signing keys, FIFO, LIFO, repeated close, untouched neighbour; separate token identity test.",
+              "current-extra-01/result.json: supplemental three-instance closure/ephemeral-loopback observation also passes."
+            ],
+            "limits": [
+              "Untrusted process ownership is not inferred from PPID. No new browser process was started in original acceptance; current parent-native and owning-helper witnesses are separate."
+            ]
+          },
+          "2": {
+            "status": "pass",
+            "evidence": [
+              "source-prepared.json and git-8183.tar: actual git archive of current scoped HEAD namespace tree,3590 exact blobs; C009 is the actual accepted f95 archive with unchanged canonical/raw import pins.",
+              "current-lf-01/result.json:206/206,0skip,120355 actual assertions; current-crlf-01/result.json:same206/206,0skip,120355 assertions; no vacuous callback."
+            ],
+            "limits": [
+              "Only explicitly pinned owning/qualifier files are imported; no false whole-HEAD dependency or copied-working-tree-as-archive claim. Historical U072 fresh203+3 named observations remain history, not substituted for these new zero-skip observations."
+            ]
+          },
+          "3": {
+            "status": "pass",
+            "evidence": [
+              "U072 verification:62 explicitly role-qualified public manifests; actual complete3589-entry seal plus its own file; nine private-document projections;14 public-transport tamper cases and35 post-freeze source/seal controls.",
+              "Actual latest committed3590-source archive satisfies unchanged verifySource/verifyCurrentSeal. All current public requirements physically exist."
+            ],
+            "limits": [
+              "Historical private inputs are explicit digest/role history, never assumed current filesystem files. Consistent verifier+authority rewriting requires the independent commit/tag anchor."
+            ]
+          },
+          "4": {
+            "status": "pass",
+            "evidence": [
+              "Source-exact actual systematic1078:1043 natural named kills+35 current runnable paired equivalents; actual curated127:126 named kills+1 paired equivalent. No invalid/crash/timeout kill; no undecided.",
+              "Current generator includes canon regex and actual named tests close R4 decoder/shape/route/MIME/validator variants. Every actually consumed production/test/helper hash is source-exact."
+            ],
+            "limits": [
+              "This is retained actual campaign evidence against identical canonical source, not a new original-acceptance mutation campaign or a claim about all conceivable JavaScript mutations."
+            ]
+          },
+          "5": {
+            "status": "pass",
+            "evidence": [
+              "returns.test.cjs generic strict-mode reachable-object walker covers19 actual public function-return families; later outputs compared against untouched control instances; vault contact aliasing separately checked."
+            ],
+            "limits": [
+              "Documented module-level mutable vocabularies/schemas/asset table are trusted in-process exports, not public function returns. RegExp lastIndex and caller-consumed Buffers are explicit exceptions; no arbitrary in-process plugin safety claim."
+            ]
+          },
+          "6": {
+            "status": "pass",
+            "evidence": [
+              "current-extra-01/result.json, self-review-extra.test.cjs SR6: complete16 real markup ids equal the independent literal compared set; all28 rendered cells and four header-row vocabularies; status/count wording and all static id text checked.",
+              "Existing published page.test.cjs closed shapes/vocabulary/request binding and forged-answer cases ran unchanged in both actual archive forms."
+            ],
+            "limits": [
+              "The oracle covers the actual16-id page and its actual table cells/headers; it does not claim arbitrary DOM/widget conformance or assistive-technology certification."
+            ]
+          },
+          "7": {
+            "status": "pass",
+            "evidence": [
+              "fuzz.test.cjs seeded holes/undefined/null/NaN/cycles/prototype keys/throwing traps; real schema-read counters and non-vacuous oracle controls.",
+              "final-work.test.cjs and final-canon.test.cjs actual capped/work witnesses; boundary sweep for every held protected field; current full suite120355 actual assertions."
+            ],
+            "limits": [
+              "Total public JSON/redactor boundary only. Trusted process-owner createVault input and internal validateInput/errorSteps are explicitly not total on arbitrary hostile Proxy/accessors; named stated-limits test pins this. No blanket JavaScript/runtime-input claim."
+            ]
+          },
+          "8": {
+            "status": "pass",
+            "evidence": [
+              "page.test.cjs arms four concurrent10000ms per-request abort budgets before fetch; clears each in finally; virtual timer covers an already-aborted fetch.",
+              "Prepared SR8 separately observes cancellation at both native fetch and native response-json awaits.",
+              "current-extra-01/result.json SR8 passes both actual fetch and response-json await cancellation contracts with virtual timer barriers; all four requests concurrent, timers cleared, no elapsed-time pass."
+            ],
+            "limits": [
+              "No caller-supplied arbitrary cancellation adapter or general workflow cancellation API. Four requests are concurrent, not four sequential40s phases. Browser lifecycle cancellation belongs to unchanged pinned owning helper."
+            ]
+          },
+          "9": {
+            "status": "pass",
+            "evidence": [
+              "Actual latest parent LIVE verification: qualified Microsoft-signed Edge157, real-service and forging-server observations, TWO invocation-owned cleanups plus injected failure; current3590-source scope verified.",
+              "U072 exact retained C014 browser-run07 and browser-cleanup04 source-bound witnesses and unchanged owning/qualifier Git imports."
+            ],
+            "limits": [
+              "Parent latest LIVE observation is the current end-run; historical C014 six-PASS observation is separately labelled reused, not relabeled new or confused with C011 native21. No unowned browser cleanup is authorized."
+            ]
+          },
+          "10": {
+            "status": "pass",
+            "evidence": [
+              "redact.SCHEMAS closed keys/kinds and positive scalar vocabularies; server fixed route/credential/query/body tables; vault typed acceptance/refusal boundary.",
+              "full current206 assertions include hostile inputs, keys/arrays/errors, unknown shapes and all canary sink/encoding families."
+            ],
+            "limits": [
+              "No external az/cloud command interpreter exists in this local synthetic fixture."
+            ]
+          },
+          "11": {
+            "status": "pass",
+            "evidence": [
+              "Current PUBLIC-TRANSPORT.md and transport-contract.json explicitly label unchanged README historical figures; readme.test.cjs checks claims/figures from actual retained evidence; source/seal pins cover all current prose.",
+              "Latest R4 G4/G5 wording and G1/G2/G3/G9 scope have named tests and explicit unsupported encodings."
+            ],
+            "limits": [
+              "No universal privacy claim for unsupported quoted-printable, separated characters, UTF16LE-base64, base64hex, reverse, ROT13, base32, homoglyphs or token-parts. New resource facts will be private result evidence, not an unauthorized README/seal edit."
+            ]
+          },
+          "12": {
+            "status": "pass",
+            "evidence": [
+              "resource-64-v2-01/final.json: requested corrected protocol, exactly64TOTAL complete groups at concurrency8,384 files and576/576 actual leaves, zero additional standalone CPU burners.",
+              "resource-raw-census-audit-v2.json: all768 new original streams recomputed;576 actually executed non-vacuous test callbacks and actual assertion count;64 server-side12-write/quiescence facts; same-run canonical naive body/CPU controls and F24 bounded heap/closure facts.",
+              "Eight actual invocation-owned live job-root readiness barriers per batch, eight batches; --additional-cpu-burners=0 is the only admitted runner option. No production/source/leaf/negative-control change."
+            ],
+            "limits": [
+              "V1 is true separately preserved diagnostics but did not comply with the requested no-additional-burner protocol. Its earlier selfReview12 does not establish protocol qualification.",
+              "V2 starts zero standalone CPU spin workers; canonical naive/flood subject workloads remain unchanged. Durations are diagnostic only. No incomplete group, observed failure, timeout, skipped/vacuous case or extra row was selected out."
+            ]
+          },
+          "13": {
+            "status": "pass",
+            "evidence": [
+              "Actual current Git archive uses exact LF blobs; live3492 raw+98 explicitly qualified CRLF forms; Node tests preload scratch-cwd and all new runtime/evidence paths are owned private paths.",
+              "No first-party C014 user-folder/Desktop resolution or user-supplied OS filename operation; source and recorder paths are controlled private paths."
+            ],
+            "limits": []
+          },
+          "14": {
+            "status": "pass",
+            "evidence": [
+              "process-matrix.test.cjs and process-matrix-10.test.cjs: independent-server raw one-write pipelines, both framings, refusal/state-effect checks, Node-own parse/Expect/continue/clientError and preceding-request families.",
+              "process-flood.test.cjs includes128 sockets [GET][GET][Expect] and server-side typed403 write counter; pending-flood.test.cjs includes3x50000 requests under48MiB."
+            ],
+            "limits": [
+              "Protocol support is local HTTP/1.x. Raw h2 preface/Upgrade rejection probes do not claim HTTP/2, TLS or WebSocket service support."
+            ]
+          },
+          "15": {
+            "status": "pass",
+            "evidence": [
+              "Current U072 actual clean producer family:13 tests against actual rejected bytes =>6pass+7 genuine assertion failures; byte-identical tests on current source=>13pass,29 genuine fixture inputs each, no manufactured README input.",
+              "Original first-publication immutable snapshots and both original reviewer-redact quantifier mutants retain actual replay witnesses; all current R4 findings map to named assertions or current runnable equivalence."
+            ],
+            "limits": [
+              "The first private runner barrier preflight failed before any C014 behavior or burner; protocol-selfcheck.json remains intact and protocol-selfcheck-02.json retains the corrected wrapper check with the same assertions. It is not a feature RED or a behavioral failure hidden as a pass."
+            ]
+          },
+          "16": {
+            "status": "pass",
+            "evidence": [
+              "U072 actual current frozen whole206/206 and parent latest LIVE206 with120355 assertions; current3590 Git-source archive exact; source-exact fresh/census/proof roles explicit.",
+              "All3365 proposed new/changed public files and2952 decoded streams scanned0 new local-identifier findings; five inherited tracked raw streams byte-exact at original paths."
+            ],
+            "limits": [
+              "No public file or decoded stream is added by this read-only original acceptance. Private original raw/campaign diagnostics remain private; no whole-history privacy claim."
+            ]
+          }
+        },
+        "r4Findings": {
+          "G1": {
+            "tests": [
+              "process-flood.test.cjs",
+              "tests/child-server.cjs"
+            ],
+            "fact": "actual socket write/end counter12 after quiescence; every server-ended12; client status403-or0 without survivors count",
+            "historicReviewer72": {
+              "publicPath": "evidence/u072/captures/review-flood-final-01.json",
+              "publicManifestSha256": "690eeed429f8afa0ac42c0fd710568b35a5b7521f766528a255943df4a6ad077",
+              "privateOriginalManifestSha256": "f19aecc58dddfc609839b6507410f1f84e74da8e228688ca794a08b688215515",
+              "role": "source-exact reused execution",
+              "actualConsumedSourceInputs": 3,
+              "summary": {
+                "thresholdErrors": [],
+                "coverageRows": []
+              }
+            },
+            "current64": {
+              "role": "actual corrected zero-additional-burner64-at8, not history or v1 deviation",
+              "report": "resource-64-v2-01/final.json",
+              "rawAudit": "resource-raw-census-audit-v2.json",
+              "serverSideWrite12Groups": 64
+            }
+          },
+          "G2": {
+            "tests": [
+              "final-overlap.test.cjs",
+              "final-review.test.cjs",
+              "final-canon.test.cjs"
+            ],
+            "fact": "union of all verbatim occurrence intervals with indexOf advance1; encodedIn union set-aside; original-text whole encoding check first"
+          },
+          "G3": {
+            "tests": [
+              "final-review.test.cjs",
+              "final-encodings.test.cjs"
+            ],
+            "fact": "literal-plus-preserving naive spaces-to-plus needle and standard URL/form variants"
+          },
+          "G4": {
+            "tests": [
+              "readme.test.cjs",
+              "patterns.test.cjs"
+            ],
+            "fact": "unheld email prefix is everything before last64 local characters, with explicit shape limits"
+          },
+          "G5": {
+            "tests": [
+              "final-headers.test.cjs",
+              "server.test.cjs"
+            ],
+            "fact": "credential checking on every GET of an existing route; unknown routes typed404"
+          },
+          "G6": {
+            "tests": [
+              "final-review.test.cjs",
+              "boundary.test.cjs",
+              "final-canon.test.cjs"
+            ],
+            "fact": "validator lower initial/apostrophe/hyphen/underscore/token/key classes and K06/K07 join boundaries"
+          },
+          "G7": {
+            "tests": [
+              "final-tooling.test.cjs",
+              "final-census.test.cjs"
+            ],
+            "fact": "four environment early-return branches explicit named skips; current main206 no skip; historical fresh3 named self-reference skips"
+          },
+          "G8": {
+            "tests": [
+              "final-headers.test.cjs"
+            ],
+            "fact": "327-answer fixed-header table including body/method/media/Node-own answers"
+          },
+          "G9": {
+            "tests": [
+              "final-review.test.cjs",
+              "final-canon.test.cjs",
+              "final-encodings.test.cjs"
+            ],
+            "fact": "leading zeros stripped before significant-digit/value bound; padded7/8/12 and braced letters/base64url repeated substitutions; actual canon generated regex closure"
+          },
+          "G10": {
+            "tests": [
+              "server.test.cjs"
+            ],
+            "fact": "independent literal HTML/JS/CSS MIME expectations, not production table as oracle"
+          },
+          "G11": {
+            "tests": [
+              "final-edges.test.cjs"
+            ],
+            "fact": "negative route prefix/suffix requests and exact page id/limit bounds; runnable equivalence where range check subsumes regex form"
+          }
+        },
+        "requiredCurrentResource": {
+          "schema": "C014-parent-original-acceptance-verification/1",
+          "workerResultSha256": "407ef7c857a82f26bbdb965425f32155de82f21e81f05b4bf9d1659c78fd3682",
+          "commit": "818318140c807413883d8c5286cdfd5b7988bdbd",
+          "groups": 64,
+          "concurrency": 8,
+          "standaloneAdditionalBurners": 0,
+          "actualFiles": 384,
+          "actualNamedTests": 576,
+          "actualAssertions": 2624,
+          "rawStreams": 768,
+          "sourceFilesExact": 3590,
+          "actualArchiveSha256": "2a143b8df4902014f23f0b22ea9361f99b7afc2054d9e5843b8c1ca4e7b4668a",
+          "actualGitLfAndCrlfWhole": [
+            206,
+            206
+          ],
+          "wholeAssertionsEach": 120355,
+          "supplemental": 3,
+          "archiveProofSha256": "e75513d4bbee20f3b2498b1f3249508f64d05425a1a5442291555c3c90f83042",
+          "oldEightBurnerMethodDeviationRetained": true,
+          "all16ScopedAnswers": true,
+          "passed": true
+        },
+        "oldEightBurnerMethodDeviation": {
+          "retained": true,
+          "qualifying": false,
+          "oldResult": "<RUN>/results/C014-original-acceptance.json",
+          "allEightOwnedProcessesConfirmedStopped": true,
+          "noExtraCreditOrBudgetExtension": true
+        },
+        "committedSource": {
+          "commit": "818318140c807413883d8c5286cdfd5b7988bdbd",
+          "tag": "kanban/C014/818318140c80",
+          "files": 3590,
+          "reviewedChanges": 3365,
+          "rawExact": 3492,
+          "qualifiedLf": 98,
+          "inheritedIdentifierBlobsUnchanged": 5,
+          "scopeExact": true,
+          "coauthorNumericExactlyOnce": true,
+          "originalC014Credit": 0
+        },
+        "privacy": {
+          "newPaths": 3365,
+          "decodedStreams": 2952,
+          "newIdentifierFindings": 0,
+          "inheritedAlreadyTrackedRawUnchanged": 5,
+          "wholeHistoryPrivacyClaimed": false
+        },
+        "extraPrivateResourceEvidence": "<RUN>/recovery-20261109-r1424/c014-transport-review/original-resource-audit-parent-v2.json",
+        "limitations": [
+          "Arbitrary in-process JavaScript plugins, hostile process-owner config Proxy/getters and shared module-level export mutation are outside the closed public JSON boundary; explicit named stated-limit tests remain.",
+          "Unsupported encodings remain explicit: quoted-printable; character spacing/dots/dashes; UTF16LE-base64; base64hex; reverse; ROT13; base32; homoglyphs; token parts.",
+          "Positive HTTP/2/h2c/TLS/WebSocket operation, another browser or assistive technology, redirected Desktop and real OS signal behavior were not claimed. Raw HTTP/1.x rejection probes are distinct.",
+          "No fifteen-minute real-time token wait; token expiry is asserted with a controlled clock."
+        ],
+        "reviewedAtUtc": "2026-11-10T22:26:56.588Z"
+      },
+      "acceptedAtUtc": "2026-11-10T22:27:28Z"
     },
     {
       "kanoUnit": "C022",
@@ -63834,12 +64274,12 @@
       "reportedAtUtc": "2026-11-06T23:37:34.0163243Z"
     },
     {
-      "status": "running",
+      "status": "accepted",
       "id": "worker-C014",
       "agentId": "d622aefc-a1d2-43cf-b70a-0754817d911b",
       "cardId": "C014",
       "dispatchedAtUtc": "2026-11-06T14:52:15.2904209Z",
-      "reportedAtUtc": "2026-11-10T22:06:42Z"
+      "reportedAtUtc": "2026-11-10T22:27:28Z"
     },
     {
       "id": "worker-C022",
@@ -69773,6 +70213,40 @@
       "id": "L-0298",
       "atUtc": "2026-11-10T21:24:57Z",
       "status": "active"
+    },
+    {
+      "text": "Count typed refusals on the server under reset-prone floods. Bind writes and quiescence to the actual cohort; a minimum client-read count is not an invariant.",
+      "atUtc": "2026-11-10T22:27:28Z",
+      "tags": [
+        "refusal-oracle",
+        "reset"
+      ],
+      "status": "active",
+      "kind": "test",
+      "id": "L-0299",
+      "cards": [
+        "C014"
+      ],
+      "evidence": "capability/C014/tests/process-flood.test.cjs",
+      "confidence": 5,
+      "by": "execution-coordinator"
+    },
+    {
+      "text": "Mask the union of overlapping secret occurrences before clipping or shape masking. Test literal-plus form variants and padded numeric escapes by decoded value.",
+      "atUtc": "2026-11-10T22:27:28Z",
+      "tags": [
+        "redaction",
+        "overlap"
+      ],
+      "status": "active",
+      "kind": "design",
+      "id": "L-0300",
+      "cards": [
+        "C014"
+      ],
+      "evidence": "capability/C014/canon.cjs",
+      "confidence": 5,
+      "by": "execution-coordinator"
     }
   ],
   "coverageBaseline": {
@@ -72337,6 +72811,16 @@
       ],
       "kanoCredit": 0,
       "id": "ACCEPT-20261110-U072"
+    },
+    {
+      "timestampUtc": "2026-11-10T22:27:28Z",
+      "reason": "Independently rerun focused, raw RED, full production coverage, browser and scoped remote-publication gates.",
+      "kanoCredit": 1,
+      "by": "execution-coordinator",
+      "cards": [
+        "C014"
+      ],
+      "id": "ACCEPT-20261108-C014"
     }
   ],
   "verificationMaintenance": [
