@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1481,
+  "revision": 1482,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T21:24:59.2893846Z",
+  "updatedAtUtc": "2026-11-10T21:37:53.5204555Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -218,13 +218,13 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
-    "D": 14,
     "L": 2,
+    "D": 14,
     "S": 177
   },
   "reservations": {
-    "D": 3,
-    "L": 0
+    "L": 0,
+    "D": 3
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -62125,14 +62125,14 @@
     },
     {
       "deliver": "Reserve bounded lease capacity and spend; reject concurrent over-admission without consuming another lease's reservation.",
-      "owner": "worker-C011",
+      "owner": null,
       "localScope": "Bounded capacity and spend reservations of fictional leases on one loopback server (Node built-ins), built on the accepted C009 and C010 fixtures imported read-only: one shared pool of synthetic capacity units and one spend ceiling in synthetic cost units with per-lease caps and a server-side price table, an atomic reserve decision at the single place where the reservation is committed (check and commit with no await between them, repeated where the effect is committed), concurrent over-admission refused with a typed code that names the bound and no effect, a refused or failed reservation never consuming, shrinking, evicting or releasing another lease reservation or the shared headroom, idempotent retries by key, release and expiry (injected clock) returning exactly what was reserved, a conservation invariant after every operation, every decision audited and visible to its owner and the operator only; fake identities and synthetic units only; no real service, no native Azure, no Entra, no real spend.",
-      "state": "In Progress",
+      "state": "To Do",
       "priority": "P0",
       "admittedAtUtc": "2026-11-07T02:07:03Z",
       "result": null,
       "blocker": null,
-      "readiness": true,
+      "readiness": false,
       "hints": [
         {
           "confidence": 4,
@@ -62157,7 +62157,7 @@
       "kano": "D",
       "authorization": "local-synthetic-offline-only",
       "packet": "H001",
-      "technicalEntryGate": "C002, C010, U034, U068, U069",
+      "technicalEntryGate": "C002, C010, U034, U068, U069, U073",
       "id": "C011",
       "kanoUnit": "C011",
       "publication": null,
@@ -62241,10 +62241,26 @@
           "actualQualityThresholdWaived": false,
           "atUtc": "2026-11-10T21:24:57Z",
           "exactWrittenThreshold": "64 total complete flood/resource executions at concurrency8, not512."
+        },
+        {
+          "reason": "Required64 total groups at concurrency8 were covered, but one of360 actual observed groups failed a genuine named assertion: job146 saw30 sockets closed and zero client typed replies. The failure remains blocking, not discarded as an extra or waived as environment.",
+          "creditAwarded": 0,
+          "to": "To Do",
+          "evidence": "<RUN>/results/C011-original-acceptance.json",
+          "previousOwner": "worker-C011",
+          "kind": "actual-unblock-entry-gate",
+          "atUtc": "2026-11-10T21:37:52Z",
+          "previousAgentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+          "from": "In Progress",
+          "originalPublicSource": "cbd45aa88753fbbe54958629b770fd1b2aef2e85",
+          "newEntryGates": [
+            "U073"
+          ],
+          "by": "parent-execution-coordinator"
         }
       ],
       "inheritedTechnicalEntryGate": "C002, C010",
-      "heartbeatUtc": "2026-11-10T20:08:31Z",
+      "heartbeatUtc": null,
       "parentLiveApplicationAuthorized": false,
       "executionBudgetUntilUtc": "2026-11-10T21:38:31.4213797Z"
     }
@@ -63817,12 +63833,12 @@
       "reportedAtUtc": "2026-11-10T14:31:45Z"
     },
     {
-      "status": "running",
+      "status": "checkpointed",
       "id": "worker-C011",
       "cardId": "C011",
       "dispatchedAtUtc": "2026-11-07T02:07:28.822577Z",
       "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
-      "reportedAtUtc": "2026-11-10T20:08:31Z"
+      "reportedAtUtc": "2026-11-10T21:37:52Z"
     }
   ],
   "completedParents": [],
@@ -80446,6 +80462,48 @@
           "atUtc": "2026-11-10T21:24:57Z"
         }
       ]
+    },
+    {
+      "readiness": true,
+      "createdAtUtc": "2026-11-10T21:37:52Z",
+      "kind": "hardening",
+      "entryGate": "C002, C010, U034, U068, U069",
+      "lineage": "OP-C011-CAUSAL-REFUSAL-RESOURCE-ORACLE",
+      "hints": [
+        {
+          "cards": [
+            "U073",
+            "C011"
+          ],
+          "tags": [
+            "resource-oracle",
+            "no-cherry-picking"
+          ],
+          "text": "Zero client replies after all sockets closed is not enough to decide server typed behavior. An observed extra failure remains real; bind the oracle to actual server writes and preserve its old failing version.",
+          "evidence": "<RUN>/GO/U073-resource-oracle-decision.json",
+          "kind": "process",
+          "confidence": 5
+        }
+      ],
+      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+      "owner": "worker-U073",
+      "state": "In Progress",
+      "kanoCredit": 0,
+      "startedAtUtc": "2026-11-10T21:37:52Z",
+      "unblocks": [
+        "C011"
+      ],
+      "executionBudgetUntilUtc": "2026-11-11T01:37:52.3951257Z",
+      "id": "U073",
+      "title": "C011 deterministic typed refusal evidence under reset-prone eight-way resource pressure",
+      "createdBy": "parent-execution-coordinator",
+      "acceptance": "Investigate server behavior separately from client reset loss. The actual same-flood typed server writes/cohorts and closure are causally proved; all socket/resource/no-effect/neighbor/reference/naive and typed-matrix guarantees remain. A real failure is never hidden by removing the client-count assertion. Full current/fresh/source/mutation/native/coverage gates and64-total/concurrency8 resource observations close on one exact new source epoch.",
+      "tdd": "Keep actual job146 and all360 observations immutable. Explicitly version the wrong client predicate. New deterministic natural server-observation assertions and negative controls fail before fixture/oracle implementation, then genuine real GREEN; no fake unchanged old-assertion replay.",
+      "parentLiveApplicationAuthorized": false,
+      "coverage": "No production change by default, verified exact diff; any authorized changed production file individually85/85/85. No threshold/namespace/evidence guard waiver.",
+      "serves": "C011",
+      "heartbeatUtc": "2026-11-10T21:37:52Z",
+      "source": "<RUN>/results/C011-original-acceptance.json job146 actual ERR_ASSERTION/raw"
     }
   ],
   "localPublisherAuthorization": {
@@ -84094,6 +84152,20 @@
       "by": "parent-execution-coordinator",
       "extraCredit": 0,
       "reason": "Actual C014 worker returned safely13minutes before budget, but source-complete public transport is not closed. Original C014 is To Do and retained actor owns only U072, not a fourth intertwined item or a fabricated Done."
+    },
+    {
+      "liveApplicationPermission": false,
+      "resumedAtUtc": "2026-11-10T21:37:52Z",
+      "extraCredit": 0,
+      "actualStops": [
+        "C011"
+      ],
+      "by": "parent-execution-coordinator",
+      "inheritedRevision": 1481,
+      "pulled": [
+        "U073"
+      ],
+      "reason": "Actual stopped C011 resource acceptance becomes one ordinary zero-credit gate; same actor owns only U073, original reservation preserved, no new D credit or live permission."
     }
   ]
 }
