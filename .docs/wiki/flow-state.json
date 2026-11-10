@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1465,
+  "revision": 1466,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T11:40:23.9647477Z",
+  "updatedAtUtc": "2026-11-10T11:46:41.5054485Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -219,12 +219,12 @@
   },
   "kanoDone": {
     "D": 12,
-    "S": 177,
-    "L": 2
+    "L": 2,
+    "S": 177
   },
   "reservations": {
-    "D": 5,
-    "L": 0
+    "L": 0,
+    "D": 5
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -57946,9 +57946,9 @@
       "blocker": "Rejected by independent review (rev-C022, fix d7ebef55c2b3): ONE major, M1 (a vacuous pass found by the all-files scan: tests/refusal-close.test.cjs line 43 returns before any assertion for the CONNECT row, so the generated test METHOD_NOT_ALLOWED (CONNECT, Node-own) AFTER a kept-alive success executes zero assertions and passes on any server, including in the archived RED against the naive stub), plus minors m1 to m4; the round-1 major (the revokeUser iteration-source mutant) is fixed for the right reason and the whole mutation class holds (84 of 84, 285 of 285, 70 of 70, 0 survivors); the production bytes behave correctly (2,586 hostile requests, 216 pipelined cases, the burst and F24 floods, no leak); a last fix by w2-C022 under orders/R4-C022.md goes back to the same reviewer.",
       "packet": "H005",
       "id": "C022",
-      "state": "To Do",
+      "state": "In Progress",
       "kano": "D",
-      "owner": null,
+      "owner": "worker-C022",
       "deliver": "Isolate synthetic tenant/auth/session state; verify cross-tenant probes and invalid identity transitions fail.",
       "localScope": "Synthetic tenant, authentication and session state isolated on one loopback server (Node built-ins), built on the accepted C009 and C020 fixtures imported read-only: tenant derived only from the verified session, every read, list, search, mutation and cache key scoped by tenant, cross-tenant probes refused uniformly with no leak, a closed identity and session state machine where every illegal transition (fixation, reuse after logout or revoke, header tenant flip, stale privilege after a role change) is a typed refusal with no effect; fake tenants and users only; no real service, no native Azure, no Entra, no spend.",
       "result": {
@@ -58453,8 +58453,8 @@
       },
       "technicalEntryGate": "C020, C009, U034",
       "readiness": false,
-      "claimedAtUtc": "2026-11-06T14:52:52.8770143Z",
-      "heartbeatUtc": null,
+      "claimedAtUtc": "2026-11-10T11:46:40Z",
+      "heartbeatUtc": "2026-11-10T11:46:40Z",
       "attemptHistory": [
         {
           "reviewer": "rev-C022",
@@ -58494,15 +58494,33 @@
           "entryGate": "U034",
           "from": "In Progress",
           "kind": "runtime-entry-gate-checkpoint"
+        },
+        {
+          "from": "To Do",
+          "scope": "Own new private namespace only; original live/source/evidence and D reservation preserved; four-focused-hour bounded completion, no gate waiver.",
+          "to": "In Progress",
+          "preservedOriginalWorkerId": true,
+          "actorId": "67570fb0-ced1-4983-94b2-0d9fd86f5bc7",
+          "atUtc": "2026-11-10T11:46:40Z",
+          "liveApplicationPermission": false,
+          "previousAgentId": "768ba2ba-3c73-4483-9e85-bf2797f893e4",
+          "retainedPublication": {
+            "commit": "d7ebef55c2b3265ca843851cbc2ed7ba68658621",
+            "tag": "kanban/C022/d7ebef55c2b3"
+          },
+          "kind": "fresh-private-continuation-after-actual-gates",
+          "by": "parent-execution-coordinator"
         }
       ],
-      "inheritedTechnicalEntryGate": "C020, C009"
+      "inheritedTechnicalEntryGate": "C020, C009",
+      "parentLiveApplicationAuthorized": false,
+      "executionBudgetUntilUtc": "2026-11-10T15:46:40.4816799Z"
     },
     {
       "deliver": "Reserve bounded lease capacity and spend; reject concurrent over-admission without consuming another lease's reservation.",
-      "owner": null,
+      "owner": "worker-C011",
       "localScope": "Bounded capacity and spend reservations of fictional leases on one loopback server (Node built-ins), built on the accepted C009 and C010 fixtures imported read-only: one shared pool of synthetic capacity units and one spend ceiling in synthetic cost units with per-lease caps and a server-side price table, an atomic reserve decision at the single place where the reservation is committed (check and commit with no await between them, repeated where the effect is committed), concurrent over-admission refused with a typed code that names the bound and no effect, a refused or failed reservation never consuming, shrinking, evicting or releasing another lease reservation or the shared headroom, idempotent retries by key, release and expiry (injected clock) returning exactly what was reserved, a conservation invariant after every operation, every decision audited and visible to its owner and the operator only; fake identities and synthetic units only; no real service, no native Azure, no Entra, no real spend.",
-      "state": "To Do",
+      "state": "In Progress",
       "priority": "P0",
       "admittedAtUtc": "2026-11-07T02:07:03Z",
       "result": null,
@@ -58540,7 +58558,7 @@
         "H001",
         "H003"
       ],
-      "claimedAtUtc": "2026-11-07T02:07:37.5741776Z",
+      "claimedAtUtc": "2026-11-10T11:46:40Z",
       "attemptHistory": [
         null,
         {
@@ -58554,10 +58572,25 @@
           "entryGate": "U034",
           "from": "In Progress",
           "kind": "runtime-entry-gate-checkpoint"
+        },
+        {
+          "from": "To Do",
+          "scope": "Own new private namespace only; original live/source/evidence and D reservation preserved; four-focused-hour bounded completion, no gate waiver.",
+          "to": "In Progress",
+          "preservedOriginalWorkerId": true,
+          "actorId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+          "atUtc": "2026-11-10T11:46:40Z",
+          "liveApplicationPermission": false,
+          "previousAgentId": "656c48c8-27c1-42ac-9b86-12238b7eef30",
+          "retainedPublication": null,
+          "kind": "fresh-private-continuation-after-actual-gates",
+          "by": "parent-execution-coordinator"
         }
       ],
       "inheritedTechnicalEntryGate": "C002, C010",
-      "heartbeatUtc": null
+      "heartbeatUtc": "2026-11-10T11:46:40Z",
+      "parentLiveApplicationAuthorized": false,
+      "executionBudgetUntilUtc": "2026-11-10T15:46:40.4618788Z"
     }
   ],
   "workers": [
@@ -60122,17 +60155,17 @@
     {
       "id": "worker-C022",
       "dispatchedAtUtc": "2026-11-06T14:52:41.6026964Z",
-      "agentId": "768ba2ba-3c73-4483-9e85-bf2797f893e4",
-      "status": "checkpointed",
+      "agentId": "67570fb0-ced1-4983-94b2-0d9fd86f5bc7",
+      "status": "running",
       "cardId": "C022",
       "reportedAtUtc": "2026-11-07T01:59:08.8744664Z"
     },
     {
-      "status": "checkpointed",
+      "status": "running",
       "id": "worker-C011",
       "cardId": "C011",
       "dispatchedAtUtc": "2026-11-07T02:07:28.822577Z",
-      "agentId": "656c48c8-27c1-42ac-9b86-12238b7eef30"
+      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680"
     }
   ],
   "completedParents": [],
@@ -78358,6 +78391,22 @@
       "inheritedRevision": 1462,
       "liveApplicationPermission": false,
       "preservationSnapshot": "<RUN>/recovery-20261109-r1424/nextwave-live-protected-1462.json"
+    },
+    {
+      "preservationSnapshot": "<RUN>/recovery-20261109-r1424/nextwave-live-protected-1465.json",
+      "logicalProcessors": 8,
+      "inheritedRevision": 1465,
+      "resumedAtUtc": "2026-11-10T11:46:40Z",
+      "selectedContributors": 3,
+      "measuredDepth": 9,
+      "totalMemoryGiB": 31.82,
+      "by": "parent-execution-coordinator",
+      "measuredReady": 18,
+      "liveApplicationPermission": false,
+      "dispatchableReady": 15,
+      "measuredOpen": 241,
+      "reason": "Memory availability increased from7.67 to16.74GiB. Three disjoint existing pieces, one owned heavy/normal child each, use current3heavy/4normal lanes without new reservations or pre-review bulk assignment.",
+      "freeMemoryGiB": 16.74
     }
   ]
 }
