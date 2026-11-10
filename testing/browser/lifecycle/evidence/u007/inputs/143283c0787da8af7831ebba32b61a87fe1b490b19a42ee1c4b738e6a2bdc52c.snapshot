@@ -1,0 +1,352 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { types } = require('node:util');
+const nativeMkdir = fs.promises.mkdir.bind(fs.promises);
+const OWNERS = new WeakSet();
+const MAX_TIMER_MS = 2147483647;
+const MAX_ROOTS = 1;
+const RETRYABLE = new Set(['EBUSY', 'EPERM', 'ENOTEMPTY']);
+const systemClock = Object.freeze({
+  now: () => Number(process.hrtime.bigint() / 1000000n),
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (timer) => clearTimeout(timer),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+});
+
+class ScratchError extends Error {
+  constructor(code, message) { super(message); this.name = 'ScratchError'; this.code = code; }
+}
+const problem = (code, message) => new ScratchError(code, message);
+const fail = (message) => problem('ERR_SCRATCH_OPTIONS', message);
+
+function readClosed(source, names) {
+  if (source === undefined) source = {};
+  if (!source || typeof source !== 'object' || Array.isArray(source) || types.isProxy(source)) throw fail('expected a non-Proxy options object');
+  const keys = Reflect.ownKeys(source);
+  if (keys.length > names.length || keys.some((k) => !names.includes(k))) throw fail('unknown option');
+  const result = {};
+  for (const name of names) {
+    try { result[name] = source[name]; }
+    catch { throw fail(`option ${name} cannot be read`); }
+  }
+  return result;
+}
+
+function mkdirOptionsOf(source) {
+  if (source === undefined) return undefined;
+  try { return Object.freeze(readClosed(source, ['recursive', 'mode'])); }
+  catch { throw problem('ERR_SCRATCH_OWNERSHIP', 'exclusive mkdir options must be readable and closed'); }
+}
+
+function frozenCopy(value, depth = 0, seen = new Set(), work = { objects: 0, chars: 0 }) {
+  if (typeof value === 'string') {
+    work.chars += value.length;
+    if (work.chars > 2097152) throw problem('ERR_SCRATCH_REPORT', 'report character limit');
+    return value;
+  }
+  if (value === null || value === undefined || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) return value;
+  if (typeof value !== 'object' || types.isProxy(value) || seen.has(value) || depth > 16 || ++work.objects > 1024) throw problem('ERR_SCRATCH_REPORT', 'invalid or oversized report');
+  seen.add(value);
+  const array = Array.isArray(value);
+  const keys = Reflect.ownKeys(value).filter((k) => !(array && k === 'length'));
+  if (keys.length > 512 || (array && value.length > 512)) throw problem('ERR_SCRATCH_REPORT', 'report entry limit');
+  if (array && (keys.length !== value.length || keys.some((key, index) => key !== String(index)))) throw problem('ERR_SCRATCH_REPORT', 'sparse or decorated report arrays are refused');
+  const result = array ? [] : {};
+  for (const key of keys) {
+    if (typeof key !== 'string' || key === '__proto__' || key === 'constructor' || key === 'prototype') throw problem('ERR_SCRATCH_REPORT', 'invalid report key');
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor || !('value' in descriptor)) throw problem('ERR_SCRATCH_REPORT', 'report accessors are not accepted');
+    Object.defineProperty(result, key, { value: frozenCopy(descriptor.value, depth + 1, seen, work), enumerable: true, configurable: true, writable: true });
+  }
+  seen.delete(value);
+  return Object.freeze(result);
+}
+
+function errorOf(error, phase, target) {
+  let code = 'UNKNOWN_ERROR';
+  let message = 'unclassified failure';
+  try {
+    const givenCode = error?.code;
+    const givenMessage = error?.message;
+    if (typeof givenCode === 'string' && givenCode.length <= 64) code = givenCode;
+    if (typeof givenMessage === 'string') message = givenMessage.slice(0, 256);
+  } catch { code = 'ERR_UNREADABLE_ERROR'; message = 'error properties cannot be read'; }
+  return { path: target, phase, code, message };
+}
+
+function refusal(code, message, remaining = []) {
+  return frozenCopy({ code, clean: false, confirmed: false, attempts: [], delays: [], removed: [],
+    remaining, refused: [{ path: null, code, message }], errors: [], unconfirmed: remaining.map((p) => ({ path: p, phase: 'refusal' })),
+    work: { identityReads: 0, directoryReads: 0, entries: 0 } });
+}
+
+function validName(name) {
+  return typeof name === 'string' && name.length > 0 && name.length <= 255 && name !== '.' && name !== '..'
+    && !/[<>:"|?*\\/\0-\x1f]/.test(name) && !/[. ]$/.test(name)
+    && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(name);
+}
+
+function validPath(target) {
+  if (typeof target !== 'string' || target.length > 1024 || !/^[A-Za-z]:\\/.test(target) || path.normalize(target) !== target) return false;
+  const segments = target.slice(3).split('\\');
+  return segments.length <= 64 && segments.every(validName);
+}
+const sameIdentity = (a, b) => a.kind === b.kind && a.device === b.device && a.fileId === b.fileId && a.birth === b.birth;
+function statOf(value) {
+  const s = readClosed(value, ['kind', 'device', 'fileId', 'birth']);
+  if (!['directory', 'file', 'link'].includes(s.kind) || !['device', 'fileId', 'birth'].every((k) => typeof s[k] === 'string' && s[k].length <= 64 && /^\d+$/.test(s[k])) || s.fileId === '0') {
+    throw problem('ERR_SCRATCH_ADAPTER', 'filesystem identity is missing or malformed');
+  }
+  return s;
+}
+function clockOf(clock) {
+  if (!clock || typeof clock !== 'object' || types.isProxy(clock)) throw fail('clock must be an object');
+  const result = {};
+  for (const key of ['now', 'setTimeout', 'clearTimeout', 'sleep']) {
+    let fn;
+    try { fn = clock[key]; } catch { throw fail(`clock.${key} cannot be read`); }
+    if (typeof fn !== 'function') throw fail(`clock.${key} must be a function`);
+    result[key] = fn.bind(clock);
+  }
+  return result;
+}
+function optionsOf(source) {
+  const s = readClosed(source, ['timeoutMs', 'maxAttempts', 'maxEntries', 'maxDepth', 'signal']);
+  for (const [key, fallback, max] of [['timeoutMs', 2000, MAX_TIMER_MS], ['maxAttempts', 4, 16], ['maxEntries', 256, 256], ['maxDepth', 16, 16]]) {
+    if (s[key] === undefined) s[key] = fallback;
+    if (!Number.isSafeInteger(s[key]) || s[key] < 1 || s[key] > max) throw fail(`${key} is outside the supported positive integer range`);
+  }
+  if (s.signal !== undefined && (!(s.signal instanceof AbortSignal) || types.isProxy(s.signal))) throw fail('signal must be an AbortSignal');
+  if (s.signal !== undefined) {
+    try { Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get.call(s.signal); }
+    catch { throw fail('signal must have a genuine AbortSignal identity'); }
+  }
+  return s;
+}
+
+function createBudget(clock, timeoutMs, signal) {
+  const started = clock.now();
+  if (!Number.isFinite(started)) throw fail('clock must return finite monotonic milliseconds');
+  const deadline = started + timeoutMs;
+  let last = started;
+  let abort;
+  const aborted = new Promise((resolve) => { abort = resolve; });
+  const listener = () => abort();
+  if (signal) EventTarget.prototype.addEventListener.call(signal, 'abort', listener, { once: true });
+  const remaining = () => {
+    const now = clock.now();
+    if (!Number.isFinite(now) || now < last) throw problem('ERR_SCRATCH_CLOCK', 'clock is not monotonic');
+    last = now;
+    if (signal && Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get.call(signal)) throw problem('ERR_SCRATCH_ABORTED', 'cleanup was aborted; issued I/O is not undone');
+    if (now >= deadline) throw problem('ERR_SCRATCH_DEADLINE', 'the original cleanup budget is exhausted');
+    return deadline - now;
+  };
+  const wait = (work) => {
+    let left;
+    try { left = remaining(); } catch (e) { return Promise.reject(e); }
+    return new Promise((resolve, reject) => {
+      let done = false;
+      let timer;
+      const finish = (fn, value) => { if (done) return; done = true; clock.clearTimeout(timer); fn(value); };
+      timer = clock.setTimeout(() => finish(reject, problem('ERR_SCRATCH_DEADLINE', 'an awaited operation exhausted the original budget')), Math.min(left, MAX_TIMER_MS));
+      aborted.then(() => finish(reject, problem('ERR_SCRATCH_ABORTED', 'cleanup was aborted; issued I/O is unconfirmed')));
+      try { Promise.resolve(work()).then((v) => finish(resolve, v), (e) => finish(reject, e)); }
+      catch (e) { finish(reject, e); }
+    });
+  };
+  return { wait, remaining, stop: () => { if (signal) EventTarget.prototype.removeEventListener.call(signal, 'abort', listener); } };
+}
+
+function createFileSystemAdapters() {
+  return {
+    mkdir: nativeMkdir,
+    async lstat(target) {
+      const s = await fs.promises.lstat(target, { bigint: true });
+      return { kind: s.isSymbolicLink() ? 'link' : s.isDirectory() ? 'directory' : 'file',
+        device: String(s.dev), fileId: String(s.ino), birth: String(s.birthtimeNs) };
+    },
+    remove: (target) => fs.promises.rm(target, { recursive: true, force: false, maxRetries: 0 }),
+    async readDir(target, limit) {
+      const dir = await fs.promises.opendir(target);
+      const entries = [];
+      try {
+        for (;;) {
+          const entry = await dir.read();
+          if (!entry) break;
+          if (entries.length >= limit) throw problem('ERR_SCRATCH_LIMIT', 'directory entry limit; no recursive removal is authorized');
+          entries.push({ name: entry.name, kind: entry.isSymbolicLink() ? 'link' : entry.isDirectory() ? 'directory' : 'file' });
+        }
+      } finally { await dir.close(); }
+      return entries;
+    },
+  };
+}
+
+function createScratchOwner(source) {
+  let parent, adapter, clock;
+  try {
+    const s = readClosed(source, ['parent', 'fs', 'clock']);
+    parent = s.parent;
+    if (!validPath(parent)) throw fail('parent must be a canonical local Windows directory');
+    clock = clockOf(s.clock === undefined ? systemClock : s.clock);
+    const given = s.fs === undefined ? createFileSystemAdapters() : s.fs;
+    if (!given || typeof given !== 'object' || types.isProxy(given)) throw fail('filesystem adapters must be an object');
+    adapter = {};
+    for (const key of ['mkdir', 'lstat', 'remove', 'readDir']) {
+      const fn = given[key];
+      if (typeof fn !== 'function') throw fail(`filesystem.${key} must be a function`);
+      adapter[key] = fn.bind(given);
+    }
+  } catch (e) { return Object.freeze({ ok: false, ...refusal('ERR_SCRATCH_OPTIONS', errorOf(e, 'options', null).message) }); }
+  const ancestry = [];
+  for (let p = parent;; p = path.dirname(p)) { ancestry.unshift(p); if (path.dirname(p) === p) break; }
+  const records = new Map();
+  const pendingRoots = new Set();
+  let closing = null;
+  let creating = 0;
+
+  const mkdir = async (target, options) => {
+    if (closing) throw problem('ERR_SCRATCH_CLOSED', 'an owner cannot create scratch after cleanup started');
+    if (!validPath(target) || path.dirname(target) !== parent || records.has(target) || creating + records.size >= MAX_ROOTS) throw problem('ERR_SCRATCH_OWNERSHIP', 'only a new direct child of this owner parent may be created');
+    const given = mkdirOptionsOf(options);
+    if (given !== undefined) {
+      if (given.recursive !== undefined && given.recursive !== false) throw problem('ERR_SCRATCH_OWNERSHIP', 'exclusive non-recursive mkdir is required');
+    }
+    creating += 1;
+    pendingRoots.add(target);
+    let result;
+    try { result = await adapter.mkdir(target, given); }
+    finally { creating -= 1; pendingRoots.delete(target); }
+    const record = { path: target, identity: null, ancestors: [], captureError: null };
+    records.set(target, record);
+    let budget;
+    try {
+      budget = createBudget(clock, 5000);
+      for (const p of [...ancestry, target]) {
+        const identity = statOf(await budget.wait(() => adapter.lstat(p)));
+        if (identity.kind !== 'directory') throw problem('ERR_SCRATCH_OWNERSHIP', 'links and non-directory ancestors are refused');
+        if (p === target) record.identity = identity;
+        else record.ancestors.push({ path: p, identity });
+      }
+    } catch (e) { record.captureError = errorOf(e, 'creation-identity', target); record.identity = null; }
+    finally { if (budget) budget.stop(); }
+    return result;
+  };
+
+  async function run(s) {
+    const r = { code: 'SCRATCH_REMAINING', clean: false, confirmed: true, attempts: [], delays: [], removed: [], remaining: [],
+      refused: [], errors: [], unconfirmed: [], work: { identityReads: 0, directoryReads: 0, entries: 0 } };
+    if (records.size === 0 || creating !== 0) return refusal('ERR_SCRATCH_OWNERSHIP', 'no completed exclusive-creation provenance', [...records.keys(), ...pendingRoots]);
+    let budget;
+    try { budget = createBudget(clock, s.timeoutMs, s.signal); }
+    catch (e) { return refusal(e.code, e.message, [...records.keys()]); }
+    const stat = async (p) => { r.work.identityReads += 1; return statOf(await budget.wait(() => adapter.lstat(p))); };
+    const verify = async (record) => {
+      if (!record.identity) throw problem('ERR_SCRATCH_OWNERSHIP', 'exclusive creation was recorded but its identity could not be verified');
+      for (const ancestor of record.ancestors) {
+        const current = await stat(ancestor.path);
+        if (current.kind !== 'directory' || !sameIdentity(current, ancestor.identity)) throw problem('ERR_SCRATCH_OWNERSHIP', 'ancestor identity changed or resolves through a link');
+      }
+      let current;
+      try { current = await stat(record.path); }
+      catch (e) { if (e.code === 'ENOENT') return false; throw e; }
+      if (current.kind !== 'directory' || !sameIdentity(current, record.identity)) throw problem('ERR_SCRATCH_OWNERSHIP', 'recorded root was replaced or became a link');
+      return true;
+    };
+    const scan = async (root) => {
+      const found = [root];
+      const queue = [{ path: root, depth: 0 }];
+      for (let i = 0; i < queue.length; i += 1) {
+        r.work.directoryReads += 1;
+        const directory = queue[i];
+        const room = s.maxEntries - found.length;
+        const entries = await budget.wait(() => adapter.readDir(directory.path, room));
+        if (!Array.isArray(entries) || types.isProxy(entries) || entries.length > room) throw problem('ERR_SCRATCH_LIMIT', 'directory answer is malformed or exceeds the entry cap');
+        const names = new Set();
+        for (let j = 0; j < entries.length; j += 1) {
+          r.work.entries += 1;
+          const entry = readClosed(entries[j], ['name', 'kind']);
+          if (!validName(entry.name) || names.has(entry.name) || !['file', 'directory', 'link'].includes(entry.kind)) throw problem('ERR_SCRATCH_ADAPTER', 'directory entries need unique valid Windows names and known types');
+          names.add(entry.name);
+          const p = path.join(directory.path, entry.name);
+          if (!validPath(p)) throw problem('ERR_SCRATCH_LIMIT', 'an enumerated path exceeds the canonical path bound');
+          found.push(p);
+          if (entry.kind === 'link') throw problem('ERR_SCRATCH_OWNERSHIP', 'a link in owned scratch is refused without following it');
+          if (directory.depth + 1 > s.maxDepth) throw problem('ERR_SCRATCH_LIMIT', 'scratch nesting exceeds the depth cap');
+          if (entry.kind === 'directory') queue.push({ path: p, depth: directory.depth + 1 });
+        }
+      }
+      return found;
+    };
+    const roots = [...records.values()];
+    let terminal = false;
+    try {
+      for (const record of roots) {
+        let phase = 'verification';
+        let remaining = [record.path];
+        if (record.captureError) r.errors.push(record.captureError);
+        if (terminal) { r.remaining.push(record.path); r.unconfirmed.push({ path: record.path, phase: 'not-started' }); continue; }
+        try {
+          for (let pass = 0; pass < s.maxAttempts; pass += 1) {
+            phase = 'verification';
+            if (!await verify(record)) { remaining = []; r.removed.push(record.path); break; }
+            phase = 'scan';
+            remaining = await scan(record.path);
+            budget.remaining();
+            phase = 'remove';
+            const attempt = { path: record.path, atMs: clock.now(), code: null };
+            r.attempts.push(attempt);
+            let removalError = null;
+            try { await budget.wait(() => adapter.remove(record.path)); }
+            catch (e) {
+              removalError = e;
+              const error = errorOf(e, phase, record.path);
+              attempt.code = error.code;
+              r.errors.push(error);
+              if (error.code === 'ERR_SCRATCH_DEADLINE' || error.code === 'ERR_SCRATCH_ABORTED') throw e;
+            }
+            phase = 'confirmation';
+            if (!await verify(record)) { remaining = []; r.removed.push(record.path); break; }
+            phase = 'remaining-scan';
+            remaining = await scan(record.path);
+            if (!removalError) { r.errors.push(errorOf(problem('ERR_SCRATCH_NOT_REMOVED', 'removal returned success but the fresh observation still finds scratch'), 'confirmation', record.path)); break; }
+            if (!RETRYABLE.has(attempt.code) || pass + 1 === s.maxAttempts) break;
+            phase = 'backoff';
+            const ms = Math.min(25 * 2 ** pass, 100, budget.remaining());
+            r.delays.push({ path: record.path, ms });
+            await budget.wait(() => clock.sleep(ms));
+          }
+        } catch (e) {
+          const error = errorOf(e, phase, record.path);
+          if (!r.errors.some((x) => x.path === error.path && x.phase === error.phase && x.code === error.code)) r.errors.push(error);
+          if (error.code === 'ERR_SCRATCH_OWNERSHIP') r.refused.push({ path: record.path, code: error.code, message: error.message });
+          r.confirmed = false;
+          r.unconfirmed.push({ path: record.path, phase });
+          if (['ERR_SCRATCH_DEADLINE', 'ERR_SCRATCH_ABORTED', 'ERR_SCRATCH_CLOCK'].includes(error.code)) { terminal = true; r.code = error.code; }
+        }
+        r.remaining.push(...remaining);
+      }
+    } finally { budget.stop(); }
+    r.remaining = [...new Set(r.remaining)];
+    r.clean = r.confirmed && r.remaining.length === 0 && r.refused.length === 0 && r.unconfirmed.length === 0;
+    if (r.clean) r.code = 'SCRATCH_CLEAN';
+    return frozenCopy(r);
+  }
+  const owner = Object.freeze({ ok: true, parent, mkdir, paths: () => Object.freeze([...records.keys()]), cleanup(options) {
+    if (!closing) {
+      let settings;
+      try { settings = optionsOf(options); }
+      catch (e) { closing = Promise.resolve(refusal('ERR_SCRATCH_OPTIONS', errorOf(e, 'options', null).message, [...records.keys()])); }
+      if (!closing) closing = run(settings);
+    }
+    return closing;
+  } });
+  OWNERS.add(owner);
+  return owner;
+}
+
+const isScratchOwner = (owner) => Boolean(owner) && OWNERS.has(owner);
+module.exports = { createScratchOwner, createFileSystemAdapters, isScratchOwner, ScratchError, systemClock,
+  frozenCopy, refusal, readClosed, mkdirOptionsOf, errorOf, clockOf, createBudget, optionsOf, validPath, validName, MAX_ROOTS };

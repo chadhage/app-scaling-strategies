@@ -1,0 +1,40 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const subject = process.env.U007_MKDIR_SUBJECT || path.resolve(__dirname, '..');
+const core = require(path.join(subject, 'scratch.cjs'));
+const api = require(path.join(subject, 'scratch-session.cjs'));
+const { ManualClock, fakeFileSystem } = require('./u007-support.cjs');
+for (const observed of [false, true]) {
+  test(`U007-R004 ${observed ? 'observed' : 'direct'}: changing mkdir options cannot adopt an existing neighbour`, async (t) => {
+    const parent = path.resolve('owned-parent');
+    const root = path.join(parent, 'session-neighbour');
+    const sentinel = path.join(root, 'sentinel.txt');
+    const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+    fake.put(root); fake.put(sentinel, 'file');
+    const identity = { ...fake.entries.get(root) };
+    const existing = Object.assign(new Error('original exclusive mkdir EEXIST'), { code: 'EEXIST' });
+    const nativeSemantics = async (target, options) => {
+      if (options?.recursive === true && fake.entries.has(target)) return undefined;
+      if (fake.entries.has(target)) throw existing;
+      return fake.adapter.mkdir(target);
+    };
+    const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, mkdir: nativeSemantics } });
+    let reads = 0;
+    const options = { get recursive() { reads += 1; return reads > (observed ? 2 : 1); } };
+    if (observed) t.mock.method(fs.promises, 'mkdir', nativeSemantics);
+    const creation = await (observed
+      ? api.observeScratchCreation(owner, () => fs.promises.mkdir(root, options))
+      : owner.mkdir(root, options)).then(() => ({ created: true }), (error) => ({ created: false, originalError: error === existing, code: error.code }));
+    const report = await owner.cleanup();
+    assert.deepEqual({
+      creation, getterReads: reads, recorded: owner.paths(), cleanupCode: report.code,
+      removals: fake.state.calls.length, neighbour: fake.entries.get(root), sentinelIntact: fake.entries.has(sentinel),
+    }, {
+      creation: { created: false, originalError: true, code: 'EEXIST' }, getterReads: 1, recorded: [],
+      cleanupCode: 'ERR_SCRATCH_OWNERSHIP', removals: 0, neighbour: identity, sentinelIntact: true,
+    }, 'an options accessor must not turn exclusive provenance into adoption of an existing directory');
+  });
+}

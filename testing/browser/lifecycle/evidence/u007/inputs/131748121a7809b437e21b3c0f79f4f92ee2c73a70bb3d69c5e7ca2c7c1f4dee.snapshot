@@ -1,0 +1,55 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
+const lf = (b) => Buffer.from(b.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+function verify(root, read = (p) => fs.readFileSync(path.join(root, p))) {
+  const problems = [];
+  const indexBytes = read('evidence\\u007\\capture-index.json');
+  const head = read('evidence\\u007\\capture-index.sha256').toString('ascii').trim();
+  if (!/^[0-9a-f]{64}$/.test(head) || sha(indexBytes) !== head) return ['INDEX_CHANGED'];
+  const index = JSON.parse(indexBytes);
+  for (const pin of index.pins) {
+    const bytes = read(pin.path);
+    if (sha(bytes) !== pin.rawSha256 && sha(lf(bytes)) !== pin.crlfToLfSha256) problems.push('PIN_CHANGED:' + pin.path);
+  }
+  for (const capture of index.captures) {
+    const bytes = read(capture.manifest);
+    if (sha(bytes) !== capture.manifestSha256) { problems.push('MANIFEST_CHANGED:' + capture.name); continue; }
+    const m = JSON.parse(bytes);
+    if (m.name !== capture.name || m.exitCode !== capture.expectedExitCode || m.timedOut !== false) problems.push('CAPTURE_OUTCOME:' + capture.name);
+    let text = '';
+    for (const stream of ['stdout', 'stderr']) {
+      const t = m.transcripts[stream];
+      const gzip = read(path.join('evidence', 'u007', 'captures', t.path));
+      if (sha(gzip) !== t.gzipSha256 || gzip.length !== t.gzipBytes) { problems.push('STREAM_CHANGED:' + capture.name + ':' + stream); continue; }
+      const raw = zlib.gunzipSync(gzip);
+      if (sha(raw) !== t.sha256 || raw.length !== t.bytes) problems.push('STREAM_CHANGED:' + capture.name + ':' + stream);
+      if (stream === 'stdout') text = raw.toString('utf8');
+      if (!m.origin.transcripts[stream].sha256 || !m.origin.manifestSha256) problems.push('ORIGIN_MISSING:' + capture.name);
+    }
+    for (const key of ['tests', 'pass', 'fail', 'skipped', 'cancelled', 'todo']) {
+      const match = text.match(new RegExp(`^# ${key} (\\d+)$`, 'm'));
+      if (match && m.summary[key] !== Number(match[1])) problems.push('SUMMARY_CHANGED:' + capture.name + ':' + key);
+    }
+    if (capture.final && capture.kind !== 'mutation') {
+      if (!(m.summary.tests > 0 && m.summary.pass === m.summary.tests && m.summary.fail === 0
+        && m.summary.skipped === 0 && m.summary.cancelled === 0 && m.summary.todo === 0)) problems.push('NOT_POSITIVE_GREEN:' + capture.name);
+    }
+    if (capture.kind === 'behavioral-red') {
+      if (!/ERR_ASSERTION/.test(text) || /MODULE_NOT_FOUND|Cannot find module|SyntaxError/.test(text)) problems.push('NOT_BEHAVIORAL_RED:' + capture.name);
+    }
+    if (capture.kind === 'coverage' && capture.final) {
+      const rows = m.summary.coverageRows.filter((r) => r.file === capture.productionFile);
+      if (rows.length !== 1 || !['lines', 'branches', 'functions'].every((k) => rows[0][k] >= 85)) problems.push('COVERAGE_BELOW_85:' + capture.name);
+    }
+    for (const input of m.inputs) {
+      const b = read(input.retained);
+      if (sha(b) !== input.rawSha256 || sha(lf(b)) !== input.crlfToLfSha256) problems.push('INPUT_CHANGED:' + capture.name + ':' + input.path);
+    }
+  }
+  return problems;
+}
+module.exports = { verify, sha, lf };

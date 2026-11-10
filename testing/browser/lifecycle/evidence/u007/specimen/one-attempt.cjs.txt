@@ -1,0 +1,79 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const freeze = (v) => v && typeof v === 'object'
+  ? Object.freeze(Array.isArray(v) ? v.map(freeze) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, freeze(x)]))) : v;
+function createFileSystemAdapters() {
+  return {
+    mkdir: (...args) => fs.promises.mkdir(...args),
+    async lstat(p) {
+      const s = await fs.promises.lstat(p, { bigint: true });
+      return { kind: s.isSymbolicLink() ? 'link' : s.isDirectory() ? 'directory' : 'file',
+        device: String(s.dev), fileId: String(s.ino), birth: String(s.birthtimeNs) };
+    },
+    remove: (p) => fs.promises.rm(p, { recursive: true, force: false, maxRetries: 0 }),
+    async readDir(p, limit = 256) {
+      const dir = await fs.promises.opendir(p);
+      const entries = [];
+      try {
+        for (;;) {
+          const e = await dir.read();
+          if (!e) break;
+          if (entries.length >= limit) throw Object.assign(new Error('directory entry limit'), { code: 'ERR_SCRATCH_LIMIT' });
+          entries.push({ name: e.name, kind: e.isSymbolicLink() ? 'link' : e.isDirectory() ? 'directory' : 'file' });
+        }
+      } finally { await dir.close(); }
+      return entries;
+    },
+  };
+}
+function createScratchOwner({ parent, fs: adapter = createFileSystemAdapters(), clock }) {
+  const roots = new Map();
+  let closing;
+  const mkdir = async (p, options) => {
+    const result = await adapter.mkdir(p, options);
+    if (!options?.recursive && path.dirname(p) === parent) roots.set(p, await adapter.lstat(p));
+    return result;
+  };
+  async function run() {
+    const r = { code: 'SCRATCH_REMAINING', clean: false, confirmed: true, attempts: [], delays: [],
+      removed: [], remaining: [], refused: [], errors: [] };
+    for (const [p, identity] of roots) {
+      const current = await adapter.lstat(p).catch((e) => e.code === 'ENOENT' ? null : Promise.reject(e));
+      if (!current) { r.removed.push(p); continue; }
+      if (current.fileId !== identity.fileId) { r.refused.push({ path: p, code: 'ERR_SCRATCH_OWNERSHIP' }); r.remaining.push(p); continue; }
+      const attempt = { path: p, atMs: clock.now(), code: null };
+      r.attempts.push(attempt);
+      try { await adapter.remove(p); }
+      catch (e) { attempt.code = e.code || 'UNKNOWN_ERROR'; r.errors.push({ path: p, code: attempt.code, phase: 'remove' }); }
+      try {
+        await adapter.lstat(p);
+        r.remaining.push(p);
+        for (const e of await adapter.readDir(p, 256)) r.remaining.push(path.join(p, e.name));
+      } catch (e) {
+        if (e.code === 'ENOENT') r.removed.push(p);
+        else { r.confirmed = false; r.remaining.push(p); r.errors.push({ path: p, code: e.code || 'UNKNOWN_ERROR', phase: 'confirmation' }); }
+      }
+    }
+    r.clean = r.confirmed && r.remaining.length === 0 && r.refused.length === 0;
+    if (r.clean) r.code = 'SCRATCH_CLEAN';
+    return freeze(r);
+  }
+  return Object.freeze({ ok: true, mkdir, paths: () => Object.freeze([...roots.keys()]),
+    cleanup: () => closing ||= run() });
+}
+function wrapScratchSession(session, owner) {
+  let closing;
+  return { ...session, close: () => closing ||= (async () => {
+    let previous;
+    let originalCloseError = null;
+    try { previous = await session.close(); }
+    catch (e) { previous = e; originalCloseError = { name: e.name, code: e.code, message: e.message }; }
+    const scratch = await owner.cleanup();
+    const clean = previous.confirmed === true && previous.survivors.length === 0 && scratch.clean;
+    const outcome = freeze({ clean, process: previous, scratch, originalCloseError });
+    if (!clean) throw Object.assign(new Error('Owned scratch remains'), { code: 'ERR_SCRATCH_SESSION', outcome });
+    return outcome;
+  })() };
+}
+module.exports = { createScratchOwner, createFileSystemAdapters, wrapScratchSession };

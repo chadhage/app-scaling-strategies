@@ -1,0 +1,62 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createHash, randomUUID } = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const helper = fs.readFileSync(path.join(__dirname, 'u007-final-authority.cjs'));
+assert.ok(['b9508b609fe96f075bc738100304f710815f4886ba17065c0f5a513d41b6fec7', 'f5fe941b1f234e6fb4aa564ba0d5b22d899a7c8380dc5dfcb2bbcbc31a09323b', 'b9508b609fe96f075bc738100304f710815f4886ba17065c0f5a513d41b6fec7'].includes(hash(helper)),
+  'U007 final authority helper is independently pinned before loading');
+const authority = require('./u007-final-authority.cjs');
+const read = (file) => fs.readFileSync(path.join(root, file));
+test('U007-FINAL-E001: append-only authority accounts for accepted514, retained185 and every exact final addition', () => {
+  assert.deepEqual(authority.verify(root), []);
+});
+test('U007-FINAL-E002: current source, accepted baseline, historical authority and new native proof edits fail by name', () => {
+  const head = JSON.parse(read(authority.HEAD));
+  const native = head.captures.find((entry) => entry.kind === 'native-u007');
+  const nativeManifest = JSON.parse(read(native.manifest));
+  const targets = ['scratch.cjs', 'scratch-session.cjs', 'close.cjs', 'session.cjs', 'imports.json',
+    'tests\\u005-real.test.cjs', 'tests\\u006-u062-authority-v4.cjs',
+    'evidence\\u061\\authority-head-3.json', 'evidence\\u062\\authority-head-4.json',
+    'evidence\\u007\\capture-index.json', 'evidence\\u007\\amendments\\authority-head-1.json',
+    authority.BASE, authority.HEAD, 'README-U007-final.md', 'U007-final.feature',
+    'tests\\u007-final-native.cjs', 'tests\\u007-final-authority.cjs',
+    head.nativeSummary, head.reusedProof, native.manifest, nativeManifest.transcripts.stdout.path];
+  for (const target of targets) {
+    const changed = Buffer.from(read(target));
+    changed[Math.floor(changed.length / 2)] ^= 1;
+    const errors = authority.verify(root, (file) => file === target ? changed : read(file));
+    assert.ok(errors.some((error) => /^U007_FINAL_/.test(error)), target);
+  }
+});
+test('U007-FINAL-E003: missing final native proof cannot fall back to the original historical verifier', () => {
+  const head = JSON.parse(read(authority.HEAD));
+  for (const target of [authority.HEAD, head.nativeSummary]) {
+    assert.ok(authority.verify(root, (file) => {
+      if (file === target) throw Object.assign(new Error('missing'), { code: 'ENOENT' });
+      return read(file);
+    }).some((error) => error.startsWith('U007_FINAL_MISSING:')), target);
+  }
+});
+test('U007-FINAL-E004: only exact raw/LF/CRLF code representations pass, never mixed newline rewrites', () => {
+  for (const target of ['scratch.cjs', 'scratch-session.cjs', 'tests\\u007-final-native.cjs']) {
+    const canonical = read(target).toString('latin1').replace(/\r\n/g, '\n');
+    for (const text of [canonical, canonical.replace(/\n/g, '\r\n')]) {
+      assert.deepEqual(authority.verify(root, (file) => file === target ? Buffer.from(text, 'latin1') : read(file)), []);
+    }
+    const crlf = canonical.replace(/\n/g, '\r\n');
+    const at = crlf.indexOf('\r\n');
+    const mixed = Buffer.from(crlf.slice(0, at) + '\n' + crlf.slice(at + 2), 'latin1');
+    assert.ok(authority.verify(root, (file) => file === target ? mixed : read(file)).some((error) => error.includes('U007_FINAL_PIN_CHANGED:' + target)));
+  }
+});
+test('U007-FINAL-E005: an actual unlisted final namespace addition is refused without a blanket exclusion', () => {
+  const file = path.join(root, 'u007-final-unlisted-' + randomUUID() + '.cjs');
+  fs.writeFileSync(file, 'unlisted owned tamper control\n', { flag: 'wx' });
+  try { assert.ok(authority.verify(root).some((error) => error.startsWith('U007_FINAL_NAMESPACE:'))); }
+  finally { fs.unlinkSync(file); }
+  assert.deepEqual(authority.verify(root), []);
+});

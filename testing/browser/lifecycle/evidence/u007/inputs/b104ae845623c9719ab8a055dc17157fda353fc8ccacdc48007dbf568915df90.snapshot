@@ -1,0 +1,65 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { implementation, ManualClock, fixture, discard } = require('./u007-support.cjs');
+const { hold } = require('./u007-lock-support.cjs');
+const { createScratchOwner, createFileSystemAdapters } = implementation();
+for (const transient of [true, false]) {
+  test(`${transient ? 'R001' : 'R002'}: actual Windows delete-denying handle ${transient ? 'released before retry' : 'held through exhaustion'}`,
+    { timeout: 300000 }, async () => {
+      assert.equal(process.platform, 'win32', 'this gate needs actual Windows, not a synthetic substitute');
+      const parent = fixture();
+      const root = path.join(parent, 'session-locked');
+      const file = path.join(root, 'held.txt');
+      const clock = new ManualClock();
+      const adapter = createFileSystemAdapters();
+      let holder;
+      let failedWhileHeld = 0;
+      let releaseBeforeRetry = false;
+      const rawRemove = adapter.remove;
+      adapter.remove = async (p) => {
+        assert.equal(p, root, 'only the exclusive-created owned root is targeted');
+        try { await rawRemove(p); }
+        catch (error) {
+          assert.ok(['EBUSY', 'EPERM', 'EACCES', 'ENOTEMPTY'].includes(error.code), 'real Windows locked-file removal error');
+          assert.equal((await holder.state()).event, 'still-held');
+          failedWhileHeld += 1;
+          console.log('U007-WINDOWS-REMOVE ' + JSON.stringify({ attempt: failedWhileHeld, code: error.code, held: true }));
+          throw error;
+        }
+      };
+      clock.sleep = async (ms) => {
+        if (transient && !releaseBeforeRetry) { await holder.release(); releaseBeforeRetry = true; }
+        clock.t += ms;
+      };
+      const owner = createScratchOwner({ parent, fs: adapter, clock });
+      try {
+        await owner.mkdir(root);
+        await fs.promises.writeFile(file, 'owned locked bytes');
+        holder = await hold(file, transient ? 'ReadWrite' : 'None');
+        console.log('U007-WINDOWS-HELD ' + JSON.stringify(holder.acknowledgement));
+        const result = await owner.cleanup({ timeoutMs: 200, maxAttempts: 4 });
+        if (transient) {
+          assert.equal(result.clean, true, 'same RED assertion: the real transient lock must be recovered');
+          assert.equal(releaseBeforeRetry, true);
+          assert.equal(failedWhileHeld, 1);
+          assert.equal(result.confirmed, true);
+          assert.equal(fs.existsSync(root), false);
+        } else {
+          assert.equal(result.clean, false);
+          assert.equal(result.attempts.length, 4, 'same RED assertion: actual persistent lock reaches the finite retry bound');
+          assert.equal(failedWhileHeld, 4);
+          assert.deepEqual(result.remaining, [root, file]);
+          assert.equal((await holder.state()).event, 'still-held');
+          assert.equal(fs.existsSync(file), true);
+        }
+        console.log('U007-WINDOWS-OUTCOME ' + JSON.stringify({ transient, clean: result.clean,
+          attempts: result.attempts.length, failedWhileHeld, releaseBeforeRetry, confirmed: result.confirmed }));
+      } finally {
+        if (holder) await holder.release();
+        await discard(parent);
+      }
+    });
+}

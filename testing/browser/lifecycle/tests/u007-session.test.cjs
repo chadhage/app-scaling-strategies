@@ -1,0 +1,52 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { implementation, ManualClock, fixture, discard, processReport } = require('./u007-support.cjs');
+const { createScratchOwner, createFileSystemAdapters, wrapScratchSession } = implementation();
+for (const order of [[0, 1], [1, 0]]) {
+  test(`S009: two live owned instances, ${order[0] === 0 ? 'FIFO' : 'LIFO'}, repeated close and unrelated neighbour`, async () => {
+    const parent = fixture();
+    const sessions = [];
+    const owners = [];
+    const roots = [];
+    const neighbour = path.join(parent, 'session-neighbour');
+    await fs.promises.mkdir(neighbour);
+    await fs.promises.writeFile(path.join(neighbour, 'sentinel.txt'), 'neighbour unchanged');
+    try {
+      for (const label of ['A', 'B']) {
+        const clock = new ManualClock();
+        const owner = createScratchOwner({ parent, fs: createFileSystemAdapters(), clock });
+        const root = path.join(parent, 'session-' + label);
+        await owner.mkdir(root);
+        await fs.promises.writeFile(path.join(root, 'sentinel.txt'), label);
+        let closes = 0;
+        const session = wrapScratchSession({ page: { title: async () => label }, close: async () => { closes += 1; return processReport(); } }, owner,
+          { timeoutMs: 2000 });
+        sessions.push({ session, closes: () => closes });
+        owners.push(owner);
+        roots.push(root);
+      }
+      const first = sessions[order[0]];
+      const last = sessions[order[1]];
+      const p = first.session.close();
+      assert.equal(p, first.session.close(), 'concurrent close shares the same promise');
+      const outcome = await p;
+      assert.equal(outcome.clean, true);
+      assert.equal(first.session.close(), p);
+      assert.equal(first.closes(), 1);
+      assert.equal(await last.session.page.title(), order[1] === 1 ? 'B' : 'A');
+      assert.equal(await fs.promises.readFile(path.join(roots[order[1]], 'sentinel.txt'), 'utf8'), order[1] === 1 ? 'B' : 'A');
+      assert.equal(await fs.promises.readFile(path.join(neighbour, 'sentinel.txt'), 'utf8'), 'neighbour unchanged');
+      assert.equal((await last.session.close()).clean, true);
+      assert.equal(last.closes(), 1);
+      assert.deepEqual(owners[order[0]].paths(), [roots[order[0]]]);
+      assert.deepEqual(owners[order[1]].paths(), [roots[order[1]]]);
+      assert.equal(await fs.promises.readFile(path.join(neighbour, 'sentinel.txt'), 'utf8'), 'neighbour unchanged');
+    } finally {
+      for (const { session } of sessions) await session.close();
+      await discard(parent);
+    }
+  });
+}

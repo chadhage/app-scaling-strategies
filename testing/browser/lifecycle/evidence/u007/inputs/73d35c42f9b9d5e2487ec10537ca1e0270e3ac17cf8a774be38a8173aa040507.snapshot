@@ -1,0 +1,25 @@
+@U007 @zero_credit @closed_inputs
+Feature: Reject invalid cleanup configuration before launching and refuse hidden report fields
+  No browser or process may be launched for an invalid scratch cleanup budget.
+  Closed pure process reports include every own key, not only enumerable strings.
+
+  Scenario Outline: An invalid scratch cleanup limit has no startup effects
+    Given a valid invocation and an invalid <option>
+    When the scratch session is started
+    Then a typed options refusal is returned before listing or opening
+    And no process or scratch root has been created
+    Examples:
+      | option           |
+      | scratchTimeoutMs |
+      | scratchMaxAttempts |
+
+  Scenario Outline: A hidden unknown process-report key cannot authorize scratch removal
+    Given positively owned scratch and an otherwise clean process report
+    And the report has an unknown <key> property
+    When the session is closed
+    Then the report is refused as closed-data validation failure
+    And owned scratch remains unremoved with its uncertainty reported
+    Examples:
+      | key                  |
+      | symbol               |
+      | nonenumerable string |

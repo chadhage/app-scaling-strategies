@@ -1,0 +1,55 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const subject = process.env.U007_VALIDATION_SUBJECT || path.resolve(__dirname, '..');
+const core = require(path.join(subject, 'scratch.cjs'));
+const api = require(path.join(subject, 'scratch-session.cjs'));
+const { World } = require('./u005-support-world.cjs');
+const { ManualClock, fakeFileSystem, drive, processReport } = require('./u007-support.cjs');
+for (const [option, value] of [['scratchTimeoutMs', 0], ['scratchMaxAttempts', 17]]) {
+  test(`U007-R005 ${option}: invalid cleanup options refuse before opening a session`, async () => {
+    const parent = path.resolve('owned-parent'), root = path.join(parent, 'session-owned');
+    const world = new World(); world.cost = 0;
+    const fake = fakeFileSystem(parent, world.clock);
+    let opens = 0, browser = null;
+    const before = fs.promises.mkdir;
+    const handle = api.startScratchSession(async () => {
+      opens += 1;
+      await fs.promises.mkdir(root);
+      browser = world.os.spawn(world.os.selfPid);
+      return { page: {}, close: async () => { world.os.exit(browser.pid); } };
+    }, { scratchParent: parent, scratchFs: fake.adapter, scratchClock: world.clock, clock: world.clock,
+      adapters: world.adapters(), deadlineMs: 1000, [option]: value });
+    try {
+      if (handle.ok) await drive(world.clock, handle.ready);
+      assert.deepEqual({
+        ok: handle.ok, code: handle.code, opens, processLists: world.listCalls,
+        browserStillRunning: browser === null ? false : world.has(browser),
+        rootExists: fake.entries.has(root), observerRestored: fs.promises.mkdir === before,
+      }, {
+        ok: false, code: 'ERR_SCRATCH_OPTIONS', opens: 0, processLists: 0,
+        browserStillRunning: false, rootExists: false, observerRestored: true,
+      }, 'invalid scratch cleanup configuration must not launch a process that its close wrapper cannot close');
+    } finally { if (browser) world.os.exit(browser.pid); }
+  });
+}
+for (const kind of ['symbol', 'nonenumerable']) {
+  test(`U007-R006 ${kind}: an unknown own report key cannot be silently discarded`, async () => {
+    const parent = path.resolve('owned-parent'), root = path.join(parent, 'session-owned');
+    const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+    const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+    await owner.mkdir(root);
+    const report = processReport();
+    Object.defineProperty(report, kind === 'symbol' ? Symbol('unexpected') : 'unexpected', { value: true, enumerable: kind === 'symbol' });
+    const wrapped = api.wrapScratchSession({ close: async () => report }, owner, { clock });
+    const result = await drive(clock, wrapped.close());
+    assert.equal(result.ok, false, 'a closed-data report must validate every own key before granting cleanup authority');
+    assert.equal(result.error.code, 'ERR_SCRATCH_SESSION');
+    assert.deepEqual(result.error.outcome.originalCloseError, { path: null, phase: 'process-report',
+      code: 'ERR_SCRATCH_REPORT', message: 'process report fields must be closed data properties' });
+    assert.equal(fake.state.calls.length, 0);
+    assert.equal(fake.entries.has(root), true);
+  });
+}

@@ -1,0 +1,128 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { verify: verifyHistorical, sha, lf } = require('./u007-evidence-support.cjs');
+const BASE_PATH = 'evidence\\u007\\amendments\\authority-base.json';
+const BASE_SHA256 = 'ebfd565f56caf81ab2a2ca94b2a7090e14a5e2611b6e74cd376acf3a679c95ba';
+const HEAD_PATH = 'evidence\\u007\\amendments\\authority-head-1.json';
+const AMENDABLE = ['scratch.cjs', 'scratch-session.cjs', 'tests\\u007-evidence.test.cjs'];
+const SHA = /^[0-9a-f]{64}$/;
+const closed = (value, keys) => value !== null && typeof value === 'object' && !Array.isArray(value)
+  && Object.keys(value).sort().join('\0') === [...keys].sort().join('\0');
+const pair = (value) => closed(value, ['rawSha256', 'crlfToLfSha256'])
+  && SHA.test(value.rawSha256) && SHA.test(value.crlfToLfSha256);
+const digestPair = (bytes) => ({ rawSha256: sha(bytes), crlfToLfSha256: sha(lf(bytes)) });
+const samePair = (a, b) => a.rawSha256 === b.rawSha256 && a.crlfToLfSha256 === b.crlfToLfSha256;
+const matches = (bytes, entry) => { const digest = sha(bytes); return digest === entry.rawSha256 || digest === entry.crlfToLfSha256; };
+class IntegrityFailure extends Error {
+  constructor(code, detail) { super(code + ':' + detail); this.code = code; }
+}
+const fail = (code, detail) => { throw new IntegrityFailure(code, detail); };
+function bytesOf(read, file) {
+  let bytes;
+  try { bytes = read(file); }
+  catch (error) {
+    if (error instanceof IntegrityFailure) throw error;
+    fail(error?.code === 'ENOENT' ? 'AUTHORITY_MISSING' : 'AUTHORITY_READ', file);
+  }
+  if (!Buffer.isBuffer(bytes) || bytes.length > 64 * 1024 * 1024) fail('AUTHORITY_BYTES', file);
+  return bytes;
+}
+function parse(bytes, file) {
+  try { return JSON.parse(bytes.toString('utf8')); }
+  catch (error) { if (error instanceof SyntaxError) fail('AUTHORITY_JSON', file); throw error; }
+}
+const retainedPath = (digest) => `evidence\\u007\\amendments\\originals\\${digest}.snapshot`;
+function load(read, headPath) {
+  const rawBase = bytesOf(read, BASE_PATH);
+  if (sha(rawBase) !== BASE_SHA256) fail('AUTHORITY_BASE_CHANGED', BASE_PATH);
+  const base = parse(rawBase, BASE_PATH);
+  if (!closed(base, ['schema', 'cardId', 'index', 'seal', 'originals']) || base.schema !== 'U007-original-authority/1'
+    || base.cardId !== 'U007' || base.originals.length !== AMENDABLE.length) fail('AUTHORITY_BASE_SHAPE', BASE_PATH);
+  for (const [key, file] of [['index', 'evidence\\u007\\capture-index.json'], ['seal', 'evidence\\u007\\capture-index.sha256']]) {
+    if (!closed(base[key], ['path', 'rawSha256']) || base[key].path !== file || !SHA.test(base[key].rawSha256)
+      || sha(bytesOf(read, file)) !== base[key].rawSha256) fail('INDEX_CHANGED', file);
+  }
+  const oldIndex = parse(bytesOf(read, base.index.path), base.index.path);
+  const originalBytes = new Map(), current = new Map();
+  for (const entry of base.originals) {
+    const pin = oldIndex.pins.find((pin) => pin.path === entry.path);
+    if (!closed(entry, ['path', 'rawSha256', 'crlfToLfSha256', 'retained']) || !AMENDABLE.includes(entry.path)
+      || originalBytes.has(entry.path) || !pin || !samePair(pin, entry) || entry.retained !== retainedPath(entry.rawSha256)) fail('AUTHORITY_ORIGINAL_ENTRY', entry.path);
+    const bytes = bytesOf(read, entry.retained);
+    if (!samePair(digestPair(bytes), entry)) fail('ORIGINAL_CHANGED', entry.retained);
+    originalBytes.set(entry.path, bytes);
+    current.set(entry.path, { rawSha256: entry.rawSha256, crlfToLfSha256: entry.crlfToLfSha256 });
+  }
+  const headName = /^evidence\\u007\\amendments\\authority-head-([1-9]\d*)\.json$/.exec(headPath);
+  const head = parse(bytesOf(read, headPath), headPath);
+  if (!headName || !closed(head, ['schema', 'cardId', 'sequence', 'baseSha256', 'addendumPath', 'addendumSha256'])
+    || head.schema !== 'U007-authority-head/1' || head.cardId !== 'U007' || head.sequence !== Number(headName[1])
+    || head.sequence > 32 || head.baseSha256 !== BASE_SHA256 || !SHA.test(head.addendumSha256)) fail('AUTHORITY_HEAD_SHAPE', headPath);
+  let previous = null, latest;
+  const added = new Map();
+  for (let sequence = 1; sequence <= head.sequence; sequence += 1) {
+    const file = `evidence\\u007\\amendments\\authority-addendum-${sequence}.json`;
+    const bytes = bytesOf(read, file), step = parse(bytes, file);
+    if (!closed(step, ['schema', 'cardId', 'sequence', 'base', 'previous', 'helper', 'amendments', 'files', 'captures'])
+      || step.schema !== 'U007-authority-addendum/1' || step.cardId !== 'U007' || step.sequence !== sequence
+      || !closed(step.base, ['path', 'rawSha256']) || step.base.path !== BASE_PATH || step.base.rawSha256 !== BASE_SHA256) fail('AUTHORITY_ADDENDUM_SHAPE', file);
+    if (previous === null ? step.previous !== null : !closed(step.previous, ['path', 'rawSha256'])
+      || step.previous.path !== previous.path || step.previous.rawSha256 !== previous.rawSha256) fail('AUTHORITY_CHAIN_CHANGED', file);
+    if (!closed(step.helper, ['path', 'rawSha256', 'crlfToLfSha256']) || step.helper.path !== 'tests\\u007-current-evidence.cjs'
+      || !SHA.test(step.helper.rawSha256) || !SHA.test(step.helper.crlfToLfSha256)) fail('AUTHORITY_HELPER_ENTRY', file);
+    if (sequence === head.sequence) {
+      if (!matches(bytesOf(read, step.helper.path), step.helper)) fail('PIN_CHANGED', step.helper.path);
+    } else if (!matches(bytesOf(read, step.helper.path), step.helper)
+      && !samePair(digestPair(bytesOf(read, retainedPath(step.helper.rawSha256))), step.helper)) fail('ORIGINAL_CHANGED', step.helper.path);
+    if (!Array.isArray(step.amendments) || step.amendments.length !== AMENDABLE.length
+      || !Array.isArray(step.files) || step.files.length > 128 || !Array.isArray(step.captures) || step.captures.length > 128) fail('AUTHORITY_ENTRY_COUNT', file);
+    const seen = new Set();
+    for (const amendment of step.amendments) {
+      if (!closed(amendment, ['path', 'previous', 'current']) || !AMENDABLE.includes(amendment.path) || seen.has(amendment.path)
+        || !pair(amendment.previous) || !pair(amendment.current) || !samePair(current.get(amendment.path), amendment.previous)) fail('AUTHORITY_AMENDMENT', file);
+      if (!samePair(digestPair(bytesOf(read, retainedPath(amendment.previous.rawSha256))), amendment.previous)) fail('ORIGINAL_CHANGED', amendment.path);
+      seen.add(amendment.path);
+      current.set(amendment.path, { ...amendment.current });
+    }
+    for (const entry of step.files) {
+      if (!closed(entry, ['path', 'rawSha256', 'crlfToLfSha256']) || seen.has(entry.path) || !SHA.test(entry.rawSha256)
+        || !SHA.test(entry.crlfToLfSha256) || !(/^(?:U007-[a-z-]+\.feature|README-U007-[a-z-]+\.md|tests\\u007-[a-z0-9.-]+\.cjs)$/.test(entry.path)
+          || entry.path === 'evidence\\u007\\amendments\\.gitattributes')
+        || oldIndex.pins.some((pin) => pin.path === entry.path)) fail('AUTHORITY_ADDED_PATH', file);
+      if (added.has(entry.path) && !samePair(added.get(entry.path), entry)
+        && !samePair(digestPair(bytesOf(read, retainedPath(added.get(entry.path).rawSha256))), added.get(entry.path))) fail('ORIGINAL_CHANGED', entry.path);
+      seen.add(entry.path);
+      added.set(entry.path, { rawSha256: entry.rawSha256, crlfToLfSha256: entry.crlfToLfSha256 });
+    }
+    previous = { path: file, rawSha256: sha(bytes) };
+    latest = step;
+  }
+  if (head.addendumPath !== previous.path || head.addendumSha256 !== previous.rawSha256) fail('AUTHORITY_HEAD_LINK', headPath);
+  for (const [file, pin] of [...current, ...added]) if (!matches(bytesOf(read, file), pin)) fail('PIN_CHANGED', file);
+  return { originalBytes, current, latest };
+}
+function verify(root, read = (file) => fs.readFileSync(path.join(root, file)), headPath = HEAD_PATH) {
+  try {
+    const authority = load(read, headPath);
+    const historicalRead = (file) => authority.originalBytes.has(file) ? authority.originalBytes.get(file) : bytesOf(read, file);
+    const failures = verifyHistorical(root, historicalRead);
+    if (failures.length) return failures;
+    const index = Buffer.from(JSON.stringify({ schema: 'U007-evidence-index/1', pins: [], captures: authority.latest.captures, limits: 'Append-only current captures; original index is unchanged.' }));
+    const currentRead = (file) => file === 'evidence\\u007\\capture-index.json' ? index
+      : file === 'evidence\\u007\\capture-index.sha256' ? Buffer.from(sha(index) + '\n') : bytesOf(read, file);
+    failures.push(...verifyHistorical(root, currentRead));
+    for (const file of ['scratch.cjs', 'scratch-session.cjs']) {
+      const coverage = authority.latest.captures.filter((capture) => capture.kind === 'coverage' && capture.final && capture.productionFile === file);
+      if (coverage.length !== 1) fail('AUTHORITY_CURRENT_COVERAGE', file);
+      const manifest = parse(bytesOf(read, coverage[0].manifest), coverage[0].manifest);
+      const input = manifest.inputs.find((entry) => entry.path === file);
+      if (!input || !samePair(authority.current.get(file), input)) fail('AUTHORITY_COVERAGE_SOURCE', file);
+    }
+    return failures;
+  } catch (error) {
+    if (error instanceof IntegrityFailure) return [error.message];
+    throw error;
+  }
+}
+module.exports = { verify };

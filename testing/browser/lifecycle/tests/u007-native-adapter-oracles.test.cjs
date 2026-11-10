@@ -1,0 +1,116 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const core = require('../scratch.cjs');
+const api = require('../scratch-session.cjs');
+const { ManualClock, fakeFileSystem, drive } = require('./u007-support.cjs');
+const parent = path.resolve('owned-parent');
+const root = path.join(parent, 'session-owned');
+for (const kind of ['file', 'directory', 'link']) {
+  test(`U007-M031: native lstat ${kind} retains exact identity units and bigint request`, async (t) => {
+    let received;
+    t.mock.method(fs.promises, 'lstat', async (...args) => {
+      received = args;
+      return { dev: 12n, ino: 34n, birthtimeNs: 56n, isSymbolicLink: () => kind === 'link', isDirectory: () => kind === 'directory' };
+    });
+    assert.deepEqual(await core.createFileSystemAdapters().lstat(root), { kind, device: '12', fileId: '34', birth: '56' });
+    assert.deepEqual(received, [root, { bigint: true }]);
+  });
+}
+test('U007-M032: the native removal adapter disables native retries and force masking', async (t) => {
+  const marker = { removed: 'original adapter result' };
+  let received;
+  t.mock.method(fs.promises, 'rm', async (...args) => { received = args; return marker; });
+  assert.equal(await core.createFileSystemAdapters().remove(root), marker);
+  assert.deepEqual(received, [root, { recursive: true, force: false, maxRetries: 0 }]);
+});
+for (const mode of ['success', 'over-cap', 'read-error', 'close-error']) {
+  test(`U007-M033: native directory ${mode} closes the opened handle and preserves its result or failure`, async (t) => {
+    const readFailure = Object.assign(Error('original directory read error'), { code: 'EIO' });
+    const closeFailure = Object.assign(Error('original directory close error'), { code: 'EBUSY' });
+    const rows = ['file', 'directory', 'link'].map((kind) => ({
+      name: kind + '-entry', isSymbolicLink: () => kind === 'link', isDirectory: () => kind === 'directory',
+    }));
+    let reads = 0, closed = 0, opened;
+    t.mock.method(fs.promises, 'opendir', async (target) => {
+      opened = target;
+      return {
+        async read() { if (mode === 'read-error') throw readFailure; return rows[reads++] || null; },
+        async close() { closed += 1; if (mode === 'close-error') throw closeFailure; },
+      };
+    });
+    const pending = core.createFileSystemAdapters().readDir(root, mode === 'over-cap' ? 1 : 3);
+    if (mode === 'success') assert.deepEqual(await pending, rows.map((row) => ({ name: row.name, kind: row.name.split('-')[0] })));
+    if (mode === 'over-cap') await assert.rejects(pending, { code: 'ERR_SCRATCH_LIMIT', message: 'directory entry limit; no recursive removal is authorized' });
+    if (mode === 'read-error') await assert.rejects(pending, (error) => error === readFailure);
+    if (mode === 'close-error') await assert.rejects(pending, (error) => error === closeFailure);
+    assert.equal(opened, root);
+    assert.equal(closed, 1);
+    if (mode === 'success') assert.equal(reads, 4);
+    if (mode === 'over-cap') assert.equal(reads, 2);
+  });
+}
+for (const target of [undefined, 'not-a-canonical-path', path.join(parent, 'NUL'), path.join(parent, 'trailing.'),
+  path.join(parent, 'nested', 'child'), path.join(parent, '..', 'neighbour')]) {
+  test(`U007-M034: invalid or foreign exclusive target ${String(target)} refuses before mkdir`, async () => {
+    const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+    let creations = 0;
+    const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, mkdir: async (target) => {
+      creations += 1; return fake.adapter.mkdir(target);
+    } } });
+    await assert.rejects(owner.mkdir(target), { code: 'ERR_SCRATCH_OWNERSHIP', message: 'only a new direct child of this owner parent may be created' });
+    assert.equal(creations, 0);
+    assert.deepEqual(owner.paths(), []);
+    assert.equal(fake.state.calls.length, 0);
+  });
+}
+test('U007-M035: a failed exclusive mkdir grants no pending path and does not prevent a later genuine creation', async () => {
+  const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+  const neighbour = path.join(parent, 'session-neighbour');
+  fake.put(neighbour);
+  const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+  await assert.rejects(owner.mkdir(neighbour), { code: 'EEXIST' });
+  await owner.mkdir(root);
+  assert.deepEqual(owner.paths(), [root]);
+  const report = (await drive(clock, owner.cleanup())).value;
+  assert.equal(report.clean, true);
+  assert.deepEqual(report.removed, [root]);
+  assert.equal(fake.entries.has(neighbour), true);
+  const refused = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+  await assert.rejects(refused.mkdir(neighbour), { code: 'EEXIST' });
+  const absentProvenance = await refused.cleanup();
+  assert.deepEqual(absentProvenance, {
+    code: 'ERR_SCRATCH_OWNERSHIP', clean: false, confirmed: false, attempts: [], delays: [], removed: [], remaining: [],
+    refused: [{ path: null, code: 'ERR_SCRATCH_OWNERSHIP', message: 'no completed exclusive-creation provenance' }],
+    errors: [], unconfirmed: [], work: { identityReads: 0, directoryReads: 0, entries: 0 },
+  });
+});
+test('U007-M036: invocation refusals preserve the exact public option error without entering startup', () => {
+  for (const [run, options, message] of [
+    [null, undefined, 'run must be an invocation function'],
+    [() => {}, null, 'expected a non-Proxy options object'],
+    [() => {}, { unknown: true }, 'unknown option'],
+    [() => {}, { scratchTimeoutMs: 0 }, 'timeoutMs is outside the supported positive integer range'],
+    [() => {}, { scratchMaxAttempts: 17 }, 'maxAttempts is outside the supported positive integer range'],
+  ]) {
+    const result = api.startScratchSession(run, options);
+    assert.equal(result.ok, false);
+    assert.equal(result.code, 'ERR_SCRATCH_OPTIONS');
+    assert.deepEqual(result.refused, [{ path: null, code: 'ERR_SCRATCH_OPTIONS', message }]);
+  }
+});
+test('U007-M037: mkdir mode and recursion are single-read captured values rather than later adapter getter reads', async () => {
+  const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+  let modeReads = 0, recursiveReads = 0, received;
+  const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, mkdir: async (target, options) => {
+    received = options; await fake.adapter.mkdir(target);
+  } } });
+  await owner.mkdir(root, { get recursive() { recursiveReads += 1; return false; },
+    get mode() { modeReads += 1; return modeReads === 1 ? 448 : 511; } });
+  assert.deepEqual(received, { recursive: false, mode: 448 });
+  assert.equal(Object.isFrozen(received), true);
+  assert.equal(modeReads, 1);
+  assert.equal(recursiveReads, 1);
+});

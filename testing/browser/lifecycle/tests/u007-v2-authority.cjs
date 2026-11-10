@@ -1,0 +1,141 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const zlib = require('node:zlib');
+const { createHash } = require('node:crypto');
+const BASE = 'evidence\\u007\\v2\\base.json';
+const HEAD = 'evidence\\u007\\v2\\head-4.json';
+const PREVIOUS_V2_HEAD_SHA256 = 'a53fe1c277a4c6a59b0aebc295e463234fddb83166cceb8dc44222c57ce4505f';
+const BASE_SHA256 = '405bdf5b277e93fa3dba62162df8bdcd7fe464e0226bb5eb40220e6d282e0316';
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const fail = (code, detail) => { throw Object.assign(new Error(code + ':' + detail), { code }); };
+const matches = (bytes, digests) => Buffer.isBuffer(bytes) && Object.values(digests).includes(hash(bytes));
+const list = (root, directory = root) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+  const file = path.join(directory, entry.name);
+  return entry.isDirectory() ? list(root, file) : [path.relative(root, file)];
+});
+function verify(root, read = (file) => fs.readFileSync(path.join(root, file))) {
+  try {
+    const bytesOf = (file) => {
+      if (typeof file !== 'string' || path.isAbsolute(file) || file.split('\\').some((part) => !part || part === '..' || part === '.') || /[:/\0]/.test(file)) fail('U007_FINAL_PATH', file);
+      try { return read(file); } catch { fail('U007_FINAL_MISSING', file); }
+    };
+    const parse = (file) => {
+      try { return JSON.parse(bytesOf(file).toString('utf8')); } catch (error) {
+        if (error.code?.startsWith('U007_FINAL_')) throw error;
+        fail('U007_FINAL_JSON', file);
+      }
+    };
+    if (hash(bytesOf(BASE)) !== BASE_SHA256) fail('U007_FINAL_BASE_CHANGED', BASE);
+    const base = parse(BASE);
+    if (base.schema !== 'U007-v2-base/1' || base.cardId !== 'U007' || base.oldFiles.length !== 753
+      || base.external.length !== 283 || base.snapshots.length !== 4) fail('U007_FINAL_BASE_SHAPE', BASE);
+    const historicalPins = new Map(base.oldFiles.map((entry) => [entry.path, entry.digests]));
+    const snapshots = new Map();
+    for (const entry of base.snapshots) {
+      const bytes = bytesOf(entry.retained);
+      if (hash(bytes) !== entry.rawSha256 || entry.rawSha256 !== historicalPins.get(entry.path)?.rawSha256) fail('U007_FINAL_OLD_SOURCE', entry.path);
+      snapshots.set(entry.path, bytes);
+    }
+    const historyRead = (file) => snapshots.get(file) || bytesOf(file);
+    const originalHead = 'evidence\\u007\\amendments\\authority-head-1.json';
+    try { JSON.parse(historyRead(originalHead)); } catch (error) {
+      const legacy = error.code === 'U007_FINAL_MISSING' ? 'AUTHORITY_MISSING:' : 'AUTHORITY_JSON:';
+      return [legacy + originalHead, 'U007_FINAL_HISTORY:' + originalHead];
+    }
+    for (const entry of base.oldFiles) if (!matches(historyRead(entry.path), entry.digests)) fail('U007_FINAL_PIN_CHANGED', entry.path);
+    for (const entry of base.external) {
+      const bytes = fs.readFileSync(path.join(root, '..', '..', '..', entry.path));
+      if (!matches(bytes, entry.digests)) fail('U007_FINAL_IMPORT_CHANGED', entry.path);
+    }
+    if (hash(historyRead(base.previousHead)) !== base.previousHeadSha256) fail('U007_FINAL_PREVIOUS_HEAD', base.previousHead);
+    const oldHelperPath = path.join(root, 'tests', 'u007-final-authority.cjs');
+    const oldHelper = new Module(oldHelperPath, module);
+    oldHelper.filename = oldHelperPath;
+    oldHelper.paths = Module._nodeModulePaths(path.dirname(oldHelperPath));
+    const requireOld = oldHelper.require.bind(oldHelper);
+    const oldNames = [...historicalPins.keys()];
+    const historicalDirectory = (directory, options) => {
+      const relative = path.relative(root, directory);
+      const prefix = relative ? relative + '\\' : '';
+      const names = new Map();
+      for (const file of oldNames.filter((file) => file.startsWith(prefix))) {
+        const suffix = file.slice(prefix.length), at = suffix.indexOf('\\');
+        const name = at < 0 ? suffix : suffix.slice(0, at);
+        names.set(name, at >= 0);
+      }
+      if (!options?.withFileTypes) return [...names.keys()];
+      return [...names].map(([name, directory]) => ({ name, isDirectory: () => directory, isFile: () => !directory }));
+    };
+    oldHelper.require = (id) => id === 'node:fs' ? { ...fs, readdirSync: historicalDirectory } : requireOld(id);
+    oldHelper._compile(historyRead('tests\\u007-final-authority.cjs').toString('utf8'), oldHelperPath);
+    const oldErrors = oldHelper.exports.verify(root, historyRead,
+      (file) => fs.readFileSync(path.join(root, '..', '..', '..', file)));
+    if (oldErrors.length) return [...oldErrors, ...oldErrors.map((error) => 'U007_FINAL_HISTORY:' + error)];
+    const head = parse(HEAD);
+    if (head.schema !== 'U007-v2-head/1' || head.cardId !== 'U007' || head.sequence !== 4
+      || head.baseSha256 !== BASE_SHA256 || head.previousHeadSha256 !== base.previousHeadSha256
+      || head.previousV2Head?.path !== 'evidence\\u007\\v2\\head-3.json'
+      || head.previousV2Head.rawSha256 !== PREVIOUS_V2_HEAD_SHA256
+      || hash(bytesOf(head.previousV2Head.path)) !== PREVIOUS_V2_HEAD_SHA256
+      || !Array.isArray(head.changes) || !Array.isArray(head.additions)) fail('U007_FINAL_HEAD', HEAD);
+    const validateDigests = (entry) => {
+      const digests = entry.digests, bytes = bytesOf(entry.path);
+      if (!digests || Object.keys(digests).sort().join(',') !== 'crlfSha256,lfSha256,rawSha256'
+        || Object.values(digests).some((value) => typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value))) fail('U007_FINAL_DIGEST_SHAPE', entry.path);
+      const code = !entry.path.startsWith('evidence\\') && /\.(?:cjs|js|md|feature|ps1|txt|html)$/.test(entry.path);
+      const canonical = Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+      const lf = code ? hash(canonical) : hash(bytes);
+      const crlf = code ? hash(Buffer.from(canonical.toString('latin1').replace(/\n/g, '\r\n'), 'latin1')) : hash(bytes);
+      if (digests.lfSha256 !== lf || digests.crlfSha256 !== crlf || ![lf, crlf].includes(digests.rawSha256)
+        || !matches(bytes, digests)) fail('U007_FINAL_PIN_CHANGED', entry.path);
+    };
+    const current = new Map(historicalPins), changed = new Set();
+    for (const entry of head.changes) {
+      validateDigests(entry);
+      if (!snapshots.has(entry.path) || changed.has(entry.path) || entry.previousRawSha256 !== historicalPins.get(entry.path).rawSha256) fail('U007_FINAL_AMENDMENT', entry.path);
+      changed.add(entry.path); current.set(entry.path, entry.digests);
+    }
+    if (changed.size !== 4) fail('U007_FINAL_AMENDMENT_COUNT', HEAD);
+    for (const entry of head.additions) {
+      validateDigests(entry);
+      if (current.has(entry.path) || (!entry.path.startsWith('evidence\\u007\\v2\\') && !/^(?:tests\\u007-[a-z0-9.-]+\.cjs|README-U007-v2\.md|U007-v2\.feature)$/.test(entry.path))) fail('U007_FINAL_ADDED_PATH', entry.path);
+      current.set(entry.path, entry.digests);
+    }
+    current.set(HEAD, null);
+    for (const [file, digests] of current) if (digests && !matches(bytesOf(file), digests)) fail('U007_FINAL_PIN_CHANGED', file);
+    const actual = list(root), unknown = actual.filter((file) => !current.has(file)), missing = [...current.keys()].filter((file) => !actual.includes(file));
+    if (unknown.length || missing.length) fail('U007_FINAL_NAMESPACE', JSON.stringify({ unknown, missing }));
+    for (const capture of head.captures) {
+      const manifest = parse(capture.manifest);
+      if (hash(bytesOf(capture.manifest)) !== capture.manifestSha256 || manifest.timedOut) fail('U007_FINAL_CAPTURE', capture.name);
+      let output;
+      for (const [name, stream] of Object.entries(manifest.transcripts)) {
+        const compressed = bytesOf(stream.path), bytes = zlib.gunzipSync(compressed);
+        if (hash(compressed) !== stream.gzipSha256 || hash(bytes) !== stream.sha256 || bytes.length !== stream.bytes) fail('U007_FINAL_STREAM', capture.name);
+        if (name === 'stdout') output = bytes.toString('utf8');
+      }
+      for (const key of ['tests', 'pass', 'fail', 'skipped']) {
+        const match = output.match(new RegExp('^# ' + key + ' (\\d+)$', 'm'));
+        if (match && Number(match[1]) !== manifest.summary[key]) fail('U007_FINAL_SUMMARY', capture.name);
+      }
+      if (capture.kind === 'coverage') {
+        const row = manifest.summary.coverageRows;
+        if (manifest.exitCode !== 0 || row.length !== 1 || row[0].file !== capture.productionFile
+          || ['lines', 'branches', 'functions'].some((metric) => row[0][metric] < 85)
+          || manifest.inputs.find((entry) => entry.path === capture.productionFile)?.rawSha256 !== current.get(capture.productionFile).rawSha256) fail('U007_FINAL_COVERAGE', capture.name);
+      }
+    }
+    for (const file of ['scratch.cjs', 'scratch-session.cjs']) if (head.captures.filter((capture) => capture.kind === 'coverage' && capture.productionFile === file).length !== 1) fail('U007_FINAL_UNLOADED', file);
+    const native = parse(head.nativeSummary);
+    if (native.cases.length !== 2 || native.sourceHashes['scratch.cjs'] !== current.get('scratch.cjs').rawSha256
+      || native.cases.some((entry) => !entry.neighbor.survivedBothOwnedCleanups || !entry.neighbor.close.clean || entry.sessions.some((session) => !session.clean))) fail('U007_FINAL_NATIVE', head.nativeSummary);
+    const mutation = parse(head.reusedProof);
+    if (mutation.sourceHashes['scratch.cjs'] !== current.get('scratch.cjs').rawSha256 || mutation.summary.generated !== 2238
+      || mutation.summary.executed !== 2238 || mutation.summary.survived || mutation.summary.undecided || mutation.summary.uncaptured
+      || mutation.executedAgain !== true || mutation.originalTuplesRetargeted !== 2213) fail('U007_FINAL_MUTATION', head.reusedProof);
+    return [];
+  } catch (error) { return [error.message.includes(':') ? error.message : 'U007_FINAL_INVALID:' + error.message]; }
+}
+module.exports = { verify, BASE, HEAD, BASE_SHA256 };

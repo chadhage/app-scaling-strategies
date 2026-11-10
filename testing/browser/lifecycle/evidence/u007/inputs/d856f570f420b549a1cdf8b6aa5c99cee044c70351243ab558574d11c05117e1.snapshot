@@ -1,0 +1,118 @@
+'use strict';
+
+// Deterministic in-memory operating system for the hermetic tests (test tooling, not production code):
+// a process table, a virtual clock and adapters that record every call. Creation times are digit strings
+// in 100 ns units, exactly like the Windows adapters return them.
+
+const BASE = 134000000000000000n;
+const SECOND = 10000000n;
+
+class FakeOS {
+  constructor({ selfPid = 900, listCostMs = 5, killCostMs = 5 } = {}) {
+    this.table = new Map();
+    this.clockMs = 0;
+    this.selfPid = selfPid;
+    this.listCostMs = listCostMs;
+    this.killCostMs = killCostMs;
+    this.nextPid = 1000;
+    this.tick = 0n;
+    this.killBatches = [];
+    this.listCalls = 0;
+    this.sleeps = [];
+    this.beforeList = null;
+    this.beforeKill = null;
+    this.failList = null;
+    this.failKill = null;
+    this.listBogus = undefined;
+    this.killBogus = undefined;
+  }
+
+  created() {
+    this.tick += SECOND;
+    return String(BASE + this.tick);
+  }
+
+  put(pid, ppid, createdAt, extra = {}) {
+    const process = { pid, ppid, createdAt, ...extra };
+    this.table.set(pid, process);
+    return process;
+  }
+
+  spawn(ppid, extra = {}) {
+    const pid = this.nextPid;
+    this.nextPid += 4;
+    return this.put(pid, ppid, this.created(), extra);
+  }
+
+  exit(pid) {
+    this.table.delete(pid);
+  }
+
+  identity(pid) {
+    return { pid, createdAt: this.table.get(pid).createdAt };
+  }
+
+  killOne({ pid, createdAt }) {
+    const live = this.table.get(pid);
+    if (!live) return { pid, createdAt, outcome: 'gone' };
+    if (live.createdAt !== createdAt) return { pid, createdAt, outcome: 'mismatch' };
+    if (live.denied) return { pid, createdAt, outcome: 'error', detail: 'access denied' };
+    if (live.immortal) return { pid, createdAt, outcome: 'survived' };
+    if (live.survivesOnce) {
+      live.survivesOnce = false;
+      live.dyingSoon = true;
+      return { pid, createdAt, outcome: 'survived' };
+    }
+    this.table.delete(pid);
+    return { pid, createdAt, outcome: 'killed' };
+  }
+
+  adapters(overrides = {}) {
+    const os = this;
+    return {
+      selfPid: os.selfPid,
+      now: () => os.clockMs,
+      sleep: async (ms) => {
+        os.sleeps.push(ms);
+        os.clockMs += ms;
+      },
+      list: async () => {
+        os.listCalls += 1;
+        if (os.beforeList) os.beforeList(os.listCalls);
+        if (os.failList) throw os.failList;
+        os.clockMs += os.listCostMs;
+        if (os.listBogus !== undefined) return os.listBogus;
+        for (const [pid, process] of os.table) if (process.dyingSoon) os.table.delete(pid);
+        return [...os.table.values()].map(({ pid, ppid, createdAt }) => ({ pid, ppid, createdAt }));
+      },
+      kill: async (identities) => {
+        os.killBatches.push(identities.map((identity) => ({ ...identity })));
+        if (os.beforeKill) os.beforeKill(identities);
+        if (os.failKill) throw os.failKill;
+        os.clockMs += os.killCostMs;
+        if (os.killBogus !== undefined) return os.killBogus;
+        return identities.map((identity) => os.killOne(identity));
+      },
+      ...overrides,
+    };
+  }
+
+  killedPids() {
+    return this.killBatches.flat().map((identity) => identity.pid);
+  }
+}
+
+// root(pid) -> a(pid) -> a1, root -> b -> b1, root -> c -> c1; the caller sits outside the tree.
+function buildTree(os) {
+  os.put(os.selfPid, 4, os.created());
+  const root = os.spawn(os.selfPid);
+  const a = os.spawn(root.pid);
+  const b = os.spawn(root.pid);
+  const c = os.spawn(root.pid);
+  const a1 = os.spawn(a.pid);
+  const b1 = os.spawn(b.pid);
+  const c1 = os.spawn(c.pid);
+  return { root, a, b, c, a1, b1, c1 };
+}
+
+module.exports = { FakeOS, buildTree, BASE, SECOND };

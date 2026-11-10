@@ -1,0 +1,65 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const core = require('../scratch.cjs');
+const { ManualClock, fakeFileSystem, drive } = require('./u007-support.cjs');
+test('U007-M038: name and path bounds independently reject boxed strings, side-effecting coercion and one extra character', () => {
+  let reads = 0;
+  const hostile = { get length() { reads += 1; throw Error('length must not run'); },
+    toString() { reads += 1; return 'C:\\owned\\child'; } };
+  for (const value of [null, undefined, true, 7, Symbol('name'), new String('ordinary'), hostile]) {
+    assert.equal(core.validName(value), false);
+    assert.equal(core.validPath(value), false);
+  }
+  assert.equal(reads, 0);
+  assert.equal(core.validName('a'), true);
+  assert.equal(core.validName('a'.repeat(255)), true);
+  assert.equal(core.validName('a'.repeat(256)), false);
+  const exact = 'C:\\' + [255, 255, 255, 253].map((length) => 'a'.repeat(length)).join('\\');
+  assert.equal(exact.length, 1024);
+  assert.equal(core.validPath(exact), true);
+  assert.equal(core.validPath(exact + 'a'), false);
+  assert.equal(core.validPath('C:\\' + Array(64).fill('a').join('\\')), true);
+  assert.equal(core.validPath('C:\\' + Array(65).fill('a').join('\\')), false);
+});
+test('U007-M039: a decorated hole cannot pass the dense-array check by keeping key count equal to length', () => {
+  const array = new Array(1); array.extra = true;
+  assert.equal(Reflect.ownKeys(array).filter((key) => key !== 'length').length, array.length);
+  assert.throws(() => core.frozenCopy(array), { code: 'ERR_SCRATCH_REPORT', message: 'sparse or decorated report arrays are refused' });
+});
+test('U007-M040: code and message errors retain independent type, length, getter and fallback boundaries', () => {
+  const phase = 'test-phase', target = 'owned-path';
+  for (const code of [undefined, null, false, 1, new String('EBUSY'), 'x'.repeat(65)]) {
+    assert.deepEqual(core.errorOf({ code }, phase, target), { path: target, phase, code: 'UNKNOWN_ERROR', message: 'unclassified failure' });
+  }
+  const maximum = 'x'.repeat(64);
+  assert.equal(core.errorOf({ code: maximum }, phase, target).code, maximum);
+  assert.equal(core.errorOf({ message: 'x'.repeat(257) }, phase, target).message, 'x'.repeat(256));
+  assert.equal(core.errorOf({ message: new String('not a primitive') }, phase, target).message, 'unclassified failure');
+  let codeReads = 0, messageReads = 0;
+  const report = core.errorOf({ get code() { codeReads += 1; return 'EBUSY'; },
+    get message() { messageReads += 1; throw Error('private accessor error'); } }, phase, target);
+  assert.deepEqual(report, { path: target, phase, code: 'ERR_UNREADABLE_ERROR', message: 'error properties cannot be read' });
+  assert.deepEqual([codeReads, messageReads], [1, 1]);
+});
+test('U007-M041: different observed codes in the same failure phase must not be deduplicated as equal', async () => {
+  const parent = path.resolve('owned-parent'), root = path.join(parent, 'session-owned');
+  const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+  const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+  await owner.mkdir(root);
+  let codeReads = 0, messageReads = 0;
+  const failure = { get code() { return ++codeReads === 1 ? 'ERR_SCRATCH_DEADLINE' : 'ERR_SCRATCH_ABORTED'; },
+    get message() { return ++messageReads === 1 ? 'first observed code' : 'second observed code'; } };
+  fake.state.beforeRemove = async () => { throw failure; };
+  const report = (await drive(clock, owner.cleanup())).value;
+  assert.deepEqual(report.errors, [
+    { path: root, phase: 'remove', code: 'ERR_SCRATCH_DEADLINE', message: 'first observed code' },
+    { path: root, phase: 'remove', code: 'ERR_SCRATCH_ABORTED', message: 'second observed code' },
+  ]);
+  assert.deepEqual([codeReads, messageReads], [2, 2]);
+  assert.equal(report.code, 'ERR_SCRATCH_ABORTED');
+  assert.equal(report.confirmed, false);
+  assert.deepEqual(report.unconfirmed, [{ path: root, phase: 'remove' }]);
+  assert.equal(clock.pending(), 0);
+});

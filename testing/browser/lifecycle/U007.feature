@@ -1,0 +1,187 @@
+@U007 @zero_credit @windows @owned_scratch
+Feature: Retry transient locks only within positively owned scratch and report the end state
+  U007 is one local browser-lifecycle behavior, not cloud or browser qualification.
+  Cleanup retries are bounded by one remaining budget and a finite attempt count.
+  Ownership comes from this caller's successful exclusive scratch-directory creation,
+  recorded for this invocation before use, not a recent-directory listing or error text.
+  The frozen isolated opener and the accepted U004, U005 and U006 history are unchanged.
+
+  Background:
+    Given an opaque ownership record for scratch exclusively created by this caller
+    And filesystem operations and a monotonic clock are injectable
+    And the fixture policy allows 4 removal attempts within 200 milliseconds
+    And retry delays are 25, 50 and 100 milliseconds, capped by the remaining budget
+    And cleanup reports attempts, delays, removed, remaining, refused, errors and confirmed
+    And success requires a fresh post-removal absence observation
+
+  @S001
+  Scenario: An unlocked owned directory is removed without a retry
+    Given owned scratch contains a file and a nested directory
+    When cleanup is requested
+    Then there is one removal attempt and no backoff
+    And fresh observation confirms that the owned root is absent
+    And the result is clean with no remaining paths
+
+  @S002
+  Scenario Outline: A transient-lock candidate is retried with capped increasing backoff
+    Given the first two removal attempts fail with <code>
+    And the third attempt removes the owned scratch
+    When cleanup is requested
+    Then removal is attempted at virtual times 0, 25 and 75 milliseconds
+    And the original failures and both delays remain in the report
+    And only a fresh absence observation makes the result clean
+    Examples:
+      | code      |
+      | EBUSY     |
+      | EPERM     |
+      | ENOTEMPTY |
+
+  @S003
+  Scenario: A persistent lock exhausts the attempt bound and names the remaining file
+    Given every removal attempt fails with EBUSY
+    And owned scratch still contains held.txt
+    When cleanup is requested
+    Then exactly 4 removal attempts occur at virtual times 0, 25, 75 and 175 milliseconds
+    And there is no fifth attempt or additional retry timer
+    And cleanup has a typed non-clean outcome
+    And the owned root and held.txt are reported as remaining
+    And the report preserves the failure codes rather than claiming successful removal
+
+  @S004
+  Scenario: Every await consumes the same deadline rather than restarting it
+    Given removal or ownership verification has already consumed part of the 200 millisecond budget
+    When a retry, backoff, remaining-path scan or confirmation is awaited
+    Then that await is raced against the remaining original budget by the cleanup core
+    And no attempt starts at or after the deadline
+    And an adapter that never settles cannot keep the returned promise pending
+    And unfinished I/O or unreadable remaining paths are reported as unconfirmed, not absent
+    And no later retry starts after the caller has received the deadline outcome
+
+  @S005
+  Scenario Outline: A non-retryable failure is reported immediately
+    Given a removal attempt fails with <code>
+    When cleanup is requested
+    Then the report contains that error and the remaining owned paths
+    And no backoff or second removal attempt occurs
+    Examples:
+      | code          |
+      | EACCES        |
+      | EINVAL        |
+      | ENOSPC        |
+      | UNKNOWN_ERROR |
+
+  @S006
+  Scenario: Already absent scratch is idempotent but a lying adapter is not success
+    Given the ownership record belongs to this invocation
+    When fresh observation reports ENOENT for its root
+    Then cleanup reports confirmed absence without treating absence as a failure
+    But when a removal adapter claims success while fresh observation still finds a file
+    Then cleanup remains non-clean and reports that file
+
+  @S007
+  Scenario Outline: A path without positive creation provenance is never a deletion target
+    Given <source> names an existing directory outside this invocation's ownership record
+    When cleanup is requested for that directory
+    Then cleanup refuses with a typed ownership outcome before any destructive adapter call
+    And the directory and every byte of its sentinel remain unchanged
+    Examples:
+      | source                                      |
+      | a forged ownership object                   |
+      | an error message containing a scratch path  |
+      | a structured error.path without provenance  |
+      | a before-and-after runtime directory diff   |
+      | another live session's ownership record     |
+      | an unrelated neighbour with the same prefix |
+      | an ancestor or the shared runtime directory |
+
+  @S008
+  Scenario: The owned boundary is rechecked before destructive attempts
+    Given the recorded root is replaced or its filesystem identity becomes unreadable
+    Or a path or ancestor resolves through an unapproved link or reparse point
+    When cleanup is requested or a retry is about to start
+    Then the affected path is refused or unconfirmed and no deletion follows that boundary
+    And an unrelated link target remains unchanged
+    And a traversal, device name, alternate data stream, trailing dot or trailing space is refused
+
+  @S009
+  Scenario: Two live ownership scopes do not share cleanup
+    Given two live sessions A and B have distinct positively recorded scratch roots
+    And an unrelated neighbour contains a byte-pinned sentinel
+    When A then B are closed in FIFO order, and in a separate run B then A in LIFO order
+    Then only the closing session's owned scratch is a removal target
+    And the other live session remains usable with its scratch and sentinel intact
+    And repeated and concurrent closes return the same promise and frozen outcome per session
+    And no removal is repeated by a subsequent close
+    And the unrelated neighbour is unchanged throughout both runs
+
+  @S010
+  Scenario: Caller options and public reports cannot change another cleanup
+    Given options have a changing or throwing getter, a Proxy, holes, cycles or oversized values
+    When the public boundary reads the options
+    Then it takes one validated snapshot or makes a typed refusal before starting work
+    And input and traversal work have explicit size, depth and iteration caps
+    And mutating every reachable public report value in strict mode cannot change later outputs
+
+  @S011
+  Scenario: Cancellation stops retries without pretending to undo an issued operation
+    Given an abort listener is attached before the first await
+    When abort occurs during verification, removal, backoff, scanning or confirmation
+    Then no new destructive attempt starts after abort
+    And the outcome preserves issued attempts and any unconfirmed in-flight I/O
+    And it never reports an unreadable or unobserved path as removed
+
+  @S012
+  Scenario: The additive session wrapper retains bounded process cleanup
+    Given an unchanged U006 bounded session close succeeds or reports a scratch failure
+    And this invocation positively recorded the sealed opener's successful scratch creation
+    When the additive U007 close performs bounded owned-scratch cleanup
+    Then the U004 through U006 process outcome and original close failure remain inspectable
+    And clean requires both confirmed process cleanup and confirmed scratch absence
+    And an unsettled opener or a failure without ownership proof never authorizes deletion
+    And a late or failed open retains its own cleanup outcome rather than adopting a later session
+
+  @R001 @real_windows_handle
+  Scenario: An actual Windows delete-denying handle proves transient-lock recovery
+    Given this test exclusively created owned scratch containing held.txt
+    And its own PowerShell fixture holds a FileStream with FileShare.ReadWrite but not FileShare.Delete
+    And the fixture acknowledges that the real handle is held
+    When a real filesystem removal attempt fails while that handle is still held
+    And a release-and-closed acknowledgement barrier precedes the next permitted retry
+    Then the cleanup retries the same positively owned root and confirms its absence
+    And the one-attempt retained control fails the same success assertion for a behavioral reason
+    And no sleep or absolute elapsed-time threshold decides the result
+    And the fixture and its owned files are cleaned in finally even after an injected assertion failure
+
+  @R002 @real_windows_handle
+  Scenario: An actual handle held through exhaustion leaves a precisely reported remainder
+    Given the same real Windows handle remains held until the cleanup outcome is returned
+    When cleanup exhausts its injected attempt or deadline bound
+    Then the typed non-clean outcome lists held.txt and does not claim the root absent
+    And the real handle was still held at the final remaining-path observation
+    And the one-attempt retained control fails the same attempt-count assertion
+    And the test releases only its own handle and removes only its own fixture afterward
+
+  @R003 @qualified_browser_gate
+  Scenario: A later qualified-browser observation exercises two actual lifecycle sessions
+    Given the coordinator has confirmed completion of U034's read-only lifecycle-adopter checks
+    And the owning qualification API genuinely admits the installed signed Edge major
+    When two isolated headless sessions exercise the U007 close in FIFO and LIFO order
+    Then the other session stays alive and answering after the first closes
+    And a repeated close targets nothing more and the unrelated neighbour is unchanged
+    And actual browser version and SHA are recorded, never pinned to an ambient equality
+    And each session is closed in finally with process roots and lower bounds checked
+    And missing qualification is reported as unobserved, never a fabricated pass
+
+  @E001
+  Scenario: Specification, behavioral RED and measured evidence precede review
+    Then a retained loadable one-attempt control fails named behavioral assertions before implementation
+    And the same RED tests pass unchanged against the candidate implementation
+    And raw stdout, stderr, exit status and exact input hashes are retained immutably
+    And every affected first-party production file is explicitly enumerated
+    And each enumerated file independently reaches at least 85 percent lines, branches and functions
+    And an unloaded production file counts as zero
+    And every statement and single condition is systematically mutated with named outcomes
+    And a timeout or unexplained survivor is undecided, never counted as killed
+    And LF and CRLF candidate-tree replays preserve historical evidence and byte pins
+    And any accepted lifecycle-file amendment needs an approved exact-byte append-only addendum
+    And only the coordinator may publish U007 or award acceptance

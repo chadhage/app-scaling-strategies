@@ -1,0 +1,53 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const { ManualClock, drive, quiesce } = require('./u005-support-world.cjs');
+function implementation() {
+  if (process.env.U007_IMPLEMENTATION === 'one-attempt') {
+    const filename = path.join(__dirname, '..', 'evidence', 'u007', 'specimen', 'one-attempt.cjs.txt');
+    const m = new Module(filename, module);
+    m.filename = filename;
+    m.paths = Module._nodeModulePaths(path.dirname(filename));
+    m._compile(fs.readFileSync(filename, 'utf8'), filename);
+    return m.exports;
+  }
+  return { ...require('../scratch.cjs'), ...require('../scratch-session.cjs') };
+}
+const error = (code) => Object.assign(new Error(code), { code });
+const fixture = () => {
+  if (!process.env.U007_WORK) throw new Error('U007_WORK must name caller-owned private scratch');
+  return fs.mkdtempSync(path.join(process.env.U007_WORK, 'case-'));
+};
+async function discard(parent) {
+  await fs.promises.rm(parent, { recursive: true, force: false, maxRetries: 0 });
+}
+function fakeFileSystem(parent, clock) {
+  const entries = new Map();
+  let id = 0;
+  const put = (p, kind = 'directory') => { id += 1; entries.set(p, { kind, device: '1', fileId: String(id), birth: String(id) }); };
+  for (let p = parent;; p = path.dirname(p)) { put(p); if (path.dirname(p) === p) break; }
+  const state = { failures: [], calls: [], beforeRemove: null, beforeStat: null, beforeRead: null };
+  const adapter = {
+    async mkdir(p) { if (entries.has(p)) throw error('EEXIST'); put(p); },
+    async lstat(p) { if (state.beforeStat) await state.beforeStat(p); if (!entries.has(p)) throw error('ENOENT'); return { ...entries.get(p) }; },
+    async remove(p) {
+      state.calls.push({ path: p, atMs: clock.now() });
+      if (state.beforeRemove) await state.beforeRemove(p);
+      const code = state.failures.shift();
+      if (code) throw error(code);
+      for (const key of entries.keys()) if (key === p || key.startsWith(p + path.sep)) entries.delete(key);
+    },
+    async readDir(p, limit) {
+      if (state.beforeRead) await state.beforeRead(p);
+      if (!entries.has(p)) throw error('ENOENT');
+      const found = [...entries].filter(([key]) => path.dirname(key) === p).map(([key, value]) => ({ name: path.basename(key), kind: value.kind }));
+      if (found.length > limit) throw error('ERR_SCRATCH_LIMIT');
+      return found;
+    },
+  };
+  return { adapter, state, entries, put };
+}
+const processReport = () => ({ clean: true, confirmed: true, terminated: [], alreadyGone: [], refused: [], survivors: [],
+  failed: [], unverifiable: [], unconfirmed: [], errors: [] });
+module.exports = { implementation, ManualClock, drive, quiesce, error, fixture, discard, fakeFileSystem, processReport };

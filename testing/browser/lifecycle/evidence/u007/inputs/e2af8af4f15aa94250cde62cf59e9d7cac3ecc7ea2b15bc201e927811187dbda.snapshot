@@ -1,0 +1,73 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { ManualClock, fakeFileSystem } = require('./u007-support.cjs');
+test('API: both production modules load and provide every declared public entry point', () => {
+  let core, sessions;
+  assert.doesNotThrow(() => { core = require('../scratch.cjs'); sessions = require('../scratch-session.cjs'); });
+  for (const name of ['createScratchOwner', 'createFileSystemAdapters', 'isScratchOwner', 'validPath', 'validName', 'optionsOf', 'createBudget', 'frozenCopy', 'clockOf', 'refusal']) assert.equal(typeof core[name], 'function', name);
+  for (const name of ['wrapScratchSession', 'startScratchSession', 'openLessonScratchSession', 'openLoopbackScratchSession', 'observeScratchCreation', 'processClean']) assert.equal(typeof sessions[name], 'function', name);
+});
+test('S010: seeded hostile option shapes are typed refusals without recursive input traversal', async () => {
+  const { createScratchOwner, validPath, validName } = require('../scratch.cjs');
+  const cycle = {}; cycle.self = cycle;
+  const proxy = new Proxy({}, { get() { throw new Error('Proxy getter must not run'); }, ownKeys() { throw new Error('Proxy keys must not run'); } });
+  const values = [undefined, null, NaN, Infinity, true, false, '', '1', 0, -1, 1e20, [], new Array(5), cycle, proxy, Symbol('input')];
+  let seed = 719;
+  for (let i = 0; i < 512; i += 1) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const value = values[seed % values.length];
+    const source = i % 2 ? value : { parent: value };
+    let answer;
+    assert.doesNotThrow(() => { answer = createScratchOwner(source); }, `seed ${i}`);
+    assert.equal(answer.ok, false);
+    assert.equal(answer.code, 'ERR_SCRATCH_OPTIONS');
+    assert.equal(answer.attempts.length, 0);
+  }
+  for (const name of ['NUL', 'nul.json', 'CON', 'COM1.log', 'LPT9', 'file.', 'file ', 'x:stream', '.', '..', 'x\\y', '\0']) assert.equal(validName(name), false, name);
+  for (const name of ['held.txt', 'session-one', 'COM10', 'ordinary name']) assert.equal(validName(name), true, name);
+  for (const p of ['C:\\', 'C:\\scratch\\..\\neighbour', 'C:\\scratch\\NUL', 'C:\\scratch\\held.txt:stream',
+    'C:\\scratch\\file.', '\\\\host\\share\\scratch', '\\\\?\\C:\\scratch', 'C:\\scratch\\file ', 'C:\\' + 'a'.repeat(1025)]) assert.equal(validPath(p), false, p.slice(0, 60));
+  assert.equal(validPath(path.resolve('owned-parent')), true);
+  assert.equal(validPath('C:\\' + Array(65).fill('a').join('\\')), false);
+});
+test('S010: clocks, adapter getters, unknown keys and oversized fields refuse explicitly', () => {
+  const { createScratchOwner, optionsOf, frozenCopy, clockOf, errorOf, createBudget } = require('../scratch.cjs');
+  const parent = path.resolve('owned-parent');
+  const badClock = { get now() { throw new Error('cannot read'); } };
+  const badFs = { get mkdir() { throw new Error('cannot read'); } };
+  for (const config of [{ parent, clock: badClock }, { parent, fs: badFs }, { parent, fs: {} }, { parent, clock: {} }, { parent, extra: true }]) assert.equal(createScratchOwner(config).ok, false);
+  for (const config of [null, [], new Proxy({}, {}), { unknown: true }, { signal: {} }, { maxDepth: 0 }, { maxEntries: 1e9 }, { timeoutMs: Infinity }, { maxAttempts: 17 }]) assert.throws(() => optionsOf(config), { code: 'ERR_SCRATCH_OPTIONS' });
+  assert.throws(() => clockOf(null), { code: 'ERR_SCRATCH_OPTIONS' });
+  assert.throws(() => createBudget({ now: () => NaN }, 10), { code: 'ERR_SCRATCH_OPTIONS' });
+  assert.throws(() => frozenCopy({ get field() { throw new Error('must not be called'); } }), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => frozenCopy({ field: 'a'.repeat(2097153) }), { code: 'ERR_SCRATCH_REPORT' });
+  const cycle = {}; cycle.child = cycle;
+  assert.throws(() => frozenCopy(cycle), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => frozenCopy(new Array(3)), { code: 'ERR_SCRATCH_REPORT' });
+  const deep = {}; let node = deep;
+  for (let i = 0; i < 18; i += 1) { node.next = {}; node = node.next; }
+  assert.throws(() => frozenCopy(deep), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => frozenCopy({ constructor: 'poison' }), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => frozenCopy({ bad: Infinity }), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => frozenCopy(Array(513).fill(null)), { code: 'ERR_SCRATCH_REPORT' });
+  assert.equal(errorOf({ get code() { throw new Error('unreadable'); } }, 'test', null).code, 'ERR_UNREADABLE_ERROR');
+  assert.equal(errorOf({ message: 'a'.repeat(1000) }, 'test', null).message.length, 256);
+});
+test('S010: owner options and cleanup getters are each snapshotted exactly once', async () => {
+  const { createScratchOwner } = require('../scratch.cjs');
+  const clock = new ManualClock();
+  const parent = path.resolve('owned-parent');
+  const fake = fakeFileSystem(parent, clock);
+  let reads = 0;
+  const source = { parent, fs: fake.adapter, clock, get unused() { throw new Error('unknown option'); } };
+  assert.equal(createScratchOwner(source).ok, false);
+  const owner = createScratchOwner({ parent, fs: fake.adapter, clock });
+  await owner.mkdir(path.join(parent, 'session-getter'));
+  const options = { get maxAttempts() { reads += 1; return reads === 1 ? 4 : 'changed'; } };
+  const result = await owner.cleanup(options);
+  assert.equal(reads, 1);
+  assert.equal(result.clean, true);
+  assert.equal(owner.cleanup({ maxAttempts: 0 }), owner.cleanup(), 'later callers cannot change the cached result');
+});

@@ -1,0 +1,160 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { AsyncLocalStorage } = require('node:async_hooks');
+const { types } = require('node:util');
+const { startSession } = require('./session.cjs');
+const { budgetsOf } = require('./close.cjs');
+const { createScratchOwner, isScratchOwner, ScratchError, systemClock, frozenCopy, refusal, readClosed,
+  errorOf, clockOf, createBudget, optionsOf, validPath } = require('./scratch.cjs');
+const storage = new AsyncLocalStorage();
+let observers = 0;
+let originalMkdir = null;
+let observer = null;
+const PROCESS_ARRAYS = ['terminated', 'alreadyGone', 'refused', 'survivors', 'failed', 'unverifiable', 'unconfirmed', 'errors'];
+const LEGACY_OPTIONS = ['deadlineMs', 'graceMs', 'pollMs', 'terminateMs', 'listMs', 'signal', 'clock', 'adapters', 'adapterOptions',
+  'lock', 'getPhase', 'opener', 'loadSealed', 'gracefulMs', 'settleMs', 'exitSettleMs', 'graceful'];
+const SCRATCH_OPTIONS = ['scratchParent', 'scratchFs', 'scratchClock', 'scratchTimeoutMs', 'scratchMaxAttempts'];
+
+class ScratchSessionError extends Error {
+  constructor(outcome) {
+    super('close() did not confirm both the owned process end state and owned scratch absence');
+    this.name = 'ScratchSessionError';
+    this.code = 'ERR_SCRATCH_SESSION';
+    this.outcome = outcome;
+    Object.freeze(this);
+  }
+}
+
+function observeScratchCreation(owner, run) {
+  if (!isScratchOwner(owner) || typeof run !== 'function') return Promise.reject(new ScratchError('ERR_SCRATCH_OWNERSHIP', 'a genuine owner and an invocation are required'));
+  if (observers === 0) {
+    originalMkdir = fs.promises.mkdir;
+    observer = function (target, options) {
+      const current = storage.getStore();
+      if (current && validPath(target) && path.dirname(target) === current.parent && (options === undefined || (options && options.recursive !== true))) return current.mkdir(target, options);
+      return originalMkdir.call(this, target, options);
+    };
+    fs.promises.mkdir = observer;
+  }
+  observers += 1;
+  const release = () => {
+    observers -= 1;
+    if (observers === 0) {
+      if (fs.promises.mkdir !== observer) throw new ScratchError('ERR_SCRATCH_OBSERVER', 'another observer changed mkdir; its bytes are not overwritten');
+      fs.promises.mkdir = originalMkdir;
+    }
+  };
+  let pending;
+  try { pending = storage.run(owner, run); }
+  catch (e) { pending = Promise.reject(e); }
+  return Promise.resolve(pending).then((v) => { release(); return v; }, (e) => {
+    if (e?.settled instanceof Promise) e.settled.then(release, release).catch((error) => { console.error(error.code + ': ' + error.message); });
+    else release();
+    throw e;
+  });
+}
+
+function processClean(report) {
+  return report.confirmed === true && PROCESS_ARRAYS.every((key) => Array.isArray(report[key]))
+    && report.survivors.length === 0 && report.unconfirmed.length === 0
+    && report.refused.every((item) => item.reason === 'identity-mismatch')
+    && report.unverifiable.every((item) => item.stillListed === false);
+}
+
+function wrapScratchSession(session, owner, options) {
+  let closeLegacy, page, owned, browserVersion, cleanupOptions, clock, processTimeoutMs;
+  try {
+    if (!isScratchOwner(owner) || !session || typeof session !== 'object' || types.isProxy(session)) throw new ScratchError('ERR_SCRATCH_OWNERSHIP', 'session needs its genuine invocation-bound scratch owner');
+    closeLegacy = session.close;
+    page = session.page;
+    owned = session.owned;
+    browserVersion = session.browserVersion;
+    if (typeof closeLegacy !== 'function') throw new ScratchError('ERR_SCRATCH_OPTIONS', 'session.close must be a bounded close function');
+    const given = readClosed(options, ['timeoutMs', 'maxAttempts', 'maxEntries', 'maxDepth', 'signal', 'clock', 'processTimeoutMs']);
+    cleanupOptions = optionsOf(Object.fromEntries(['timeoutMs', 'maxAttempts', 'maxEntries', 'maxDepth', 'signal'].map((k) => [k, given[k]])));
+    clock = clockOf(given.clock === undefined ? systemClock : given.clock);
+    processTimeoutMs = given.processTimeoutMs === undefined ? budgetsOf().closeBoundMs : given.processTimeoutMs;
+    if (!Number.isSafeInteger(processTimeoutMs) || processTimeoutMs < 1 || processTimeoutMs > 2147483647) throw new ScratchError('ERR_SCRATCH_OPTIONS', 'processTimeoutMs is outside the supported range');
+  } catch (e) { return Object.freeze({ ok: false, ...refusal('ERR_SCRATCH_OPTIONS', errorOf(e, 'options', null).message) }); }
+  let closing = null;
+  async function run() {
+    let processReport = null;
+    let originalCloseError = null;
+    let unsettled = false;
+    const budget = createBudget(clock, processTimeoutMs);
+    try {
+      try { processReport = await budget.wait(() => closeLegacy.call(session)); }
+      catch (e) {
+        originalCloseError = errorOf(e, 'process-close', null);
+        unsettled = ['ERR_SCRATCH_DEADLINE', 'ERR_SCRATCH_ABORTED'].includes(originalCloseError.code);
+        processReport = e;
+      }
+      try { processReport = frozenCopy(Object.fromEntries(Object.keys(processReport).filter((k) => !['stack', 'message', 'name', 'code', 'outcome'].includes(k)).map((k) => [k, processReport[k]]))); }
+      catch (e) { processReport = { confirmed: false, clean: false, errors: [errorOf(e, 'process-report', null)] }; }
+      const confirmedProcesses = processClean(processReport);
+      const mayRemove = confirmedProcesses && !unsettled && processReport.sealed !== 'unsettled' && processReport.innerSettled !== false;
+      const scratch = mayRemove ? await owner.cleanup(cleanupOptions)
+        : refusal('ERR_SCRATCH_PROCESS_UNCONFIRMED', 'scratch is not removed while process or sealed I/O completion is unconfirmed', owner.paths());
+      const outcome = frozenCopy({ clean: confirmedProcesses && scratch.clean, process: processReport, scratch, originalCloseError });
+      if (!outcome.clean) throw new ScratchSessionError(outcome);
+      return outcome;
+    } finally { budget.stop(); }
+  }
+  return { ok: true, page, owned, browserVersion, scratchPaths: owner.paths, close: () => closing ||= run() };
+}
+
+function startScratchSession(run, options) {
+  let given, owner, cleanup, legacy;
+  try {
+    if (typeof run !== 'function') throw new ScratchError('ERR_SCRATCH_OPTIONS', 'run must be an invocation function');
+    given = readClosed(options, [...LEGACY_OPTIONS, ...SCRATCH_OPTIONS]);
+    const parent = given.scratchParent === undefined
+      ? path.resolve(__dirname, '..', '..', '..', '.git', 'kanban-orchestrator', 'browser-runtime') : given.scratchParent;
+    owner = createScratchOwner({ parent, fs: given.scratchFs, clock: given.scratchClock === undefined ? given.clock : given.scratchClock });
+    if (!owner.ok) return owner;
+    cleanup = { timeoutMs: given.scratchTimeoutMs, maxAttempts: given.scratchMaxAttempts,
+      clock: given.scratchClock === undefined ? given.clock : given.scratchClock, signal: given.signal };
+    legacy = Object.fromEntries(LEGACY_OPTIONS.map((key) => [key, given[key]]));
+  } catch (e) { return Object.freeze({ ok: false, ...refusal('ERR_SCRATCH_OPTIONS', errorOf(e, 'options', null).message) }); }
+  let lifecycle;
+  let closing = null;
+  const observed = observeScratchCreation(owner, () => {
+    lifecycle = startSession(run, legacy);
+    return lifecycle.ready;
+  });
+  const close = () => {
+    if (!closing) {
+      const wrapper = wrapScratchSession({ close: () => lifecycle.close() }, owner, cleanup);
+      closing = wrapper.ok ? wrapper.close() : Promise.reject(new ScratchSessionError(wrapper));
+    }
+    return closing;
+  };
+  const ready = observed.then(async (session) => {
+    const wrapper = wrapScratchSession(session, owner, cleanup);
+    if (!wrapper.ok) { await close(); throw new ScratchSessionError(wrapper); }
+    return { ...wrapper, close };
+  });
+  ready.catch(() => {});
+  return { ok: true, ready, close, scratchPaths: owner.paths };
+}
+
+async function openLessonScratchSession(relativeRepoPath, options) {
+  const given = readClosed(options, [...LEGACY_OPTIONS, ...SCRATCH_OPTIONS]);
+  const load = given.loadSealed === undefined ? () => require('../isolated.cjs') : given.loadSealed;
+  const open = given.opener === undefined ? load().openIsolatedLesson : given.opener;
+  const handle = startScratchSession(() => open(relativeRepoPath), given);
+  if (!handle.ok) throw new ScratchSessionError(handle);
+  return handle.ready;
+}
+async function openLoopbackScratchSession(relativeOwnedIndexPath, server, options) {
+  const given = readClosed(options, [...LEGACY_OPTIONS, ...SCRATCH_OPTIONS]);
+  const load = given.loadSealed === undefined ? () => require('../isolated.cjs') : given.loadSealed;
+  const open = given.opener === undefined ? load().openIsolatedLoopback : given.opener;
+  const handle = startScratchSession(() => open(relativeOwnedIndexPath, server), given);
+  if (!handle.ok) throw new ScratchSessionError(handle);
+  return handle.ready;
+}
+module.exports = { wrapScratchSession, startScratchSession, openLessonScratchSession, openLoopbackScratchSession,
+  observeScratchCreation, processClean, ScratchSessionError };

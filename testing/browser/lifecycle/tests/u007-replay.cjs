@@ -1,0 +1,25 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const args = process.argv.slice(2);
+const work = path.resolve(args[args.indexOf('--work') + 1]);
+const implementation = args[args.indexOf('--implementation') + 1];
+const testAt = args.indexOf('--test');
+if (testAt < 0 || !['one-attempt', 'candidate'].includes(implementation)) throw new Error('Invalid U007 replay arguments');
+fs.mkdirSync(work);
+const env = { ...process.env, U007_WORK: work, U007_IMPLEMENTATION: implementation };
+for (const key of Object.keys(env)) if (['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE'].includes(key.toUpperCase())) delete env[key];
+const old = process.env.NODE_V8_COVERAGE;
+delete process.env.NODE_V8_COVERAGE;
+try {
+  const resolved = args.slice(testAt).map((a) => a.startsWith('--') ? a : path.resolve(a));
+  const result = spawnSync(process.execPath, resolved, { cwd: work, env, windowsHide: true, stdio: 'inherit' });
+  process.exitCode = result.error || result.signal ? 2 : result.status;
+  if (result.error) console.error(result.error);
+} finally {
+  if (old !== undefined) process.env.NODE_V8_COVERAGE = old;
+  const remaining = fs.readdirSync(work);
+  if (remaining.length) { console.error('U007 fixture remainder: ' + JSON.stringify(remaining)); process.exitCode = 2; }
+  else fs.rmdirSync(work);
+}

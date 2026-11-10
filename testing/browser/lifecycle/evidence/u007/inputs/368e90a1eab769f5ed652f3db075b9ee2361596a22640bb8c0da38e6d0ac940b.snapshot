@@ -1,0 +1,182 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const core = require('../scratch.cjs');
+const api = require('../scratch-session.cjs');
+const { ManualClock, fakeFileSystem, drive } = require('./u007-support.cjs');
+const parent = path.resolve('owned-parent');
+const root = path.join(parent, 'session-owned');
+const invalidObjectMessage = 'expected a non-Proxy options object';
+test('U007-M015: every closed option shape has the exact typed validation failure', () => {
+  for (const value of [null, false, 0, 'options', [], () => {}, new Proxy({}, {})]) {
+    assert.throws(() => core.readClosed(value, ['known']), { code: 'ERR_SCRATCH_OPTIONS', message: invalidObjectMessage });
+  }
+  for (const value of [{ extra: true }, { [Symbol('extra')]: true }, Object.defineProperty({}, 'hidden', { value: true })]) {
+    assert.throws(() => core.readClosed(value, ['known']), { code: 'ERR_SCRATCH_OPTIONS', message: 'unknown option' });
+  }
+  assert.deepEqual(core.readClosed(undefined, ['known']), { known: undefined });
+  let reads = 0;
+  assert.deepEqual(core.readClosed({ get known() { reads += 1; return 7; } }, ['known']), { known: 7 });
+  assert.equal(reads, 1);
+  assert.throws(() => core.readClosed({ get known() { throw Error('private accessor error'); } }, ['known']), {
+    code: 'ERR_SCRATCH_OPTIONS', message: 'option known cannot be read',
+  });
+});
+test('U007-M016: filesystem object identity checks do not read invalid or Proxy adapters', () => {
+  const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+  let traps = 0;
+  const proxy = new Proxy(fake.adapter, { get() { traps += 1; throw Error('adapter trap'); } });
+  const callable = Object.assign(() => {}, fake.adapter);
+  for (const value of [null, false, 0, 'filesystem', callable, proxy]) {
+    const report = core.createScratchOwner({ parent, clock, fs: value });
+    assert.equal(report.ok, false);
+    assert.equal(report.code, 'ERR_SCRATCH_OPTIONS');
+    assert.deepEqual(report.refused, [{ path: null, code: 'ERR_SCRATCH_OPTIONS', message: 'filesystem adapters must be an object' }]);
+  }
+  assert.equal(traps, 0);
+  for (const key of ['mkdir', 'lstat', 'remove', 'readDir']) {
+    const report = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, [key]: null } });
+    assert.deepEqual(report.refused, [{ path: null, code: 'ERR_SCRATCH_OPTIONS', message: `filesystem.${key} must be a function` }]);
+  }
+});
+test('U007-M017: clocks reject invalid identities before looking up functions and snapshot their receiver once', () => {
+  let traps = 0;
+  const proxy = new Proxy(new ManualClock(), { get() { traps += 1; throw Error('clock trap'); } });
+  const callable = Object.assign(() => {}, { now() {}, setTimeout() {}, clearTimeout() {}, sleep() {} });
+  for (const value of [null, false, 0, 'clock', callable, proxy]) {
+    assert.throws(() => core.clockOf(value), { code: 'ERR_SCRATCH_OPTIONS', message: 'clock must be an object' });
+  }
+  assert.equal(traps, 0);
+  for (const key of ['now', 'setTimeout', 'clearTimeout', 'sleep']) {
+    const value = new ManualClock(); value[key] = null;
+    assert.throws(() => core.clockOf(value), { code: 'ERR_SCRATCH_OPTIONS', message: `clock.${key} must be a function` });
+  }
+  const receiver = { counter: 0 }, reads = {}, calls = [];
+  for (const key of ['now', 'setTimeout', 'clearTimeout', 'sleep']) Object.defineProperty(receiver, key, {
+    get() { reads[key] = (reads[key] || 0) + 1; return function (...args) { calls.push({ key, receiver: this, args }); return ++this.counter; }; },
+  });
+  const clock = core.clockOf(receiver);
+  for (const key of ['now', 'setTimeout', 'clearTimeout', 'sleep']) {
+    assert.equal(clock[key]('argument'), calls.length);
+    assert.equal(reads[key], 1);
+    assert.deepEqual(calls.at(-1), { key, receiver, args: ['argument'] });
+  }
+});
+test('U007-M018: AbortSignal shape and genuine native identity refusals stay distinct', () => {
+  const genuine = new AbortController().signal;
+  for (const signal of [null, false, 0, {}, [], 'signal', new Proxy(genuine, {})]) {
+    assert.throws(() => core.optionsOf({ signal }), { code: 'ERR_SCRATCH_OPTIONS', message: 'signal must be an AbortSignal' });
+  }
+  assert.throws(() => core.optionsOf({ signal: Object.create(AbortSignal.prototype) }), {
+    code: 'ERR_SCRATCH_OPTIONS', message: 'signal must have a genuine AbortSignal identity',
+  });
+  assert.equal(core.optionsOf({ signal: genuine }).signal, genuine);
+});
+test('U007-M019: every numeric option boundary is closed without coercion or a lower threshold', () => {
+  for (const [key, max] of [['timeoutMs', 2147483647], ['maxAttempts', 16], ['maxEntries', 256], ['maxDepth', 16]]) {
+    for (const value of [null, false, '1', 0, -1, 1.5, max + 1, NaN, Infinity, {}]) {
+      assert.throws(() => core.optionsOf({ [key]: value }), {
+        code: 'ERR_SCRATCH_OPTIONS', message: `${key} is outside the supported positive integer range`,
+      });
+    }
+    assert.equal(core.optionsOf({ [key]: 1 })[key], 1);
+    assert.equal(core.optionsOf({ [key]: max })[key], max);
+  }
+});
+for (const [label, change] of [
+  ['unknown kind', { kind: 'unknown' }], ['zero file ID', { fileId: '0' }],
+  ...['device', 'fileId', 'birth'].flatMap((key) => [
+    [`${key} numeric`, { [key]: 7 }], [`${key} oversized`, { [key]: '1'.repeat(65) }], [`${key} nonnumeric`, { [key]: 'invalid' }],
+  ]),
+]) {
+  test(`U007-M020: ${label} cannot establish filesystem creation identity`, async () => {
+    const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+    const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter,
+      lstat: async (target) => ({ ...await fake.adapter.lstat(target), ...change }),
+    } });
+    await owner.mkdir(root);
+    const report = (await drive(clock, owner.cleanup())).value;
+    assert.deepEqual(report.errors[0], { path: root, phase: 'creation-identity', code: 'ERR_SCRATCH_ADAPTER',
+      message: 'filesystem identity is missing or malformed' });
+    assert.deepEqual(report.refused, [{ path: root, code: 'ERR_SCRATCH_OWNERSHIP',
+      message: 'exclusive creation was recorded but its identity could not be verified' }]);
+    assert.deepEqual(report.remaining, [root]);
+    assert.equal(report.confirmed, false);
+    assert.equal(report.clean, false);
+    assert.equal(fake.state.calls.length, 0);
+  });
+}
+for (const label of ['null', 'array-like', 'proxy-array', 'over-cap']) {
+  test(`U007-M021: ${label} directory answer has a typed cap refusal and cannot remove scratch`, async () => {
+    const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+    const answers = { null: null, 'array-like': { length: 0 }, 'proxy-array': new Proxy([], {}),
+      'over-cap': [{ name: 'one.txt', kind: 'file' }, { name: 'two.txt', kind: 'file' }] };
+    const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, readDir: async () => answers[label] } });
+    await owner.mkdir(root);
+    const report = (await drive(clock, owner.cleanup({ maxEntries: 2 }))).value;
+    assert.deepEqual(report.errors, [{ path: root, phase: 'scan', code: 'ERR_SCRATCH_LIMIT',
+      message: 'directory answer is malformed or exceeds the entry cap' }]);
+    assert.deepEqual(report.unconfirmed, [{ path: root, phase: 'scan' }]);
+    assert.deepEqual(report.remaining, [root]);
+    assert.equal(report.confirmed, false);
+    assert.equal(fake.state.calls.length, 0);
+  });
+}
+test('U007-M022: report copy bounds accept their exact limits and reject one additional unit', () => {
+  const maximum = 'a'.repeat(2097152);
+  assert.equal(core.frozenCopy({ field: maximum }).field, maximum);
+  assert.throws(() => core.frozenCopy({ field: maximum, extra: 'x' }), { code: 'ERR_SCRATCH_REPORT', message: 'report character limit' });
+  assert.equal(core.frozenCopy(Array(512).fill(null)).length, 512);
+  assert.throws(() => core.frozenCopy(Array(513).fill(null)), { code: 'ERR_SCRATCH_REPORT', message: 'report entry limit' });
+  const object = Object.fromEntries(Array.from({ length: 512 }, (_, index) => ['k' + index, null]));
+  assert.equal(Object.keys(core.frozenCopy(object)).length, 512);
+  object.extra = null;
+  assert.throws(() => core.frozenCopy(object), { code: 'ERR_SCRATCH_REPORT', message: 'report entry limit' });
+  const tree = { a: Array.from({ length: 510 }, () => ({})), b: Array.from({ length: 511 }, () => ({})) };
+  assert.doesNotThrow(() => core.frozenCopy(tree));
+  tree.b.push({});
+  assert.throws(() => core.frozenCopy(tree), { code: 'ERR_SCRATCH_REPORT', message: 'invalid or oversized report' });
+  const deep = {}; let cursor = deep;
+  for (let i = 0; i < 16; i += 1) { cursor.next = {}; cursor = cursor.next; }
+  assert.doesNotThrow(() => core.frozenCopy(deep));
+  cursor.next = {};
+  assert.throws(() => core.frozenCopy(deep), { code: 'ERR_SCRATCH_REPORT', message: 'invalid or oversized report' });
+});
+test('U007-M023: report copies reject every unsupported value and magic key without calling accessors', () => {
+  for (const value of [Infinity, NaN, () => {}, Symbol('value'), 1n, new Proxy({}, {})]) {
+    assert.throws(() => core.frozenCopy(value), { code: 'ERR_SCRATCH_REPORT', message: 'invalid or oversized report' });
+  }
+  for (const key of ['__proto__', 'constructor', 'prototype', Symbol('key')]) {
+    const value = Object.defineProperty({}, key, { value: 'bad' });
+    assert.throws(() => core.frozenCopy(value), { code: 'ERR_SCRATCH_REPORT', message: 'invalid report key' });
+  }
+  let reads = 0;
+  assert.throws(() => core.frozenCopy({ get field() { reads += 1; return 1; } }), {
+    code: 'ERR_SCRATCH_REPORT', message: 'report accessors are not accepted',
+  });
+  assert.equal(reads, 0);
+  for (const value of [new Array(1), Object.assign([null], { extra: true })]) {
+    assert.throws(() => core.frozenCopy(value), { code: 'ERR_SCRATCH_REPORT', message: 'sparse or decorated report arrays are refused' });
+  }
+  const result = core.frozenCopy({ values: [null, undefined, true, false, 0, -1, 1.5, ''] });
+  assert.deepEqual(result.values, [null, undefined, true, false, 0, -1, 1.5, '']);
+  assert.equal(Object.isFrozen(result), true);
+  assert.equal(Object.isFrozen(result.values), true);
+});
+test('U007-M024: session validation snapshots distinguish missing close, forged ownership and an invalid process budget', () => {
+  const clock = new ManualClock(), fake = fakeFileSystem(parent, clock);
+  const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+  for (const session of [null, false, {}, new Proxy({}, {})]) {
+    const result = api.wrapScratchSession(session, owner);
+    assert.equal(result.ok, false);
+    assert.equal(result.code, 'ERR_SCRATCH_OPTIONS');
+    const message = session && typeof session === 'object' && !require('node:util').types.isProxy(session)
+      ? 'session.close must be a bounded close function' : 'session needs its genuine invocation-bound scratch owner';
+    assert.deepEqual(result.refused, [{ path: null, code: 'ERR_SCRATCH_OPTIONS', message }]);
+  }
+  for (const processTimeoutMs of [null, false, 0, 1.5, 2147483648, '1']) {
+    const result = api.wrapScratchSession({ close() {} }, owner, { processTimeoutMs });
+    assert.deepEqual(result.refused, [{ path: null, code: 'ERR_SCRATCH_OPTIONS', message: 'processTimeoutMs is outside the supported range' }]);
+  }
+});

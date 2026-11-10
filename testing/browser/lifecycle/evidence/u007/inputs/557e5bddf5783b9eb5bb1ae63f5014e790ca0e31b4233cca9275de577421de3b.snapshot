@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('node:assert/strict');
+const { createScratchOwner } = require('../scratch.cjs');
+let getterReads = 0;
+for (let i = 0; i < 4096; i += 1) {
+  const config = { get parent() { getterReads += 1; return i % 2 ? 'a'.repeat(4096) : null; } };
+  const result = createScratchOwner(config);
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'ERR_SCRATCH_OPTIONS');
+}
+assert.equal(process.env.NODE_TEST_CONTEXT, undefined);
+assert.equal(process.env.NODE_V8_COVERAGE, undefined);
+console.log(JSON.stringify({ checks: 4096, getterReads, childContextRemoved: true, childCoverageRemoved: true }));

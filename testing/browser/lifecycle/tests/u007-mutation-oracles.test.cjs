@@ -1,0 +1,53 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const path=require('node:path');
+const core=require('../scratch.cjs');
+const {ManualClock,fakeFileSystem,drive}=require('./u007-support.cjs');
+const parent=path.resolve('owned-parent');
+test('U007-M001: positive ownership branding and every invalid-argument report field are observable',async()=>{
+  const clock=new ManualClock(),fake=fakeFileSystem(parent,clock);
+  const owner=core.createScratchOwner({parent,clock,fs:fake.adapter});
+  assert.equal(owner.ok,true);
+  assert.equal(core.isScratchOwner(owner),true,'a genuine owner must be recognized');
+  for(const value of [null,undefined,false,0,'owner',{},new Proxy({}, {})])assert.equal(core.isScratchOwner(value),false);
+  const root=path.join(parent,'session-owned');
+  await owner.mkdir(root);
+  const report=await owner.cleanup({unknown:true});
+  assert.deepEqual(report,{
+    code:'ERR_SCRATCH_OPTIONS',clean:false,confirmed:false,attempts:[],delays:[],removed:[],remaining:[root],
+    refused:[{path:null,code:'ERR_SCRATCH_OPTIONS',message:'unknown option'}],errors:[],
+    unconfirmed:[{path:root,phase:'refusal'}],work:{identityReads:0,directoryReads:0,entries:0}
+  });
+  assert.equal(fake.state.calls.length,0);
+});
+test('U007-M002: cleanup during an issued mkdir names its unconfirmed path without deletion',async()=>{
+  const clock=new ManualClock(),fake=fakeFileSystem(parent,clock);
+  let finish;
+  const pending=new Promise(r=>{finish=r;});
+  const owner=core.createScratchOwner({parent,clock,fs:{...fake.adapter,mkdir:async p=>{await pending;return fake.adapter.mkdir(p);}}});
+  const root=path.join(parent,'session-pending');
+  const creation=owner.mkdir(root);
+  const report=await owner.cleanup();
+  assert.equal(report.clean,false);
+  assert.equal(report.confirmed,false);
+  assert.deepEqual(report.remaining,[root]);
+  assert.deepEqual(report.unconfirmed,[{path:root,phase:'refusal'}]);
+  assert.equal(fake.state.calls.length,0);
+  finish();
+  await creation;
+  assert.equal(owner.cleanup(),owner.cleanup());
+});
+test('U007-M003: unlocked cleanup report has every field and exact measured work',async()=>{
+  const clock=new ManualClock(),fake=fakeFileSystem(parent,clock),owner=core.createScratchOwner({parent,clock,fs:fake.adapter});
+  const root=path.join(parent,'session-owned');
+  await owner.mkdir(root);
+  fake.put(path.join(root,'held.txt'),'file');
+  const result=(await drive(clock,owner.cleanup())).value;
+  assert.equal(result.code,'SCRATCH_CLEAN');assert.equal(result.clean,true);assert.equal(result.confirmed,true);
+  assert.deepEqual(result.attempts,[{path:root,atMs:0,code:null}]);
+  assert.deepEqual(result.delays,[]);assert.deepEqual(result.errors,[]);assert.deepEqual(result.refused,[]);
+  assert.deepEqual(result.unconfirmed,[]);assert.deepEqual(result.remaining,[]);assert.deepEqual(result.removed,[root]);
+  assert.equal(result.work.directoryReads,1);assert.equal(result.work.entries,1);
+  assert.ok(result.work.identityReads>0);
+});

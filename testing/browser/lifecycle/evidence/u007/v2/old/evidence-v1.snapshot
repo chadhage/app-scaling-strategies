@@ -1,0 +1,43 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+for (const [file, raw, canonical] of [
+  ['u007-current-evidence.cjs', '2ad748ae94ef53f3b3521560171a7277b703b705f711f38f2a8c02ef1d2ef4cc', '3c4532573b7edf835d65f431bba0848979c2465374fd7bf3655c023115a779ae'],
+  ['u007-evidence-support.cjs', '131748121a7809b437e21b3c0f79f4f92ee2c73a70bb3d69c5e7ca2c7c1f4dee', '631efda6f2af0829f826b5b772e343ed12634538a2ec0cf86ad1fedad26462c8'],
+]) {
+  const bytes = fs.readFileSync(path.join(__dirname, file));
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  assert.ok(digest === raw || digest === canonical, file + ' must match its independently pinned raw or exact LF bytes before loading');
+}
+const { verify } = require('./u007-current-evidence.cjs');
+const root = path.resolve(__dirname, '..');
+const indexPath = path.join(root, 'evidence', 'u007', 'capture-index.json');
+const uncaptured = !fs.existsSync(indexPath);
+test('E001: every U007 capture, stream, retained input and final file pin verifies', { skip: uncaptured ? 'U007 public derivatives not yet captured; not acceptance evidence' : false }, () => {
+  assert.deepEqual(verify(root), []);
+  const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+  assert.ok(index.captures.some((c) => c.kind === 'behavioral-red'));
+  for (const name of ['scratch.cjs', 'scratch-session.cjs']) assert.ok(index.captures.some((c) => c.kind === 'coverage' && c.final && c.productionFile === name));
+});
+test('E001: tamper controls fail by name for feature, README, tests, production, stream, manifest and ownership evidence', { skip: uncaptured ? 'U007 public derivatives not yet captured; not acceptance evidence' : false }, () => {
+  const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+  const capture = index.captures.find((c) => c.final && c.kind === 'coverage');
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, capture.manifest), 'utf8'));
+  const paths = ['U007.feature', 'README-U007.md', 'tests\\u007-scratch.test.cjs', 'scratch.cjs', 'scratch-session.cjs',
+    'evidence\\u007\\capture-index.json', 'evidence\\u007\\capture-index.sha256',
+    capture.manifest, path.join('evidence', 'u007', 'captures', manifest.transcripts.stdout.path),
+    manifest.inputs.find((i) => i.path.endsWith('u007-session.test.cjs')).retained];
+  for (const target of paths) {
+    const read = (p) => {
+      const bytes = fs.readFileSync(path.join(root, p));
+      if (p !== target) return bytes;
+      const changed = Buffer.from(bytes); changed[Math.floor(changed.length / 2)] ^= 1;
+      return changed;
+    };
+    const errors = verify(root, read);
+    assert.ok(errors.some((e) => /PIN_CHANGED|STREAM_CHANGED|MANIFEST_CHANGED|INPUT_CHANGED|INDEX_CHANGED/.test(e)), target);
+  }
+});

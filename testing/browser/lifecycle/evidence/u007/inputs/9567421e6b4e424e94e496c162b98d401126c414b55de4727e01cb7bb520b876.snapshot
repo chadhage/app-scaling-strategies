@@ -1,0 +1,141 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const { spawnSync } = require('node:child_process');
+const { ManualClock, fakeFileSystem, drive, error, fixture, discard, processReport } = require('./u007-support.cjs');
+const core = require('../scratch.cjs');
+const api = require('../scratch-session.cjs');
+const parent = path.resolve('owned-parent');
+
+test('S007/S008: exclusive creation retains return/error semantics, refuses recursion, and has a finite root cap', async () => {
+  const clock = new ManualClock();
+  if (kind === 'bad-clock') clock.now = function () { return this.unreadable ? NaN : this.t; };
+  const fake = fakeFileSystem(parent, clock);
+  const originalError = error('EEXIST');
+  const existing = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, mkdir: async () => { throw originalError; } } });
+  await assert.rejects(existing.mkdir(path.join(parent, 'session-existing')), (e) => e === originalError);
+  assert.equal((await existing.cleanup()).code, 'ERR_SCRATCH_OWNERSHIP');
+  const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, mkdir: async (p) => { await fake.adapter.mkdir(p); return 'original-result'; } } });
+  assert.equal(await owner.mkdir(path.join(parent, 'session-owned'), { recursive: false, mode: 448 }), 'original-result');
+  await assert.rejects(owner.mkdir(path.join(parent, 'session-second')), { code: 'ERR_SCRATCH_OWNERSHIP' });
+  await assert.rejects(owner.mkdir(parent), { code: 'ERR_SCRATCH_OWNERSHIP' });
+  const r = await owner.cleanup();
+  assert.equal(r.clean, true);
+  await assert.rejects(owner.mkdir(path.join(parent, 'session-after-close')), { code: 'ERR_SCRATCH_CLOSED' });
+  for (const options of [{ recursive: true }, { recursive: 'yes' }, { unknown: true }, new Proxy({}, {}), null, { get recursive() { throw error('GETTER'); } }]) {
+    const fresh = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+    await assert.rejects(fresh.mkdir(path.join(parent, 'session-refused'), options), { code: 'ERR_SCRATCH_OWNERSHIP' });
+  }
+});
+test('S008: creation identity failures do not change successful mkdir semantics and cannot authorize removal', async () => {
+  for (const kind of ['missing', 'link', 'zero-id', 'throw', 'bad-clock']) {
+    const clock = new ManualClock();
+    const fake = fakeFileSystem(parent, clock);
+    let stat = fake.adapter.lstat;
+    if (kind === 'missing') stat = async () => null;
+    if (kind === 'link') stat = async () => ({ kind: 'link', device: '1', fileId: '1', birth: '1' });
+    if (kind === 'zero-id') stat = async () => ({ kind: 'directory', device: '1', fileId: '0', birth: '1' });
+    if (kind === 'throw') stat = async () => { throw error('EACCES'); };
+    const owner = core.createScratchOwner({ parent, clock, fs: { ...fake.adapter, lstat: stat } });
+    if (kind === 'bad-clock') clock.unreadable = true;
+    assert.equal(await owner.mkdir(path.join(parent, 'session-unverified')), undefined, kind);
+    const result = await owner.cleanup();
+    assert.equal(result.clean, false);
+    assert.equal(fake.state.calls.length, 0);
+  }
+});
+test('S010: error fields are read once, dense copies are independent, hostile process reports remain typed', async () => {
+  let reads = 0;
+  assert.equal(core.errorOf({ get code() { reads += 1; return 'EBUSY'; }, message: 'locked' }, 'remove', 'owned').code, 'EBUSY');
+  assert.equal(reads, 1);
+  assert.equal(core.errorOf({ code: 'a'.repeat(65) }, 'remove', null).code, 'UNKNOWN_ERROR');
+  const source = { array: [{ flag: true }], missing: undefined };
+  const copy = core.frozenCopy(source);
+  source.array[0].flag = false;
+  assert.equal(copy.array[0].flag, true);
+  assert.throws(() => core.frozenCopy(Object.assign([null], { extra: true })), { code: 'ERR_SCRATCH_REPORT' });
+  assert.throws(() => core.optionsOf({ signal: Object.create(AbortSignal.prototype) }), { code: 'ERR_SCRATCH_OPTIONS' });
+  for (const report of [null, undefined, true, [], new Proxy({}, {}), { get confirmed() { throw error('GETTER'); } },
+    { ...processReport(), unknown: true }, { ...processReport(), errors: new Array(3) }]) {
+    const clock = new ManualClock();
+    const fake = fakeFileSystem(parent, clock);
+    const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+    await owner.mkdir(path.join(parent, 'session-report'));
+    const wrapped = api.wrapScratchSession({ close: async () => report }, owner, { clock });
+    await assert.rejects(wrapped.close(), { code: 'ERR_SCRATCH_SESSION' });
+    assert.equal(fake.state.calls.length, 0);
+  }
+});
+test('S004: process-close and scratch defaults have an explicit sum, and nonmonotonic clocks cannot authorize work', async () => {
+  const clock = new ManualClock();
+  const fake = fakeFileSystem(parent, clock);
+  const owner = core.createScratchOwner({ parent, clock, fs: fake.adapter });
+  await owner.mkdir(path.join(parent, 'session-defaults'));
+  const closeBound = require('../close.cjs').budgetsOf().closeBoundMs;
+  const defaults = core.optionsOf();
+  assert.deepEqual([defaults.timeoutMs, defaults.maxAttempts, defaults.maxEntries, defaults.maxDepth], [2000, 4, 256, 16]);
+  const wrapped = api.wrapScratchSession({ close: () => new Promise(() => {}) }, owner, { clock });
+  const result = await drive(clock, wrapped.close());
+  assert.equal(result.ok, false);
+  assert.equal(clock.t, closeBound);
+  assert.equal(closeBound + defaults.timeoutMs, 184000);
+  assert.ok(clock.requested.every((ms) => ms <= 2147483647));
+  const changing = new ManualClock();
+  const budget = core.createBudget(changing, 10);
+  changing.t = -1;
+  assert.throws(() => budget.remaining(), { code: 'ERR_SCRATCH_CLOCK' });
+  budget.stop();
+  await assert.rejects(core.createBudget({ ...core.systemClock, now: () => 0 }, 10).wait(() => { throw error('SYNC_FAILURE'); }), { code: 'SYNC_FAILURE' });
+});
+test('S009: 64 actual owned-file scopes in eight-way waves preserve an unrelated neighbour', async () => {
+  const parent = fixture();
+  const neighbour = path.join(parent, 'session-neighbour');
+  await fs.promises.mkdir(neighbour);
+  await fs.promises.writeFile(path.join(neighbour, 'sentinel.txt'), 'resource neighbour unchanged');
+  let runs = 0;
+  try {
+    for (let wave = 0; wave < 8; wave += 1) {
+      await Promise.all(Array.from({ length: 8 }, async (_, member) => {
+        const root = path.join(parent, `session-${wave}-${member}`);
+        const owner = core.createScratchOwner({ parent, clock: new ManualClock() });
+        await api.observeScratchCreation(owner, () => fs.promises.mkdir(root));
+        await fs.promises.writeFile(path.join(root, 'same-name.txt'), 'own bytes');
+        const pending = owner.cleanup();
+        assert.equal(owner.cleanup(), pending);
+        const result = await pending;
+        assert.equal(result.clean, true);
+        assert.deepEqual(result.removed, [root]);
+        assert.equal(result.attempts.length, 1);
+        assert.equal(fs.existsSync(root), false);
+        runs += 1;
+      }));
+    }
+    assert.equal(runs, 64);
+    assert.equal(await fs.promises.readFile(path.join(neighbour, 'sentinel.txt'), 'utf8'), 'resource neighbour unchanged');
+    console.log('U007-RESOURCE-WAVES ' + JSON.stringify({ runs, concurrency: 8, failed: 0 }));
+  } finally { await discard(parent); }
+});
+test('S010: nested Node removes both ambient test keys and performs capped-heap hostile checks', async () => {
+  const parent = fixture();
+  const sentinel = path.join(parent, 'coverage-sentinel');
+  await fs.promises.mkdir(sentinel);
+  const previous = process.env.NODE_V8_COVERAGE;
+  process.env.NODE_V8_COVERAGE = sentinel;
+  const env = { ...process.env, NODE_TEST_CONTEXT: 'child-v8' };
+  for (const name of Object.keys(env)) if (['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE'].includes(name.toUpperCase())) delete env[name];
+  let result;
+  try {
+    delete process.env.NODE_V8_COVERAGE;
+    result = spawnSync(process.execPath, ['--max-old-space-size=64', path.join(__dirname, 'u007-hostile.cjs')],
+      { env, cwd: process.env.U007_WORK, windowsHide: true, encoding: 'utf8' });
+  } finally { if (previous === undefined) delete process.env.NODE_V8_COVERAGE; else process.env.NODE_V8_COVERAGE = previous; }
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.signal, null);
+    assert.deepEqual(fs.readdirSync(sentinel), []);
+    assert.deepEqual(JSON.parse(result.stdout), { checks: 4096, getterReads: 4096, childContextRemoved: true, childCoverageRemoved: true });
+  } finally { await discard(parent); }
+});

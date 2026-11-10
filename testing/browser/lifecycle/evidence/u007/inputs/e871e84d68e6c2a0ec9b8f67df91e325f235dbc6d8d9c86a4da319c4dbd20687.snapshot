@@ -1,0 +1,59 @@
+'use strict';
+const path = require('node:path');
+const readline = require('node:readline');
+const { spawn } = require('node:child_process');
+async function hold(file, share = 'ReadWrite') {
+  const executable = path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) if (['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'PSMODULEPATH'].includes(key.toUpperCase())) delete env[key];
+  const old = process.env.NODE_V8_COVERAGE;
+  delete process.env.NODE_V8_COVERAGE;
+  let child;
+  try {
+    child = spawn(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'fixtures', 'u007-lock-holder.ps1')],
+      { cwd: process.env.U007_WORK, env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+  } finally { if (old !== undefined) process.env.NODE_V8_COVERAGE = old; }
+  const queue = [];
+  const waiters = [];
+  let stderr = '';
+  child.stderr.on('data', (b) => { stderr += b.toString('utf8'); });
+  const lines = readline.createInterface({ input: child.stdout });
+  lines.on('line', (line) => {
+    const item = JSON.parse(line);
+    const next = waiters.shift();
+    if (next) next.resolve(item); else queue.push(item);
+  });
+  let exit = null;
+  const exited = new Promise((resolve, reject) => {
+    child.once('error', (error) => { for (const w of waiters.splice(0)) w.reject(error); reject(error); });
+    child.once('close', (code) => {
+      exit = code;
+      if (code !== 0) { const e = new Error(`Owned lock holder exited ${code}: ${stderr}`); for (const w of waiters.splice(0)) w.reject(e); reject(e); }
+      else resolve();
+    });
+  });
+  exited.catch(() => {});
+  const next = () => queue.length ? Promise.resolve(queue.shift())
+    : exit !== null ? Promise.reject(new Error('Lock holder already exited'))
+      : new Promise((resolve, reject) => waiters.push({ resolve, reject }));
+  const held = next();
+  child.stdin.write(JSON.stringify({ path: file, share }) + '\n');
+  const acknowledgement = await held;
+  if (acknowledgement.event !== 'held') throw new Error('Missing real held-handle acknowledgement');
+  let released;
+  return {
+    pid: child.pid, acknowledgement,
+    async state() { const pending = next(); child.stdin.write('state\n'); return pending; },
+    release() {
+      return released ||= (async () => {
+        const closed = next();
+        child.stdin.end('release\n');
+        const message = await closed;
+        if (message.event !== 'closed') throw new Error('Missing closed-handle barrier');
+        await exited;
+        lines.close();
+      })();
+    },
+  };
+}
+module.exports = { hold };

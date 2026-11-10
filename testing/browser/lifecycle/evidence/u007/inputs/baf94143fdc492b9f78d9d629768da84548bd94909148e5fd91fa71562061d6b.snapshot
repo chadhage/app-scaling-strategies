@@ -1,0 +1,200 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const fs = require('node:fs');
+const { ManualClock, drive, fakeFileSystem, fixture, discard, error, processReport } = require('./u007-support.cjs');
+const core = require('../scratch.cjs');
+const sessions = require('../scratch-session.cjs');
+const parent = path.resolve('owned-parent');
+async function made(adapt = (a) => a, clock = new ManualClock()) {
+  const fake = fakeFileSystem(parent, clock);
+  const owner = core.createScratchOwner({ parent, fs: adapt(fake.adapter), clock });
+  assert.equal(owner.ok, true);
+  const root = path.join(parent, 'session-owned');
+  await owner.mkdir(root);
+  fake.put(path.join(root, 'held.txt'), 'file');
+  return { owner, fake, clock, root };
+}
+for (const code of ['EACCES', 'EINVAL', 'ENOSPC', 'UNKNOWN_ERROR']) {
+  test(`S005: ${code} is reported without a retry or backoff`, async () => {
+    const { owner, fake, clock, root } = await made();
+    fake.state.failures = [code, code];
+    const { value: r } = await drive(clock, owner.cleanup({ timeoutMs: 200 }));
+    assert.equal(r.clean, false);
+    assert.equal(r.attempts.length, 1);
+    assert.equal(r.delays.length, 0);
+    assert.equal(r.errors[0].code, code);
+    assert.deepEqual(r.remaining, [root, path.join(root, 'held.txt')]);
+  });
+}
+test('S006: already absent scratch is confirmed and a lying remove cannot fabricate absence', async () => {
+  const gone = await made();
+  gone.fake.entries.delete(gone.root);
+  const absent = (await drive(gone.clock, gone.owner.cleanup())).value;
+  assert.equal(absent.clean, true);
+  assert.equal(absent.attempts.length, 0);
+  const liar = await made((a) => ({ ...a, remove: async () => {} }));
+  const r = (await drive(liar.clock, liar.owner.cleanup())).value;
+  assert.equal(r.clean, false);
+  assert.equal(r.confirmed, true);
+  assert.equal(r.errors[0].code, 'ERR_SCRATCH_NOT_REMOVED');
+  assert.deepEqual(r.remaining, [liar.root, path.join(liar.root, 'held.txt')]);
+});
+for (const kind of ['root-replaced', 'ancestor-replaced', 'root-link', 'ancestor-link', 'identity-unreadable', 'descendant-link', 'malformed-list', 'duplicate-name', 'invalid-name', 'entry-cap', 'depth-cap']) {
+  test(`S008: ${kind} refuses before any destructive call`, async () => {
+    const { owner, fake, clock, root } = await made((adapter) => {
+      if (kind === 'duplicate-name') return { ...adapter, readDir: async (p, limit) => {
+        const entries = await adapter.readDir(p, limit);
+        return [...entries, ...entries];
+      } };
+      if (kind === 'malformed-list') return { ...adapter, readDir: async () => null };
+      return adapter;
+    });
+    if (kind === 'root-replaced') fake.put(root);
+    if (kind === 'ancestor-replaced') fake.put(parent);
+    if (kind === 'root-link') fake.put(root, 'link');
+    if (kind === 'ancestor-link') fake.put(parent, 'link');
+    if (kind === 'identity-unreadable') fake.state.beforeStat = async () => { throw error('EACCES'); };
+    if (kind === 'descendant-link') fake.put(path.join(root, 'link'), 'link');
+    if (kind === 'invalid-name') fake.put(path.join(root, 'NUL'), 'file');
+    if (kind === 'entry-cap') for (let i = 0; i < 5; i += 1) fake.put(path.join(root, 'file-' + i), 'file');
+    if (kind === 'depth-cap') { fake.put(path.join(root, 'nested')); fake.put(path.join(root, 'nested', 'deep.txt'), 'file'); }
+    const r = (await drive(clock, owner.cleanup({ maxEntries: kind === 'entry-cap' ? 2 : 256, maxDepth: kind === 'depth-cap' ? 1 : 16 }))).value;
+    assert.equal(r.clean, false);
+    assert.equal(fake.state.calls.length, 0);
+    assert.ok(r.errors.length > 0);
+    assert.ok(r.remaining.includes(root));
+  });
+}
+test('S007: hostile target options, an uncreated path and forged owners cannot authorize deletion', async () => {
+  for (const name of ['path', 'record', 'ownership', 'root', 'paths', 'target', 'error', 'beforeAfter']) {
+    const { owner, fake, clock, root } = await made();
+    fake.put(path.join(parent, 'session-neighbour'));
+    const r = (await drive(clock, owner.cleanup({ [name]: root }))).value;
+    assert.equal(r.code, 'ERR_SCRATCH_OPTIONS');
+    assert.equal(fake.state.calls.length, 0);
+    assert.equal(fake.entries.has(path.join(parent, 'session-neighbour')), true);
+  }
+  const clock = new ManualClock();
+  const fake = fakeFileSystem(parent, clock);
+  const owner = core.createScratchOwner({ parent, fs: fake.adapter, clock });
+  assert.equal((await owner.cleanup()).code, 'ERR_SCRATCH_OWNERSHIP');
+  assert.equal(sessions.wrapScratchSession({ close() {} }, { ok: true }).ok, false);
+  assert.equal(core.isScratchOwner({ ok: true }), false);
+  assert.equal(core.isScratchOwner(null), false);
+});
+test('S007: a live session cannot be rebound to the other live invocation owner', async () => {
+  const a = await made();
+  const b = await made();
+  const session = { close: async () => processReport() };
+  assert.equal(sessions.wrapScratchSession(session, a.owner).ok, true);
+  const refused = sessions.wrapScratchSession(session, b.owner);
+  assert.equal(refused.ok, false, 'a genuine but foreign invocation owner is still the wrong owner');
+  assert.equal(b.fake.state.calls.length, 0);
+});
+for (const phase of ['verification', 'scan', 'remove', 'confirmation', 'backoff']) {
+  test(`S004: a never-settling ${phase} adapter is bounded by the original virtual deadline`, async () => {
+    const clock = new ManualClock();
+    if (phase === 'backoff') clock.sleep = () => new Promise(() => {});
+    const { owner, fake, root } = await made((a) => a, clock);
+    const never = () => new Promise(() => {});
+    if (phase === 'verification') fake.state.beforeStat = never;
+    if (phase === 'scan') fake.state.beforeRead = never;
+    if (phase === 'remove') fake.state.beforeRemove = never;
+    if (phase === 'confirmation') {
+      let roots = 0;
+      fake.state.beforeStat = async (p) => { if (p === root && ++roots === 2) await never(); };
+    }
+    if (phase === 'backoff') fake.state.failures = ['EBUSY'];
+    const r = (await drive(clock, owner.cleanup({ timeoutMs: 200 }))).value;
+    assert.equal(r.code, 'ERR_SCRATCH_DEADLINE');
+    assert.equal(r.clean, false);
+    assert.equal(r.confirmed, false);
+    assert.equal(clock.t, 200);
+    assert.ok(r.unconfirmed.some((x) => x.path === root));
+    assert.ok(fake.state.calls.length <= 1);
+  });
+  test(`S011: abort during ${phase} stops new attempts and preserves uncertainty`, async () => {
+    const clock = new ManualClock();
+    const controller = new AbortController();
+    if (phase === 'backoff') clock.sleep = async () => { controller.abort(); };
+    const { owner, fake, root } = await made((a) => a, clock);
+    if (phase === 'verification') fake.state.beforeStat = async () => { controller.abort(); };
+    if (phase === 'scan') fake.state.beforeRead = async () => { controller.abort(); };
+    if (phase === 'remove') fake.state.beforeRemove = async () => { controller.abort(); await new Promise(() => {}); };
+    if (phase === 'confirmation') {
+      let roots = 0;
+      fake.state.beforeStat = async (p) => { if (p === root && ++roots === 2) controller.abort(); };
+    }
+    if (phase === 'backoff') fake.state.failures = ['EBUSY'];
+    const r = (await drive(clock, owner.cleanup({ timeoutMs: 200, signal: controller.signal }))).value;
+    assert.equal(r.code, 'ERR_SCRATCH_ABORTED');
+    assert.equal(r.clean, false);
+    assert.ok(fake.state.calls.length <= 1);
+    const count = fake.state.calls.length;
+    while (clock.fireNext()) {}
+    await Promise.resolve();
+    assert.equal(fake.state.calls.length, count);
+  });
+}
+test('S004: budget consumed during I/O cannot start removal at deadline equality', async () => {
+  const { owner, fake, clock } = await made();
+  fake.state.beforeRead = async () => { clock.t = 200; };
+  const r = (await drive(clock, owner.cleanup({ timeoutMs: 200 }))).value;
+  assert.equal(r.code, 'ERR_SCRATCH_DEADLINE');
+  assert.equal(fake.state.calls.length, 0);
+});
+test('S011: a pre-aborted signal performs no filesystem work', async () => {
+  const { owner, fake } = await made();
+  const controller = new AbortController();
+  controller.abort();
+  const r = await owner.cleanup({ signal: controller.signal });
+  assert.equal(r.code, 'ERR_SCRATCH_ABORTED');
+  assert.equal(fake.state.calls.length, 0);
+  assert.equal(r.work.identityReads, 1);
+});
+test('S010: every reachable report object is frozen and later callers see identical fields', async () => {
+  const { owner, fake, clock } = await made();
+  fake.state.failures = ['EBUSY'];
+  const r = (await drive(clock, owner.cleanup())).value;
+  const before = JSON.stringify(r);
+  const visited = new Set();
+  const walk = (v) => {
+    if (!v || typeof v !== 'object' || visited.has(v)) return;
+    visited.add(v);
+    assert.equal(Object.isFrozen(v), true);
+    assert.throws(() => { v.__tamper = true; }, TypeError);
+    for (const key of Reflect.ownKeys(v)) if (key !== 'length') walk(v[key]);
+  };
+  walk(r);
+  walk(owner.paths());
+  assert.equal(await owner.cleanup(), r);
+  assert.equal(JSON.stringify(r), before);
+  assert.ok(visited.size >= 10);
+});
+test('S008 Windows: an actual junction replacement never changes the unrelated target sentinel', async () => {
+  const parent = fixture();
+  const root = path.join(parent, 'session-owned');
+  const neighbour = path.join(parent, 'session-neighbour');
+  const owner = core.createScratchOwner({ parent });
+  try {
+    await owner.mkdir(root);
+    await fs.promises.mkdir(neighbour);
+    await fs.promises.writeFile(path.join(neighbour, 'sentinel.txt'), 'foreign unchanged');
+    await fs.promises.rmdir(root);
+    await fs.promises.symlink(neighbour, root, 'junction');
+    const r = await owner.cleanup();
+    assert.equal(r.clean, false);
+    assert.equal(r.attempts.length, 0);
+    assert.equal(r.refused.length, 1);
+    assert.equal(await fs.promises.readFile(path.join(neighbour, 'sentinel.txt'), 'utf8'), 'foreign unchanged');
+  } finally { await discard(parent); }
+});
+test('S012: malformed process rows are a typed non-clean close, not a thrown TypeError', async () => {
+  const { owner } = await made();
+  const report = processReport();
+  report.refused = [null];
+  const wrapped = sessions.wrapScratchSession({ close: async () => report }, owner);
+  await assert.rejects(wrapped.close(), { code: 'ERR_SCRATCH_SESSION' });
+});
