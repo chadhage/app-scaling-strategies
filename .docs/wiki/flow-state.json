@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1474,
+  "revision": 1475,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T14:35:27.9936242Z",
+  "updatedAtUtc": "2026-11-10T15:26:32.7581621Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -223,8 +223,8 @@
     "D": 14
   },
   "reservations": {
-    "L": 0,
-    "D": 3
+    "D": 3,
+    "L": 0
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -62092,9 +62092,9 @@
     },
     {
       "deliver": "Reserve bounded lease capacity and spend; reject concurrent over-admission without consuming another lease's reservation.",
-      "owner": "worker-C011",
+      "owner": null,
       "localScope": "Bounded capacity and spend reservations of fictional leases on one loopback server (Node built-ins), built on the accepted C009 and C010 fixtures imported read-only: one shared pool of synthetic capacity units and one spend ceiling in synthetic cost units with per-lease caps and a server-side price table, an atomic reserve decision at the single place where the reservation is committed (check and commit with no await between them, repeated where the effect is committed), concurrent over-admission refused with a typed code that names the bound and no effect, a refused or failed reservation never consuming, shrinking, evicting or releasing another lease reservation or the shared headroom, idempotent retries by key, release and expiry (injected clock) returning exactly what was reserved, a conservation invariant after every operation, every decision audited and visible to its owner and the operator only; fake identities and synthetic units only; no real service, no native Azure, no Entra, no real spend.",
-      "state": "In Progress",
+      "state": "To Do",
       "priority": "P0",
       "admittedAtUtc": "2026-11-07T02:07:03Z",
       "result": null,
@@ -62124,7 +62124,7 @@
       "kano": "D",
       "authorization": "local-synthetic-offline-only",
       "packet": "H001",
-      "technicalEntryGate": "C002, C010, U034",
+      "technicalEntryGate": "C002, C010, U034, U068, U069",
       "id": "C011",
       "kanoUnit": "C011",
       "publication": null,
@@ -62159,10 +62159,27 @@
           "retainedPublication": null,
           "kind": "fresh-private-continuation-after-actual-gates",
           "by": "parent-execution-coordinator"
+        },
+        {
+          "newEntryGates": [
+            "U068",
+            "U069"
+          ],
+          "reason": "Qualified partial217/coverage7/native/load80 is not acceptance: history eviction re-admits the same key, original core was pre-drafted before its RED, strict mutation has54survivors/15undecided/1197unexecuted. Core retry contract is not waived; actual repair and closure are independent zero-credit work.",
+          "by": "parent-execution-coordinator",
+          "previousAgentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+          "evidence": "<RUN>/results/C011-final.json",
+          "atUtc": "2026-11-10T15:26:31Z",
+          "to": "To Do",
+          "creditAwarded": 0,
+          "retainedPrivate": "<RUN>/scratch/C011-final-20261110/candidate",
+          "from": "In Progress",
+          "kind": "actual-unblock-entry-gate",
+          "previousOwner": "worker-C011"
         }
       ],
       "inheritedTechnicalEntryGate": "C002, C010",
-      "heartbeatUtc": "2026-11-10T11:46:40Z",
+      "heartbeatUtc": null,
       "parentLiveApplicationAuthorized": false,
       "executionBudgetUntilUtc": "2026-11-10T15:46:40.4618788Z"
     }
@@ -63735,7 +63752,7 @@
       "reportedAtUtc": "2026-11-10T14:31:45Z"
     },
     {
-      "status": "running",
+      "status": "checkpointed",
       "id": "worker-C011",
       "cardId": "C011",
       "dispatchedAtUtc": "2026-11-07T02:07:28.822577Z",
@@ -78869,6 +78886,94 @@
       "createdBy": "controller-2026-11-06",
       "entryGate": "C059 Done (its README states the limit until this item lands)",
       "unblocks": []
+    },
+    {
+      "entryGate": "C002, C010, U034, U069",
+      "tdd": "Archive actual core-spec and evicted-key behavioral assertion REDs before installing the reused implementation into the new attempt; then correct the bounded replay ledger and replay the same assertions GREEN. The old pre-drafted chronology remains false/uncertified, never rewritten.",
+      "kind": "hardening",
+      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+      "readiness": false,
+      "state": "In Progress",
+      "source": "<RUN>/results/C011-final.json actual obstacles and original orders/C011.md",
+      "parentLiveApplicationAuthorized": false,
+      "acceptance": "Same-lease same-key retries never reserve twice after retained-history eviction, release or expiry; different bodies still conflict and foreign leases remain independent. Maintain bounded per-lease replay identity with typed no-effect refusal for new unique keys at capacity, never silent eviction or unbounded memory. Preserve all old evidence and explicitly uncertified original chronology; a genuine fresh BDD/RED-before-reused-implementation attempt provides the new acceptance anchor.",
+      "heartbeatUtc": "2026-11-10T15:26:31Z",
+      "title": "C011 bounded server-lifetime idempotency beyond history eviction with an honest fresh TDD epoch",
+      "executionBudgetUntilUtc": "2026-11-10T19:26:31.5660389Z",
+      "hints": [
+        {
+          "cards": [
+            "U068",
+            "C011"
+          ],
+          "confidence": 5,
+          "text": "Actual stopped C011 work, not new credit. Two private intertwined unblocks share one final source/proof epoch; all individual RED/coverage/authority checks remain and both close atomically only after parent review/publication.",
+          "tags": [
+            "intertwined",
+            "source-epoch",
+            "no-waiver"
+          ],
+          "kind": "process",
+          "evidence": "<RUN>/GO/C011-unblock-decision.json"
+        }
+      ],
+      "startedAtUtc": "2026-11-10T15:26:31Z",
+      "kanoCredit": 0,
+      "lineage": "OP-C011-LIFETIME-REPLAY",
+      "owner": "worker-U068",
+      "intertwinedBatch": "C011-history-and-current-mutation-20261110",
+      "serves": "C011",
+      "createdBy": "parent-execution-coordinator",
+      "createdAtUtc": "2026-11-10T15:26:31Z",
+      "unblocks": [
+        "C011"
+      ],
+      "id": "U068",
+      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff."
+    },
+    {
+      "entryGate": "C002, C010, U034, U068",
+      "tdd": "The current incomplete corpus and completion gate form retained assertion RED evidence; add genuine behavioral assertions for real survivors before fixes, then unchanged GREEN and strict complete accounting. No default equivalence, test deletion or threshold change.",
+      "kind": "hardening",
+      "agentId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+      "readiness": false,
+      "state": "In Progress",
+      "source": "<RUN>/results/C011-final.json actual obstacles and original orders/C011.md",
+      "parentLiveApplicationAuthorized": false,
+      "acceptance": "Recompute the original systematic corpus against the final U068 source and complete every required position. Every valid variant is killed by a natural named assertion or has a specific runnable source-bound scoped equivalence; no survivors, undecided, unexecuted or timeout/module/syntax-fault kill credit. Preserve the prior incomplete54/15/1197 census and all actual streams as history; final completion/integrity tests and whole-source per-file85 gates must pass.",
+      "heartbeatUtc": "2026-11-10T15:26:31Z",
+      "title": "C011 strict current-source mutation and completion-proof closure",
+      "executionBudgetUntilUtc": "2026-11-10T19:26:31.5702059Z",
+      "hints": [
+        {
+          "cards": [
+            "U069",
+            "C011"
+          ],
+          "confidence": 5,
+          "text": "Actual stopped C011 work, not new credit. Two private intertwined unblocks share one final source/proof epoch; all individual RED/coverage/authority checks remain and both close atomically only after parent review/publication.",
+          "tags": [
+            "intertwined",
+            "source-epoch",
+            "no-waiver"
+          ],
+          "kind": "process",
+          "evidence": "<RUN>/GO/C011-unblock-decision.json"
+        }
+      ],
+      "startedAtUtc": "2026-11-10T15:26:31Z",
+      "kanoCredit": 0,
+      "lineage": "OP-C011-CURRENT-MUTATION-CLOSURE",
+      "owner": "worker-U069",
+      "intertwinedBatch": "C011-history-and-current-mutation-20261110",
+      "serves": "C011",
+      "createdBy": "parent-execution-coordinator",
+      "createdAtUtc": "2026-11-10T15:26:31Z",
+      "unblocks": [
+        "C011"
+      ],
+      "id": "U069",
+      "coverage": "Every changed/added first-party production file individually85/85/85; actual unloaded0. Test-only work N/A only with explicit no-production-change diff."
     }
   ],
   "localPublisherAuthorization": {
@@ -82451,6 +82556,32 @@
       "liveApplicationPermission": false,
       "totalMemoryGiB": 31.82,
       "dispatchableReady": 15
+    },
+    {
+      "by": "parent-execution-coordinator",
+      "inheritedRevision": 1474,
+      "reason": "Actual C011 stop becomes ordinary U068/U069 entry gates in the same transaction. Parent preserves original D reservation and worker identity; the existing actor handles two genuinely intertwined private items, not independent bulk work.",
+      "intertwinedBatches": [
+        {
+          "cards": [
+            "U068",
+            "U069"
+          ],
+          "maximumWip": 2,
+          "atomicDoneOnlyAfterAllThreeReviewedAndPublished": true,
+          "id": "C011-history-and-current-mutation-20261110",
+          "actorId": "1d92bc66-4135-4aac-9a6f-a9ce70da8680",
+          "allIndividualAcceptanceRequirementsRetained": true,
+          "externalActualDone": [
+            "C002",
+            "C010",
+            "U034"
+          ]
+        }
+      ],
+      "resumedAtUtc": "2026-11-10T15:26:31Z",
+      "extraCredit": 0,
+      "liveApplicationPermission": false
     }
   ]
 }
