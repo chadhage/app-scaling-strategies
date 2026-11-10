@@ -25,6 +25,12 @@ const BODY_KINDS = {
   'missing-crlf-after-chunk': { status: 400, fin: false, timer: false, make: (host, version, expect) => `${head(host, version, 'Transfer-Encoding: chunked\r\n', expect)}5\r\nhelloXY` },
   'chunk-cut-fin': { status: 400, fin: true, timer: false, make: (host, version, expect) => `${head(host, version, 'Transfer-Encoding: chunked\r\n', expect)}5\r\nhel` },
 };
+// U056's approved narrowing is HTTP/1.1 without Expect. These are separate rows because Node does not emit the ordinary immediate body error for them.
+const upgradeHead = (host, framing) => head(host, '1.1', `Connection: Upgrade\r\nUpgrade: websocket\r\n${framing}\r\n`, false);
+const UPGRADE_BODY_KINDS = {
+  'upgrade-bad-chunk-size': { status: 408, fin: false, timer: true, make: (host) => `${upgradeHead(host, 'Transfer-Encoding: chunked')}zz\r\n` },
+  'upgrade-short-body-fin': { status: null, fin: true, timer: false, make: (host) => `${upgradeHead(host, 'Content-Length: 100')}0123456789` },
+};
 // G = a complete legitimate read before the failing request; X = the failing request.
 const BODY_SHAPES = { X: 0, GX: 1, GGX: 2 };
 // h11: everything HTTP/1.1 (also after Expect: 100-continue). h10: everything HTTP/1.0 asking to keep alive (Node ignores Expect there).
@@ -67,4 +73,4 @@ const statusesOf = (answers) => answers.map((item) => item.status ?? (item.parti
 // The server holds no connection any more: a bounded poll of a COUNT (the bound is a liveness guard, never asserted).
 const noConnections = (instance, label = 'the server holds no connection', ms) => lib.until(async () => (await instance.connections()) === 0, label, ms).then(() => true, () => false);
 
-module.exports = { BODY_FRAMINGS, BODY_KINDS, BODY_SHAPES, EXPECT, TIMER_BOUNDS, bodyBytes, bodyName, burstName, leaversName, noConnections, peer, statusesOf };
+module.exports = { BODY_FRAMINGS, BODY_KINDS, BODY_SHAPES, EXPECT, TIMER_BOUNDS, UPGRADE_BODY_KINDS, bodyBytes, bodyName, burstName, leaversName, noConnections, peer, statusesOf };

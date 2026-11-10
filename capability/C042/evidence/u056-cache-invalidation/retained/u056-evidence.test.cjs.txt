@@ -1,0 +1,108 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const zlib = require('node:zlib');
+
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const evidence = path.join(root, 'evidence', 'u056-residuals');
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+const json = (name) => JSON.parse(fs.readFileSync(path.join(evidence, name), 'utf8'));
+const capture = (name) => json(`${name}.json`);
+const stream = (manifest, name) => zlib.gunzipSync(fs.readFileSync(path.join(evidence, manifest.transcripts[name].path)));
+const observation = (name, kind) => JSON.parse(stream(capture(name), 'stdout').toString('utf8').split(/\r?\n/).find((line) => line.includes(`"kind":"${kind}"`)).replace(/^# /, ''));
+const same = (bytes, raw, canonical) => sha(bytes) === raw || sha(lf(bytes)) === canonical;
+
+test('U056 retained RED is five behavioral assertions, and the unchanged assertions turn GREEN', () => {
+  const red = capture('red-02-u056-residuals');
+  const green = capture('green-01-u056-residuals');
+  assert.deepEqual([red.exitCode, red.timedOut, red.summary.tests, red.summary.fail], [1, false, 5, 5]);
+  const out = stream(red, 'stdout').toString('utf8');
+  assert.equal((out.match(/code: 'ERR_ASSERTION'/g) ?? []).length, 5);
+  assert.doesNotMatch(out, /TypeError|ReferenceError|SyntaxError|Cannot find module|ERR_MODULE_NOT_FOUND|testTimeoutFailure/);
+  assert.deepEqual([green.exitCode, green.summary.tests, green.summary.pass, green.summary.fail], [0, 10, 10, 0]);
+  const subject = 'capability\\C042\\tests\\u056-residuals.test.cjs';
+  const before = red.inputs.find((item) => item.path === subject);
+  const after = green.inputs.find((item) => item.path === subject);
+  assert.equal(before.rawSha256, after.rawSha256);
+  assert.equal(same(fs.readFileSync(path.join(repository, subject)), before.rawSha256, before.crlfToLfSha256), true);
+});
+
+test('U056 archives measured structural operations and the actual before/after nested RED, not timing thresholds', () => {
+  const before = observation('before-02-evidence-operations', 'measured-evidence-operations');
+  const after = observation('after-01-evidence-operations', 'measured-evidence-operations');
+  assert.equal(before.fixtureFiles, 362);
+  assert.equal(after.fixtureFiles, 362);
+  assert.equal(before.selectedTests, after.selectedTests);
+  assert.equal(after.counts.fileReads, 362);
+  assert.equal(after.maximumReadsOfOneFile, 1);
+  for (const metric of ['walks', 'fileReads', 'sha256Calls', 'gunzipCalls']) assert.equal(after.counts[metric] < before.counts[metric], true, metric);
+  const oldReplay = observation('before-03-nested-red', 'u056-nested-node-observation');
+  const newReplay = observation('after-02-nested-red', 'u056-nested-node-observation');
+  assert.deepEqual([oldReplay.exitCode, oldReplay.summary.tests, oldReplay.summary.pass, oldReplay.summary.fail, oldReplay.assertions], [1, 16, 5, 11, 11]);
+  assert.deepEqual([newReplay.exitCode, newReplay.summary.tests, newReplay.summary.pass, newReplay.summary.fail, newReplay.assertions], [1, 6, 5, 1, 1]);
+  assert.equal(newReplay.spawnError, null);
+  assert.equal(newReplay.signal, null);
+  const historical = json('review-observations.snapshot.json');
+  assert.equal(historical.historicalOnly, true);
+  assert.equal(historical.freshMeasurement, false);
+  assert.match(historical.F4.durationCapture, /57\.1 s/);
+  assert.match(historical.F4.finding.text, /309\.6 s/);
+});
+
+test('U056 reviewer mutant J has a witnessed named assertion kill, never a timeout or reasoning-only equivalence', () => {
+  const got = observation('mutant-01-reviewer-J', 'mutant-J-outcome');
+  assert.equal(got.verdict, 'KILLED_BY_NAMED_ASSERTION');
+  assert.equal(got.replacements, 1);
+  assert.equal(got.timeoutAsKill, false);
+  assert.deepEqual(got.control, { exitCode: 0, pass: 1 });
+  assert.equal(got.mutant.exitCode, 1);
+  assert.equal(got.mutant.assertionFailures, 1);
+  const mutant = fs.readFileSync(path.join(evidence, 'mutant-J-drop-does-not-release.cjs.txt'));
+  assert.equal(sha(lf(mutant)), got.mutantSha256);
+  assert.match(fs.readFileSync(path.join(root, 'U039.md'), 'utf8'), /all-four-fixes generator is absent/);
+});
+
+test('U056 addendum 4 chains to byte-exact addendum 3, retains every supersession and changes no production file', () => {
+  const fourth = JSON.parse(fs.readFileSync(path.join(root, 'evidence-addendum-4.json'), 'utf8'));
+  assert.deepEqual([fourth.item, fourth.sequence, fourth.coverage.status], ['U056', 4, 'not-applicable']);
+  const third = fs.readFileSync(path.join(root, 'evidence-addendum-3.json'));
+  assert.equal(same(third, fourth.previous.rawSha256, fourth.previous.canonicalLfSha256), true);
+  assert.equal(fourth.supersedes.length, 5);
+  for (const item of fourth.supersedes) assert.equal(same(fs.readFileSync(path.join(repository, item.retained)), item.previousRawSha256, item.previousCanonicalLfSha256), true, item.path);
+  const proof = json('production-unchanged.json');
+  const files = fs.readdirSync(root).filter((name) => /\.c?js$/.test(name)).sort();
+  assert.deepEqual(files, proof.fullEnumeratedProductionSet.map((item) => path.posix.basename(item.path)));
+  assert.equal(files.length, 8);
+  for (const item of proof.fullEnumeratedProductionSet) {
+    assert.equal(item.beforeRawSha256, item.afterRawSha256, item.path);
+    assert.equal(same(fs.readFileSync(path.join(repository, item.path)), item.beforeRawSha256, item.canonicalLfSha256), true, item.path);
+  }
+});
+
+test('U056 verifies every own manifest input version and both raw streams, preserving superseded inputs honestly', () => {
+  const versions = fs.readdirSync(path.join(evidence, 'retained')).map((name) => fs.readFileSync(path.join(evidence, 'retained', name)));
+  const names = fs.readdirSync(evidence).filter((name) => /^(?:red|green|before|after|mutant)-\d+-.*\.json$/.test(name));
+  assert.equal(names.length >= 7, true);
+  for (const name of names) {
+    const manifest = json(name);
+    assert.equal(manifest.timedOut, false, name);
+    assert.equal(manifest.spawnError, null, name);
+    assert.equal(manifest.exitCode, manifest.expectedExitCode, name);
+    for (const channel of ['stdout', 'stderr']) {
+      const meta = manifest.transcripts[channel];
+      const gzip = fs.readFileSync(path.join(evidence, meta.path));
+      assert.equal(sha(gzip), meta.gzipSha256, `${name} ${channel} gzip`);
+      assert.equal(sha(zlib.gunzipSync(gzip)), meta.sha256, `${name} ${channel} raw`);
+    }
+    for (const input of manifest.inputs) {
+      const current = fs.readFileSync(path.join(repository, input.path));
+      assert.equal(same(current, input.rawSha256, input.crlfToLfSha256) || versions.some((bytes) => same(bytes, input.rawSha256, input.crlfToLfSha256)), true, `${name}: ${input.path}`);
+    }
+  }
+});

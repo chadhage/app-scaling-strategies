@@ -1,0 +1,134 @@
+{
+  "comparison": "Same 362-file accepted fixture, 30 actual registered tamper/chain/conversion tests. Counters wrap real fs, crypto and zlib operations.",
+  "before": {
+    "kind": "measured-evidence-operations",
+    "before": true,
+    "fixtureFiles": 362,
+    "selectedTests": 30,
+    "counts": {
+      "walks": 775,
+      "fileReads": 11944,
+      "sha256Calls": 59787,
+      "gunzipCalls": 4617
+    },
+    "maximumReadsOfOneFile": 57,
+    "uniqueFilesRead": 362,
+    "replay": {
+      "nestedNodeProcesses": 1,
+      "selectedTests": 16,
+      "names": [
+        "incomplete in-process h11 [X] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete in-process h11 [X] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete in-process h11 [GX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete in-process h11 [GX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete in-process h11 [GGX] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete in-process h11 [GGX] short-body-fin: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "incomplete separate-process h10 [X] missing-crlf-after-chunk: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "a burst of 128 sockets that each send a bad chunk size (in-process) leaves no connection open, and a legitimate GET is answered (the connection cap is not pinned)",
+        "an incomplete request queued behind a request in flight is dropped after its turn: its handler never runs (no 100 Continue), and the client gets ONE typed refusal",
+        "a GET with a broken chunked body queued behind a request in flight answers once, not twice (the handler of the dropped request would refuse the unexpected body again)",
+        "the refusal for an incomplete request waits only for the requests before it: [submit in flight][read][incomplete] answers the submit, the read, then the refusal",
+        "a request whose message is complete (a Content-Length body) is answered before the refusal behind it, the submit still in flight",
+        "a request whose message is complete (a chunked body) is answered before the refusal behind it, the submit still in flight",
+        "a refused connection is destroyed at the flush of the refusal, not left to Node: destroy() runs while the socket has not finished its own shutdown",
+        "a body that arrives slowly is not refused: the incomplete check applies only after the client error, and the connection stays usable",
+        "a queued request whose body is still arriving when its turn comes is served, not dropped: only a client error makes an incomplete request refused"
+      ]
+    }
+  },
+  "after": {
+    "kind": "measured-evidence-operations",
+    "before": false,
+    "fixtureFiles": 362,
+    "selectedTests": 30,
+    "counts": {
+      "walks": 25,
+      "fileReads": 362,
+      "sha256Calls": 1327,
+      "gunzipCalls": 154
+    },
+    "maximumReadsOfOneFile": 1,
+    "uniqueFilesRead": 362,
+    "replay": {
+      "nestedNodeProcesses": 1,
+      "selectedTests": 6,
+      "names": [
+        "incomplete in-process h11 [X] bad-chunk-size: typed refusal after the earlier answers, then the connection is closed and no slot is kept",
+        "a request whose message is complete (a Content-Length body) is answered before the refusal behind it, the submit still in flight",
+        "a request whose message is complete (a chunked body) is answered before the refusal behind it, the submit still in flight",
+        "a refused connection is destroyed at the flush of the refusal, not left to Node: destroy() runs while the socket has not finished its own shutdown",
+        "a body that arrives slowly is not refused: the incomplete check applies only after the client error, and the connection stays usable",
+        "a queued request whose body is still arriving when its turn comes is served, not dropped: only a client error makes an incomplete request refused"
+      ]
+    }
+  },
+  "actualNestedBefore": {
+    "kind": "u056-nested-node-observation",
+    "exitCode": 1,
+    "signal": null,
+    "spawnError": null,
+    "summary": {
+      "tests": 16,
+      "pass": 5,
+      "fail": 11,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "assertions": 11,
+    "command": [
+      "--test",
+      "--test-concurrency=1",
+      "--test-name-pattern=incomplete in-process h11 \\\\[(X|GX|GGX)\\\\] (bad-chunk-size|short-body-fin):",
+      "--test-name-pattern=incomplete separate-process h10 \\\\[X\\\\] missing-crlf-after-chunk:",
+      "--test-name-pattern=a burst of 128 sockets that each send a bad chunk size \\\\(in-process\\\\)",
+      "--test-name-pattern=an incomplete request queued behind a request in flight is dropped after its turn",
+      "--test-name-pattern=a GET with a broken chunked body queued behind",
+      "--test-name-pattern=the refusal for an incomplete request waits only",
+      "--test-name-pattern=a request whose message is complete \\\\(a Content-Length body\\\\)",
+      "--test-name-pattern=a request whose message is complete \\\\(a chunked body\\\\)",
+      "--test-name-pattern=a refused connection is destroyed at the flush",
+      "--test-name-pattern=a body that arrives slowly is not refused",
+      "--test-name-pattern=a queued request whose body is still arriving when its turn comes is served",
+      "capability\\\\C042\\\\tests\\\\u039-body.test.cjs",
+      "capability\\\\C042\\\\tests\\\\u039-body-order.test.cjs"
+    ],
+    "stdoutRawSha256": "30c872882f146b3e057f4938aa326d0748fd30750e9e1b6516d7e4c48fd25f92",
+    "stderrRawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "actualNestedAfter": {
+    "kind": "u056-nested-node-observation",
+    "exitCode": 1,
+    "signal": null,
+    "spawnError": null,
+    "summary": {
+      "tests": 6,
+      "pass": 5,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "assertions": 1,
+    "command": [
+      "--test",
+      "--test-concurrency=1",
+      "--test-name-pattern=incomplete in-process h11 \\\\[X\\\\] bad-chunk-size:",
+      "--test-name-pattern=a request whose message is complete \\\\(a Content-Length body\\\\)",
+      "--test-name-pattern=a request whose message is complete \\\\(a chunked body\\\\)",
+      "--test-name-pattern=a refused connection is destroyed at the flush",
+      "--test-name-pattern=a body that arrives slowly is not refused",
+      "--test-name-pattern=a queued request whose body is still arriving when its turn comes is served",
+      "capability\\\\C042\\\\tests\\\\u039-body.test.cjs",
+      "capability\\\\C042\\\\tests\\\\u039-body-order.test.cjs"
+    ],
+    "stdoutRawSha256": "5ad16c0e2d37a5ef201c4cb789570377ccf39cbaf860a101ee85d6c00bfa6ad0",
+    "stderrRawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "historicalDurations": {
+    "source": "review-observations.snapshot.json",
+    "evidenceSuiteSeconds": 309.6,
+    "incompleteRedTestSeconds": 57.1,
+    "meaning": "Retained reviewer observations, not imposed thresholds."
+  }
+}

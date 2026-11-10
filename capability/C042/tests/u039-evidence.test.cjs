@@ -4,7 +4,7 @@
 // pinned inside evidence-addendum-1.json). `verify` is a pure function over an injected file system, so the tamper tests run the
 // same check on an in-memory copy: any change to a pinned byte, an unlisted addition, a broken chain or a doctored transcript
 // must produce a named problem. The pin in force for a path is the one of the LAST addendum that names it: addendum 3 supersedes the bytes it
-// replaces BY NAME (previous hashes, a retained copy of the replaced bytes, the new hashes) and pins addendum 2 byte for byte. Not detectable by any
+// replaces BY NAME (previous hashes, a retained copy of the replaced bytes, the new hashes). U056 addendum 4 pins addendum 3 byte for byte. Not detectable by any
 // in-tree test: a CONSISTENT rewrite of an archive, its manifest and the addendum together; the accepted commit 6e088f54 and its tag are the only anchor
 // for that (README U039.md says so).
 const assert = require('node:assert/strict');
@@ -22,8 +22,32 @@ const NS = 'capability/C042';
 const EVIDENCE = `${NS}/evidence/u039-pipelining`;
 const AMENDABLE = [`${NS}/README.md`, `${NS}/server.cjs`];
 const ACCEPTED = { [`${NS}/server.cjs`]: '2503ad0fbd1455810068c03386061d57100e4ad97a7635923bb220ea7dbb16f2', [`${NS}/README.md`]: '661045e34f410b805f21d8bfbb4cc2e1cec1302a34c5734ea89ca4d2cdbe4c65' };
-const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-const lfOf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+// Buffer identity is mutable: reuse requires equality with a private copy of the input bytes.
+const hashes = new WeakMap();
+const canonical = new WeakMap();
+const inflatedHashes = new WeakMap();
+const sha = (bytes) => {
+  const cached = hashes.get(bytes);
+  if (cached !== undefined && cached.source.equals(bytes)) return cached.value;
+  const value = crypto.createHash('sha256').update(bytes).digest('hex');
+  hashes.set(bytes, { source: Buffer.from(bytes), value });
+  return value;
+};
+const lfOf = (bytes) => {
+  const cached = canonical.get(bytes);
+  if (cached !== undefined && cached.source.equals(bytes)) return cached.value;
+  const value = Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+  canonical.set(bytes, { source: Buffer.from(bytes), value });
+  return value;
+};
+const inflatedSha = (bytes) => {
+  const cached = inflatedHashes.get(bytes);
+  if (cached !== undefined && cached.source.equals(bytes)) return cached.value;
+  const value = sha(zlib.gunzipSync(bytes));
+  inflatedHashes.set(bytes, { source: Buffer.from(bytes), value });
+  return value;
+};
+const strictEvidence = () => process.env.U039_ALLOW_UNPINNED_EVIDENCE !== '1';
 // A pin holds for the raw bytes or for the same bytes with CRLF turned into LF (a tree converted by a checkout or a tool). An unconverted
 // file must match BOTH digests (a doctored canonical digest is caught); a converted one matches the canonical form.
 const same = (bytes, rawDigest, lfDigest) => {
@@ -44,7 +68,14 @@ function walk(directory, prefix = NS) {
 }
 const realFs = () => ({ files: walk(root), read: (name) => (fs.existsSync(path.join(repository, name)) ? fs.readFileSync(path.join(repository, name)) : null) });
 const memoryFs = (map) => ({ files: [...map.keys()], read: (name) => map.get(name) ?? null });
-const snapshot = () => { const real = realFs(); return new Map(real.files.map((name) => [name, real.read(name)])); };
+let sharedSnapshot;
+const snapshot = () => {
+  if (sharedSnapshot === undefined) {
+    const real = realFs();
+    sharedSnapshot = new Map(real.files.map((name) => [name, real.read(name)]));
+  }
+  return new Map(sharedSnapshot);
+};
 // Every attempt an addendum lists as retained (failed or superseded: its transcripts stay pinned, its inputs are not compared), over the whole chain.
 function retainedNames() {
   const names = new Set();
@@ -64,7 +95,7 @@ function verify({ files, read }) {
     let json;
     try { json = JSON.parse(bytes.toString('utf8')); } catch { add(`addendum ${sequence} is not JSON`); break; }
     addenda.push({ json, bytes });
-    if (json.schema !== 'C042-evidence-addendum/1' || json.cardId !== 'C042' || json.item !== 'U039' || json.sequence !== sequence) add(`addendum ${sequence} has a wrong identity`);
+    if (json.schema !== 'C042-evidence-addendum/1' || json.cardId !== 'C042' || json.item !== (sequence >= 4 ? 'U056' : 'U039') || json.sequence !== sequence) add(`addendum ${sequence} has a wrong identity`);
     const before = sequence === 1 ? null : addenda[sequence - 2].bytes;
     const linked = sequence === 1 ? json.previous === null : json.previous?.path === `${NS}/evidence-addendum-${sequence - 1}.json` && same(before, json.previous.rawSha256, json.previous.canonicalLfSha256);
     if (!linked) add(`addendum ${sequence} does not chain to its predecessor by raw SHA-256`);
@@ -120,9 +151,8 @@ function verify({ files, read }) {
   }
   const pinned = new Set(inForce.keys());
   const addendumNames = new Set(addenda.map((_, index) => `${NS}/evidence-addendum-${index + 1}.json`));
-  // Evidence archived after the newest addendum is pinned by the NEXT one (or by this one once it is rewritten, before publication): inside the evidence
-  // directories it is tolerated here, and refused by the strict run (U039_STRICT_EVIDENCE=1, the check of the final tree). U039.md is pinned by the newest addendum.
-  const strict = process.env.U039_STRICT_EVIDENCE === '1';
+  // The plain run is sealed-tree verification. Only an explicit pre-seal capture mode tolerates unpinned U039 evidence.
+  const strict = strictEvidence();
   for (const name of files) if (!(isEvidence(name) && !strict) && name !== `${NS}/U039.md` && !listed.has(name) && !pinned.has(name) && !addendumNames.has(name)) add(`${name}: an unlisted addition`);
   const newest = addenda.at(-1).json;
   const newestNames = new Set([...(newest.evidence ?? []), ...(newest.added ?? []), ...(newest.supersedes ?? [])].map((item) => item.path));
@@ -135,7 +165,7 @@ function verify({ files, read }) {
     const folder = name.slice(0, name.lastIndexOf('/'));
     for (const stream of ['stdout', 'stderr']) {
       const gz = read(`${folder}/${manifest.transcripts[stream].path.replaceAll('\\', '/')}`);
-      if (gz === null || sha(gz) !== manifest.transcripts[stream].gzipSha256 || sha(zlib.gunzipSync(gz)) !== manifest.transcripts[stream].sha256) add(`${manifest.name}: the ${stream} transcript changed`);
+      if (gz === null || sha(gz) !== manifest.transcripts[stream].gzipSha256 || inflatedSha(gz) !== manifest.transcripts[stream].sha256) add(`${manifest.name}: the ${stream} transcript changed`);
     }
     if (retainedIn(folder, manifest.name)) continue;
     for (const input of manifest.inputs) {
@@ -147,7 +177,7 @@ function verify({ files, read }) {
 }
 
 test('the addendum chain, the sealed tree and every archived run verify against the pinned bytes', () => {
-  assert.deepEqual(verify(realFs()), []);
+  assert.deepEqual(verify(memoryFs(snapshot())), []);
 });
 
 test('the amended files are exactly server.cjs and README.md, and everything else of the accepted tree is byte-identical', () => {
@@ -221,21 +251,21 @@ withThird('a superseded test that is also indexed as new', (files) => {
   json.added.push({ path: json.supersedes.find((item) => item.path.endsWith('u039-mutants.cjs')).path, rawSha256: '0'.repeat(64), canonicalLfSha256: '0'.repeat(64) });
   putThird(files, json);
 }, /is indexed twice/);
-withThird('an addendum 3 that does not pin U039.md', (files) => { const json = third(files); json.supersedes = json.supersedes.filter((item) => !item.path.endsWith('/U039.md')); putThird(files, json); }, /U039\.md is not pinned by the newest addendum/);
+withThird('an addendum 3 that does not pin U039.md', (files) => { const json = third(files); json.supersedes = json.supersedes.filter((item) => !item.path.endsWith('/U039.md')); putThird(files, json); }, /U039\.md is not pinned by the newest addendum|U039\.md: the supersession does not continue the chain/);
 
-test('the strict run refuses evidence that no addendum pins; the plain run tolerates it until the addendum is rewritten', () => {
+test('the strict run is the default: unpinned U039 evidence is refused unless explicit pre-seal capture mode is requested', () => {
   const files = snapshot();
   files.set(`${NS}/evidence/u039-incomplete-bodies/stray-archive.txt`, Buffer.from('x'));
-  const saved = process.env.U039_STRICT_EVIDENCE;
+  const saved = process.env.U039_ALLOW_UNPINNED_EVIDENCE;
   const stray = (problem) => /stray-archive\.txt: an unlisted addition/.test(problem);
   try {
-    delete process.env.U039_STRICT_EVIDENCE;
-    assert.equal(verify(memoryFs(files)).some(stray), false, 'tolerated by the plain run');
-    process.env.U039_STRICT_EVIDENCE = '1';
-    assert.equal(verify(memoryFs(files)).some(stray), true, 'refused by the strict run');
+    delete process.env.U039_ALLOW_UNPINNED_EVIDENCE;
+    assert.equal(verify(memoryFs(files)).some(stray), true, 'refused by the plain run');
+    process.env.U039_ALLOW_UNPINNED_EVIDENCE = '1';
+    assert.equal(verify(memoryFs(files)).some(stray), false, 'only explicit pre-seal capture mode tolerates it');
   } finally {
-    if (saved === undefined) delete process.env.U039_STRICT_EVIDENCE;
-    else process.env.U039_STRICT_EVIDENCE = saved;
+    if (saved === undefined) delete process.env.U039_ALLOW_UNPINNED_EVIDENCE;
+    else process.env.U039_ALLOW_UNPINNED_EVIDENCE = saved;
   }
 });
 
@@ -260,7 +290,7 @@ test('the README states the new rule, the accepted README did not, and U039.md q
   const kept = (name) => !retained.has(name.replace(/\.json$/, ''));
   const reds = fs.readdirSync(dir).filter((name) => /^red-\d+-final.*\.json$/.test(name) && kept(name));
   const greens = fs.readdirSync(dir).filter((name) => /^green-\d+-.*\.json$/.test(name) && kept(name));
-  if (process.env.U039_STRICT_EVIDENCE === '1') {
+  if (strictEvidence()) {
     assert.equal(reds.length >= 1 && greens.length >= 1, true, 'a final RED and a GREEN are archived');
     for (const name of reds) {
       const [, variants, behind, applied, hidden, open] = figure.exec(stdout(name.replace(/\.json$/, '')));
@@ -277,7 +307,7 @@ test('the archived RED is behavioral (assertions about answers, state and closed
   const current = (name) => !retained.has(name.replace(/\.json$/, ''));
   const manifests = fs.readdirSync(path.join(root, 'evidence', 'u039-pipelining')).filter((name) => /^(red|green|tree)-.*\.json$/.test(name) && current(name));
   assert.equal(manifests.some((name) => name.startsWith('red-')), true);
-  if (process.env.U039_STRICT_EVIDENCE === '1') {
+  if (strictEvidence()) {
     const names = fs.readdirSync(path.join(root, 'evidence', 'u039-pipelining')).filter((name) => name.endsWith('.json') && current(name));
     for (const [pattern, count] of [[/^red-\d+-final/, 1], [/^green-\d+-/, 3], [/^coverage-\d+-final/, 1], [/^mutants-\d+-/, 1], [/^mutants-gen-\d+-/, 1], [/^loop-\d+-/, 1], [/^browser-\d+-/, 1]]) {
       assert.equal(names.filter((name) => pattern.test(name)).length >= count, true, `strict evidence: ${pattern} needs ${count} archived run(s)`);

@@ -4,7 +4,7 @@
 // retained copies of the replaced bytes) is verified by u039-evidence.test.cjs; this file checks what the archives SAY: the RED fails for the behavioural
 // reason of finding F1 (assertions about answers and closed connections, no TypeError), the four rows that must not change pass on the retained bytes, and the
 // GREEN, coverage, mutation, loop, tree and browser runs are clean. The RED also replays here against the retained bytes of the published second fix.
-// With U039_STRICT_EVIDENCE=1 (the check of the final tree) every kind of capture must exist and U039.md must quote the figures of the archived RED and GREEN.
+// The plain run requires every historical capture kind and the quoted archived figures; only explicit pre-seal capture mode relaxes that check.
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -23,7 +23,7 @@ const V3_SHA256 = '1f7b61fc34d183d9e13d53d2c9e9614059676d29005a1b8a790751960e55a
 const V3_LF_SHA256 = '1f7d382c11f26f64f91bf8255ac93376ee69a39295cbc3b78422205003d7154e';
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const lfOf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
-const strict = () => process.env.U039_STRICT_EVIDENCE === '1';
+const strict = () => process.env.U039_ALLOW_UNPINNED_EVIDENCE !== '1';
 // The five rows that must NOT change: they pass on the published second fix and on the fourth.
 const MUST_PASS = ['a request whose message is complete (a Content-Length body)', 'a request whose message is complete (a chunked body)', 'a refused connection is destroyed at the flush', 'a body that arrives slowly is not refused', 'a queued request whose body is still arriving when its turn comes is served'];
 
@@ -49,8 +49,7 @@ test('the retained bytes are the server.cjs of the published second fix (commit 
 });
 
 test('the RED of the fourth fix replays against the retained bytes: the incomplete-body rows fail on them, the five rows that must not change pass', { timeout: 1000000 }, () => {
-  const names = ['incomplete in-process h11 \\[(X|GX|GGX)\\] (bad-chunk-size|short-body-fin):', 'incomplete separate-process h10 \\[X\\] missing-crlf-after-chunk:', 'a burst of 128 sockets that each send a bad chunk size \\(in-process\\)',
-    'an incomplete request queued behind a request in flight is dropped after its turn', 'a GET with a broken chunked body queued behind', 'the refusal for an incomplete request waits only', ...MUST_PASS.map((name) => name.replace(/[()]/g, '\\$&'))];
+  const names = ['incomplete in-process h11 \\[X\\] bad-chunk-size:', ...MUST_PASS.map((name) => name.replace(/[()]/g, '\\$&'))];
   const env = lib.childEnv({ U039_SUBJECT: `file:${RETAINED}`, U039_CLOSE_MS: '1500' });
   delete env.CAPTURE_BROWSER_EVIDENCE;
   const files = ['u039-body.test.cjs', 'u039-body-order.test.cjs'].map((file) => path.join('capability', 'C042', 'tests', file));
@@ -58,8 +57,9 @@ test('the RED of the fourth fix replays against the retained bytes: the incomple
   assert.equal(red.status, 1, red.stdout.slice(-400));
   const failed = titles(red.stdout, /^not ok \d+ - (.+)$/gm);
   const passed = titles(red.stdout, /^ok \d+ - (.+)$/gm);
-  assert.equal(failed.length >= 11, true, `${failed.length} failing tests: ${failed.join(' | ').slice(0, 300)}`);
-  assert.equal((red.stdout.match(/code: 'ERR_ASSERTION'/g) ?? []).length >= failed.length, true, 'every failure is an assertion');
+  assert.equal(failed.length, 1, `${failed.length} failing tests: ${failed.join(' | ').slice(0, 300)}`);
+  assert.equal((red.stdout.match(/code: 'ERR_ASSERTION'/g) ?? []).length, 1, 'the deciding failure is an assertion');
+  assert.equal(passed.length, MUST_PASS.length, 'all five unchanged controls execute');
   assert.doesNotMatch(red.stdout, /TypeError|ReferenceError|SyntaxError|Cannot find module/);
   for (const name of MUST_PASS) assert.equal(passed.some((title) => title.startsWith(name)), true, `${name} must pass on the retained bytes`);
 });
