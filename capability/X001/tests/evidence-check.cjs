@@ -12,6 +12,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 const { execFileSync } = require('node:child_process');
 const { sha, lf } = require('.\\pins-check.cjs');
+const authority = require('.\\u049-authority.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
@@ -20,6 +21,21 @@ const OWN = 'capability\\X001\\';
 const fixDirectory = path.join(root, 'evidence', 'fix');
 const historical = (file) => path.relative(fixDirectory, file).startsWith('..');
 const posix = (file) => file.replaceAll('\\', '/');
+let acceptedFixFiles = null;
+function acceptedFixCapture(file) {
+  if (historical(file)) return false;
+  if (!acceptedFixFiles) {
+    const base = JSON.parse(fs.readFileSync(path.join(root, authority.AUTHORITY_PATH), 'utf8'));
+    acceptedFixFiles = new Set(base.files.map((entry) => entry.path));
+  }
+  return acceptedFixFiles.has(path.relative(root, file));
+}
+
+function acceptedFixSource(file, relative, expected, read = (target) => fs.readFileSync(target)) {
+  if (!acceptedFixCapture(file)) return read(path.join(root, relative));
+  const chain = authority.load(root, read);
+  return authority.legacyBytes(chain, relative, expected, (name) => read(path.join(root, name)));
+}
 
 function manifests(directory = path.join(root, 'evidence')) {
   const found = [];
@@ -67,6 +83,8 @@ function acceptedBlob(relative) {
 function check(file, read = (target) => fs.readFileSync(target), blob = firstBlob) {
   const manifest = JSON.parse(read(file).toString('utf8'));
   const problems = [];
+  let chain = null;
+  const inherited = acceptedFixCapture(file);
   for (const stream of ['stdout', 'stderr']) {
     const entry = manifest.transcripts[stream];
     const gz = read(path.join(path.dirname(file), entry.path));
@@ -84,6 +102,18 @@ function check(file, read = (target) => fs.readFileSync(target), blob = firstBlo
       continue;
     }
     let bytes = null;
+    if (own && inherited) {
+      try {
+        if (!chain) chain = authority.load(root, read);
+        bytes = authority.legacyBytes(chain, input.path.slice(OWN.length), input.rawSha256, (name) => read(path.join(root, name)));
+      } catch (error) {
+        if (!(error instanceof authority.IntegrityError)) throw error;
+        problems.push(`${input.path}: differs from the input hash recorded when the run was made or its exact current authority (${error.message})`);
+        continue;
+      }
+      if (sha(bytes) !== input.rawSha256) problems.push(`${input.path}: differs from the input hash recorded when the run was made (retained accepted-fix input or unsuperseded current bytes)`);
+      continue;
+    }
     try { bytes = read(path.join(repository, input.path)); } catch (error) { if (own || !error || error.code !== 'ENOENT') throw error; }
     if (bytes === null) {
       // A scratch tree holds only the files imports.json pins: such a foreign input is verified against the blob of the commit its namespace was accepted at.
@@ -102,4 +132,4 @@ const stdoutOf = (file, read = (target) => fs.readFileSync(target)) => {
   return zlib.gunzipSync(read(path.join(path.dirname(file), manifest.transcripts.stdout.path))).toString('utf8');
 };
 
-module.exports = Object.freeze({ manifests, check, stdoutOf, sha, root, repository, historical, firstBlob, firstBlobs, acceptedBlob, FIRST_PUBLICATION });
+module.exports = Object.freeze({ manifests, check, stdoutOf, sha, root, repository, historical, firstBlob, firstBlobs, acceptedBlob, FIRST_PUBLICATION, acceptedFixSource });

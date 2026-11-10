@@ -1,0 +1,59 @@
+{
+  "schema": "X001-U049-final-work-counterfactuals/1",
+  "sourceRawSha256": "c147858612806c26685fb5e49b5c10bfcbdb8815660f66a542db2513470c181d",
+  "observationToolSha256": "c586d7f46ab66ec1c90185938cbdae0aa6790ce80940c771b0bf32c609bae8e4",
+  "budget": 200000,
+  "safetyIterationBound": 210000,
+  "wallClockAcceptance": false,
+  "rows": [
+    {
+      "name": "removed production work guard",
+      "changedSourceSha256": "172892e5b8ec4c349dc519a1da404e5e8bd0a08405a5bdfcaa5e9a55878afca9",
+      "result": {
+        "ok": false,
+        "checked": 0,
+        "mismatches": [],
+        "code": "VERIFY_FAILED"
+      },
+      "actual": {
+        "steps": 210001,
+        "reads": 105022,
+        "charged": 210078,
+        "allocated": 105022,
+        "rawGetterReads": 105018,
+        "folds": 0
+      },
+      "boundHit": true,
+      "namedFailingAssertion": {
+        "code": "ERR_ASSERTION",
+        "name": "AssertionError",
+        "message": "G1 production guard must refuse before 210000 actual ownership iterations\n\ntrue !== false\n"
+      }
+    },
+    {
+      "name": "hidden raw property enumeration",
+      "changedSourceSha256": "16cbd3a9c90e7e12f26f434012f932b2770958ffbd8fe5fb980111bcfcc08715",
+      "result": {
+        "ok": false,
+        "checked": 0,
+        "mismatches": [],
+        "code": "SAVED_RUN_TOO_LARGE"
+      },
+      "actual": {
+        "steps": 199923,
+        "reads": 99983,
+        "charged": 200001,
+        "allocated": 99982,
+        "rawGetterReads": 199989,
+        "folds": 0
+      },
+      "boundHit": false,
+      "namedFailingAssertion": {
+        "code": "ERR_ASSERTION",
+        "name": "AssertionError",
+        "message": "G1 actual raw getter reads plus allocations must fit the occurrence budget"
+      }
+    }
+  ],
+  "passed": true
+}

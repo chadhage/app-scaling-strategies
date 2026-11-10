@@ -330,8 +330,8 @@
     return found === undefined ? null : found;
   }
 
-  // An independent forward pass over the raw entries (own states, nothing shared with the cached scan of build()): position i of the
-  // pass is the prefix 0..i folded from the initial state. Total: whatever it is given it answers, and a failure to read is the typed VERIFY_FAILED.
+  // An independent forward pass over a budgeted private copy, even when the caller supplies a timeline. Raw shared data must be
+  // refused before the reducer or canonical comparison can expand it. Other read failures retain the typed VERIFY_FAILED answer.
   const unverified = (code) => deepFreeze({ ok: false, checked: 0, mismatches: [], code });
   function verify(saved, timeline) {
     try {
@@ -339,8 +339,13 @@
       const target = timeline === undefined ? build(saved) : timeline;
       if (!target || target.ok !== true) return unverified((target && target.code) || 'TIMELINE_REQUIRED');
       const consoleRun = saved.kind === 'console';
-      const events = consoleRun ? saved.entries : saved.snapshot.events;
-      if (!Array.isArray(events) || events.length > MAX_ENTRIES) return unverified('ENTRIES_REQUIRED');
+      const raw = consoleRun ? saved.entries : saved.snapshot.events;
+      if (!Array.isArray(raw) || raw.length > MAX_ENTRIES) return unverified('ENTRIES_REQUIRED');
+      const source = isObject(saved.source) ? saved.source : null;
+      const mine = own(consoleRun
+        ? { entries: raw, producer: saved.producer === undefined ? null : saved.producer, source }
+        : { snapshot: saved.snapshot, source });
+      const events = consoleRun ? mine.entries : mine.snapshot.events;
       const mismatches = [];
       const steps = (consoleRun ? foldConsole : foldTrace)(events, false);
       const fresh = runningTallies(steps);
@@ -357,8 +362,8 @@
         if (what) mismatches.push({ index, what });
       }
       return deepFreeze({ ok: mismatches.length === 0, checked: events.length, mismatches });
-    } catch {
-      return unverified('VERIFY_FAILED');
+    } catch (error) {
+      return unverified(error instanceof Refusal && error.code === 'SAVED_RUN_TOO_LARGE' ? error.code : 'VERIFY_FAILED');
     }
   }
 

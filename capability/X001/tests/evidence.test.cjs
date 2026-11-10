@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
-const { manifests, check, stdoutOf, sha, root, historical, firstBlob, firstBlobs, acceptedBlob, FIRST_PUBLICATION, repository } = require('.\\evidence-check.cjs');
+const { manifests, check, stdoutOf, sha, root, historical, firstBlob, firstBlobs, acceptedBlob, FIRST_PUBLICATION, repository, acceptedFixSource } = require('.\\evidence-check.cjs');
 const { lf, crlf } = require('.\\pins-check.cjs');
 
 const redManifests = () => manifests().filter((file) => historical(file) && file.includes(`${path.sep}red${path.sep}run-`));
@@ -17,6 +17,17 @@ test('every archived run recomputes: transcripts, declared inputs and exit code'
   assert.ok(list.length >= 1);
   for (const file of list) assert.deepEqual(check(file).problems, [], file);
   assert.ok(list.some(historical), 'the first-publication captures are still archived');
+});
+
+test('U049 the amendment checker is byte-pinned and the complete accepted/current namespace remains closed', () => {
+  const helper = fs.readFileSync(path.join(__dirname, 'u049-authority.cjs'));
+  assert.equal(sha(helper), 'eb3225bd89be441a3fa8a22a398b1e434201e95c1c682d77fd814ef2a1073b30', 'acyclic checker pin; a later edit requires another numbered amendment');
+  const authority = require('.\\u049-authority.cjs');
+  const chain = authority.load(root);
+  const counts = authority.checkCurrent(chain, (relative) => fs.readFileSync(path.join(root, relative)), authority.filesIn(root));
+  assert.equal(counts.sealed, 120);
+  assert.equal([...chain.replacements.keys()].filter((file) => chain.sealed.has(file)).length, 3);
+  assert.ok(counts.additions > 10);
 });
 
 test('the first-publication archive is immutable: every file under evidence\\ of commit 368332e2a881 is still byte-identical (the fix only adds evidence\\fix)', () => {
@@ -144,7 +155,7 @@ test('a browser observation summary pins the exact sources it observed and its D
     assert.equal(summary.outcome, 'passed');
     assert.deepEqual([summary.liveAzureResult, summary.packagesDownloaded, summary.cloudRuns, summary.spend], [false, 0, 0, 0]);
     for (const [name, digest] of Object.entries(summary.sourceSha256)) {
-      const bytes = historical(file) ? firstBlob(`capability\\X001\\${name}`) : fs.readFileSync(path.join(root, name));
+      const bytes = historical(file) ? firstBlob(`capability\\X001\\${name}`) : acceptedFixSource(file, name, digest);
       assert.equal(sha(bytes), digest, `${name} differs from the source the browser observed`);
     }
     const snapshot = fs.readFileSync(path.join(path.dirname(file), 'dom-restart-gap-position-17.html'));
