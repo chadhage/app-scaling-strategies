@@ -1,0 +1,352 @@
+[
+  {
+    "file": "canon.cjs",
+    "index": 41,
+    "kind": "regex quantifier + -> *",
+    "original": "+",
+    "replacement": "*",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "An added empty percent-run match is replaced by the empty string. Nonempty byte runs are identical; native global replacement advances after an empty match.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 69,
+    "kind": "regex quantifier {2,6} -> {1,6}",
+    "original": "{2,6}",
+    "replacement": "{1,6}",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The named dictionary has no one-letter key. The added one-letter matches return their original text; the upper bound and all real dictionary matches are unchanged.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 71,
+    "kind": "regex quantifier {2,6} -> {2,5}",
+    "original": "{2,6}",
+    "replacement": "{2,5}",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The named dictionary keys have length two through four. Both upper bounds exceed four: an unknown longer run cannot be cut immediately after a valid four-letter key.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 72,
+    "kind": "regex quantifier {2,6} -> {2,7}",
+    "original": "{2,6}",
+    "replacement": "{2,7}",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Both named-reference upper bounds exceed the dictionary maximum of four. Additional longer matches are unknown and return their original text unchanged.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 78,
+    "kind": "regex anchor ^ -> nothing",
+    "original": "^",
+    "replacement": "",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The outer numeric grammar permits x/X only as the first character, or decimal digits with no x/X. Removing the inner start anchor cannot change its decision.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 83,
+    "kind": "regex quantifier + -> *",
+    "original": "+",
+    "replacement": "*",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Replacing a leading empty zero-run by empty text is an identity. A nonempty leading zero-run is consumed identically by the greedy plus and star forms.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 88,
+    "kind": "if-false",
+    "original": "significant.length > (hex ? 6 : 7)",
+    "replacement": "false",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "With leading zeros removed, excess significant digits imply a value above U+10FFFF. The independent point comparison still returns the entire original reference.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 90,
+    "kind": "number",
+    "original": "6",
+    "replacement": "7",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Every seven-significant-hex-digit value is at least 0x1000000, above U+10FFFF. The unchanged value comparison refuses all newly parsed values.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 91,
+    "kind": "number",
+    "original": "7",
+    "replacement": "8",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Every eight-significant-decimal-digit value is at least 10000000, above U+10FFFF. The unchanged value comparison refuses all newly parsed values.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 127,
+    "kind": "regex quantifier + -> *",
+    "original": "+",
+    "replacement": "*",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Leading zero-star replacement adds only an empty identity replacement when the first digit is nonzero. A leading zero-run is stripped identically.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 132,
+    "kind": "if-false",
+    "original": "significant.length > 6",
+    "replacement": "false",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The braced length guard is redundant with the unchanged U+10FFFF comparison after leading zeros are stripped; every excess significant value is above the maximum.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 134,
+    "kind": "number",
+    "original": "6",
+    "replacement": "7",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "A seven-significant-hex-digit braced value is above U+10FFFF. Widening the preliminary digit guard changes work but not the final value decision.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 141,
+    "kind": "regex quantifier + -> *",
+    "original": "+",
+    "replacement": "*",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "An empty padding match at the end of base64 is replaced by empty text. Existing nonempty padding runs are trimmed identically.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 144,
+    "kind": "regex anchor $ -> nothing",
+    "original": "$",
+    "replacement": "",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Native Buffer base64 contains equals signs only in its trailing padding. Its first equals run therefore already ends at the end of the string.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 163,
+    "kind": "number",
+    "original": "1",
+    "replacement": "2",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The extra Uint32Array cell is zero-initialized and is never written by an occurrence start. Visiting it can append no interval or output; it adds one empty iteration.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 173,
+    "kind": "number",
+    "original": "0",
+    "replacement": "1",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "Every nonempty occurrence ends at position at least one, replacing either initial endpoint zero or one with the same positive maximum. Empty needles are skipped.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 175,
+    "kind": "swap <",
+    "original": "<",
+    "replacement": "<=",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "The extra out-of-bounds typed-array iteration occurs after the final real interval was flushed. It may set local sentinel/NaN state, but no output statement can run afterwards.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 206,
+    "kind": "swap >",
+    "original": ">",
+    "replacement": ">=",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "With no covering secret, interval replacement returns the original text. Recomputing its views gives the same values as the shared views; only work changes.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "canon.cjs",
+    "index": 208,
+    "kind": "swap >",
+    "original": ">",
+    "replacement": ">=",
+    "sourceLfSha256": "374c9eae0db6c202af0b5300780c3ab065c0bdd5097099528516ca1eb9a9e954",
+    "reason": "With no covering secret, the exact views are the shared views. Folding them again returns the same strings as sharedFolded; only work changes.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "redact.cjs",
+    "index": 189,
+    "kind": "swap false",
+    "original": "false",
+    "replacement": "true",
+    "sourceLfSha256": "a5b7b2d09ea5272b377ea555916ceff25620f6e61600901ed34ec80c734843cb",
+    "reason": "A null int returns null without a redaction whether nullable is true or false: miss also returns null and counts neither null nor undefined. Other values take the same range decision.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "redact.cjs",
+    "index": 190,
+    "kind": "swap true",
+    "original": "true",
+    "replacement": "false",
+    "sourceLfSha256": "a5b7b2d09ea5272b377ea555916ceff25620f6e61600901ed34ec80c734843cb",
+    "reason": "A null id returns null with no redaction in either nullable branch. Invalid nonnull ids are missed and counted identically; valid ids take the same tested branch.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "redact.cjs",
+    "index": 203,
+    "kind": "swap true",
+    "original": "true",
+    "replacement": "false",
+    "sourceLfSha256": "a5b7b2d09ea5272b377ea555916ceff25620f6e61600901ed34ec80c734843cb",
+    "reason": "The bool walker never reads node.nullable. Both flags use the same boolean-or-miss expression and therefore the same body and redaction count.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "redact.cjs",
+    "index": 206,
+    "kind": "swap true",
+    "original": "true",
+    "replacement": "false",
+    "sourceLfSha256": "a5b7b2d09ea5272b377ea555916ceff25620f6e61600901ed34ec80c734843cb",
+    "reason": "The nullable audit integer flag only changes whether null passes through miss, which returns null without counting it. All nonnull values are judged identically.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "vault.cjs",
+    "index": 93,
+    "kind": "regex quantifier {16,512} -> {15,512}",
+    "original": "{16,512}",
+    "replacement": "{15,512}",
+    "sourceLfSha256": "e2792a9a8f1aa11252582915c8643d3058ea770e6ca4366bd47498f672bbe14d",
+    "reason": "Three distinct required connection keys and their six-character values require at least 44 characters. A lower regex minimum of 15 cannot admit a structurally valid new value.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "vault.cjs",
+    "index": 94,
+    "kind": "regex quantifier {16,512} -> {17,512}",
+    "original": "{16,512}",
+    "replacement": "{17,512}",
+    "sourceLfSha256": "e2792a9a8f1aa11252582915c8643d3058ea770e6ca4366bd47498f672bbe14d",
+    "reason": "The minimum valid connection string is 44 characters, independently of the printable-character regex. Raising the regex minimum from 16 to 17 excludes no valid configuration.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "vault.cjs",
+    "index": 110,
+    "kind": "swap <",
+    "original": "<",
+    "replacement": "<=",
+    "sourceLfSha256": "e2792a9a8f1aa11252582915c8643d3058ea770e6ca4366bd47498f672bbe14d",
+    "reason": "Only a one-character unknown key is additionally ignored. The parsed Server, User Id, Password and Database keys all have length at least six and cannot be affected.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "vault.cjs",
+    "index": 111,
+    "kind": "number",
+    "original": "1",
+    "replacement": "2",
+    "sourceLfSha256": "e2792a9a8f1aa11252582915c8643d3058ea770e6ca4366bd47498f672bbe14d",
+    "reason": "Moving the first-equals cutoff from one to two affects only one-character keys. No returned connection field reads such a key, so parsed fields and validation are unchanged.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "evidence.cjs",
+    "index": 18,
+    "kind": "number",
+    "original": "1",
+    "replacement": "2",
+    "sourceLfSha256": "39c5c44f4ff7b4dc117e4b9f44bbee3f89bb2fcf45fdde822eadb902941c9098",
+    "reason": "Actual redactor epochs start at zero and grow. Both fresh negative sentinel epochs differ from every real epoch, so the first publication and subsequent cache refreshes are identical.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "evidence.cjs",
+    "index": 19,
+    "kind": "if-true",
+    "original": "stores[kind].length > RING",
+    "replacement": "true",
+    "sourceLfSha256": "39c5c44f4ff7b4dc117e4b9f44bbee3f89bb2fcf45fdde822eadb902941c9098",
+    "reason": "For a within-bound array, splice(0, length minus RING) has a nonpositive deletion count and changes nothing. Above the bound it performs the same deletion.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "evidence.cjs",
+    "index": 21,
+    "kind": "swap >",
+    "original": ">",
+    "replacement": ">=",
+    "sourceLfSha256": "39c5c44f4ff7b4dc117e4b9f44bbee3f89bb2fcf45fdde822eadb902941c9098",
+    "reason": "At equality with RING the deletion count is zero. Running or skipping that no-op yields identical records, sequence values and public bundles.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "evidence.cjs",
+    "index": 48,
+    "kind": "number",
+    "original": "1",
+    "replacement": "2",
+    "sourceLfSha256": "39c5c44f4ff7b4dc117e4b9f44bbee3f89bb2fcf45fdde822eadb902941c9098",
+    "reason": "Fresh audit/run slots use a negative sentinel, while actual epochs are nonnegative. Both sentinels force the same first publication and later epoch updates.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "server.cjs",
+    "index": 49,
+    "kind": "regex quantifier {0,2} -> {0,3}",
+    "original": "{0,2}",
+    "replacement": "{0,3}",
+    "sourceLfSha256": "15ffc15b121c527610ca8890f5f823cdbab07c385a13cc45818fe60936c14755",
+    "reason": "A four-digit no-leading-zero limit is at least 1000 and fails the unchanged <=200 value check. The expanded regex therefore admits no new limit.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "server.cjs",
+    "index": 59,
+    "kind": "delete-statement",
+    "original": "ctx.role = identity === null ? null : identity.role;",
+    "replacement": ";",
+    "sourceLfSha256": "15ffc15b121c527610ca8890f5f823cdbab07c385a13cc45818fe60936c14755",
+    "reason": "For ordinary issued tokens, route already set the same immutable token role. A failure in the repeated authentication throws before this assignment, so removing it changes no observed role.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "server.cjs",
+    "index": 155,
+    "kind": "if-true",
+    "original": "broken === null",
+    "replacement": "true",
+    "sourceLfSha256": "15ffc15b121c527610ca8890f5f823cdbab07c385a13cc45818fe60936c14755",
+    "reason": "The once-listening path runs before connections and the connection path calls failClosed only while broken is null. The inner warning condition is therefore true on each reachable call.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  },
+  {
+    "file": "server.cjs",
+    "index": 163,
+    "kind": "condition-true",
+    "original": "broken === null",
+    "replacement": "true",
+    "sourceLfSha256": "15ffc15b121c527610ca8890f5f823cdbab07c385a13cc45818fe60936c14755",
+    "reason": "After failure, repeating failClosed writes the same constant and its own guard suppresses duplicate warnings. Each subsequent socket is still destroyed without serving bytes.",
+    "witness": "tests/final-equivalences.cjs:execute; current paired production functions and premise checks"
+  }
+]

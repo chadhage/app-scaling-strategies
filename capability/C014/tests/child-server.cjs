@@ -14,6 +14,7 @@ async function main() {
   const limits = process.env.C014_CHILD_LIMITS ? JSON.parse(process.env.C014_CHILD_LIMITS) : undefined;
   const reads = [];
   const open = new Set();
+  let typed403Writes = 0;
   let server;
   let local = null;
   if (mode === 'naive') {
@@ -23,7 +24,25 @@ async function main() {
     local = await startLocal({ config: seedConfig(), limits, logSink: (line) => process.stderr.write(`${line}\n`) });
     ({ server } = local);
   }
-  server.on('connection', (socket) => { open.add(socket); socket.once('close', () => { open.delete(socket); reads.push(socket.bytesRead); }); });
+  server.on('connection', (socket) => {
+    open.add(socket);
+    let counted = false;
+    let nested = false;
+    for (const method of ['write', 'end']) {
+      const original = socket[method];
+      socket[method] = function observedWrite(...args) {
+        const outer = !nested;
+        if (outer && !counted && (typeof args[0] === 'string' || Buffer.isBuffer(args[0])) && /^HTTP\/1\.[01] 403 /.test(args[0].toString('latin1'))) {
+          typed403Writes += 1;
+          counted = true;
+        }
+        const prior = nested;
+        nested = true;
+        try { return Reflect.apply(original, this, args); } finally { nested = prior; }
+      };
+    }
+    socket.once('close', () => { open.delete(socket); reads.push(socket.bytesRead); });
+  });
   const connections = () => new Promise((resolve) => server.getConnections((error, count) => resolve(count)));
   // everything read so far from every connection, closed or still open: a control that has consumed what it was sent has read at least that much
   const readTotal = () => reads.reduce((sum, bytes) => sum + bytes, 0) + [...open].reduce((sum, socket) => sum + socket.bytesRead, 0);
@@ -32,7 +51,7 @@ async function main() {
       let result = null;
       if (message.op === 'plant') local.service.plant(message.place, message.value);
       else if (message.op === 'issueToken') result = local.service.issueToken(message.identity, message.options);
-      else if (message.op === 'stats') result = { cpuMs: millis(process.cpuUsage()), heapBytes: process.memoryUsage().heapUsed, connections: await connections(), reads: [...reads], readTotal: readTotal() };
+      else if (message.op === 'stats') result = { cpuMs: millis(process.cpuUsage()), heapBytes: process.memoryUsage().heapUsed, connections: await connections(), reads: [...reads], readTotal: readTotal(), typed403Writes };
       else if (message.op === 'close') {
         if (local) await local.close(); else server.close();
         process.exit(0);

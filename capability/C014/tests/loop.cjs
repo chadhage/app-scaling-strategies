@@ -10,6 +10,9 @@
 // Usage (repository root): node capability\C014\tests\loop.cjs --runs=20 --parallel=4 --burners=4 [--files=process-flood,pending-flood] [--guard-seconds=300]
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
+const zlib = require('node:zlib');
+const { createHash } = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPOSITORY = path.resolve(ROOT, '..', '..');
@@ -24,7 +27,7 @@ const guardMs = Number(argument('guard-seconds', 300)) * 1000;
 const burnerMinutes = Number(argument('burner-minutes', 90));
 const files = argument('files', FILES.join(',')).split(',');
 
-function runFile(name) {
+function runFile(name, runNumber) {
   return new Promise((resolve) => {
     const env = { ...process.env, NODE_V8_COVERAGE: '' };
     delete env.NODE_TEST_CONTEXT;
@@ -32,8 +35,10 @@ function runFile(name) {
     const started = Date.now();
     const child = spawn(process.execPath, args, { cwd: REPOSITORY, env, windowsHide: true });
     const output = [];
-    child.stdout.on('data', (chunk) => output.push(chunk));
-    child.stderr.on('data', (chunk) => output.push(chunk));
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on('data', (chunk) => { stdout.push(chunk); output.push(chunk); });
+    child.stderr.on('data', (chunk) => { stderr.push(chunk); output.push(chunk); });
     let ended = false;
     const guard = setTimeout(() => { ended = true; child.kill(); }, guardMs);
     child.on('close', (code) => {
@@ -41,6 +46,20 @@ function runFile(name) {
       const text = Buffer.concat(output).toString('utf8').replace(/\r\n/g, '\n');
       const count = (key) => Number((new RegExp(`^# ${key} (\\d+)$`, 'm').exec(text) || [])[1] || 0);
       const row = { file: name, exit: code, durationMs: Date.now() - started, tests: count('tests'), pass: count('pass'), fail: count('fail'), cancelled: count('cancelled'), skipped: count('skipped'), todo: count('todo'), endedByGuard: ended };
+      if (process.env.C014_PRIVATE_EVIDENCE && process.env.C014_ACTIVE_CAPTURE) {
+        const relative = path.join('loop-children', process.env.C014_ACTIVE_CAPTURE, String(runNumber), name);
+        const directory = path.join(process.env.C014_PRIVATE_EVIDENCE, relative);
+        fs.mkdirSync(directory, { recursive: true });
+        row.originalStreams = {};
+        for (const [stream, chunks] of [['stdout', stdout], ['stderr', stderr]]) {
+          const bytes = Buffer.concat(chunks);
+          const gzip = zlib.gzipSync(bytes);
+          const file = `${stream}.raw.gz`;
+          fs.writeFileSync(path.join(directory, file), gzip, { flag: 'wx' });
+          row.originalStreams[stream] = { path: path.join(relative, file).replace(/\\/g, '/'), bytes: bytes.length,
+            sha256: createHash('sha256').update(bytes).digest('hex'), gzipSha256: createHash('sha256').update(gzip).digest('hex') };
+        }
+      }
       row.failing = [...text.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1].trim().slice(0, 100));
       // the assertion text of a failing test (the YAML block node:test prints under `not ok`), with the repository and home paths made neutral: a failure under load must say what failed
       if (code !== 0 || row.fail > 0) row.detail = (/^not ok [^]*?^# /m.exec(text) || [''])[0].split(REPOSITORY).join('<REPO>').replace(/[A-Za-z]:[\\/]+Users[\\/]+[^\\/\s'"]+/g, '<HOME>').slice(0, 2500);
@@ -70,7 +89,7 @@ async function main() {
         next += 1;
         const rows = [];
         for (const name of files) {
-          const row = await runFile(name);
+          const row = await runFile(name, run + 1);
           rows.push(row);
           console.log(`run ${run + 1} ${name}: ${row.ok ? 'ok' : 'NOT OK'} ${(row.durationMs / 1000).toFixed(1)} s, ${row.pass} of ${row.tests} tests${row.failing.length ? `, failing: ${JSON.stringify(row.failing)}` : ''}`);
         }

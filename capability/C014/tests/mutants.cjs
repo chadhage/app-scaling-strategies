@@ -20,16 +20,16 @@ const { spawn } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const REPOSITORY = path.resolve(ROOT, '..', '..');
 const SUITES = {
-  'canon.cjs': ['canon', 'fragments', 'redact'], 'redact.cjs': ['redact', 'patterns', 'fragments', 'hostile', 'canon', 'evidence', 'service'], 'vault.cjs': ['vault', 'boundary', 'service'], 'evidence.cjs': ['evidence', 'service', 'server'],
-  'service.cjs': ['service', 'server'], 'server.cjs': ['server', 'health', 'refusal'], 'page.js': ['page']
+  'canon.cjs': ['final-work', 'final-edges', 'final-overlap', 'canon', 'fragments', 'redact', 'final-review', 'final-canon'], 'redact.cjs': ['redact', 'patterns', 'fragments', 'hostile', 'canon', 'evidence', 'service', 'final-review', 'final-overlap'], 'vault.cjs': ['vault', 'boundary', 'service', 'final-review', 'final-edges'], 'evidence.cjs': ['evidence', 'service', 'server'],
+  'service.cjs': ['service', 'server'], 'server.cjs': ['server', 'health', 'refusal', 'final-review', 'final-edges'], 'page.js': ['page', 'final-review']
 };
 // the second pass over the survivors of the focused pass (--all-suites): every in-process suite of the namespace, the sweep and the property test included
-const ALL_SUITES = ['canon', 'scanner', 'redact', 'patterns', 'fragments', 'hostile', 'vault', 'boundary', 'evidence', 'service', 'server', 'health', 'refusal', 'sweep', 'property', 'page', 'fuzz', 'returns'];
+const ALL_SUITES = ['final-work', 'canon', 'scanner', 'redact', 'patterns', 'fragments', 'hostile', 'vault', 'boundary', 'evidence', 'service', 'server', 'health', 'refusal', 'sweep', 'property', 'page', 'fuzz', 'returns', 'final-review', 'final-canon', 'final-edges', 'final-headers', 'final-encodings'];
 const suitesFor = (file) => (process.argv.includes('--all-suites') ? ALL_SUITES : SUITES[file]);
 const KEYWORDS = /^\s*(?:const|let|var|return|throw|if|else|for|while|switch|case|default|function|class|module|break|continue|import|export|try|catch|finally|async|await|\}|\)|\]|\/\/)/;
 
 // A boolean mask: true where the character is code (not a string, template, regex literal or comment).
-function codeMask(source) {
+function codeMask(source, literals = []) {
   const mask = new Uint8Array(source.length).fill(1);
   let at = 0;
   let last = '';
@@ -59,6 +59,8 @@ function codeMask(source) {
       while (source[end] !== '/' || inClass) { if (source[end] === '\\') end += 1; else if (source[end] === '[') inClass = true; else if (source[end] === ']') inClass = false; end += 1; }
       end += 1;
       while (/[a-z]/.test(source[end] || '')) end += 1;
+      const literal = /^\/([^]*)\/([a-z]*)$/.exec(source.slice(at, end));
+      literals.push({ start: at, body: literal[1], flags: literal[2] });
       blank(at, end); at = end; last = 'x'; continue;
     }
     if (!/\s/.test(char)) last = /[A-Za-z0-9_$)\]]/.test(char) ? 'x' : char;
@@ -83,10 +85,13 @@ function matching(source, mask, open) {
 // a mutant whose regular expression would not compile is never emitted. The validator patterns of vault.cjs only get their quantifiers and anchors mutated (a different alphabet
 // cannot make a value unprotected: whatever the validator accepts is held by value, proved by the boundary sweep), and no other regular expression of the namespace is mutated.
 const REGEX_REGIONS = {
+  'canon.cjs': /^([^]*)$/,
   'redact.cjs': /const PATTERNS = Object\.freeze\(\[\r?\n([^]*?)\r?\n\]\);/,
-  'vault.cjs': /\nconst TOKEN = ([^]*?)\r?\nconst IDENTITIES/
+  'vault.cjs': /\nconst TOKEN = ([^]*?)\r?\nconst IDENTITIES/,
+  'server.cjs': /^([^]*)$/,
+  'page.js': /^([^]*)$/
 };
-const REGEX_KINDS = { 'vault.cjs': /^(?:quantifier|anchor) / };
+const REGEX_KINDS = {};
 const LITERAL = /\/((?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+)\/([a-z]*)/g;
 
 function classEdits(body, open, edits) {
@@ -95,7 +100,8 @@ function classEdits(body, open, edits) {
   const items = [];
   while (body[at] !== ']') {
     const start = at;
-    at += body[at] === '\\' ? 2 : 1;
+    if (body[at] === '\\' && /[pP]/.test(body[at + 1]) && body[at + 2] === '{') at = body.indexOf('}', at + 3) + 1;
+    else at += body[at] === '\\' ? 2 : 1;
     if (body[at] === '-' && body[at + 1] !== ']') { at += 2; items.push({ start, end: at, range: true }); } else items.push({ start, end: at, range: false });
   }
   for (const item of items) {
@@ -108,7 +114,7 @@ function classEdits(body, open, edits) {
 
 function regexEdits(body) {
   const edits = [];
-  const groups = [];
+  const groups = [{ from: 0, bars: [] }];
   let at = 0;
   while (at < body.length) {
     const char = body[at];
@@ -159,6 +165,15 @@ function regexEdits(body) {
       at += 1;
     }
   }
+  const root = groups[0];
+  if (root.bars.length > 0) {
+    const cuts = [-1, ...root.bars, body.length];
+    for (let index = 0; index < cuts.length - 1; index += 1) {
+      const from = index === 0 ? 0 : cuts[index] + 1;
+      const to = cuts[index + 1];
+      edits.push([index < cuts.length - 2 ? from : from - 1, index < cuts.length - 2 ? to + 1 : to, '', `alternative ${body.slice(from, to)} removed`]);
+    }
+  }
   return edits;
 }
 
@@ -167,8 +182,11 @@ function regexMutants(source, file) {
   if (!region) return [];
   const regionStart = region.index + region[0].indexOf(region[1]);
   const mutants = [];
-  for (const found of region[1].matchAll(LITERAL)) {
-    const bodyStart = regionStart + found.index + 1;
+  const literals = [];
+  codeMask(source, literals);
+  for (const literal of literals.filter((item) => item.start >= regionStart && item.start < regionStart + region[1].length)) {
+    const found = [null, literal.body, literal.flags];
+    const bodyStart = literal.start + 1;
     const flagsStart = bodyStart + found[1].length + 1;
     const compiles = (body, flags) => { try { return Boolean(new RegExp(body, flags)); } catch { return false; } };
     for (const [from, to, replacement, kind] of regexEdits(found[1])) {

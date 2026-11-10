@@ -118,8 +118,7 @@ function createRedactor({ secrets = [], limits = LIMITS } = {}) {
   function maskText(input) {
     if (typeof input !== 'string' || input.length > limits.textCap) return MASK;
     if (canon.encodedIn(input, registry)) return MASK;
-    let value = input;
-    for (const secret of ordered) if (value.includes(secret)) value = value.split(secret).join(MASK);
+    let value = canon.replaceVerbatim(input, ordered, MASK);
     for (const [, shape] of PATTERNS) value = value.replace(shape, MASK);
     return value.length > limits.text ? `${value.slice(0, limits.text)}\u2026` : value;
   }

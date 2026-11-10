@@ -13,10 +13,14 @@ const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const lf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const normal = (value) => value.replace(/\\/g, '/');
 
-function checkManifest(file, { repository = REPOSITORY, allowExit = false, skipInputs = false } = {}) {
+function checkManifest(file, { repository = REPOSITORY, allowExit = false, skipInputs = false, readInput } = {}) {
   const problems = [];
   let manifest;
   try { manifest = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return [`${path.basename(file)}: not readable JSON`]; }
+  const authority = require('./u072-authority.cjs');
+  if (manifest.schema === 'C014-public-capture-projection/1') return authority.verifyPublicCapture(file, repository);
+  const retained = authority.catalog().retained?.find((entry) => path.resolve(ROOT, entry.path) === path.resolve(file));
+  if (retained) return authority.verifyRetainedCapture(file, retained);
   const name = path.basename(file);
   for (const stream of ['stdout', 'stderr']) {
     const entry = manifest.transcripts && manifest.transcripts[stream];
@@ -31,25 +35,31 @@ function checkManifest(file, { repository = REPOSITORY, allowExit = false, skipI
   }
   for (const input of allowExit || skipInputs ? [] : manifest.inputs || []) {
     const inputPath = path.join(repository, normal(input.path));
-    if (!fs.existsSync(inputPath)) problems.push(`${name}: input ${input.path} is missing`);
-    else if (sha(lf(fs.readFileSync(inputPath))) !== input.crlfToLfSha256) problems.push(`${name}: input ${input.path} changed after the capture`);
+    let bytes;
+    try { bytes = readInput ? readInput(input.path) : fs.readFileSync(inputPath); } catch { /* reported below */ }
+    if (bytes === undefined) problems.push(`${name}: input ${input.path} is missing`);
+    else if (sha(lf(bytes)) !== input.crlfToLfSha256) problems.push(`${name}: input ${input.path} changed after the capture`);
   }
   if (!allowExit && (manifest.exitCode !== manifest.expectedExitCode || manifest.timedOut)) problems.push(`${name}: exit code ${manifest.exitCode} is not the expected ${manifest.expectedExitCode}`);
   return problems;
 }
 
 // Every capture manifest of the namespace evidence (a JSON with transcripts, outside the raw folders).
-function manifests(root = path.join(ROOT, 'evidence')) {
+function manifests(root) {
+  return require('./u072-authority.cjs').publicManifests().filter((file) => !root || path.resolve(file).startsWith(path.resolve(root) + path.sep));
+}
+function developmentManifests(root) {
   const found = [];
   const walk = (directory) => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const full = path.join(directory, entry.name);
-      if (entry.isDirectory()) { if (entry.name !== 'raw') walk(full); } else if (entry.name.endsWith('.json')) {
+      if (entry.isDirectory()) { if (entry.name !== 'raw' && entry.name !== process.env.C014_ACTIVE_CAPTURE) walk(full); } else if (entry.name.endsWith('.json')) {
         try { if (JSON.parse(fs.readFileSync(full, 'utf8')).transcripts) found.push(full); } catch { /* not a capture manifest */ }
       }
     }
   };
-  if (fs.existsSync(root)) walk(root);
+  const directories = root ? [root] : [path.join(ROOT, 'evidence'), ...(process.env.C014_PRIVATE_EVIDENCE ? [path.join(process.env.C014_PRIVATE_EVIDENCE, 'final-captures')] : [])];
+  for (const directory of directories) if (fs.existsSync(directory)) walk(directory);
   return found.sort();
 }
 
@@ -93,6 +103,15 @@ function checkMutants({ reports, reruns, equivalents, root = ROOT }) {
       const result = decided.get(index);
       if (!result) { problems.push(`${file} #${index}: never run`); continue; }
       if (result.killed) continue;
+      if (result.invalid && result.syntax === 'SyntaxError') {
+        const mutant = generated[index];
+        const changed = source.slice(0, mutant.start) + mutant.replacement + source.slice(mutant.end);
+        let invalid = false;
+        try { new (require('node:vm').Script)(file.endsWith('.cjs') ? require('node:module').wrap(changed) : changed); } catch (error) { invalid = error instanceof SyntaxError; }
+        if (!invalid) problems.push(`${file} #${index}: invalid classification has no current syntax proof`);
+        continue;
+      }
+      if (result.invalid) { problems.push(`${file} #${index}: a module/environment fault is not a decision`); continue; }
       if (result.timedOut) { problems.push(`${file} #${index}: undecided (it only timed out)`); continue; }
       const equivalent = equivalents.find((item) => item.file === file && item.index === index);
       if (!equivalent) problems.push(`${file} #${index} (${generated[index].kind}): survived and is not listed as equivalent`);
@@ -130,21 +149,33 @@ function mutantTotals({ reports, reruns, equivalents, root = ROOT }) {
 
 // The mutation evidence stored in evidence\mutants: the main reports, the re-runs of survivors and the written equivalences.
 function mutationEvidence(root = ROOT) {
+  return require('./u072-authority.cjs').mutationEvidence();
+}
+function developmentMutationEvidence(root = ROOT) {
+  if (process.env.C014_PHASE === 'final') {
+    if (!process.env.C014_PRIVATE_EVIDENCE) throw new Error('Final phase requires its explicit private exact evidence root');
+    const report = path.join(process.env.C014_PRIVATE_EVIDENCE, 'systematic-06-final.json');
+    if (!fs.existsSync(report)) throw new Error('Final current mutation receipt is not yet captured');
+    return {
+      reports: [JSON.parse(fs.readFileSync(report))],
+      reruns: [],
+      equivalents: JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'mutants', 'equivalents-final.json')))
+    };
+  }
   const directory = path.join(root, 'evidence', 'mutants');
   const names = fs.readdirSync(directory);
   const read = (name) => JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8'));
+  const current = names.includes('systematic-05-final.json');
   return {
-    reports: names.filter((name) => /^systematic-\d+.*\.json$/.test(name)).sort().map(read),
-    reruns: names.filter((name) => /^rerun-\d+.*\.json$/.test(name)).sort().map(read),
-    equivalents: names.includes('equivalents.json') ? read('equivalents.json') : []
+    reports: names.filter((name) => current ? /^systematic-\d+.*final.*\.json$/.test(name) : /^systematic-\d+.*\.json$/.test(name)).sort().map(read),
+    reruns: names.filter((name) => current ? /^rerun-\d+.*final.*\.json$/.test(name) : /^rerun-\d+.*\.json$/.test(name)).sort().map(read),
+    equivalents: names.includes('equivalents-final.json') ? read('equivalents-final.json') : names.includes('equivalents.json') ? read('equivalents.json') : []
   };
 }
 
 // The FINAL capture of a kind is the one with the highest serial of its stem (green-suite-03 over green-suite-02); the earlier ones stay as history.
 function finalCapture(stem, root) {
-  const pattern = new RegExp(`^${stem}-(\\d+)$`);
-  const found = manifests(root).map((file) => ({ file, serial: pattern.exec(path.basename(file, '.json')) })).filter((item) => item.serial).sort((left, right) => Number(left.serial[1]) - Number(right.serial[1]));
-  return found.length > 0 ? found[found.length - 1].file : null;
+  return require('./u072-authority.cjs').current(stem);
 }
 
 module.exports = Object.freeze({ ROOT, REPOSITORY, sha, lf, checkManifest, manifests, printedDocument, checkMutants, mutantTotals, mutationEvidence, finalCapture });

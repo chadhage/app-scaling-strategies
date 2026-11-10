@@ -205,7 +205,7 @@ test('a COMMAND request is recorded with the role of its caller as well: a condu
 
 test('the three assets are served BYTE FOR BYTE: GET /, /page.js and /style.css return exactly index.html, page.js and style.css of the namespace, with their content types', () => withLocal(async ({ port }) => {
   const sources = [];
-  for (const [route, [file, type]] of Object.entries(ASSETS)) {
+  for (const [route, file, type] of [['/', 'index.html', 'text/html; charset=utf-8'], ['/page.js', 'page.js', 'text/javascript; charset=utf-8'], ['/style.css', 'style.css', 'text/css; charset=utf-8']]) {
     const result = await call(port, 'GET', route);
     const expected = fs.readFileSync(path.join(__dirname, '..', file));
     assert.equal(result.status, 200, route);

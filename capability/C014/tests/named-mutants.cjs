@@ -10,7 +10,7 @@ const NAMED = [
   { id: 'R2 nested arrays are not walked (entries pass raw)', file: 'redact.cjs', find: 'const entry = walk(node.of, read(value, index), state);', replace: 'const entry = read(value, index);' },
   { id: 'R3 value masking is removed from free text', file: 'redact.cjs', find: 'const masked = maskText(value);', replace: 'const masked = value;' },
   { id: 'R4 the encoded-forms check is removed', file: 'redact.cjs', find: 'if (canon.encodedIn(input, registry)) return MASK;', replace: '' },
-  { id: 'R5 exact occurrences are not replaced', file: 'redact.cjs', find: 'for (const secret of ordered) if (value.includes(secret)) value = value.split(secret).join(MASK);', replace: '' },
+  { id: 'R5 exact occurrences are not replaced', file: 'redact.cjs', find: 'let value = canon.replaceVerbatim(input, ordered, MASK);', replace: 'let value = input;' },
   { id: 'R6 the secret shapes are not replaced', file: 'redact.cjs', find: 'for (const [, shape] of PATTERNS) value = value.replace(shape, MASK);', replace: '' },
   { id: 'R7 an item with an invalid required field is published half formed', file: 'redact.cjs', find: 'if (node.required.some((field) => out[field] === null)) { state.redactions += 1; return null; }', replace: '' },
   { id: 'R8 a new secret does not change the epoch (stale published items)', file: 'redact.cjs', find: 'epoch += 1;', replace: '' },

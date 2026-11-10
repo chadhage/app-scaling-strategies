@@ -1,7 +1,7 @@
 'use strict';
 
-// The by-value half of the redaction: canonical forms of a text and the encodings of a secret. Every function is linear in its input
-// (no nested quantifiers, no backtracking) and total: it returns a string or a boolean and never throws on a string.
+// The by-value half of the redaction: canonical forms of text and encodings of a held secret.
+// The public boundary limits free-text input before calling these string helpers.
 const MIN_SECRET = 6;
 const MIN_BASE64 = 8;
 const DASHES = /[\u2010-\u2015\u2212\ufe58\ufe63\uff0d]/g;
@@ -19,9 +19,12 @@ function percentDecode(text) {
 }
 
 function htmlDecode(text) {
-  return text.replace(/&(?:#([xX][0-9a-fA-F]{1,6}|\d{1,7})|([a-zA-Z]{2,6}));?/g, (all, numeric, named) => {
+  return text.replace(/&(?:#([xX][0-9a-fA-F]+|\d+)|([a-zA-Z]{2,6}));?/g, (all, numeric, named) => {
     if (numeric !== undefined) {
-      const point = /^[xX]/.test(numeric) ? parseInt(numeric.slice(1), 16) : Number(numeric);
+      const hex = /^[xX]/.test(numeric);
+      const significant = (hex ? numeric.slice(1) : numeric).replace(/^0+/, '') || '0';
+      if (significant.length > (hex ? 6 : 7)) return all;
+      const point = parseInt(significant, hex ? 16 : 10);
       return point <= 0x10ffff ? String.fromCodePoint(point) : all;
     }
     return Object.hasOwn(NAMED, named.toLowerCase()) ? NAMED[named.toLowerCase()] : all;
@@ -29,8 +32,10 @@ function htmlDecode(text) {
 }
 
 function unicodeUnescape(text) {
-  return text.replace(/\\u\{([0-9a-fA-F]{1,6})\}|\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})/g, (all, braced, four, two) => {
-    const point = parseInt(braced || four || two, 16);
+  return text.replace(/\\u\{([0-9a-fA-F]+)\}|\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})/g, (all, braced, four, two) => {
+    const significant = (braced || four || two).replace(/^0+/, '') || '0';
+    if (significant.length > 6) return all;
+    const point = parseInt(significant, 16);
     return point <= 0x10ffff ? String.fromCodePoint(point) : all;
   });
 }
@@ -52,7 +57,33 @@ function needlesFor(secret) {
       exact.add(text.replace(/\+/g, '-').replace(/\//g, '_'));
     }
   }
-  return { exact: [...exact], folded: [...new Set([fold(secret), bytes.toString('hex')])] };
+  return { exact: [...exact], folded: [...new Set([fold(secret), bytes.toString('hex'), fold(secret.replace(/ /g, '+'))])] };
+}
+
+// Merge matches in the original text, including occurrences that overlap themselves.
+function replaceVerbatim(text, secrets, replacement) {
+  const ends = new Uint32Array(text.length + 1);
+  for (const secret of secrets) {
+    if (secret.length === 0) continue;
+    for (let at = text.indexOf(secret); at !== -1; at = text.indexOf(secret, at + 1)) ends[at] = Math.max(ends[at], at + secret.length);
+  }
+  let from = 0;
+  let start = -1;
+  let end = 0;
+  const output = [];
+  for (let at = 0; at < ends.length; at += 1) {
+    if (start !== -1 && at === end) {
+      output.push(text.slice(from, start), replacement);
+      from = end;
+      start = -1;
+    }
+    if (ends[at] !== 0) {
+      if (start === -1) start = at;
+      end = Math.max(end, ends[at]);
+    }
+  }
+  output.push(text.slice(from));
+  return output.join('');
 }
 
 // The marker that takes the place of a secret where it stands verbatim: no needle contains it and fold() leaves it alone.
@@ -73,11 +104,11 @@ function encodedIn(text, registry) {
   for (const [secret, needles] of registry) {
     const key = fold(secret);
     const covering = present.filter(([, folded]) => folded.includes(key)).map(([other]) => other);
-    const exactViews = covering.length > 0 ? views(covering.reduce((rest, other) => rest.split(other).join(SET_ASIDE), text)) : shared;
+    const exactViews = covering.length > 0 ? views(replaceVerbatim(text, covering, SET_ASIDE)) : shared;
     const foldedViews = covering.length > 0 ? exactViews.map(fold) : sharedFolded;
     if (holds(needles, exactViews, foldedViews)) return true;
   }
   return false;
 }
 
-module.exports = Object.freeze({ MIN_SECRET, fold, percentDecode, htmlDecode, unicodeUnescape, views, needlesFor, encodedIn });
+module.exports = Object.freeze({ MIN_SECRET, fold, percentDecode, htmlDecode, unicodeUnescape, views, needlesFor, replaceVerbatim, encodedIn });

@@ -10,7 +10,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
-const { ROOT, manifests, printedDocument, mutantTotals, mutationEvidence, finalCapture } = require('./evidence-check.cjs');
+const { ROOT, printedDocument, mutantTotals } = require('./evidence-check.cjs');
+const { historicalManifests: manifests, historicalCapture: finalCapture, historicalMutationEvidence: mutationEvidence } = require('./final-base.cjs');
 
 const FRESH_COPY = fs.existsSync(path.join(ROOT, 'tests', 'scratch', 'FRESH-COPY'));
 const readme = () => fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8').replace(/\r\n/g, '\n');
@@ -187,8 +188,8 @@ test('a README paragraph without its citation, a citation of a row that does not
   assert.deepEqual(checkCitations('```\nevery fenced line\n```\n<!-- claims:begin -->\n| C01 | every row | a.test.cjs | x |\n<!-- claims:end -->', ids), [], 'a fenced block and the claims table are no prose');
 });
 
-test('the fresh-checkout lines of the README state the figures of the stored fresh-checkout captures (a fresh tree is a copy made before them: it has no such lines)', () => {
-  if (FRESH_COPY) return;
+test('the fresh-checkout lines of the README state the figures of the stored fresh-checkout captures (a fresh tree is a copy made before them: it has no such lines)', (t) => {
+  if (FRESH_COPY) return t.skip('FRESH-COPY cannot contain the figures of its own still-running capture.');
   for (const [name, stem] of [['LF', 'fresh-lf'], ['CRLF', 'fresh-crlf']]) {
     const file = finalCapture(stem);
     assert.ok(file, `the ${name} capture is stored`);

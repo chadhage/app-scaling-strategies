@@ -97,11 +97,12 @@ test('flood of refused requests with endless one-byte chunks, attacker in anothe
     flooding = false;
     await asking;
     const after = { real: await quiescent(real, 1), naive: await quiescent(naive, 0) };
+    assert.equal(after.real.typed403Writes - before.real.typed403Writes, 12, 'G1 exactly twelve typed 403 writes observed on the server after quiescence');
     assert.ok(answers.length >= 1 && answers.every((line) => line === 'HTTP/1.1 200'), `${answers.length} legitimate requests during the flood, all answered 200 (${legit.state.opened} connections, ${legit.state.retried} asked again after the server had ended one)`);
     // The typed 403 is visible on most sockets; on a few the reset that follows the server's close can discard it before the client reads it (L-0179), so a socket may
     // show no status at all, but never another one, and every one of them was ended by the server.
     assert.equal(sockets.real.filter((socket) => socket.serverEnded).length, 12, `the server ended every attacker socket: ${JSON.stringify(sockets.real.map((socket) => [socket.status, socket.serverEnded, socket.written]))}`);
-    assert.ok(sockets.real.every((socket) => socket.status === 403 || socket.status === 0) && sockets.real.filter((socket) => socket.status === 403).length >= 6, 'and answered 403 where the answer survived');
+    assert.ok(sockets.real.every((socket) => socket.status === 403 || socket.status === 0), 'every answer the client retained is 403; resets may discard any number of unread answers');
     assert.equal(sockets.naive.filter((socket) => socket.serverEnded).length, 0, 'the control never ends a connection (it may not even answer all of them while it parses): this test can fail');
     const realReads = after.real.reads.slice(before.real.reads.length).filter((bytes) => bytes > 0);
     const naiveReads = after.naive.reads.filter((bytes) => bytes > 0);

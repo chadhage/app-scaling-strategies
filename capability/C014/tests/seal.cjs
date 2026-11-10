@@ -17,7 +17,7 @@ const lf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) return entry.name === 'raw' || entry.name === 'scratch' ? [] : walk(full);
+    if (entry.isDirectory()) return entry.name === 'scratch' ? [] : walk(full);
     return [full];
   });
 }
@@ -27,7 +27,7 @@ function sealedNames(root = ROOT) {
   const relative = (file) => path.relative(root, file).split(path.sep).join('/');
   const atRoot = fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => entry.name);
   const below = ['tests', 'evidence'].flatMap((name) => (fs.existsSync(path.join(root, name)) ? walk(path.join(root, name)).map(relative) : []));
-  return [...atRoot, ...below].filter((name) => name !== 'evidence/seal.json').sort();
+  return [...atRoot, ...below].filter((name) => name !== 'evidence/u072/public-seal.json').sort();
 }
 
 // The problems of a seal: a file that differs from its pin (raw or LF form), a file that was sealed and is gone, a file that exists and was never sealed.
