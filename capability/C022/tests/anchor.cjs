@@ -9,7 +9,7 @@ const { createHash } = require('node:crypto');
 const path = require('node:path');
 const imports = require('../imports.json');
 
-const repo = path.resolve(__dirname, '..', '..', '..');
+const repo = process.env.C022_GIT_REPO || path.resolve(__dirname, '..', '..', '..');
 const sha = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const git = (args, encoding = 'utf8') => execFileSync('git', args, { cwd: repo, encoding, maxBuffer: 1 << 26 });
 
@@ -22,5 +22,10 @@ for (const dep of imports.dependencies) {
   const later = git(['log', '--format=%H', `${dep.commit}..HEAD`, '--', dep.path]).trim();
   if (later !== '') problems.push(`${dep.path}: changed after the accepted commit by ${later.split('\n').join(', ')}`);
 }
-console.log(JSON.stringify({ checked: imports.dependencies.length, problems }, null, 2));
+const extension = require('../imports.final.json');
+for (const dep of extension.dependencies) {
+  if (git(['rev-parse', `${dep.tag}^{commit}`]).trim() !== dep.commit) problems.push(`${dep.path}: extension tag mismatch`);
+  if (sha(git(['show', `${dep.commit}:${dep.path}`], 'buffer')) !== dep.git) problems.push(`${dep.path}: extension blob mismatch`);
+}
+console.log(JSON.stringify({ checked: imports.dependencies.length, extensionChecked: extension.dependencies.length, problems }, null, 2));
 process.exit(problems.length ? 1 : 0);

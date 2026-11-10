@@ -72,17 +72,17 @@ function runFile(tree, name, timeoutMs, bail = false) {
     let out = '';
     let timedOut = false;
     let bailed = false;
-    const seen = () => [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
+    const seen = () => [...out.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()).filter((name) => !/\.cjs$/.test(name));
     const onData = (chunk) => {
       out += chunk;
-      if (bail && !bailed && !timedOut && /^\s*not ok \d+ - /m.test(out)) { bailed = true; child.kill('SIGKILL'); }
+      if (bail && !bailed && !timedOut && seen().length && /ERR_ASSERTION/.test(out)) { bailed = true; child.kill('SIGKILL'); }
     };
     child.stdout.on('data', onData);
     child.stderr.on('data', onData);
     const timer = setTimeout(() => { timedOut = true; child.kill('SIGKILL'); }, timeoutMs);
     child.on('close', (status) => {
       clearTimeout(timer);
-      resolve({ status: bailed ? 1 : status, failed: seen(), timedOut: timedOut && !bailed, bailed });
+      resolve({ status: bailed ? 1 : status, failed: seen(), assertionFailure: /ERR_ASSERTION/.test(out), timedOut: timedOut && !bailed, bailed });
     });
   });
 }
@@ -98,6 +98,14 @@ function handMutant(entry, source) {
 }
 
 async function main() {
+  const importProof = JSON.parse(fs.readFileSync(args['import-proof'] ? path.resolve(args['import-proof']) : path.join(namespace, 'evidence', 'final', 'import-reuse-proof.json'), 'utf8'));
+  const importBindings = {};
+  for (const rel of IMPORTS) {
+    const bytes = fs.readFileSync(path.join(repo, rel));
+    const normalized = sha256(Buffer.from(bytes.toString('latin1').replaceAll('\r\n', '\n'), 'latin1'));
+    if (normalized !== importProof.imports[rel].lf) throw new Error(`${rel}: current imports do not bind the historical pass`);
+    importBindings[rel] = { raw: sha256(bytes), lf: normalized, commit: importProof.imports[rel].commit };
+  }
   const queue = [];
   const sourceHashes = {};
   for (const file of FILES) {
@@ -115,6 +123,8 @@ async function main() {
   // file that killed it is byte-identical too (test files are only ever ADDED between passes), and runs everything else: the survivors, the
   // undecided and the mutants an earlier time-boxed pass did not reach. The new files can only add kills.
   const base = args.base ? JSON.parse(fs.readFileSync(path.resolve(args.base), 'utf8')) : null;
+  const baseSha256 = base ? sha256(fs.readFileSync(path.resolve(args.base))) : null;
+  if (base && !Object.values(importProof.baseManifests).includes(baseSha256)) throw new Error('base pass is not the exact retained observation');
   const rawOf = (entry) => (entry && typeof entry === 'object' ? entry.raw : entry);
   const sameSource = (file) => base && base.sourceHashes && rawOf(base.sourceHashes[file]) === sourceHashes[file].raw;
   const stillValid = (entry) => {
@@ -163,7 +173,7 @@ async function main() {
         for (const name of orderFor(file)) {
           const result = await runFile(tree, name, 180000, !SPAWNING.has(name));
           if (result.status === 0) continue;
-          if (result.timedOut || result.failed.length === 0) { undecided = undecided || { file: `${name}.test.cjs`, reason: result.timedOut ? 'timed out' : 'ended without a named failing test' }; continue; }
+          if (result.timedOut || result.failed.length === 0 || !result.assertionFailure) { undecided = undecided || { file: `${name}.test.cjs`, reason: result.timedOut ? 'timed out' : 'ended without a named assertion failure' }; continue; }
           killedBy = { file: `${name}.test.cjs`, test: result.failed[0] };
           break;
         }
@@ -182,7 +192,8 @@ async function main() {
   }
   const document = {
     tool: 'tests/mutate-gen.cjs + tests/mutate-run.cjs', handList: hand ? { file: 'tests/hand-mutants.cjs', count: hand.length, raw: sha256(fs.readFileSync(path.resolve(args.hand), 'utf8')), lf: sha256(fs.readFileSync(path.resolve(args.hand), 'utf8').replaceAll('\r\n', '\n')) } : null, node: process.version, generatedAtUtc: new Date().toISOString(), workers, order: { all: ALL, first: FIRST, skippedForServer: [...UNIT], neverBailing: [...SPAWNING] }, timeBox: args.until || null, baseline,
-    sourceHashes, testHashes, passes: [...(base && sameSource(FILES[0]) ? base.passes || [] : []), { generatedAtUtc: new Date().toISOString(), ran: results.length - kept.length, keptFromBase: kept.length, workers, timeBox: args.until || null }],
+    sourceHashes, testHashes, importBindings, baseSha256, retainedKillsAreHistoricalNotNewRuns: true,
+    passes: [...(base && sameSource(FILES[0]) ? base.passes || [] : []), { generatedAtUtc: new Date().toISOString(), ran: results.length - kept.length, keptFromBase: kept.length, workers, timeBox: args.until || null }],
     complete: Object.values(summary).every((figures) => figures.notRun === 0 && figures.undecided === 0), summary, results: results.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
   };
   fs.writeFileSync(path.resolve(args.out), `${JSON.stringify(document, null, 1)}\n`, { flag: 'wx' });

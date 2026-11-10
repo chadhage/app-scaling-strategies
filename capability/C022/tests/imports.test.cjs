@@ -89,3 +89,21 @@ test('the gates not imported, and why, are written down', () => {
   assert.match(imports.c009ReadmeFalseLine, /immediate/);
   assert.match(imports.policy, /never edits an imported file/);
 });
+
+test('the browser integration is an additive exact-published U007 binding, never a rewrite of the seven retained producer pins', () => {
+  const extension = require('../imports.final.json');
+  const original = fs.readFileSync(path.join(root, 'imports.json'));
+  assert.equal(extension.schema, 'C022-imports-append/1');
+  assert.equal(extension.appendOnly, true);
+  assert.equal(extension.previous.changed, false);
+  assert.ok(sha(original) === extension.previous.raw || sha(lf(original)) === extension.previous.lf);
+  assert.equal(extension.authority.commit, 'cb27bebe434029bdd8fa1eeeb3d08ccd5030eb24');
+  assert.ok(extension.dependencies.length >= 5);
+  for (const entry of extension.dependencies) {
+    assert.match(entry.path, /^testing\/browser\/lifecycle\/[a-z-]+\.cjs$/);
+    const bytes = fs.readFileSync(path.join(repo, entry.path));
+    assert.ok(sha(bytes) === entry.raw || sha(lf(bytes)) === entry.lf, entry.path);
+    assert.equal(entry.commit, extension.authority.commit);
+    assert.equal(entry.git, entry.lf);
+  }
+});

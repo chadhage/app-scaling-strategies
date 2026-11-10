@@ -13,6 +13,7 @@ const { runInputs } = require('./evidence-verify.cjs');
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => (value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs), []));
 const repo = path.resolve(__dirname, '..', '..', '..');
+const gitRepo = process.env.C022_GIT_REPO || repo;
 const imports = require('../imports.json');
 const tree = path.resolve(args.tree);
 const TEXT = /\.(c?js|json|md|html|css|feature|gitattributes|gitignore)$/;
@@ -36,8 +37,8 @@ fs.rmSync(tree, { recursive: true, force: true });
 // The bytes this run copies (hashes taken just before the copy): evidence.test.cjs compares them with the live files.
 const inputs = runInputs(path.join(repo, 'capability', 'C022'));
 copy(path.join(repo, 'capability', 'C022'), path.join(tree, 'capability', 'C022'));
-for (const dep of imports.dependencies) {
-  const blob = execFileSync('git', ['show', `${dep.commit}:${dep.path}`], { cwd: repo, maxBuffer: 1 << 26 });
+for (const dep of [...imports.dependencies, ...require('../imports.final.json').dependencies]) {
+  const blob = execFileSync('git', ['show', `${dep.commit}:${dep.path}`], { cwd: gitRepo, maxBuffer: 1 << 26 });
   const target = path.join(tree, dep.path);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, convert(blob, dep.path));

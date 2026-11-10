@@ -2,7 +2,7 @@
 
 // Test tooling, not production code: verifies the archived evidence of C022 under a namespace root (the real one, or a scratch COPY that a
 // tamper test has altered). Every manifest written by RUN\scripts\archive-run.cjs is checked: its transcripts (gunzip and gzip SHA-256 and
-// size), its pinned inputs (raw or LF-normalized SHA-256), and the shape that its purpose demands. seal.json (written last by seal.cjs)
+// size), its pinned inputs (raw or LF-normalized SHA-256), and the shape that its purpose demands. final/seal.json (written last by seal.cjs)
 // pins the final bytes of the README, the feature, every test and production file and imports.json. It returns a list of problems.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -33,6 +33,27 @@ function verify(root, { repoRoot = path.resolve(root, '..', '..') } = {}) {
   const problems = [];
   const rel = (file) => path.relative(root, file);
   const manifests = manifestsOf(root);
+  const retainedFailures = new Set();
+  const failuresFile = path.join(root, 'evidence', 'final', 'nonqualifying-attempts.json');
+  if (fs.existsSync(failuresFile)) {
+    try {
+      const history = JSON.parse(fs.readFileSync(failuresFile, 'utf8'));
+      if (history.schema !== 'C022-nonqualifying-attempts/1' || history.attempts.length !== 1) throw new Error('closed failed-attempt shape');
+      const [entry] = history.attempts;
+      if (entry.path !== 'evidence/browser/browser-3.json' || entry.successor !== 'evidence/browser/browser-4.json'
+        || entry.cause !== 'SUBST_NATIVE_PATH_REQUIRED' || entry.accepted !== false) throw new Error('closed failed-attempt vocabulary');
+      const failedBytes = fs.readFileSync(path.join(root, entry.path));
+      const failed = JSON.parse(failedBytes);
+      const successor = JSON.parse(fs.readFileSync(path.join(root, entry.successor), 'utf8'));
+      if (sha(lf(failedBytes)) !== entry.manifestLfSha256 || failed.exitCode !== 1 || failed.expectedExitCode !== 0
+        || failed.timedOut || successor.exitCode !== 0 || successor.expectedExitCode !== 0 || successor.timedOut) throw new Error('the failed attempt must stay failed and its successor must pass');
+      const failedOut = zlib.gunzipSync(fs.readFileSync(path.join(root, path.dirname(entry.path), failed.transcripts.stdout.path))).toString('utf8');
+      const successorOut = zlib.gunzipSync(fs.readFileSync(path.join(root, path.dirname(entry.successor), successor.transcripts.stdout.path))).toString('utf8');
+      if (/C022 BROWSER OK/.test(failedOut) || !/C022 BROWSER OK/.test(successorOut)
+        || !/C022 OWN CLEANUP/.test(successorOut)) throw new Error('a qualifier-only failure is not a UI observation');
+      retainedFailures.add(entry.path);
+    } catch (error) { problems.push(`nonqualifying attempts: ${error.message}`); }
+  }
   if (manifests.length === 0) problems.push('no archived run manifest found');
   for (const file of walk(path.join(root, 'evidence')).filter((candidate) => candidate.endsWith('.json') && !candidate.includes(`${path.sep}raw${path.sep}`))) {
     try { JSON.parse(fs.readFileSync(file, 'utf8')); } catch { problems.push(`${rel(file)}: is not valid JSON`); }
@@ -65,19 +86,25 @@ function verify(root, { repoRoot = path.resolve(root, '..', '..') } = {}) {
       if (snapshots.some((snapshot) => fs.existsSync(snapshot) && pinned(fs.readFileSync(snapshot)))) continue;
       problems.push(live || retained ? `${where}: input ${input.path} differs from its pin` : `${where}: input ${input.path} is missing`);
     }
-    if (json.exitCode !== json.expectedExitCode || json.timedOut) problems.push(`${where}: exit ${json.exitCode} (expected ${json.expectedExitCode})`);
+    if ((json.exitCode !== json.expectedExitCode && !retainedFailures.has(where.split(path.sep).join('/'))) || json.timedOut) problems.push(`${where}: exit ${json.exitCode} (expected ${json.expectedExitCode})`);
   }
-  const sealFile = path.join(root, 'evidence', 'seal.json');
-  if (!fs.existsSync(sealFile)) problems.push('evidence/seal.json is missing');
+  const sealFile = path.join(root, 'evidence', 'final', 'seal.json');
+  if (!fs.existsSync(path.join(root, 'evidence', 'seal.json'))) problems.push('evidence/seal.json is missing');
+  if (!fs.existsSync(sealFile)) problems.push('evidence/final/seal.json is missing');
   else {
     const seal = JSON.parse(fs.readFileSync(sealFile, 'utf8'));
+    const previous = path.join(root, 'evidence', 'seal.json');
+    if (seal.previousSeal?.path !== 'evidence/seal.json' || !fs.existsSync(previous)
+      || seal.previousSeal.sha256 !== seal.files['evidence/seal.json']
+      || seal.previousSeal.lf !== seal.lf['evidence/seal.json']
+      || sha(lf(fs.readFileSync(previous))) !== seal.previousSeal.lf) problems.push('seal: previous seal binding differs');
     for (const [name, hash] of Object.entries(seal.files)) {
       const target = path.join(root, name);
       if (!fs.existsSync(target)) problems.push(`seal: ${name} is missing`);
       else if (sha(fs.readFileSync(target)) !== hash && sha(lf(fs.readFileSync(target))) !== seal.lf[name]) problems.push(`seal: ${name} differs from its pin`);
     }
     const sealed = new Set(Object.keys(seal.files));
-    const present = [...PRODUCTION, 'README.md', 'C022.feature', 'imports.json', ...fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name)).map((name) => `tests/${name}`), ...sealedEvidence(root)];
+    const present = [...PRODUCTION, 'README.md', 'C022.feature', 'C022-final.feature', 'imports.json', 'imports.final.json', ...fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name)).map((name) => `tests/${name}`), ...sealedEvidence(root)];
     for (const name of present) if (!sealed.has(name)) problems.push(`seal: ${name} is not sealed`);
   }
   return problems;
@@ -89,7 +116,7 @@ function readManifest(root, relative) {
 
 // The two lists of retained manifests (see verify): their manifests and their snapshot directories. A damaged list is reported by verify() as
 // invalid JSON and retains nothing.
-const SUPERSEDED_LISTS = ['evidence/red/superseded.json', 'evidence/superseded.json'];
+const SUPERSEDED_LISTS = ['evidence/red/superseded.json', 'evidence/superseded.json', 'evidence/final/retained.json', 'evidence/final/retained-phase-1.json'];
 function retainedOf(root) {
   const manifests = new Set();
   const snapshotDirs = [];
@@ -111,7 +138,7 @@ function retainedOf(root) {
 function sealedEvidence(root) {
   const { manifests: retained } = retainedOf(root);
   return walk(path.join(root, 'evidence')).map((file) => path.relative(root, file).split(path.sep).join('/'))
-    .filter((name) => name !== 'evidence/seal.json' && !name.includes('/raw/') && !(/^evidence\/green\/verify-\d+\.json$/.test(name) && !retained.has(name))).sort();
+    .filter((name) => name !== 'evidence/final/seal.json' && !name.includes('/raw/') && !(/^evidence\/green\/verify-\d+\.json$/.test(name) && !retained.has(name))).sort();
 }
 
 // The files a loop or a fresh-checkout run executes or reads: every production file, the feature, imports.json and every tool and test under
@@ -120,7 +147,7 @@ function sealedEvidence(root) {
 // bytes, so a capture cannot silently describe other bytes than the ones that ship.
 const ARCHIVE_TOOLS = ['evidence.test.cjs', 'evidence-verify.cjs', 'seal.cjs'];
 function runInputs(root) {
-  const names = [...PRODUCTION, 'C022.feature', 'imports.json', ...fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name) && !ARCHIVE_TOOLS.includes(name)).map((name) => `tests/${name}`)].sort();
+  const names = [...PRODUCTION, 'C022.feature', 'C022-final.feature', 'imports.json', 'imports.final.json', ...fs.readdirSync(path.join(root, 'tests')).filter((name) => /\.c?js$/.test(name) && !ARCHIVE_TOOLS.includes(name)).map((name) => `tests/${name}`)].sort();
   return Object.fromEntries(names.map((name) => {
     const bytes = fs.readFileSync(path.join(root, name));
     return [name, { raw: sha(bytes), lf: sha(lf(bytes)) }];

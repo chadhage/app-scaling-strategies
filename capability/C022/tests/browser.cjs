@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const os = require('node:os');
 const path = require('node:path');
 const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
-const { openIsolatedLoopback } = require(path.join(repositoryRoot, 'testing', 'browser', 'isolated.cjs'));
+const { openOwnedLoopback } = require('./browser-owned.cjs');
 const { qualifyEdge } = require(path.join(repositoryRoot, 'testing', 'browser', 'qualify', 'qualify.cjs'));
 const { startApp } = require('./helpers.cjs');
 
@@ -42,11 +42,12 @@ async function main() {
   checked('the installed Edge is Microsoft-signed and its major is qualified', { version: edge.version, major: edge.major, signature: edge.signature.status, publisher: edge.signature.publisher, sha256: edge.sha256, attempts });
   const ctx = await startApp();
   let session;
+  const failures = [];
   try {
     const ada = await ctx.session('ada');
     const bea = await ctx.session('bea');
     const ana = await ctx.session('ana');
-    session = await openIsolatedLoopback(path.join('capability', 'C022', 'index.html'), ctx.app.server);
+    session = await openOwnedLoopback(path.join('capability', 'C022', 'index.html'), ctx.app.server);
     const { page } = session;
     assert.equal(Number(String(session.browserVersion).split('.')[0]), edge.major, 'the launched browser has the qualified major');
     console.log(`Edge ${session.browserVersion}, page ${ctx.origin}/ (synthetic, loopback, isolated headless)`);
@@ -117,9 +118,13 @@ async function main() {
     assert.deepEqual(await page.context().cookies(), [], 'the browser context holds no cookie');
     checked('no cookie and no storage entry after the whole run', { ...kept, contextCookies: 0 });
     checked('no page error, no CSP violation, same-origin GET requests only', { requests: requests.length, refusedProbesLoggedByTheBrowser: consoleErrors.length });
+  } catch (error) {
+    failures.push(error);
   } finally {
-    try { if (session) await session.close(); } finally { await ctx.close(); }
+    try { if (session) await session.close(); } catch (error) { failures.push(error); }
+    try { await ctx.close(); } catch (error) { failures.push(error); }
   }
+  if (failures.length) throw new AggregateError(failures, 'C022 browser observation or own cleanup failed');
   console.log('C022 BROWSER OK');
 }
 

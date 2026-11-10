@@ -1,0 +1,115 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const own = path.join(root, 'capability', 'C022');
+const gitRepo = process.env.C022_GIT_REPO;
+const { manifestsOf, retainedOf, runInputs, sha, lf, walk } = require(path.join(own, 'tests', 'evidence-verify.cjs'));
+const write = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const relative = (file) => path.relative(root, file);
+const originalLists = retainedOf(own);
+const old = manifestsOf(own).filter(({ file }) => !originalLists.manifests.has(path.relative(own, file).split(path.sep).join('/')));
+const snapshotDir = 'evidence/final/snapshot-3';
+fs.mkdirSync(path.join(own, snapshotDir), { recursive: true });
+for (const { json } of manifestsOf(own)) for (const input of json.inputs || []) {
+  const pinned = (bytes) => sha(bytes) === input.rawSha256 || sha(lf(bytes)) === input.crlfToLfSha256;
+  const current = path.join(root, input.path);
+  if (fs.existsSync(current) && pinned(fs.readFileSync(current))) continue;
+  const base = `${path.win32.basename(input.path)}.snap`;
+  if (originalLists.snapshotDirs.some((directory) => {
+    const file = path.join(own, directory, base);
+    return fs.existsSync(file) && pinned(fs.readFileSync(file));
+  })) continue;
+  const target = path.join(own, snapshotDir, base);
+  if (fs.existsSync(target)) { assert.ok(pinned(fs.readFileSync(target)), `${base}: no ambiguous snapshot replacement`); continue; }
+  const original = path.join(gitRepo, input.path);
+  assert.ok(fs.existsSync(original) && pinned(fs.readFileSync(original)), `${input.path}: exact original source witness is required`);
+  fs.copyFileSync(original, target, fs.constants.COPYFILE_EXCL);
+}
+if (!fs.existsSync(path.join(own, 'evidence', 'final', 'retained.json'))) {
+write(path.join(own, 'evidence', 'final', 'retained.json'), {
+  schemaVersion: 1, note: 'Append-only retention for the private final correction. Earlier captures stay historical, including failures; no old manifest, raw stream, seal or pin is rewritten.',
+  manifests: old.map(({ file }) => path.relative(own, file).split(path.sep).join('/')).sort(),
+  snapshotDir, correctsHistoricalDescription: 'red-1 also differs in contract.js and proc.cjs, already resolved by snapshot-2'
+});
+fs.copyFileSync(path.join(root, 'work', 'assertions-before', 'counts.json'), path.join(own, 'evidence', 'final', 'assertion-red-counts.json'), fs.constants.COPYFILE_EXCL);
+}
+if (process.argv.includes('--retention-only')) process.exit(0);
+
+const sourceInputs = [...Object.keys(runInputs(own)).map((file) => path.join('capability', 'C022', file)),
+  path.join('capability', 'C022', 'tests', 'evidence-verify.cjs'),
+  path.join('capability', 'C022', 'tests', 'evidence.test.cjs'),
+  path.join('capability', 'C022', 'tests', 'seal.cjs')].sort();
+const tests = fs.readdirSync(path.join(own, 'tests')).filter((name) => name.endsWith('.test.cjs') && name !== 'evidence.test.cjs').sort();
+const all = tests.map((name) => path.join('capability', 'C022', 'tests', name));
+const http = ['server', 'isolation', 'isolation-more', 'lifecycle', 'races', 'refusal-close', 'pipeline-one-write', 'pipeline-earlier',
+  'pipeline-two-writes', 'pipeline-http10', 'pipeline-third-hole', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pending-flood']
+  .map((name) => path.join('capability', 'C022', 'tests', `${name}.test.cjs`));
+const looped = ['assertion-counter', 'child-env', 'default-timeouts', 'imports', 'pending-flood', 'pipeline-earlier', 'pipeline-http10',
+  'pipeline-one-write', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pipeline-third-hole', 'pipeline-two-writes', 'races', 'refusal-close', 'refusal-flood'];
+const plan = [];
+function capture(name, args, outDir, resource = 'heavy', expectedExitCode = 0, extra = {}) {
+  const spec = path.join('work', `${name}.spec.json`);
+  write(path.join(root, spec), { name, purpose: `${name}: final frozen-source private C022 verification; no live application or publication authority`,
+    args, inputs: sourceInputs, outDir: path.join('capability', 'C022', 'evidence', outDir), expectedExitCode,
+    timeoutMs: 3600000, ...extra });
+  plan.push({ name, spec, resource });
+}
+const cli = (name, ...args) => [path.join('capability', 'C022', 'tests', name), ...args];
+const native = ['--test', '--test-concurrency=1', '--test-timeout=60000'];
+capture('red-4', [...native.map((x) => x === '--test-timeout=60000' ? '--test-timeout=150000' : x), ...http], 'red\\run-4', 'heavy', 1,
+  { env: { C022_SUBJECT_DIR: 'capability\\C022\\evidence\\red\\stub' }, inputs: [...sourceInputs, 'capability\\C022\\evidence\\red\\stub\\server.cjs'] });
+capture('assertion-scan-1', cli('assertion-audit.cjs', '--all', '1', '--report', 'work\\assertions-all'), 'final\\assertions');
+capture('replay-4', [...native.map((x) => x === '--test-timeout=60000' ? '--test-timeout=150000' : x), ...http], 'red\\replay-4');
+capture('green-3', [...native, ...all], 'green');
+capture('anchor-3', cli('anchor.cjs'), 'anchor', 'none');
+capture('equivalence-1', cli('equivalence-demo.cjs', '--scratch', 'work\\equivalence-final', '--out', 'capability\\C022\\evidence\\final\\equivalence.json'), 'final\\equivalence');
+capture('cap-demo-1', cli('cap-demo.cjs', '--scratch', 'work\\caps-final', '--out', 'capability\\C022\\evidence\\final\\cap-analysis.json'), 'final\\caps', 'mutation');
+capture('mutation-capture-4', cli('mutate-run.cjs', '--scratch', 'work\\mutation-final', '--out', 'capability\\C022\\evidence\\mutants\\mutation-4.json', '--workers', '1', '--base', 'capability\\C022\\evidence\\mutants\\mutation-3.json'), 'final\\mutation', 'mutation');
+capture('hand-capture-2', cli('mutate-run.cjs', '--scratch', 'work\\hand-final', '--out', 'capability\\C022\\evidence\\mutants\\hand-2.json', '--workers', '1', '--base', 'capability\\C022\\evidence\\mutants\\hand-1.json', '--hand', 'capability\\C022\\tests\\hand-mutants.cjs'), 'final\\mutation', 'mutation');
+capture('loop-capture-3', cli('loop.cjs', '--out', 'capability\\C022\\evidence\\loops\\loop-3.json', '--files', looped.map((name) => `${name}.test.cjs`).join(','), '--rounds', '20', '--parallel', '4', '--burners', '4'), 'final\\loops');
+capture('files-capture-2', cli('loop.cjs', '--out', 'capability\\C022\\evidence\\loops\\files-2.json', '--files', tests.join(','), '--rounds', '1', '--parallel', '1', '--burners', '0'), 'final\\loops');
+for (const mode of ['lf', 'crlf']) capture(`fresh-capture-${mode}-3`, cli('fresh.cjs', '--mode', mode, '--tree', `work\\fresh-${mode}`, '--out', `capability\\C022\\evidence\\fresh\\fresh-${mode}-3.json`), 'final\\fresh');
+for (const file of ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js']) {
+  capture(`cov-${file.replace('.', '-')}-3`, ['--test', '--test-concurrency=1', '--test-timeout=600000', '--experimental-test-coverage',
+    `--test-coverage-include=**/C022/${file}`, '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...all], 'coverage');
+}
+capture('browser-3', ['tools\\browser-entry.cjs'], 'browser');
+write(path.join(root, 'work', 'plan.json'), plan);
+const published = 'd7ebef55c2b3265ca843851cbc2ed7ba68658621';
+const pinnedImports = fs.readFileSync(path.join(own, 'imports.json'));
+const publishedImports = execFileSync('git', ['show', `${published}:capability/C022/imports.json`], { cwd: gitRepo });
+assert.equal(sha(lf(pinnedImports)), sha(lf(publishedImports)), 'historical consumer import authority is unchanged');
+const importReuse = {};
+for (const dep of require(path.join(own, 'imports.json')).dependencies.filter((entry) => entry.path.startsWith('capability/'))) {
+  const blob = execFileSync('git', ['show', `${dep.commit}:${dep.path}`], { cwd: gitRepo });
+  const bytes = fs.readFileSync(path.join(root, dep.path));
+  assert.equal(sha(lf(bytes)), dep.lf, `${dep.path}: accepted current import`);
+  assert.equal(sha(blob), dep.git, `${dep.path}: accepted Git anchor`);
+  importReuse[dep.path] = { raw: sha(bytes), lf: sha(lf(bytes)), commit: dep.commit, tag: dep.tag };
+}
+write(path.join(own, 'evidence', 'final', 'import-reuse-proof.json'), {
+  schema: 'C022-import-reuse/1', consumerPublished: published, consumerImportsLf: sha(lf(publishedImports)), imports: importReuse,
+  baseManifests: Object.fromEntries(['mutation-3.json', 'hand-1.json'].map((name) => [name, sha(fs.readFileSync(path.join(own, 'evidence', 'mutants', name)))])),
+  note: 'Retained exact observations are historical. Reuse additionally requires the same production file and named killing test bytes; changed killers and all undecided/survivors are executed again.'
+});
+const live = path.join(gitRepo, 'capability', 'C022');
+write(path.join(root, 'work', 'protected-live.json'), Object.fromEntries(walk(live).map((file) => [path.relative(live, file), sha(fs.readFileSync(file))])));
+const production = ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js', 'index.html', 'style.css'];
+const sourceGit = {};
+for (const file of production) {
+  const blob = execFileSync('git', ['show', `${published}:capability/C022/${file}`], { cwd: gitRepo });
+  const bytes = fs.readFileSync(path.join(own, file));
+  assert.equal(sha(lf(bytes)), sha(lf(blob)), `${file}: frozen production must equal the published blob`);
+  sourceGit[file] = { raw: sha(bytes), lf: sha(lf(bytes)), gitBlobSha256: sha(blob), commit: published };
+}
+const frozen = [...sourceInputs, 'capability\\C022\\README.md', ...walk(path.join(root, 'tools')).map(relative)].sort();
+write(path.join(own, 'evidence', 'final', 'source-freeze.json'), {
+  schema: 'C022-source-freeze/1', atUtc: new Date().toISOString(), actorId: '67570fb0-ced1-4983-94b2-0d9fd86f5bc7',
+  originalWorkerId: 'worker-C022', published, production: sourceGit,
+  files: Object.fromEntries(frozen.map((name) => { const bytes = fs.readFileSync(path.join(root, name)); return [name, { raw: sha(bytes), lf: sha(lf(bytes)) }]; }))
+});
+console.log(`prepared ${plan.length} sequential captures; ${tests.length} non-evidence test files; final source frozen`);

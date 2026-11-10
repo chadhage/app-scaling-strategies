@@ -1,0 +1,77 @@
+param([string]$Plan = 'work\plan.json')
+$ErrorActionPreference = 'Stop'
+$Owner = 'worker-C022-final-67570fb0-ced1-4983-94b2-0d9fd86f5bc7'
+$Root = Split-Path $PSScriptRoot
+$RunDir = $env:C022_RUN
+$SlotScript = $env:C022_SLOT_TOOL
+$Deadline = [DateTimeOffset]::Parse('2026-11-10T15:46:40.4816799Z')
+$Jobs = Get-Content -LiteralPath (Join-Path $Root $Plan) -Raw | ConvertFrom-Json
+
+function Assert-ForeignResourcesFresh([string]$Directory) {
+    foreach ($Lock in Get-ChildItem -LiteralPath $Directory -Filter '*.lock' -File -ErrorAction SilentlyContinue) {
+        $Text = Get-Content -LiteralPath $Lock.FullName -Raw
+        if ($Text -notlike "$Owner *" -and $Lock.LastWriteTimeUtc -lt [DateTime]::UtcNow.AddMinutes(-55)) {
+            throw "Foreign lock near legacy stale-cleanup boundary; preserve and report: $($Lock.Name)"
+        }
+    }
+    foreach ($Ticket in Get-ChildItem -LiteralPath (Join-Path $Directory 'queue') -Filter '*.q' -File -ErrorAction SilentlyContinue) {
+        $TicketPid = [int](($Ticket.BaseName -split '-')[-1])
+        if (-not (Get-Process -Id $TicketPid -ErrorAction SilentlyContinue)) {
+            throw "Foreign queue ticket cannot be cleaned by this worker: $($Ticket.Name)"
+        }
+    }
+}
+
+foreach ($Job in $Jobs) {
+    if ([DateTimeOffset]::UtcNow -gt $Deadline.AddMinutes(-5)) { throw 'No new capture is admitted inside the final five budget minutes' }
+    $Directory = $null
+    $Count = 0
+    $Slot = $null
+    if ($Job.resource -in @('heavy', 'mutation')) {
+        $Count = if ($Job.resource -eq 'heavy') { 3 } else { 4 }
+        $Directory = Join-Path $RunDir ($Job.resource + '-locks')
+        $WaitUntil = [DateTime]::UtcNow.AddMinutes(25)
+        while ($null -eq $Slot) {
+            Assert-ForeignResourcesFresh $Directory
+            try { $Slot = & $SlotScript -Action Acquire -Owner $Owner -Slots $Count -LockDir $Directory -MaxWaitMinutes 1 }
+            catch {
+                if ($_.Exception.Message -notlike 'No heavy slot free*' -or [DateTime]::UtcNow -gt $WaitUntil) { throw }
+            }
+        }
+    }
+    try {
+        $Log = Join-Path $Root ('work\driver-' + $Job.name + '.stdout')
+        $ErrorLog = Join-Path $Root ('work\driver-' + $Job.name + '.stderr')
+        if ((Test-Path -LiteralPath $Log) -or (Test-Path -LiteralPath $ErrorLog)) { throw 'Driver output already exists; refusing overwrite' }
+        Write-Output ("START {0} {1:o} resource={2}" -f $Job.name, [DateTime]::UtcNow, $Job.resource)
+        $Child = Start-Process -FilePath (Get-Command node).Source -ArgumentList @('tools\capture.cjs', $Job.spec) `
+            -WorkingDirectory $Root -NoNewWindow -PassThru -RedirectStandardOutput $Log -RedirectStandardError $ErrorLog
+        $Created = $Child.StartTime.ToUniversalTime()
+        while (-not $Child.WaitForExit(15000)) {
+            if ($Directory) {
+                foreach ($OwnLock in Get-ChildItem -LiteralPath $Directory -Filter '*.lock' -File) {
+                    if ((Get-Content -LiteralPath $OwnLock.FullName -Raw) -like "$Owner *") {
+                        [IO.File]::SetLastWriteTimeUtc($OwnLock.FullName, [DateTime]::UtcNow)
+                    }
+                }
+            }
+            [IO.File]::WriteAllText((Join-Path $Root 'work\heartbeat.txt'), "$([DateTime]::UtcNow.ToString('o')) $($Job.name) pid=$($Child.Id) created=$($Created.ToString('o'))")
+        }
+        $Child.WaitForExit()
+        $Document = Get-Content -LiteralPath $Log -Raw | ConvertFrom-Json
+        Write-Output ("END {0} exit={1} expected={2} tests={3} pass={4}" -f $Job.name, $Document.exitCode, $Document.expected, $Document.summary.tests, $Document.summary.pass)
+        if ($Child.ExitCode -ne 0) {
+            Get-Content -LiteralPath $ErrorLog -Tail 8
+            throw "Capture $($Job.name) did not meet its recorded expected outcome; original failure is preserved"
+        }
+        if ($Job.name -eq 'assertion-scan-1') {
+            $Target = Join-Path $Root 'capability\C022\evidence\final\assertion-counts.json'
+            if (Test-Path -LiteralPath $Target) { throw 'Assertion census target already exists' }
+            Copy-Item -LiteralPath (Join-Path $Root 'work\assertions-all\counts.json') -Destination $Target
+        }
+    } finally {
+        if ($Directory -and $null -ne $Slot) {
+            & $SlotScript -Action Release -Owner $Owner -Slots $Count -LockDir $Directory
+        }
+    }
+}

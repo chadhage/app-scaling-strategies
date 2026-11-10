@@ -1,0 +1,73 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const own = path.join(root, 'capability', 'C022');
+const { sha, lf, manifestsOf } = require(path.join(own, 'tests', 'evidence-verify.cjs'));
+const read = (file) => JSON.parse(fs.readFileSync(path.join(own, 'evidence', file), 'utf8'));
+const write = (file, value) => fs.writeFileSync(path.join(own, 'evidence', file), `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const get = (name) => {
+  const found = manifestsOf(own).find(({ json }) => json.name === name);
+  assert.ok(found, name);
+  assert.equal(found.json.exitCode, found.json.expectedExitCode, name);
+  assert.equal(found.json.timedOut, false, name);
+  return found.json;
+};
+const green = get('green-3');
+assert.equal(green.summary.tests, 662);
+assert.equal(green.summary.pass, 662);
+assert.deepEqual([green.summary.fail, green.summary.cancelled, green.summary.skipped, green.summary.todo], [0, 0, 0, 0]);
+const census = read('final/assertion-counts.json');
+assert.equal(census.executed, 662);
+assert.deepEqual(census.zero, []);
+assert.ok(census.tests.every((entry) => entry.assertions > 0));
+const mutation = read('mutants/mutation-4.json');
+const hand = read('mutants/hand-2.json');
+assert.equal(mutation.complete, true);
+assert.equal(mutation.results.length, 768);
+assert.equal(mutation.results.filter((entry) => entry.killedBy).length, 766);
+assert.equal(mutation.results.filter((entry) => entry.undecided).length, 0);
+assert.equal(hand.results.length, 70);
+assert.ok(hand.results.every((entry) => entry.killedBy?.test && !entry.undecided));
+const demo = read('final/equivalence.json');
+assert.equal(demo.results.length, 3);
+const originalEquivalents = fs.readFileSync(path.join(own, 'evidence', 'mutants', 'equivalents.json'));
+write('mutants/equivalents.final.json', {
+  schema: 'C022-equivalents-append/1',
+  previous: { path: 'equivalents.json', raw: sha(originalEquivalents), lf: sha(lf(originalEquivalents)), changed: false },
+  demonstration: { path: '../final/equivalence.json', sha256: sha(fs.readFileSync(path.join(own, 'evidence', 'final', 'equivalence.json'))) },
+  equivalents: demo.results.map((entry) => ({ id: entry.id, file: entry.file, kind: 'equivalent', outcomeSha256: entry.outcomeSha256 })),
+  observationsAreCurrent: true, noHistoricalFailureRelabeled: true
+});
+const loop = read('loops/loop-3.json');
+const timing = read('loops/files-2.json');
+assert.equal(Object.keys(loop.perFile).length, 15);
+assert.ok(Object.values(loop.perFile).every((entry) => entry.runs === 20 && entry.passed === entry.runs));
+assert.ok(Object.values(timing.perFile).every((entry) => entry.runs === 1 && entry.passed === 1));
+const coverage = {};
+for (const file of ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js']) {
+  const capture = get(`cov-${file.replace('.', '-')}-3`);
+  const row = capture.summary.coverageRows.find((entry) => entry.file === file);
+  assert.ok(row && row.lines >= 85 && row.branches >= 85 && row.functions >= 85, file);
+  coverage[file] = row;
+}
+const freeze = read('final/source-freeze.json');
+for (const [file, hashes] of Object.entries(freeze.files)) {
+  const bytes = fs.readFileSync(path.join(root, file));
+  assert.ok(sha(bytes) === hashes.raw || sha(lf(bytes)) === hashes.lf, `${file} changed after the final source freeze`);
+}
+write('final/figures.json', {
+  schema: 'C022-final-figures/1', green: green.summary, assertions: { files: census.files, executed: census.executed, zero: 0 },
+  red: get('red-4').summary, replay: get('replay-4').summary, coverage,
+  mutation: { total: 768, killed: 766, equivalent: 2, undecided: 0, finalPass: mutation.passes.at(-1), retainedAreHistorical: true },
+  hand: { total: 70, killed: 70, finalPass: hand.passes.at(-1), retainedAreHistorical: true },
+  equivalents: { total: 3, completeOutcomesCompared: true },
+  loop: { runs: loop.runs.length, passed: Object.values(loop.perFile).reduce((sum, entry) => sum + entry.passed, 0),
+    overCapDiagnosticOnly: Object.values(loop.perFile).reduce((sum, entry) => sum + entry.overCap, 0), burners: loop.burners, burnerPids: loop.burnerPids },
+  timing: { files: Object.keys(timing.perFile).length, maxMsDiagnosticOnly: Math.max(...Object.values(timing.perFile).map((entry) => entry.maxMs)) },
+  fresh: Object.fromEntries(['lf', 'crlf'].map((mode) => { const result = read(`fresh/fresh-${mode}-3.json`); return [mode, { tests: result.tests, pass: result.pass, fail: result.fail }]; })),
+  noLiveApplication: true, noCreditAwarded: true, noPublicationAttempted: true
+});
+console.log('Final observations complete; source bytes unchanged; ready for append-only seal and evidence verification');

@@ -5,6 +5,53 @@ tenants (`tenant-alder`, `tenant-birch`, `tenant-cedar`) share ONE loopback HTTP
 with its own users, roles, sessions, projects, profiles and audit trail. No Entra, no cloud, no registration, no IaC, no spend
 (`liveAzureRuns` 0, `authorizedCloudSpend` 0). Tested runtime: Node v22.23.4. Specification: `C022.feature`.
 
+## Final private correction (same original C022, no new credit)
+
+Production, the original seven import pins, old manifests, seals and raw streams stay byte-exact. This correction changes tests,
+verification tools and documentation only. `C022-final.feature` specifies the correction before implementation.
+<!-- current-suite -->The current non-evidence suite has 662 tests; no executed test may have zero assertions.<!-- /current-suite -->
+`tests/assertion-count.cjs` instruments callable `node:assert`, `node:assert/strict` and `t.assert`; its fixtures check all three and
+distinguish an explicit named skip. The immutable pre-correction negative control fails with `ERR_ASSERTION` naming exactly the generated CONNECT row
+(`evidence/final/red-before` and `assertion-red-counts.json`). The unchanged audit is then run over the corrected complete suite.
+
+The generated CONNECT row now asserts the real statuses, typed outcome, close header and server-side close. Three additional real-socket
+tests send `[GET /v1/session][CONNECT 127.0.0.1:port HTTP/1.1]` in one write, in two writes 150 ms apart, and `[GET][GET][CONNECT]`.
+They require every 200 before the 405, `Connection: close`, and no tenant-state effect. The 150 ms delay defines a protocol fixture;
+it is not a global scheduling or latency guarantee. The stalled first-request test requires exactly one typed 408; silence cannot pass.
+
+Current captures use new serials: RED/replay 5, GREEN/coverage/browser/anchor 4, loop 4, timing 3, fresh 4, mutation 5 and hand list 3.
+`evidence/final/retained.json` preserves preceding captures and exact changed source witnesses without changing an old pin.
+`tests/equivalence-demo.cjs` is runnable: it builds published-byte real/mutant trees and compares complete deterministic outcomes for
+1,078 request pairs over 12 principals plus world/audits, five socket-close shapes, and 12 ticket variants plus 240 suffix cases.
+`evidence/final/equivalence-2.json` stores both outcomes for all three equivalents; no reviewer-only demonstration is claimed as a new run.
+The current assertion census is `evidence/final/assertion-counts-2.json`; the append-only final seal is `evidence/final/seal.json`.
+The original `evidence/seal.json` and `verify-2.json` remain historical; current `verify-4.json` is produced after the new seal and is
+outside it by construction. The parent alone reviews, applies, publishes and awards the original D credit.
+
+Run the assertion census with:
+
+    node capability\C022\tests\assertion-audit.cjs --all 1 --report <new-owned-report-directory>
+    node capability\C022\tests\equivalence-demo.cjs --scratch <new-owned-tree> --out <new-outcome-json>
+
+The latter and `anchor.cjs`/`fresh.cjs` accept `C022_GIT_REPO` for read-only access to the actual Git object database when the private
+candidate has no `.git`; there is no index/HEAD write. `imports.final.json` is an additive binding to the actually published U007 opt-in
+scratch/session API, verified against its exact producer commit. It never replaces a sealed helper or an original import pin.
+The owning `qualifyEdge()` resolves legitimate policy additions; no consumer reads or rewrites the sealed qualified-major list.
+The browser records its own CDP root PID/creation identity and positively created opaque profiles, confirms only its own cleanup and
+does not adopt unknown neighbours or claim that a shared runtime is globally clean.
+
+All numerical observations in the historical section below describe the retained `d7ebef55c2b3` phase, not this correction.
+Current count, coverage, load, fresh-tree and mutation records are checked directly by `evidence.test.cjs`. Historical README figure
+checks still search for a figure's text rather than validating an arbitrary surrounding sentence; that limited tripwire is not a prose proof.
+The final full LF and CRLF checks additionally start from an actual Git archive of the retained publication, overlay this exact private
+candidate and include the evidence suite. They are private after-seal verification, not a claim that the unpublished candidate has a Git commit.
+The first post-fix capture phase is retained but did not qualify: `browser-3.json` still records exit 1 versus expected 0. The installed
+signed major qualified, but a substituted-drive path did not resolve to the helper's approved native root, so no UI success was observed.
+`fs.realpathSync.native` corrects only the private launcher. An actual-path diagnostic passed the unchanged 19 checks and own cleanup;
+the later complete frozen phase repeats the gates. `nonqualifying-attempts.json` names that failure and requires its successful current
+browser successor; it never rewrites the failed manifest or counts a qualifier-only observation as a UI pass. First-phase source bytes
+are retained under `evidence/final/epoch-1-source`, with a new final `source-freeze-2.json` and `retained-phase-1.json`.
+
 ## The world and the rules
 
 - Users: `ada` (admin), `alf` (member), `ana` (viewer) in alder; `bea`, `ben`, `bo` in birch; `cai`, `cy` in cedar; `dana` belongs to alder (member)
@@ -19,7 +66,7 @@ with its own users, roles, sessions, projects, profiles and audit trail. No Entr
   answer to an id that exists nowhere (status line, every header but `Date`, body; the id is never echoed). Cursors and ETags are keyed MACs over
   the tenant (and the query): a value of one tenant verifies in no other. `If-None-Match` of another tenant gives 200, never 304; there is no
   `Last-Modified` (and `If-Modified-Since` is ignored), so there is nothing else to validate with.
-- The audit trail is a ring of 200 per USER of a tenant plus a separate ring of 50 for anonymous refusals; a probe or denial is recorded in the
+- The audit trail is a ring of 200 per USER of a tenant plus a separate ring of 50 for anonymous refusals AND anonymous session starts; a probe or denial is recorded in the
   caller's own tenant only; one user's flood cannot evict another user's records or another tenant's. `GET /v1/admin/audit` is admin only.
 - Quotas are per tenant (12 projects, 8 active sessions, 32 session records); one tenant at its bound refuses with 409 and starves nobody.
 
@@ -76,14 +123,14 @@ cut a stalled request at about 5.1 s with no bytes and the typed 408 never arriv
 
 ## Commands (repository root, PowerShell 7; take a heavy slot with `RUN\scripts\heavy-slot.ps1` for coverage, loops and the browser)
 
-GREEN, every non-browser test (657 tests in 42 files, the evidence test excluded: it verifies the whole archive and runs alone, 20 seconds to 2 minutes depending on the load; the whole GREEN takes 1 to 7 minutes depending on the load; every
+GREEN, every non-browser test (662 tests in 43 files, the evidence test excluded: it verifies the whole archive and runs alone; timings are diagnostics, not acceptance assertions; every
 process-spawning or raw-socket file is cheap on purpose, see "Cost of the test files" below; no file is meant to run over the 60 s per-file cap, the archived run used a 600 s timeout so that a starved machine cannot cancel it):
 
     node --test --test-concurrency=1 --test-timeout=60000 (Get-ChildItem capability\C022\tests\*.test.cjs -Exclude evidence.test.cjs).FullName
     node --test --test-concurrency=1 --test-timeout=600000 capability\C022\tests\evidence.test.cjs
 
-RED replay against the retained naive stub (fourteen HTTP-level files, 382 of 400 tests fail, 381 of them with assertion errors about the specified
-behavior; the same files replayed on the final code pass, `evidence\red\replay-3`; the two earlier cycles are retained exactly as archived, see `evidence\red\superseded.json` and `evidence\superseded.json`; the archived cycle ran with `--test-timeout=150000`, see "Evidence and figures"):
+RED replay against the retained naive stub (fourteen HTTP-level files; the current failures, including the formerly vacuous row and all
+three CONNECT shapes, are in `evidence\red\run-5`; the unchanged replay is `evidence\red\replay-5`. Older failed captures stay failed history):
 
     $env:C022_SUBJECT_DIR = 'capability\C022\evidence\red\stub'
     node --test --test-concurrency=1 --test-timeout=150000 capability\C022\tests\server.test.cjs capability\C022\tests\isolation.test.cjs capability\C022\tests\isolation-more.test.cjs capability\C022\tests\lifecycle.test.cjs capability\C022\tests\races.test.cjs capability\C022\tests\refusal-close.test.cjs capability\C022\tests\pipeline-one-write.test.cjs capability\C022\tests\pipeline-earlier.test.cjs capability\C022\tests\pipeline-two-writes.test.cjs capability\C022\tests\pipeline-http10.test.cjs capability\C022\tests\pipeline-third-hole.test.cjs capability\C022\tests\pipeline-process-rows.test.cjs capability\C022\tests\pipeline-process-third-hole.test.cjs capability\C022\tests\pending-flood.test.cjs
@@ -93,13 +140,13 @@ Per-file coverage (85 lines, 85 branches, 85 functions for each of the 6 product
 
     node capability\C022\tests\coverage.cjs
 
-    node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=**/C022/server.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 capability/C022/tests/*.test.cjs
+    node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=**/C022/server.cjs --test-coverage-lines=85 --test-coverage-branches=85 --test-coverage-functions=85 (Get-ChildItem capability\C022\tests\*.test.cjs -Exclude evidence.test.cjs).FullName
 
-A test child never inherits `NODE_V8_COVERAGE`: the review of the first publication got `Could not report code coverage. SyntaxError: Unexpected end of JSON input` and no rows once, because a spawned test child (killed by its own test) left a truncated V8 file in the directory of the coverage run. Deleting the variable from the child's environment does NOT help (Node's `child_process` puts the parent's value back unless `options.env` has its own property of that name), so every spawner (`proc.cjs` `childEnv`, `pending-flood`, `refusal-flood`, `imports`, `loop.cjs`, `fresh.cjs`, `mutate-run.cjs`) sets it to an EMPTY string, which V8 ignores; `child-env.test.cjs` pins this on the real `child_process` and structurally over every file that spawns a process. `coverage.cjs` additionally retries once when the report could not be written.
+A test child never inherits the parent's V8 coverage directory: the review of the first publication got `Could not report code coverage. SyntaxError: Unexpected end of JSON input` and no rows once, because a spawned test child left a truncated V8 file there. Deleting the variable from a child-env copy does NOT help (Node re-injects it), so the test spawners set an own EMPTY value. The loop's deliberately terminated CPU burner is the exception: it emits no report. A top-level capture omits `NODE_V8_COVERAGE` entirely, rather than starting Node with an empty directory value. `child-env.test.cjs` proves the child behavior with a real control. It removes its unique scratch SUBDIRECTORY in `finally`; an empty gitignored `tests/scratch` parent may remain. `coverage.cjs` additionally retries once only when a report could not be written.
 
 Real isolated headless Edge (heavy slot, quiet machine: `qualifyEdge()` asks PowerShell for the signature and the version; a typed timeout is
 retried once). It requires a Microsoft-signed Edge of a qualified major (no equality pin), opens the page through `openIsolatedLoopback`, pastes
-two sessions of two tenants, compares every row, drives the page by keyboard (Tab to the button, a visible focus ring, Enter), and prints
+two sessions of two tenants through the owning U007 opt-in wrapper over the unchanged sealed loopback helper, compares every row, drives the page by keyboard (Tab to the button, a visible focus ring, Enter), and prints
 `C022 BROWSER OK`. The helper permits only GET and HEAD: every POST, PUT and DELETE is proven with `node:test` sockets, not in the browser.
 
     node capability\C022\tests\browser.cjs
@@ -108,15 +155,15 @@ Other commands: `node capability\C022\tests\anchor.cjs` (import pins against git
 (the systematic mutant campaign, run under a mutation slot of the machine: a baseline of every file on the unmutated tree first, a timeout is UNDECIDED and never a kill; `--base` keeps the kills of an earlier pass whose killing test file and production file are byte-identical and re-runs the rest; `--hand capability\C022\tests\hand-mutants.cjs` runs the hand list instead of the generated mutants, each entry alone, and counts a kill only when a NAMED test fails), `node capability\C022\tests\loop.cjs --out <json> --files ... --rounds 20 --parallel 4 --burners 4 --low 0`
 (flake loop under four CPU burners the loop starts, PIDs recorded, stopped by PID, normal priority; with `--rounds 1 --parallel 1 --burners 0` over every test file it is the per-file timing), `node capability\C022\tests\fresh.cjs --mode lf|crlf --tree <dir> --out <json>`
 (every test file but the evidence test in a scratch tree of this namespace's working bytes converted to LF or to CRLF, the pinned imports taken from git blobs; both tools record the hashes of the files they run and `evidence.test.cjs` compares them with the bytes that ship), `node capability\C022\tests\seal.cjs` (writes `evidence\seal.json` last),
-`node --test capability\C022\tests\evidence.test.cjs` (recomputes every manifest, the seal and these figures).
+`node --test capability\C022\tests\evidence.test.cjs` (recomputes every manifest, the append-only final seal and the current records).
 
-## Evidence and figures (every number here is recomputed from `evidence\` by `evidence.test.cjs`)
+## Historical evidence and figures (retained d7ebef55 phase, not new observations)
 
 - RED: 382 of 400 tests fail on the naive stub (classic mistakes: tenant from a header, one global table, shared ETags, fixation, no logout, stale roles,
   replayable tickets, ids echoed, mass assignment, no close after a refusal, a plain server that never cuts a connection under a pending first request); replay on the
   final code (`evidence\red\replay-3`): all 400 pass. 381 of the 382 failures are assertion errors about the specified behavior; the last is the harness reading the typed body of the stub's plain 400, which has none. The per-test timeout of this cycle is 150 s: the 20 table tests at the end of `refusal-close` each wait for a close that the stub never does, and a first attempt with the 60 s of the earlier cycles was cut by the runner after 380 tests on a busy machine (it is not kept).
   Two earlier cycles stay in the tree exactly as archived and are listed as retained: `evidence\red\run-1` (303 tests, 292 fail) and `replay-1` (396 pass), made before the cost split of the pipelining files, and `run-2` (400 tests, 381 fail) and `replay-2` (400 pass) of the first publication;
-  the bytes of every input that changed since are retained in `evidence\red\snapshot-1\*.snap` and `evidence\superseded\snapshot-2\*.snap` (taken from the first publication), and `evidence.test.cjs` checks all of it. The captures of the first publication (GREEN, coverage, browser, its own `verify-1`) are retained the same way (`evidence\superseded.json`); the captures of this fix carry the next serial.
+  the bytes of every input that changed since are retained in `evidence\red\snapshot-1\*.snap` and `evidence\superseded\snapshot-2\*.snap` (taken from the first publication). The old RED supersession description names the split pipeline files and feature but omits `contract.js` and `proc.cjs`; those two also differ from `red-1` and are resolved by snapshot-2. The old description is preserved, not silently rewritten. The append-only final retention list adds changed-source witnesses of this correction.
 - GREEN: 657 tests in 42 files, nothing skipped, cancelled or todo (`evidence\green\green-2`, one runner, a 600 s per-test timeout so that a starved machine cannot cancel it); every file also ran alone, one after the other, and none took 60 s (`evidence\loops\files-1`, the per-file timing on a quiet machine: slowest `default-timeouts.test.cjs` 5834 ms, the one file that waits for the shipped 5 s limits to fire; the loaded figures are the loop's below).
 - Coverage per file (lines/branches/functions): contract.js 98.84/98.55/100, identity.cjs 100/100/100, store.cjs 100/100/100, service.cjs 100/100/100, server.cjs 100/100/100, page.js 100/100/100.
 - Mutation (systematic generator, every condition, comparison, logical operator, negation, simple statement and `return value;` of a production file, numbers in contract.js only; strings, comments and regexes masked): 766 of 768 mutants are killed by a named test in the final one of 3 mutation passes that are archived (`evidence\mutants\mutation-1.json`, `mutation-2.json`, `mutation-3.json`: server.cjs 176 mutants, service.cjs 92, identity.cjs 155, store.cjs 38, contract.js 131, page.js 176; 2 workers at normal priority under a mutation slot of the machine; every test file passed on the unmutated tree first; every mutant ran; the 2 that survive are proven equivalent).
@@ -200,9 +247,9 @@ burners that the loop started; a run over the 60 s cap under that load would be 
   request is still pending costs about 6 MB of request and response objects until that request ends (the test prints what it measured: 18 MB for 3 HTTP/1.1 sockets and 7 MB for 3 HTTP/1.0 sockets in a
   child with a 48 MB heap). Memory is bounded PER SOCKET and by the 256-connection cap, not by the heap and not by the number of requests after the first read (50,000 are offered per socket, at most two reads
   are parsed). By extrapolation, not measurement, 256 sockets that each hold a pending first request would cost on the order of 1.5 GB; nothing above 3 pending sockets was probed (a 48 MB child is known to
-  die at about 8, L-0213) and only a held `project.create` was tried as the pending request.
+  die at about 8, L-0213) and only a held `project.create` was tried as the pending request. The actual lowest cap that preserves the card's 128-socket burst is 128 (127 fails that test), not a newly changed production default. At about 6 MB per pending socket, that lower cap extrapolates to about 0.8 GB, not 1.5 GB; production remains frozen at 256 and the larger extrapolation belongs to that shipped cap.
 - The transcripts of the two earlier RED cycles (`red-1`, `red-2`) contain absolute paths of the machine that produced them (the recorder keeps the stack traces of failing tests, including the local Windows user
   name); they were not scrubbed because the manifests pin them by hash. Every recorder capture of the fix round except the browser run was made with the code of the shared recorder from a substituted drive letter that maps to the same working tree (only the root constant of the recorder was changed), so that the stack traces of the new RED cycle and of the fix RED carry no local identifier; a scan of every added or modified file and of every decompressed transcript found none. The browser run needs the real path: `testing\browser\isolated.cjs` refuses a page outside its approved roots when the repository is reached through the substituted drive.
-- The generator mutates conditions, comparisons, logical operators, negations, simple statements and `return value;` (numbers in contract.js only); it does not mutate method calls, property names, the content of strings, templates and regular expressions, object-literal values, call arguments, iteration sources or the order of statements. The HAND list (70 mutants of `tests\hand-mutants.cjs`) covers argument, iteration, scope and anchor mutants of the isolation guards, but it is a list chosen by a person: a mutant of those classes that is not on it was not tried. page.js mutants run against `page` and `page-gaps` only (no other file loads it). The 2 surviving mutants of the generated pass are equivalent by a data-flow argument (a one-line proof each), not by a test.
+- The generator mutates conditions, comparisons, logical operators, negations, simple statements and `return value;` (numbers in contract.js only); it does not mutate method calls, property names, the content of strings, templates and regular expressions, object-literal values, call arguments, iteration sources or the order of statements. The HAND list (70 mutants of `tests\hand-mutants.cjs`) covers argument, iteration, scope and anchor mutants of the isolation guards, but it is a list chosen by a person: a mutant of those classes that is not on it was not tried. page.js mutants run against `page` and `page-gaps` only (no other file loads it). The two generated equivalents and E01 now have the runnable complete-outcome differential named above, not reasoning alone.
 - Stalled requests: the typed `408` arrives after about 5 to 6 seconds for a stalled body and for headers that stop in the first request of a connection; half-sent headers behind a complete request are cut by Node's keep-alive timeout without an answer (see "What is imported"). `default-timeouts.test.cjs` waits for the real timers and asserts what arrives, never how long it took.
 - Machine facts: a CPU burner at BelowNormal got 0.05 s of CPU in 6 minutes on this machine (88 node processes), so the campaign and the loops run at normal priority with 2 workers at most per campaign, and the campaign waits for a mutation slot of the machine.

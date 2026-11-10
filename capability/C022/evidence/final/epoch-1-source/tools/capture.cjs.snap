@@ -1,0 +1,69 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const spec = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+const output = path.join(root, spec.outDir);
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('latin1').replaceAll('\r\n', '\n'), 'latin1');
+fs.mkdirSync(path.join(output, 'raw'), { recursive: true });
+assertAbsent(path.join(output, `${spec.name}.json`));
+const env = { ...process.env };
+delete process.env.NODE_V8_COVERAGE;
+delete env.NODE_TEST_CONTEXT;
+delete env.NODE_V8_COVERAGE;
+if (spec.env) Object.assign(env, spec.env);
+const inputs = (spec.inputs || []).map((name) => {
+  const bytes = fs.readFileSync(path.join(root, name));
+  return { path: name, bytes: bytes.length, rawSha256: sha(bytes), crlfToLfSha256: sha(lf(bytes)) };
+});
+const started = new Date();
+const timeoutMs = spec.timeoutMs || 1800000;
+const run = spawnSync(process.execPath, spec.args, {
+  cwd: root, env, windowsHide: true, timeout: timeoutMs, maxBuffer: 1 << 28, killSignal: 'SIGKILL'
+});
+const finished = new Date();
+const stdout = run.stdout || Buffer.alloc(0);
+const stderr = run.stderr || Buffer.alloc(0);
+const transcript = (stream, bytes) => {
+  const compressed = zlib.gzipSync(bytes, { level: 9 });
+  const relative = `raw\\${spec.name}.${stream}.raw.gz`;
+  fs.writeFileSync(path.join(output, relative), compressed, { flag: 'wx' });
+  return { path: relative, bytes: bytes.length, sha256: sha(bytes), gzipBytes: compressed.length,
+    gzipSha256: sha(compressed), rawCRLFPairs: (bytes.toString('latin1').match(/\r\n/g) || []).length };
+};
+const text = stdout.toString('utf8').replaceAll('\r\n', '\n');
+const summary = {};
+for (const key of ['tests', 'suites', 'pass', 'fail', 'cancelled', 'skipped', 'todo']) {
+  const match = new RegExp(`^# ${key} (\\d+)$`, 'm').exec(text);
+  if (match) summary[key] = Number(match[1]);
+}
+summary.thresholdErrors = [...text.matchAll(/^# Error: (.+)$/gm)].map((match) => match[1].trim());
+summary.coverageRows = [...text.matchAll(/^# +(\S+\.(?:js|cjs|mjs)) +\| +([\d.]+) +\| +([\d.]+) +\| +([\d.]+) +\|(.*)$/gm)]
+  .map((match) => ({ file: match[1], lines: +match[2], branches: +match[3], functions: +match[4], uncoveredLines: match[5].trim() }));
+const failed = [...text.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
+if (failed.length) summary.notOk = failed;
+const manifest = {
+  schemaVersion: 1, name: spec.name, purpose: spec.purpose,
+  command: ['node.exe', ...spec.args], commandResolvedExecutable: path.basename(process.execPath),
+  nodeRuntime: process.version, cwd: 'private candidate root',
+  environmentRemoved: ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE'],
+  ...(spec.env ? { environmentAdded: Object.keys(spec.env) } : {}),
+  startedAtUtc: started.toISOString(), completedAtUtc: finished.toISOString(), elapsedMs: finished - started,
+  timeoutMs, timedOut: run.error?.code === 'ETIMEDOUT', expectedExitCode: spec.expectedExitCode,
+  exitCode: run.status, signal: run.signal, spawnError: run.error ? run.error.code : null,
+  inputs, summary, transcripts: { stdout: transcript('stdout', stdout), stderr: transcript('stderr', stderr) }
+};
+fs.writeFileSync(path.join(output, `${spec.name}.json`), `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ name: spec.name, exitCode: run.status, expected: spec.expectedExitCode,
+  timedOut: manifest.timedOut, summary }));
+if (manifest.timedOut || run.status !== spec.expectedExitCode) process.exitCode = 3;
+
+function assertAbsent(file) {
+  if (fs.existsSync(file)) throw new Error('capture name already exists; old evidence is immutable');
+}

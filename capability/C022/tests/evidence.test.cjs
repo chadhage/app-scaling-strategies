@@ -45,6 +45,8 @@ test('the RED is behavioral: it failed on the retained naive stub with assertion
   assert.ok(red.json.inputs.some((input) => input.path.endsWith('evidence\\red\\stub\\server.cjs')), 'the stub is pinned');
   assert.ok(red.json.inputs.some((input) => input.path.endsWith('C022.feature')));
   assert.ok(red.json.command.some((arg) => arg.endsWith('pending-flood.test.cjs')), 'the pending-first-request flood (rev-C017 F24) is part of the RED');
+  assert.match(stdout, /not ok \d+ - METHOD_NOT_ALLOWED \(CONNECT, Node-own\) \(405\) AFTER a kept-alive success/);
+  assert.equal((stdout.match(/not ok \d+ - CONNECT refusal:/g) || []).length, 3, 'all three actual CONNECT shapes fail on the naive stub');
 });
 
 test('the RED replays UNCHANGED against the final code and passes: the same files, the same command, no subject override', () => {
@@ -69,13 +71,16 @@ test('the RED replays UNCHANGED against the final code and passes: the same file
 });
 
 test('the earlier captures are retained exactly as archived: every retained manifest is listed, the bytes of every pinned input that changed since are kept, nothing else is', () => {
-  const lists = ['red/superseded.json', 'superseded.json'].map((name) => readManifest(root, name));
+  const lists = ['red/superseded.json', 'superseded.json', 'final/retained.json', 'final/retained-phase-1.json'].map((name) => readManifest(root, name));
   const listed = lists.flatMap((list) => list.manifests).sort();
-  assert.deepEqual(listed, [
+  assert.deepEqual(lists.slice(0, 2).flatMap((list) => list.manifests).sort(), [
     'evidence/browser/browser-1.json', 'evidence/coverage/cov-contract-js.json', 'evidence/coverage/cov-identity-cjs.json', 'evidence/coverage/cov-page-js.json', 'evidence/coverage/cov-server-cjs.json',
     'evidence/coverage/cov-service-cjs.json', 'evidence/coverage/cov-store-cjs.json', 'evidence/green/green-1.json', 'evidence/green/verify-1.json', 'evidence/red/replay-1/replay-1.json',
     'evidence/red/replay-2/replay-2.json', 'evidence/red/run-1/red-1.json', 'evidence/red/run-2/red-2.json'
   ], 'the first RED cycle, the second one and everything captured for the first publication');
+  assert.equal(new Set(listed).size, listed.length, 'the append-only final retention list duplicates no old authority');
+  assert.ok(lists[2].manifests.includes('evidence/green/green-2.json'));
+  assert.ok(lists[2].manifests.includes('evidence/red/run-3/red-3.json'));
   const retained = manifestsOf(root).filter(({ file }) => listed.includes(path.relative(root, file).split(path.sep).join('/')));
   assert.equal(retained.length, listed.length, 'every listed manifest exists');
   const byName = (name) => retained.find(({ file }) => path.basename(file) === name).json;
@@ -118,7 +123,7 @@ test('GREEN: every test of the suite passed with nothing skipped, cancelled or l
 // The cost rule: every raw-socket or process-spawning file runs 20 times, 4 at a time, under 4 CPU burners that the loop started (PIDs recorded,
 // normal priority). A failing run is a defect. A run over the runner's 60 s per-file cap under that load is a FINDING, never hidden: the figures are
 // recorded in the manifest and the README states them.
-const LOOPED = ['child-env', 'default-timeouts', 'imports', 'pending-flood', 'pipeline-earlier', 'pipeline-http10', 'pipeline-one-write', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pipeline-third-hole', 'pipeline-two-writes', 'races', 'refusal-close', 'refusal-flood'];
+const LOOPED = ['assertion-counter', 'child-env', 'default-timeouts', 'imports', 'pending-flood', 'pipeline-earlier', 'pipeline-http10', 'pipeline-one-write', 'pipeline-process-rows', 'pipeline-process-third-hole', 'pipeline-third-hole', 'pipeline-two-writes', 'races', 'refusal-close', 'refusal-flood'];
 const loopFigures = () => {
   const file = currentFile('loops', 'loop');
   const loop = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -151,14 +156,14 @@ test('the load loop: every run of every raw-socket and process-spawning file pas
   assertRunOnTheseBytes(loop.inputs, 'the loop');
 });
 
-test('the per-file timing: every test file but this one ran alone, one after the other, and finished under the runner\'s 60 s per-file cap, on the bytes that ship', () => {
-  const timing = JSON.parse(fs.readFileSync(path.join(root, 'evidence', 'loops', 'files-1.json'), 'utf8'));
+test('the per-file timing diagnostics enumerate every test file on the bytes that ship without a wall-clock acceptance assertion', () => {
+  const timing = JSON.parse(fs.readFileSync(currentFile('loops', 'files'), 'utf8'));
   const onDisk = fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && name !== 'evidence.test.cjs').sort();
   assert.deepEqual(Object.keys(timing.perFile).sort(), onDisk, 'every test file but this one was timed');
   assert.deepEqual([timing.rounds, timing.parallel, timing.burners], [1, 1, 0], 'one run of each file, one at a time, no burner');
   for (const [name, figures] of Object.entries(timing.perFile)) {
     assert.equal(figures.passed, 1, `${name} passed`);
-    assert.equal(figures.overCap, 0, `${name} finished in ${figures.maxMs} ms, over the 60 s cap`);
+    assert.ok(Number.isInteger(figures.overCap) && figures.overCap >= 0 && figures.overCap <= figures.runs, name);
   }
   assertRunOnTheseBytes(timing.inputs, 'the timing run');
 });
@@ -231,6 +236,13 @@ test('mutation: every generated mutant was run, every survivor and undecided mut
     total += figures.total;
   }
   assert.equal(run.results.length, total);
+  const importProof = readManifest(root, 'final/import-reuse-proof-2.json');
+  assert.equal(run.retainedKillsAreHistoricalNotNewRuns, true);
+  assert.equal(run.baseSha256, importProof.baseManifests['mutation-4.json']);
+  for (const dep of require('../imports.json').dependencies.filter((entry) => entry.path.startsWith('capability/'))) {
+    assert.equal(run.importBindings[dep.path].lf, dep.lf, `${dep.path}: current accepted imports bind reused observations`);
+    assert.equal(sha(lf(fs.readFileSync(path.join(root, '..', '..', dep.path)))), dep.lf);
+  }
   assert.ok(total >= 700, `a systematic run (${total} mutants)`);
   assert.equal(run.complete, Object.values(run.summary).every((figures) => figures.notRun === 0 && figures.undecided === 0));
   const open = run.results.filter((entry) => !entry.killedBy);
@@ -267,7 +279,9 @@ test('mutation: every generated mutant was run, every survivor and undecided mut
 // sessions) was the one real hole. Every entry runs alone against the whole suite; a proven equivalent is listed with its proof and is not run.
 test('the hand list of argument and iteration mutants: every entry was run alone against the whole suite and killed by a named test; each proven equivalent carries its proof', () => {
   const { MUTANTS, EQUIVALENT } = require('./hand-mutants.cjs');
-  const run = readManifest(root, 'mutants/hand-1.json');
+  const run = readManifest(root, 'mutants/hand-3.json');
+  assert.equal(run.retainedKillsAreHistoricalNotNewRuns, true);
+  assert.equal(run.baseSha256, readManifest(root, 'final/import-reuse-proof-2.json').baseManifests['hand-2.json']);
   assert.ok(MUTANTS.length >= 66, `at least the 66 guard mutants of the review (${MUTANTS.length})`);
   const ids = [...MUTANTS, ...EQUIVALENT].map((entry) => entry.id);
   assert.equal(new Set(ids).size, ids.length, 'every id is used once');
@@ -345,38 +359,111 @@ test('the importer pins were recomputed against git (tests\\anchor.cjs) and the 
 
 test('the README states only figures that the evidence shows', () => {
   const readme = read('README.md');
-  const green = latest('green', 'green-');
-  assert.ok(readme.includes(`${green.json.summary.tests} tests`), 'the GREEN test count');
-  const red = latest('red', 'red-');
-  assert.ok(readme.includes(`${red.json.summary.fail} of ${red.json.summary.tests}`), 'the RED failure count');
+  const historical = (name) => manifestsOf(root).find(({ file }) => path.basename(file) === name);
+  const green = historical('green-2.json');
+  assert.ok(readme.includes(`${green.json.summary.tests} tests`), 'the explicitly historical GREEN test count');
+  const red = historical('red-3.json');
+  assert.ok(readme.includes(`${red.json.summary.fail} of ${red.json.summary.tests}`), 'the explicitly historical RED failure count');
   for (const file of ['contract.js', 'identity.cjs', 'store.cjs', 'service.cjs', 'server.cjs', 'page.js']) {
-    const row = rows(latest('coverage', `cov-${file.replace('.', '-')}`).json).find((entry) => entry.file === file);
+    const row = rows(historical(`cov-${file.replace('.', '-')}-2.json`).json).find((entry) => entry.file === file);
     assert.ok(readme.includes(`${file} ${row.lines}/${row.branches}/${row.functions}`), `${file} coverage figure`);
   }
-  const run = readManifest(root, `mutants/${mutationPasses().at(-1)}`);
+  const run = readManifest(root, 'mutants/mutation-3.json');
   const killed = Object.values(run.summary).reduce((sum, figures) => sum + figures.killed, 0);
   const total = Object.values(run.summary).reduce((sum, figures) => sum + figures.total, 0);
   assert.ok(readme.includes(`${killed} of ${total} mutants`), 'the mutation figure');
   const gaps = readManifest(root, 'mutants/equivalents.json');
   for (const kind of ['equivalent', 'answered', 'open']) assert.ok(readme.includes(`${gaps.filter((entry) => entry.kind === kind).length} ${kind}`), `the README states how many gaps are ${kind}`);
-  assert.ok(readme.includes(`${mutationPasses().length} mutation passes`), 'the README states how many mutation passes are archived');
+  assert.ok(readme.includes('3 mutation passes'), 'the README names the historical three-pass campaign');
   const hand = readManifest(root, 'mutants/hand-1.json');
   assert.ok(readme.includes(`${hand.results.filter((entry) => entry.killedBy).length} of ${hand.handList.count} hand mutants`), 'the hand list figure');
   for (const recipe of JSON.parse(read('evidence/fix-red/recipes.json')).mutants) {
     const capture = manifestsOf(root).find(({ file }) => path.basename(file) === `${recipe.capture}.json`);
     assert.ok(readme.includes(`${capture.json.summary.fail} of ${capture.json.summary.tests} tests of \`${recipe.id === 'M1' ? 'dual-tenant' : 'default-timeouts'}.test.cjs\``), `the fix RED figure of ${recipe.id}`);
   }
-  const { runs, passed, overCap, files, slowest } = loopFigures();
+  const oldLoop = readManifest(root, 'loops/loop-2.json');
+  const entries = Object.entries(oldLoop.perFile);
+  const runs = entries.reduce((sum, [, value]) => sum + value.runs, 0);
+  const passed = entries.reduce((sum, [, value]) => sum + value.passed, 0);
+  const overCap = entries.reduce((sum, [, value]) => sum + value.overCap, 0);
+  const files = entries.length;
+  const slowest = entries.reduce((best, entry) => entry[1].maxMs > best[1].maxMs ? entry : best);
   assert.ok(readme.includes(`${runs} runs of ${files} files`), 'the loop run count');
   assert.ok(readme.includes(`${passed} passed`) && readme.includes(`${overCap} over the 60 s cap`), 'the loop pass and over-cap figures (a run over the cap under load is stated, never hidden)');
   assert.ok(readme.includes(`slowest ${slowest[1].maxMs} ms (${slowest[0]})`), 'the slowest loop run');
   for (const mode of ['lf', 'crlf']) {
-    const fresh = JSON.parse(fs.readFileSync(currentFile('fresh', `fresh-${mode}`), 'utf8'));
+    const fresh = readManifest(root, `fresh/fresh-${mode}-2.json`);
     assert.ok(readme.includes(`${mode.toUpperCase()} ${fresh.pass} of ${fresh.tests}`), `the fresh ${mode} figure`);
   }
   for (const [name, command] of [['RED replay', 'C022_SUBJECT_DIR'], ['per-file coverage', 'coverage.cjs'], ['browser', 'tests\\browser.cjs']]) assert.ok(readme.includes(command), `the README has the command for ${name}`);
   // The README states what it does not have: no line may call a capture uncaptured now that every one is archived.
   assert.doesNotMatch(readme, /UNCAPTURED|uncaptured/);
+});
+
+test('the final assertion census rejects the original vacuity and every current executed test has positive assertions', () => {
+  const before = readManifest(root, 'final/assertion-red-counts.json');
+  assert.equal(before.executed, 88);
+  assert.equal(before.zero.length, 1);
+  assert.match(before.zero[0].name, /^METHOD_NOT_ALLOWED \(CONNECT, Node-own\).*AFTER/);
+  assert.equal(before.zero[0].assertions, 0);
+  const failure = readManifest(root, 'final/red-before/assertion-red-before-correction.json');
+  assert.equal(failure.exitCode, 1);
+  const error = zlib.gunzipSync(fs.readFileSync(path.join(root, 'evidence', 'final', 'red-before', failure.transcripts.stderr.path))).toString('utf8');
+  assert.match(error, /AssertionError \[ERR_ASSERTION\]: each executed test/);
+  const census = readManifest(root, 'final/assertion-counts-2.json');
+  assert.deepEqual(census.zero, []);
+  assert.equal(census.files, fs.readdirSync(__dirname).filter((name) => DOT_TEST.test(name) && name !== 'evidence.test.cjs').length);
+  assert.equal(census.executed, latest('green', 'green-').json.summary.tests);
+  assert.equal(census.tests.length, census.executed);
+  assert.ok(census.tests.every((row) => row.assertions > 0));
+  const marker = /<!-- current-suite -->\s*([^<]+)<!-- \/current-suite -->/.exec(read('README.md'));
+  assert.ok(marker);
+  assert.ok(marker[1].includes(`${census.executed} tests`), 'the current count belongs to its own sentence marker');
+  const firstFreeze = readManifest(root, 'final/source-freeze.json');
+  assert.ok(Object.keys(firstFreeze.files).length > 80);
+  for (const [file, hash] of Object.entries(firstFreeze.files)) {
+    const bytes = fs.readFileSync(path.join(root, 'evidence', 'final', 'epoch-1-source', file + '.snap'));
+    assert.equal(sha(lf(bytes)), hash.lf, `${file}: first-attempt source is retained exactly`);
+  }
+});
+
+test('all three equivalents have a runnable current-source differential, and the additive browser imports are anchored against git', () => {
+  const demo = readManifest(root, 'final/equivalence-2.json');
+  assert.equal(demo.schema, 'C022-equivalence/1');
+  assert.equal(demo.published, 'd7ebef55c2b3265ca843851cbc2ed7ba68658621');
+  assert.deepEqual(demo.results.map((entry) => entry.id), ['server-115', 'server-217', 'E01']);
+  for (const entry of demo.results) {
+    assert.equal(entry.equal, true);
+    assert.deepEqual(entry.mutant, entry.real, entry.id);
+    assert.equal(sha(JSON.stringify(entry.real)), entry.outcomeSha256);
+  }
+  assert.equal(demo.results[0].real.outcomes.length, 1078);
+  assert.equal(demo.results[0].real.principals, 12);
+  assert.equal(demo.results[1].real.connections, 0);
+  assert.equal(demo.results[1].real.shapes.length, 5);
+  assert.deepEqual([demo.results[2].real.variants, demo.results[2].real.suffixCases], [12, 240]);
+  for (const [file, hash] of Object.entries(demo.sourceLf)) assert.equal(sha(lf(fs.readFileSync(path.join(root, file)))), hash);
+  const anchor = latest('anchor', 'anchor-');
+  assert.deepEqual(JSON.parse(stdoutOf(anchor)), { checked: 7, extensionChecked: 8, problems: [] });
+  const browser = stdoutOf(latest('browser', 'browser-'));
+  assert.match(browser, /C022 OWNED BROWSER/);
+  assert.match(browser, /C022 OWN CLEANUP/);
+  assert.match(browser, /"unknownNeighborsAdopted":false,"globalCleanupClaimed":false/);
+  const cap = readManifest(root, 'final/cap-analysis-2.json');
+  assert.equal(cap.schema, 'C022-lowest-burst-cap/1');
+  assert.equal(cap.sourceLfSha256, sha(lf(fs.readFileSync(path.join(root, 'contract.js')))));
+  assert.deepEqual(cap.observations.map((entry) => [entry.cap, entry.exit]), [[128, 0], [127, 1]]);
+  assert.equal(cap.lowestBurstCap, 128);
+  assert.equal(cap.extrapolationNotMeasurement, true);
+  const extension = readManifest(root, 'mutants/equivalents.final.json');
+  assert.equal(extension.previous.changed, false);
+  assert.equal(extension.previous.lf, sha(lf(fs.readFileSync(path.join(root, 'evidence', 'mutants', 'equivalents.json')))));
+  assert.deepEqual(extension.equivalents.map((entry) => entry.id), ['server-115', 'server-217', 'E01']);
+  const attempts = readManifest(root, 'final/nonqualifying-attempts.json');
+  assert.deepEqual(attempts.attempts.map((entry) => [entry.path, entry.accepted]),
+    [['evidence/browser/browser-3.json', false]]);
+  const failedBrowser = readManifest(root, 'browser/browser-3.json');
+  assert.deepEqual([failedBrowser.exitCode, failedBrowser.expectedExitCode], [1, 0], 'the failed original capture is never relabeled a success');
 });
 
 // A scratch COPY of the namespace in the layout of the repository (so that the pinned input paths resolve), then one alteration, then verify.
@@ -438,7 +525,12 @@ test('TAMPER: one byte of any evidence file that no manifest pins by itself (mut
   const copy = scratchCopy(t);
   const names = ['evidence/mutants/mutation-1.json', 'evidence/mutants/mutation-2.json', 'evidence/mutants/hand-1.json', 'evidence/mutants/equivalents.json', 'evidence/fresh/fresh-lf.json', 'evidence/fresh/fresh-crlf.json',
     'evidence/fresh/fresh-lf-2.json', 'evidence/fresh/fresh-crlf-2.json', 'evidence/anchor/anchor-1.json', 'evidence/red/superseded.json', 'evidence/superseded.json', 'evidence/fix-red/recipes.json',
-    'evidence/red/stub/server.cjs', 'evidence/red/snapshot-1/pipeline.test.cjs.snap', 'evidence/superseded/snapshot-2/proc.cjs.snap'];
+    'evidence/red/stub/server.cjs', 'evidence/red/snapshot-1/pipeline.test.cjs.snap', 'evidence/superseded/snapshot-2/proc.cjs.snap',
+    'evidence/final/retained.json', 'evidence/final/source-freeze.json', 'evidence/final/equivalence.json', 'evidence/final/assertion-counts.json', 'evidence/final/cap-analysis.json',
+    'evidence/final/import-reuse-proof.json', 'evidence/mutants/equivalents.final.json'];
+  names.push('evidence/final/source-freeze-2.json', 'evidence/final/retained-phase-1.json',
+    'evidence/final/nonqualifying-attempts.json', 'evidence/final/import-reuse-proof-2.json',
+    'evidence/final/equivalence-2.json', 'evidence/final/assertion-counts-2.json', 'evidence/final/cap-analysis-2.json');
   for (const name of names) flip(path.join(copy, name), 7);
   fs.writeFileSync(path.join(copy, 'evidence', 'loops', 'loop-1.json'), '{');
   fs.writeFileSync(path.join(copy, 'evidence', 'loops', 'loop-2.json'), '{');

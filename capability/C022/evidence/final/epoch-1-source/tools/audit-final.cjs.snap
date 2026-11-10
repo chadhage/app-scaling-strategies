@@ -1,0 +1,96 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const { execFileSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const own = path.join(root, 'capability', 'C022');
+const gitRepo = process.env.C022_GIT_REPO;
+const { sha, lf, verify, manifestsOf, walk } = require(path.join(own, 'tests', 'evidence-verify.cjs'));
+const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
+
+async function main() {
+  const problems = verify(own);
+  assert.deepEqual(problems, []);
+  const freeze = read(path.join(own, 'evidence', 'final', 'source-freeze.json'));
+  for (const [file, hash] of Object.entries(freeze.files)) {
+    const bytes = fs.readFileSync(path.join(root, file));
+    assert.ok(sha(bytes) === hash.raw || sha(lf(bytes)) === hash.lf, `${file}: frozen source differs`);
+  }
+  const original = read(path.join(root, 'work', 'protected-live.json'));
+  const live = path.join(gitRepo, 'capability', 'C022');
+  const liveNow = Object.fromEntries(walk(live).map((file) => [path.relative(live, file), sha(fs.readFileSync(file))]));
+  assert.deepEqual(liveNow, original, 'every original live C022 byte and path is still read-only');
+  for (const [file, hash] of Object.entries(original)) {
+    if (file.startsWith('evidence' + path.sep)) {
+      assert.equal(sha(fs.readFileSync(path.join(own, file))), hash, `${file}: old evidence was changed`);
+    }
+  }
+  const changed = walk(own).filter((file) => {
+    const rel = path.relative(own, file);
+    return !rel.startsWith('tests' + path.sep + 'scratch' + path.sep)
+      && (!Object.hasOwn(original, rel) || sha(fs.readFileSync(file)) !== original[rel]);
+  });
+  const privateMarkers = [
+    /[A-Za-z]:[\\/]Users[\\/]/i, /\.copilot[\\/]session-state/i,
+    ...String(process.env.C022_PRIVACY_MARKERS || '').split(';').filter(Boolean)
+      .map((value) => new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'))
+  ];
+  const privacy = [];
+  let decodedStreams = 0;
+  for (const file of changed) {
+    let bytes = fs.readFileSync(file);
+    if (file.endsWith('.gz')) { bytes = zlib.gunzipSync(bytes); decodedStreams += 1; }
+    const text = bytes.toString('utf8');
+    let decoded = text;
+    try { decoded += '\n' + JSON.stringify(JSON.parse(text)); } catch {}
+    const folded = decoded.normalize('NFKC').replace(/\p{Cf}/gu, '');
+    if (privateMarkers.some((pattern) => pattern.test(folded))) privacy.push(path.relative(own, file));
+  }
+  assert.deepEqual(privacy, [], 'new source, metadata and decompressed raw streams carry no local identifier');
+  const browser = manifestsOf(own).find(({ json }) => json.name === 'browser-3');
+  const text = zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(browser.file), browser.json.transcripts.stdout.path))).toString('utf8');
+  const cleanup = JSON.parse(/^C022 OWN CLEANUP (.+)$/m.exec(text)[1]);
+  const nativeScratch = path.join(root, 'work', 'native-final-audit');
+  fs.mkdirSync(nativeScratch, { recursive: false });
+  for (const key of ['TEMP', 'TMP', 'TMPDIR']) process.env[key] = nativeScratch;
+  const actualRoot = fs.realpathSync(root);
+  const { createOwnedAdapters } = require(path.join(actualRoot, 'testing', 'browser', 'lifecycle', 'owned.cjs'));
+  const table = await createOwnedAdapters().list({ timeoutMs: 120000 });
+  fs.rmSync(nativeScratch, { recursive: true, force: true });
+  assert.ok(table.some((entry) => entry.pid === process.pid), 'a nonempty native table includes this caller');
+  const remaining = cleanup.endedRecordedIdentities.filter((owned) =>
+    table.some((entry) => entry.pid === owned.pid && entry.createdAt === owned.createdAt));
+  assert.deepEqual(remaining, [], 'fresh native identities confirm only this browser invocation ended');
+  assert.equal(cleanup.unknownNeighborsAdopted, false);
+  assert.equal(cleanup.globalCleanupClaimed, false);
+  const parent = path.join(own, 'tests', 'scratch');
+  assert.ok(!fs.existsSync(parent) || fs.readdirSync(parent).length === 0, 'owned test scratch has no remaining child');
+  if (fs.existsSync(parent)) fs.rmdirSync(parent);
+  const fresh = read(path.join(root, 'work', 'final-fresh.json'));
+  for (const value of Object.values(fresh.modes)) {
+    assert.equal(value.failed, 0);
+    assert.equal(value.zeroAssertions, 0);
+    assert.equal(value.includesEvidence, true);
+  }
+  const gitStatus = execFileSync('git', ['--no-pager', 'status', '--porcelain', '--', 'capability/C022'], { cwd: gitRepo, encoding: 'utf8' });
+  assert.equal(gitStatus, '', 'the live namespace remains untouched');
+  const result = {
+    schema: 'C022-private-final-audit/1', pass: true,
+    sourceFreezeSha256: sha(fs.readFileSync(path.join(own, 'evidence', 'final', 'source-freeze.json'))),
+    originalLiveFilesPreserved: Object.keys(original).length, oldEvidencePreserved: true,
+    changedOrAddedNamespaceFilesScanned: changed.length, decodedNewStreams: decodedStreams,
+    privacyHits: [], originalPrivacyBearingStreamsUnchanged: true, sourceAfterFreezeChanged: false,
+    integrityProblems: problems, fresh: fresh.modes,
+    cleanup: { nativeRecordedIdentitiesAbsent: cleanup.endedRecordedIdentities.length, ownProfilesAbsent: cleanup.profilesAbsent,
+      ownScratchAbsent: cleanup.scratchAbsent, unknownNeighborsPreserved: true, globalCleanupClaimed: false,
+      testScratchChildren: 0 },
+    originalCreditReservationPreserved: true, noPublication: true, noLedgerIndexOrHeadWrite: true,
+    sealSha256: sha(fs.readFileSync(path.join(own, 'evidence', 'final', 'seal.json')))
+  };
+  fs.writeFileSync(path.join(root, 'work', 'final-audit.json'), `${JSON.stringify(result, null, 2)}\n`, { flag: 'wx' });
+  console.log(JSON.stringify(result));
+}
+main().catch((error) => { console.error(error); process.exitCode = 1; });

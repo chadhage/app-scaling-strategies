@@ -1,0 +1,76 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync, spawnSync } = require('node:child_process');
+const root = path.resolve(__dirname, '..');
+const own = path.join(root, 'capability', 'C022');
+const { childEnv } = require(path.join(own, 'tests', 'proc.cjs'));
+const { verify, sha, lf } = require(path.join(own, 'tests', 'evidence-verify.cjs'));
+assert.deepEqual(verify(own), []);
+const gitRepo = process.env.C022_GIT_REPO;
+const published = 'd7ebef55c2b3265ca843851cbc2ed7ba68658621';
+const scratch = path.join(root, 'work', 'final-archive');
+fs.mkdirSync(scratch, { recursive: false });
+const archive = path.join(scratch, 'published.tar');
+fs.writeFileSync(archive, execFileSync('git', ['-c', 'core.autocrlf=false', 'archive', '--format=tar', published, 'capability/C022'], {
+  cwd: gitRepo, maxBuffer: 1 << 27
+}), { flag: 'wx' });
+const modes = {};
+const TEXT = /\.(c?js|json|jsonl|md|html|css|feature|gitattributes|gitignore)$/;
+function copy(from, to, mode) {
+  fs.mkdirSync(to, { recursive: true });
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    if (entry.name === 'scratch') continue;
+    const source = path.join(from, entry.name);
+    const target = path.join(to, entry.name);
+    if (entry.isDirectory()) copy(source, target, mode);
+    else {
+      const bytes = fs.readFileSync(source);
+      const canonical = lf(bytes);
+      fs.writeFileSync(target, TEXT.test(entry.name) || entry.name.startsWith('.git')
+        ? mode === 'crlf' ? Buffer.from(canonical.toString('latin1').replaceAll('\n', '\r\n'), 'latin1') : canonical : bytes);
+    }
+  }
+}
+try {
+  for (const mode of ['lf', 'crlf']) {
+    const tree = path.join(scratch, mode);
+    fs.mkdirSync(tree);
+    execFileSync('tar.exe', ['-xf', archive, '-C', tree]);
+    copy(own, path.join(tree, 'capability', 'C022'), mode);
+    const imports = [...require(path.join(own, 'imports.json')).dependencies, ...require(path.join(own, 'imports.final.json')).dependencies];
+    for (const dep of imports) {
+      const bytes = execFileSync('git', ['show', `${dep.commit}:${dep.path}`], { cwd: gitRepo });
+      assert.equal(sha(bytes), dep.git, dep.path);
+      const target = path.join(tree, dep.path);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, mode === 'crlf' ? Buffer.from(lf(bytes).toString('latin1').replaceAll('\n', '\r\n'), 'latin1') : lf(bytes));
+    }
+    const reports = path.join(tree, 'assertions');
+    fs.mkdirSync(reports);
+    const tests = fs.readdirSync(path.join(tree, 'capability', 'C022', 'tests')).filter((name) => name.endsWith('.test.cjs')).sort();
+    const args = ['--require', '.\\capability\\C022\\tests\\assertion-count.cjs', '--test', '--test-concurrency=1', '--test-timeout=600000',
+      ...tests.map((name) => path.join('capability', 'C022', 'tests', name))];
+    const run = spawnSync(process.execPath, args, { cwd: tree, env: childEnv({ C022_ASSERTION_DIR: reports }), encoding: 'utf8',
+      timeout: 1800000, maxBuffer: 1 << 27 });
+    console.log(`FINAL GIT ARCHIVE + EXACT CANDIDATE OVERLAY ${mode.toUpperCase()}`);
+    process.stdout.write(run.stdout || '');
+    process.stderr.write(run.stderr || '');
+    assert.equal(run.error, undefined);
+    assert.equal(run.status, 0, `the complete ${mode} tree must pass including evidence tests`);
+    const count = (key) => Number(new RegExp(`^# ${key} (\\d+)$`, 'm').exec(run.stdout)?.[1]);
+    assert.deepEqual([count('fail'), count('cancelled'), count('skipped'), count('todo')], [0, 0, 0, 0]);
+    assert.equal(count('pass'), count('tests'));
+    const census = fs.readdirSync(reports).filter((name) => /^assertions-\d+\.json$/.test(name))
+      .map((name) => JSON.parse(fs.readFileSync(path.join(reports, name), 'utf8')));
+    assert.equal(census.length, tests.length);
+    assert.ok(census.flatMap((entry) => entry.tests).every((entry) => entry.assertions > 0));
+    assert.equal(census.flatMap((entry) => entry.tests).length, count('tests'));
+    modes[mode] = { files: tests.length, tests: count('tests'), passed: count('pass'), failed: count('fail'),
+      zeroAssertions: 0, includesEvidence: true, actualGitArchive: true, exactCandidateOverlay: true };
+  }
+  fs.writeFileSync(path.join(root, 'work', 'final-fresh.json'), `${JSON.stringify({ modes }, null, 2)}\n`, { flag: 'wx' });
+  console.log(JSON.stringify({ completeFreshChecks: modes }));
+} finally { fs.rmSync(scratch, { recursive: true, force: true }); }

@@ -1,0 +1,42 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
+const root = path.resolve(__dirname, '..');
+const gitRepo = process.env.C022_GIT_REPO;
+const commit = 'cb27bebe434029bdd8fa1eeeb3d08ccd5030eb24';
+const tag = 'kanban/U007/cb27bebe4340';
+const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('latin1').replaceAll('\r\n', '\n'), 'latin1');
+const git = (args) => execFileSync('git', args, { cwd: gitRepo });
+assert.equal(git(['rev-parse', `${tag}^{commit}`]).toString().trim(), commit);
+const pending = ['testing/browser/lifecycle/scratch-session.cjs', 'testing/browser/lifecycle/owned.cjs'];
+const seen = new Set();
+const dependencies = [];
+while (pending.length) {
+  const file = pending.shift();
+  if (seen.has(file)) continue;
+  seen.add(file);
+  assert.ok(file.startsWith('testing/browser/lifecycle/'));
+  const working = fs.readFileSync(path.join(root, file));
+  const blob = git(['show', `${commit}:${file}`]);
+  assert.equal(sha(lf(working)), sha(lf(blob)), `${file} matches the published owning producer`);
+  dependencies.push({ path: file, raw: sha(working), lf: sha(lf(working)), git: sha(blob), commit, tag });
+  for (const [, request] of working.toString('utf8').matchAll(/require\(['"](\.[^'"]+)['"]\)/g)) {
+    const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), request));
+    if (target.startsWith('testing/browser/lifecycle/')) pending.push(target);
+  }
+}
+const original = fs.readFileSync(path.join(root, 'capability', 'C022', 'imports.json'));
+const extension = {
+  schema: 'C022-imports-append/1', appendOnly: true,
+  previous: { path: 'imports.json', raw: sha(original), lf: sha(lf(original)), changed: false },
+  authority: { producer: 'U007', stateRequired: 'Done', commit, tag, method: 'owning opt-in scratch-session API; no sealed helper replacement' },
+  owningQualificationAPI: 'qualifyEdge; the owning producer resolves its sealed set plus legitimate append-only policy',
+  dependencies: dependencies.sort((a, b) => a.path.localeCompare(b.path))
+};
+fs.writeFileSync(path.join(root, 'capability', 'C022', 'imports.final.json'), `${JSON.stringify(extension, null, 2)}\n`, { flag: 'wx' });
+console.log(`append-only browser imports: ${dependencies.length} exact published files; original seven pins unchanged`);
