@@ -1,0 +1,193 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { verifyManifest, normalize, sha } = require('./evidence-verify.cjs');
+const { inventory, inspect } = require('./identifier-inventory.cjs');
+const producerAuthority = require('./u070-producer.cjs');
+const historicalVersions = require('./u070-history.cjs');
+const currentAuthority = require('./u070-namespace.cjs');
+
+const root = path.resolve(__dirname, '..');
+const repository = path.resolve(root, '..', '..');
+const raw = path.join(root, 'evidence', 'raw');
+const freezeFile = path.join(root, 'evidence', 'final', 'source-freeze.json');
+const json = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
+const PRE_GREEN = ['syntax-9', 'coverage-10', 'mutgen-10', 'loop-5', 'f24-2', 'final-d1-red-01', 'final-metadata-red-01', 'final-policy-red-01'];
+const COMPLETE = [...PRE_GREEN, 'browser-14', 'browser-cleanup-6', 'green-8', 'fresh-lf-2', 'fresh-lf-pins-2', 'fresh-crlf-2'];
+
+function verifyRows(rows, read = (file) => fs.readFileSync(path.join(repository, file))) {
+  const problems = [];
+  for (const row of rows) {
+    let bytes;
+    try { bytes = read(row.path); } catch { problems.push(`MISSING ${row.path}`); continue; }
+    if (sha(bytes) !== row.rawSha256 && !(row.acceptLf && sha(normalize(bytes)) === row.crlfToLfSha256) &&
+        !producerAuthority.acceptedFrozenProducer(row, bytes)) problems.push(`CHANGED ${row.path}`);
+  }
+  return problems;
+}
+
+function transportProblems(manifest, original, originalBytes) {
+  const amendment = manifest.privateCaptureTransport;
+  const problems = [];
+  if (!amendment || amendment.schema !== 'C059-private-capture-transport/1') return ['TRANSPORT_SCHEMA'];
+  if (sha(originalBytes) !== amendment.originalSha256) problems.push('TRANSPORT_ORIGINAL_CHANGED');
+  const reconstructed = { ...manifest };
+  delete reconstructed.privateCaptureTransport;
+  reconstructed.inputs = reconstructed.inputs.map((input) => ({ ...input, path: path.join(amendment.prefix, input.path) }));
+  if (JSON.stringify(reconstructed) !== JSON.stringify(original)) problems.push('TRANSPORT_OBSERVATION_CHANGED');
+  return problems;
+}
+
+function verifyCapturedInputs(manifest, read, producers = []) {
+  const producerMap = new Map(producers.map((row) => [row.path, row]));
+  const problems = [];
+  const historical = historicalVersions.context(manifest);
+  for (const [ordinal, input] of manifest.inputs.entries()) {
+    if (historical) {
+      try {
+        if (sha(historical.read(input, ordinal)) !== input.rawSha256) problems.push(`INPUT_CHANGED ${input.path}`);
+      } catch { problems.push(`INPUT_VERSION_UNAVAILABLE ${input.path}`); }
+      continue;
+    }
+    let bytes;
+    try { bytes = read(input.path); } catch { problems.push(`INPUT_MISSING ${input.path}`); continue; }
+    if (sha(bytes) === input.rawSha256) continue;
+    const producer = producerMap.get(input.path);
+    if (manifest.privateCaptureTransport?.producerTextForms && producer &&
+        sha(normalize(bytes)) === producer.crlfToLfSha256 && input.crlfToLfSha256 === producer.crlfToLfSha256) continue;
+    problems.push(`INPUT_CHANGED ${input.path}`);
+  }
+  return problems;
+}
+
+function capture(name, { checkInputs = true } = {}) {
+  const file = path.join(raw, `${name}.json`);
+  const checked = verifyManifest(file, { root: repository, checkInputs: false });
+  if (checkInputs) {
+    const producers = fs.existsSync(freezeFile) ? json(freezeFile).imports : [];
+    checked.problems.push(...verifyCapturedInputs(checked.manifest, (name) => fs.readFileSync(path.join(repository, name)), producers));
+  }
+  if (checked.manifest.privateCaptureTransport) {
+    const originalFile = path.resolve(path.dirname(file), checked.manifest.privateCaptureTransport.original);
+    const originalBytes = fs.readFileSync(originalFile);
+    checked.problems.push(...transportProblems(checked.manifest, JSON.parse(originalBytes), originalBytes));
+  }
+  return checked;
+}
+
+function verifyFreeze({ browser = false } = {}) {
+  const freeze = json(freezeFile);
+  const currentNamespace = currentAuthority.verifyCurrent();
+  const historicalRows = rows => rows.flatMap(row => {
+    try { return sha(historicalVersions.frozenRow(row)) === row.rawSha256 ? [] : [`HISTORICAL_ROW_CHANGED ${row.path}`]; }
+    catch { return [`HISTORICAL_ROW_UNAVAILABLE ${row.path}`]; }
+  });
+  assert.deepEqual(historicalRows(freeze.source), [], 'the original 94-source set is checked against explicit original versions, not a virtual current enumeration');
+  assert.deepEqual(historicalRows(freeze.imports), []);
+  assert.deepEqual(verifyRows(freeze.imports), []);
+  assert.deepEqual(historicalRows(freeze.inheritedEvidence), [], 'all original evidence stays byte-identical');
+  assert.deepEqual(historicalRows(freeze.retainedDevelopmentEvidence), [], 'all genuine pre-correction REDs and retained development observations are immutable');
+  const tree = sha(Buffer.from(freeze.source.map((row) => `${row.path}\0${row.rawSha256}\n`).sort().join('')));
+  assert.equal(freeze.sourceTreeSha256, tree);
+  if (browser) {
+    assert.deepEqual(historicalRows(freeze.browserInputs), [], 'sealed helper inputs are verified against their recorded original versions');
+    assert.deepEqual(historicalRows(freeze.workflow), [], 'the original execution machinery remains an explicit historical version');
+  }
+  return { ...freeze, currentNamespace };
+}
+
+function auditAllManifests() {
+  const rows = inventory(root).filter(([name]) => name.endsWith('.json'));
+  const results = [];
+  for (const [name, bytes] of rows) {
+    let manifest;
+    try { manifest = JSON.parse(bytes.toString('utf8')); } catch { continue; }
+    if (!manifest || !Array.isArray(manifest.inputs) || !manifest.transcripts?.stdout || !manifest.transcripts?.stderr) continue;
+    const verified = verifyManifest(path.join(root, name), { root: repository, checkInputs: true });
+    assert.deepEqual(verified.problems.filter((problem) => problem !== 'RUN_NOT_AS_EXPECTED'), [], name);
+    if (manifest.privateCaptureTransport) {
+      const originalFile = path.resolve(root, path.dirname(name), manifest.privateCaptureTransport.original);
+      const originalBytes = fs.readFileSync(originalFile);
+      assert.deepEqual(transportProblems(manifest, JSON.parse(originalBytes), originalBytes), [], name);
+    }
+    results.push({ path: name, exitCode: manifest.exitCode, expectedExitCode: manifest.expectedExitCode, historicalRunMatchedExpectation: !verified.problems.includes('RUN_NOT_AS_EXPECTED') });
+  }
+  assert.ok(results.length >= 50, `every manifest is inventoried (${results.length})`);
+  return results;
+}
+
+function browserVersionFrom(text) {
+  const summaries = text.split(/\r?\n/).flatMap((line) => {
+    try {
+      const value = JSON.parse(line);
+      return value?.summary && Object.hasOwn(value.summary, 'browserVersion') ? [value.summary] : [];
+    } catch { return []; }
+  });
+  assert.equal(summaries.length, 1, 'one actual browser summary is recorded');
+  const version = summaries[0].browserVersion;
+  assert.equal(typeof version, 'string', 'the actual browser version is a string');
+  assert.match(version, /^\d+\.\d+\.\d+\.\d+$/, 'the actual browser version is canonical');
+  return version;
+}
+
+function audit({ complete = false } = {}) {
+  const freeze = verifyFreeze({ browser: complete });
+  const required = complete ? COMPLETE : PRE_GREEN;
+  const captures = Object.fromEntries(required.map((name) => {
+    const checked = capture(name);
+    assert.deepEqual(checked.problems, [], name);
+    assert.equal(checked.manifest.timedOut, false, name);
+    assert.equal(checked.manifest.spawnError, null, name);
+    return [name, checked];
+  }));
+  const coverage = captures['coverage-10'].stdout;
+  const figures = [...coverage.matchAll(/"file": "([^"]+)",\s+"lines": ([\d.]+),\s+"branches": ([\d.]+),\s+"functions": ([\d.]+)/g)]
+    .map((match) => ({ file: path.basename(match[1]), lines: Number(match[2]), branches: Number(match[3]), functions: Number(match[4]) }));
+  assert.deepEqual(figures.map((row) => row.file).sort(), ['a11y-check.js', 'journey.js', 'page.js', 'server.cjs', 'transcript.cjs']);
+  assert.ok(figures.every((row) => row.lines >= 85 && row.branches >= 85 && row.functions >= 85));
+  const mutations = json(path.join(raw, 'mutgen-report-10.json'));
+  assert.deepEqual([mutations.total, mutations.survivors.length, mutations.undecided, mutations.errors], [247, 0, 0, 0]);
+  assert.equal(mutations.killed + mutations.equivalent.filter((item) => item.survived).length, mutations.total);
+  assert.ok(mutations.results.filter((item) => item.killed).every((item) => item.failingTests.length > 0));
+  assert.ok(mutations.equivalent.every((item) => item.proof !== 'reasoning'));
+  assert.equal(mutations.sourceFreezeSha256, sha(fs.readFileSync(freezeFile)));
+  const loopText = captures['loop-5'].stdout;
+  const loop = JSON.parse(loopText.slice(loopText.indexOf('{')));
+  assert.deepEqual([loop.runs, loop.parallel, loop.burners, loop.passed], [20, 4, 4, 20]);
+  const measure = JSON.parse(captures['f24-2'].stdout.trim().split(/\r?\n/).at(-1));
+  assert.deepEqual([measure.heapMb, measure.sockets, measure.maxConnections, measure.clientsClosed, measure.connectionsLeft], [256, 32, 32, 32, 0]);
+  assert.match(measure.legitimateGet, / 200 /);
+  const allManifests = auditAllManifests();
+  if (complete) {
+    assert.equal((captures['browser-14'].stdout.match(/^PASS /gm) ?? []).length, 21);
+    assert.equal(browserVersionFrom(captures['browser-14'].stdout).split('.')[0], '157', 'the actual running browser belongs to the qualified current major, without a build equality pin');
+    assert.match(captures['browser-cleanup-6'].stdout, /"result":"ok","injected":true,"exit":1/);
+    for (const name of ['green-8', 'fresh-lf-2', 'fresh-lf-pins-2', 'fresh-crlf-2']) {
+      const summary = captures[name].manifest.summary;
+      assert.equal(summary.tests, summary.pass, name);
+      assert.deepEqual([summary.fail, summary.cancelled, summary.skipped, summary.todo], [0, 0, 0, 0], name);
+    }
+    const reportText = fs.readFileSync(path.join(root, 'evidence', 'final', 'README-F24.md'), 'utf8');
+    assert.ok(reportText.includes(JSON.stringify(measure, null, 2)), 'the current generated README measurement figures are the actual captured JSON');
+  }
+  return {
+    schema: 'C059-final-audit/1', complete, sourceFreezeSha256: sha(fs.readFileSync(freezeFile)),
+    sourceFiles: freeze.source.length, immutableInheritedEvidenceFiles: freeze.inheritedEvidence.length,
+    enumeratedCoverage: figures,
+    mutation: { total: mutations.total, killed: mutations.killed, equivalents: mutations.equivalent.filter((item) => item.survived), survivors: mutations.survivors, undecided: mutations.undecided, errors: mutations.errors },
+    loop: { runs: loop.runs, parallel: loop.parallel, burners: loop.burners, passed: loop.passed },
+    f24: measure, requiredCaptures: required,
+    historicalManifestCount: allManifests.length,
+    historicalFailedAttempts: allManifests.filter((item) => !item.historicalRunMatchedExpectation),
+    limits: ['Historical inputs are not re-labelled current; their immutable bytes and transcripts are audited.', 'No screen reader, native browser POST, cloud runtime or parser-wide mutation generator is claimed.'],
+  };
+}
+
+if (require.main === module) {
+  try { console.log(JSON.stringify(audit({ complete: process.argv.includes('--complete') }), null, 2)); }
+  catch (error) { console.error(error); process.exitCode = 1; }
+}
+
+module.exports = Object.freeze({ COMPLETE, PRE_GREEN, audit, auditAllManifests, browserVersionFrom, capture, inspect, transportProblems, verifyCapturedInputs, verifyFreeze, verifyRows });

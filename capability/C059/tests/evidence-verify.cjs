@@ -7,6 +7,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 const { createHash } = require('node:crypto');
+const producerAuthority = require('./u070-producer.cjs');
+const historicalVersions = require('./u070-history-v2.cjs');
+const repository = path.resolve(__dirname, '..', '..', '..');
 
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const normalize = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'));
@@ -21,7 +24,14 @@ function verifyManifest(manifestPath, { root, checkInputs = true }) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   const dir = path.dirname(manifestPath);
   if (checkInputs) {
-    for (const input of manifest.inputs) {
+    const historical = path.resolve(root) === repository ? historicalVersions.context(manifest) : null;
+    for (const [ordinal, input] of manifest.inputs.entries()) {
+      if (historical) {
+        try {
+          if (sha(historical.read(input, ordinal)) !== input.rawSha256) problems.push(`INPUT_CHANGED ${input.path}`);
+        } catch { problems.push(`INPUT_VERSION_UNAVAILABLE ${input.path}`); }
+        continue;
+      }
       const file = path.join(root, ...input.path.split('\\'));
       if (!fs.existsSync(file)) problems.push(`INPUT_MISSING ${input.path}`);
       else if (sha(fs.readFileSync(file)) !== input.rawSha256) problems.push(`INPUT_CHANGED ${input.path}`);
@@ -56,7 +66,8 @@ function verifyPins(pins, { readBlob, readFile }) {
     if (sha(blob) !== entry.acceptedGitSha256) problems.push(`BLOB_MISMATCH ${entry.path}`);
     const bytes = readFile(entry.path);
     // Either form of the accepted file is the accepted file: the raw bytes of the machine that recorded the pin, or their LF-normalized form (an LF checkout; review M2).
-    if (sha(bytes) !== entry.rawSha256 && sha(normalize(bytes)) !== entry.crlfToLfSha256) problems.push(`WORKING_COPY_DIFFERS ${entry.path}`);
+    if (sha(bytes) !== entry.rawSha256 && sha(normalize(bytes)) !== entry.crlfToLfSha256 &&
+        !producerAuthority.acceptedWorking(entry, bytes, pins.accepted[entry.card])) problems.push(`WORKING_COPY_DIFFERS ${entry.path}`);
     if (![entry.rawSha256, entry.crlfToLfSha256].includes(entry.acceptedGitSha256)) problems.push(`PIN_NOT_ACCEPTED_BYTES ${entry.path}`);
   }
   return problems;

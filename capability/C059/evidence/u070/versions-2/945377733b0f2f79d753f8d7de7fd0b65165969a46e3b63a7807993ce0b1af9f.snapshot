@@ -1,0 +1,111 @@
+# C059: the core conducting journey, operable with the keyboard and a screen reader
+
+A **synthetic, local-only, offline** H008/H012 fixture on `127.0.0.1` (automatic port, Node built-ins only). One page composes the core conducting journey: **choose** a delivered lesson (the accepted C041 host, read-only) -> **conduct one validated step** with its closed input contract (the accepted C042 contract and engine, read-only, pinned) -> see the **explicit result** -> use the **offered recovery controls** after a typed failure (retry, correct and resubmit, cancel, resume, inspect). It is **not** the approved Node.js 24 LTS / Express / Entra control API, validates no production runtime, verifies no identity, registers no real service and makes no cloud call, no spend and no Azure call. Node `v22` here is test tooling.
+
+## What is and is not claimed (read this first)
+
+- **No real screen reader was run.** NVDA, JAWS and Narrator behaviour is **NOT claimed**. What is verified is the *programmatic* side: ARIA semantics, names, roles, states, the live region, focus management and keyboard operability, by `a11y-check.js` (against a DOM stub and the real DOM in Edge), an independent oracle in the tests, the real accessibility tree (`locator.ariaSnapshot()`, Playwright 1.56.1) and a recorded keyboard traversal in real headless Edge. A screen reader may still announce things differently; that is a separate, manual check this card does not replace.
+- The **isolated browser helper allows only GET** (`testing\browser\isolated.cjs`): the real browser **cannot POST**. Submitting the form in Edge therefore fails at the network layer and the page reports the outcome as **UNKNOWN** (no valid answer, so it is not known whether anything was applied), never as success, and offers Retry and Inspect. States that need a POST are reached in Edge through the **GET Inspect** control on steps prepared from Node (committed, in flight, cancelled, interrupted, unknown key). The POST actions themselves (submit, retry, cancel, resume, unsupported action) are proved by `node:test` suites over **real loopback sockets**, by the page tests that drive the real `page.js` against the real C042 engine, and by a **server-produced transcript** (`GET /transcript.json`: the service drives its own POST journey against private instances, a client that disappears, a restart and an explicit resume, and returns what it recorded). Edge re-derives every envelope of that transcript with the page's own rules.
+- The lesson **frame content** (accepted C041 lessons A-S001 and A-S003) runs in an opaque-origin sandbox and is **not** covered by these checks: only the host side is (the frame has a name, the focus enters and leaves it, a Close control returns the focus to its invoker).
+- C059 does **not** recheck C001 consent (C042's CLI does and reads the live ledger); it binds only `127.0.0.1` and accepts only `--data-dir=<name>` and `--settle-ms=<0 to 60000>`. A data name that is a Windows device name (`nul`, `con`, `com1` ...), ends with a dot or is not `[A-Za-z0-9][A-Za-z0-9._-]{0,31}` is refused before anything is created.
+
+## Run it
+
+```powershell
+node capability\C059\server.cjs --settle-ms=20000
+```
+
+It prints one JSON line with the exact origin; open it in a browser. Ctrl+C stops it. Routes: `GET /` (page), `/page.js`, `/journey.js`, `/a11y-check.js`, `/styles.css`, the pinned `/c042/contract.js` and `/c041/{accepted-catalog,host-policy,lesson-host}.js`, the pinned lesson assets `/c041-lessons/<A-S001|A-S003>/<file>`, `/scope.json`, `/transcript.json`, `GET /v1/leases`, `POST /v1/steps`, `GET /v1/steps/{key}`, `POST /v1/steps/{key}/{cancel|resume|anything else = UNSUPPORTED_ACTION}`. Every answer carries the strict headers (CSP `default-src 'none'` with `connect-src 'self'` and `frame-src 'self'`, `nosniff`, `no-store`, `Referrer-Policy`, `Permissions-Policy`; lesson assets carry the C041 lesson CSP with `sandbox allow-scripts`).
+
+## The accessibility contract (each rule has its own negative test)
+
+`a11y-check.js` is pure and dependency-free: `check(document, options) -> { ok, findings: [{ code, selector, message }] }`, plus `tabOrder`, `walkTab` (a keyboard-trap detector over injected key presses), `checkStyles(css)` and `accessibleName`. The page must pass it after **every** user action (render, choose, open, close, invalid submit, submit, typed failure, retry, correct-and-resubmit, cancel, resume, inspect, start over, a lost answer, a tampered answer); `tests\checker.test.cjs` proves each rule on a fixture that is valid except for that one defect (`tests\fixtures.cjs`).
+
+| Area | Rule codes |
+| --- | --- |
+| Names | `NAME_MISSING`, `NAME_MISMATCH` (label in name), `GROUP_NAME_MISSING`, `NAV_NAME`, `LABEL_TARGET_MISSING`, `ARIA_REF_MISSING`, `ID_DUPLICATE`, `ROLE_INVALID` |
+| Document | `DOC_LANG`, `DOC_TITLE`, `ZOOM_BLOCKED`, `H1_COUNT`, `HEADING_ORDER`, `LANDMARK_MAIN` |
+| Keyboard | `TABINDEX_POSITIVE`, `FOCUSABLE_NO_ROLE`, `ARIA_HIDDEN_FOCUSABLE`, `ROVING_TABINDEX` (radio group), `KEYBOARD_TRAP` (`walkTab`) |
+| Focus | `FOCUS_LOST` (body), `FOCUS_DETACHED` (removed element), `FOCUS_HIDDEN`, `FOCUS_UNNAMED` |
+| Form errors | `ERROR_FIELD_UNDESCRIBED` (aria-invalid + aria-describedby the message), `ERROR_SUMMARY_MISSING`, `ERROR_FOCUS` (first invalid field), `ERROR_STALE`, `ERROR_SUMMARY_STALE` |
+| Status | `LIVE_REGION_MISSING`, `LIVE_REGION_COUNT` (exactly one polite region, no alert), `ANNOUNCEMENT_CONTRADICTS_STATE` (success wording for a state that is not succeeded), `ANNOUNCEMENT_INCOMPLETE` (typed code and every offered action named), `RECOVERY_MISMATCH`, `STATE_AMBIGUOUS`, `COLOUR_ONLY`, `BUSY_NOT_PROGRAMMATIC`, `DISABLED_NOT_PROGRAMMATIC` |
+| Styles (`checkStyles`) | `FOCUS_INDICATOR_MISSING`, `REDUCED_MOTION_IGNORED`, `TEXT_CLIPPING_RISK`, `FIXED_FONT_SIZE` |
+
+Conventions the checker relies on (documented here, tested): the result section carries `data-outcome` (`none`, `pending`, `validation`, `succeeded`, `rejected`, `unsupported`, `unknown`, `cancelled`, `interrupted`), `data-code` and `data-recovery`; the one live region `#status` carries `data-about` (`ready`, `navigation`, `validation`, `progress`, `result`); error message ids end with `-error`; the error summary is `#error-summary`.
+
+## Keyboard model and the way out of every widget
+
+| Control | Keys |
+| --- | --- |
+| Whole page | Tab / Shift+Tab in document order (skip link, step links, lesson radios (one stop), Open, Close, key, lease, units, Conduct, then the recovery buttons, Start over); `tabindex` is never positive |
+| Lesson chooser (ARIA radio group) | One tab stop (the chosen radio, or the first); Arrow keys move **and** choose with wrapping; Space chooses the focused radio; Tab leaves the group. No Home/End (not part of the pattern) |
+| Buttons, links | Enter (and Space on buttons) activate |
+| Lesson frame | Open focuses the lesson heading; Tab enters the frame (the frame has a name); Shift+Tab or **Close the lesson** leaves it and returns the focus to **Open**; there is no dialog and no focus trap |
+| Form | Enter in a field submits; an invalid submit moves the focus to the first invalid field |
+
+Focus after every action (always a named, visible, focusable target, never the body or a removed element): render -> the h1; choose -> the radio; open -> the lesson heading; close -> Open; invalid submit -> the first invalid field; submit, retry, cancel, resume and inspect -> the result heading (moved at the start of the request and kept at the end); correct-and-resubmit -> the key field; start over -> the first lesson. While a request is in flight `aria-busy="true"` is set on the result and the form and the Conduct and Start over buttons carry `aria-disabled="true"` (they stay focusable, so the focus is never lost); a second submit is ignored.
+
+## Status announcements
+
+One polite live region (`role="status"`, `aria-live="polite"`) announces **each state change exactly once** (one write per change; the DOM stub logs every write and Edge counts MutationObserver records): the progress ("Working on ...") and then the explicit result for a request (two), a choice, open, close, a validation failure or a start over (one). Every sentence is **re-derived from validated facts and fixed catalogs**, never from server prose (C017 F3): `journey.present()` validates the envelope (C042 `validateResultEnvelope`), the HTTP status against the envelope and the typed code, the outcome against the code, and the offered actions and reason against the catalog; a tampered answer, malformed JSON or a lying status is shown as the **unknown** outcome with the page's own words (`ANSWER_REJECTED`, `NO_VALID_RESPONSE`) and offers Retry and Inspect. A success is announced only for the outcome `succeeded`; a typed failure names its code and every offered recovery action. Outcomes are always text plus a symbol (`✔ ✖ ⊘ ? ■ ⏸`), never colour alone.
+
+## Verify
+
+Every command runs from the repository root in PowerShell. Nothing needs a package install, a network, a credential or a fixed port; scratch lives under `capability\C059\tests\scratch` (git-ignored, removed by each test). Every test has an explicit timeout and every long command a hard external one.
+
+RED replay (the original behavioral failure against a NAIVE subject: a checker that finds nothing, a page with unnamed buttons, a lost focus and a success-shaped status, a service that answers 501; expect 44 tests, 42 failing with `ERR_ASSERTION`, 2 passing vacuously, exit code 1):
+
+```powershell
+$env:C059_RED_SUBJECT = 'capability\C059\evidence\red\stubs'
+try { node --test --test-concurrency=1 capability\C059\evidence\red\initial-a.snapshot.cjs capability\C059\evidence\red\initial-b.snapshot.cjs } finally { Remove-Item Env:\C059_RED_SUBJECT }
+```
+
+The SAME retained files pass unchanged against the final code (44 of 44): `node --test --test-concurrency=1 capability\C059\evidence\red\initial-a.snapshot.cjs capability\C059\evidence\red\initial-b.snapshot.cjs`. The archived RED run is `evidence\red\run-1\red.json` (raw stdout and stderr, exit code, SHA-256 of every input). It was recorded before any production file existed; `tests\integrity.test.cjs` recomputes every hash, replays both commands above and fails by name when a retained RED file, a transcript, a manifest count or a pin is tampered with (each tamper is tried on a scratch copy).
+
+GREEN (all focused suites; `keyboard` and `property` take about 2 minutes and 35 seconds, `resources` about a minute):
+
+```powershell
+node --test --test-concurrency=1 capability\C059\tests\checker.test.cjs capability\C059\tests\journey.test.cjs capability\C059\tests\page.test.cjs capability\C059\tests\flow.test.cjs capability\C059\tests\tamper.test.cjs capability\C059\tests\keyboard.test.cjs capability\C059\tests\property.test.cjs capability\C059\tests\server.test.cjs capability\C059\tests\resources.test.cjs capability\C059\tests\transcript.test.cjs capability\C059\tests\integrity.test.cjs
+```
+
+Per-file coverage, 85 lines / 85 branches / 85 functions for each enumerated production file (`a11y-check.js`, `journey.js`, `page.js`, `server.cjs`, `transcript.cjs`), **one L-0004 command per file**, an unloaded file counts as 0% (`index.html` and `styles.css` are not measurable by Node and are disclosed, never counted). `page.js` is loaded under Node in a `vm` context with a DOM stub built from the real `index.html` (the scripts it lists, in its order); each file is measured with the suites that exercise it (`tests\coverage.cjs` has the list). Take a heavy-run slot first (`RUN\scripts\heavy-slot.ps1`) when other agents are active:
+
+```powershell
+node capability\C059\tests\coverage.cjs
+```
+
+Real isolated headless Edge observation (heavy-run slot; no evidence file is written; `CAPTURE_BROWSER_EVIDENCE` stays unset). The Edge qualification is the shared U018 check (`qualifyEdge()`: valid Microsoft signature and a qualified major; the actual version and SHA-256 are recorded, nothing is pinned by equality):
+
+```powershell
+node capability\C059\tests\browser.cjs
+```
+
+It observes, on the real DOM: the accessibility tree (`ariaSnapshot`), the Tab order recorded in Edge (forwards and backwards) against the expected list and `tabOrder()`, the visible focus indicator on every stop (`outline: solid 3px`), the radio group keys, the lesson frame (named, entered with Tab, left with Shift+Tab and Close), invalid fields, the blocked POST (UNKNOWN), real GET Inspect of a committed, in-flight, cancelled, interrupted and unknown step, one live-region write per announcement (MutationObserver), the checker on the real DOM after every action, `prefers-reduced-motion`, reflow at 320 px and 200% text size, and the transcript re-derived in Edge.
+
+Mutation (every guard line of the service, the page, the journey rules and each checker rule group removed in a private copy; a named failing test is required; `--scratch` must be outside the repository):
+
+```powershell
+node capability\C059\tests\mutate.cjs --scratch <folder outside the repository> --out <new report.json>
+```
+
+`tests\record.cjs` is not needed: the shared recorder `RUN\scripts\archive-run.cjs` (spec: name, args, inputs, outDir, expectedExitCode) archived the RED (`evidence\red\run-1`) and the later runs (`evidence\raw`, with the SHA-256 of every input; captures were made last, after the final README and `tests\browser.cjs`).
+
+## Imports are read-only and pinned
+
+`imports.json` pins the nine accepted files this namespace reads (C042: `contract.js`, `engine.cjs`, `input.cjs`, `journal.cjs`, `result.cjs`; C041: `accepted-catalog.js`, `host-policy.js`, `lesson-host.js`, `serve.cjs`) by commit, tag and three hashes (raw, CRLF-to-LF and the accepted git blob). `tests\integrity.test.cjs` recomputes them against git (`git cat-file blob <accepted commit>:<path>`; no live index or HEAD) and checks that every imported file the sources and the page load is pinned and no pin is unused. The C041 lesson assets are pinned by C041's own catalog and verified (`verifyAsset`) when the service starts. Nothing under C041 or C042 is edited.
+
+## Resource bounds and the refusal rule
+
+ONE central `send()`/`refuse()` answers every request: a request whose body was not read is answered with `Connection: close` and its socket is destroyed once the answer is flushed, so an endless chunked body behind a refusal is cut off at once (L-0132, L-0143). `tests\server.test.cjs` is table-driven over every refusal the service can emit before it reads a body (421, 403, 414, 400 x6, 405 x4, 404 x3, 415, 413); `tests\resources.test.cjs` floods the service from **another process** (`tests\attacker.cjs`, 60 sockets, every refusal status, endless chunked bodies) while the service runs in a child with `--max-old-space-size=48`, and bounds the event-loop lag measured inside the child and the latency of a concurrent GET. Bodies are at most 2048 bytes; headers 8192 bytes and 64 fields; at most 4 pipelined requests per connection; at most 128 sockets; a socket that never completes a request line is closed after 5 s, a slow header or body after about 6 s (`connectionsCheckingInterval` is set to 1 s: Node otherwise enforces those timeouts only every 30 s), an idle keep-alive socket after 1 s, any other idle socket after 90 s; every accepted socket is tracked so `closeServer` never waits for a half-open or never-reading peer. There is no authentication, role boundary, TLS, rate limit or multi-process locking: one service owns one journal directory.
+
+## Honest limits
+
+- Programmatic verification only (see the top of this file). The accessible-name computation is simplified to what this page uses; the checker is not a general auditor.
+- The DOM stub is a test double (`tests\dom.cjs`): elements, attributes, events with bubbling, focus, the Tab order and the key defaults the page relies on; Edge is the reference for real behaviour, and its Tab traversal, focus indicator and accessibility tree are recorded.
+- A reset can discard a typed answer sent to a client that keeps flooding; the typed answers and `Connection: close` are therefore proved with small complete bodies (`tests\server.test.cjs`), and the flood test asserts the sockets are closed and the service stays responsive.
+- The mutation check lists the guards it mutates; a guard that is not in `tests\mutate.cjs` is not claimed.
+
+## Files
+
+`C059.feature` (specification, written first), `a11y-check.js` (the checker, also loaded by the page), `journey.js` (client validation and wording), `page.js`, `index.html`, `styles.css`, `server.cjs` (the loopback service and CLI), `transcript.cjs` (server-produced transcript and its verifier), `imports.json` (pins), `.gitattributes` (`* -text`: byte-exact fixtures), `.gitignore`, `tests\` (suites, `dom.cjs` + `dom-nodes.cjs` DOM stub, `harness.cjs`, `fixtures.cjs`, `engine-fetch.cjs`, `net.cjs`, `child-server.cjs`, `attacker.cjs`, `browser.cjs` + `browser-support.cjs`, `coverage.cjs` + `coverage-gate.cjs`, `mutate.cjs`, `evidence-verify.cjs`, `build-imports.cjs`), `evidence\red\` (the retained RED with its helper copies and naive stubs, immutable), `evidence\raw\` (archived GREEN, coverage, syntax, browser and mutation runs).
+

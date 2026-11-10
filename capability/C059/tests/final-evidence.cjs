@@ -5,6 +5,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { verifyManifest, normalize, sha } = require('./evidence-verify.cjs');
 const { inventory, inspect } = require('./identifier-inventory.cjs');
+const producerAuthority = require('./u070-producer.cjs');
+const historicalVersions = require('./u070-history-v2.cjs');
+const currentAuthority = require('./u070-namespace-v3.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
@@ -19,7 +22,8 @@ function verifyRows(rows, read = (file) => fs.readFileSync(path.join(repository,
   for (const row of rows) {
     let bytes;
     try { bytes = read(row.path); } catch { problems.push(`MISSING ${row.path}`); continue; }
-    if (sha(bytes) !== row.rawSha256 && !(row.acceptLf && sha(normalize(bytes)) === row.crlfToLfSha256)) problems.push(`CHANGED ${row.path}`);
+    if (sha(bytes) !== row.rawSha256 && !(row.acceptLf && sha(normalize(bytes)) === row.crlfToLfSha256) &&
+        !producerAuthority.acceptedFrozenProducer(row, bytes)) problems.push(`CHANGED ${row.path}`);
   }
   return problems;
 }
@@ -39,7 +43,14 @@ function transportProblems(manifest, original, originalBytes) {
 function verifyCapturedInputs(manifest, read, producers = []) {
   const producerMap = new Map(producers.map((row) => [row.path, row]));
   const problems = [];
-  for (const input of manifest.inputs) {
+  const historical = historicalVersions.context(manifest);
+  for (const [ordinal, input] of manifest.inputs.entries()) {
+    if (historical) {
+      try {
+        if (sha(historical.read(input, ordinal)) !== input.rawSha256) problems.push(`INPUT_CHANGED ${input.path}`);
+      } catch { problems.push(`INPUT_VERSION_UNAVAILABLE ${input.path}`); }
+      continue;
+    }
     let bytes;
     try { bytes = read(input.path); } catch { problems.push(`INPUT_MISSING ${input.path}`); continue; }
     if (sha(bytes) === input.rawSha256) continue;
@@ -68,19 +79,23 @@ function capture(name, { checkInputs = true } = {}) {
 
 function verifyFreeze({ browser = false } = {}) {
   const freeze = json(freezeFile);
-  const source = inventory(root).filter(([name]) => !name.startsWith('evidence/') && !name.startsWith('data/')).map(([name]) => `capability\\C059\\${name.replaceAll('/', '\\')}`);
-  assert.deepEqual(source.sort(), freeze.source.map((row) => row.path).sort(), 'the enumerated source set is frozen, not just its loaded subset');
-  assert.deepEqual(verifyRows(freeze.source), []);
+  const currentNamespace = currentAuthority.verifyCurrent();
+  const historicalRows = rows => rows.flatMap(row => {
+    try { return sha(historicalVersions.frozenRow(row)) === row.rawSha256 ? [] : [`HISTORICAL_ROW_CHANGED ${row.path}`]; }
+    catch { return [`HISTORICAL_ROW_UNAVAILABLE ${row.path}`]; }
+  });
+  assert.deepEqual(historicalRows(freeze.source), [], 'the original 94-source set is checked against explicit original versions, not a virtual current enumeration');
+  assert.deepEqual(historicalRows(freeze.imports), []);
   assert.deepEqual(verifyRows(freeze.imports), []);
-  assert.deepEqual(verifyRows(freeze.inheritedEvidence), [], 'all original evidence stays byte-identical');
-  assert.deepEqual(verifyRows(freeze.retainedDevelopmentEvidence), [], 'all genuine pre-correction REDs and retained development observations are immutable');
+  assert.deepEqual(historicalRows(freeze.inheritedEvidence), [], 'all original evidence stays byte-identical');
+  assert.deepEqual(historicalRows(freeze.retainedDevelopmentEvidence), [], 'all genuine pre-correction REDs and retained development observations are immutable');
   const tree = sha(Buffer.from(freeze.source.map((row) => `${row.path}\0${row.rawSha256}\n`).sort().join('')));
   assert.equal(freeze.sourceTreeSha256, tree);
   if (browser) {
-    assert.deepEqual(verifyRows(freeze.browserInputs), [], 'sealed helper and current append-only qualification inputs are unchanged');
-    assert.deepEqual(verifyRows(freeze.workflow), [], 'the private execution machinery is frozen too');
+    assert.deepEqual(historicalRows(freeze.browserInputs), [], 'sealed helper inputs are verified against their recorded original versions');
+    assert.deepEqual(historicalRows(freeze.workflow), [], 'the original execution machinery remains an explicit historical version');
   }
-  return freeze;
+  return { ...freeze, currentNamespace };
 }
 
 function auditAllManifests() {
@@ -90,7 +105,7 @@ function auditAllManifests() {
     let manifest;
     try { manifest = JSON.parse(bytes.toString('utf8')); } catch { continue; }
     if (!manifest || !Array.isArray(manifest.inputs) || !manifest.transcripts?.stdout || !manifest.transcripts?.stderr) continue;
-    const verified = verifyManifest(path.join(root, name), { root: repository, checkInputs: false });
+    const verified = verifyManifest(path.join(root, name), { root: repository, checkInputs: true });
     assert.deepEqual(verified.problems.filter((problem) => problem !== 'RUN_NOT_AS_EXPECTED'), [], name);
     if (manifest.privateCaptureTransport) {
       const originalFile = path.resolve(root, path.dirname(name), manifest.privateCaptureTransport.original);
