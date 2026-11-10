@@ -6,11 +6,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { lifecycleRoot, repoRoot, git, readImports, verifyImports } = require('./u006-support-imports.cjs');
+const { lifecycleRoot, repoRoot, git, readImports, verifyImports, crlfToLf } = require('./u006-support-imports.cjs');
+assert.equal(require('node:crypto').createHash('sha256').update(crlfToLf(fs.readFileSync(path.join(__dirname, 'u006-u062-authority-v4.cjs')))).digest('hex'),
+  'e0202a12ce9298b01b34db58c4f6adb5a265745d3ff9ba2251b60e6dd76743ef', 'U062_AUTHORITY_HELPER_PIN');
+const authority = require('./u006-u062-authority-v4.cjs').loadAuthority(
+  (file) => fs.readFileSync(path.join(lifecycleRoot, file)),
+  (file) => fs.readFileSync(path.join(repoRoot, file)),
+);
 
 const T = { timeout: 60000 };
 const imports = readImports();
-const pinned = new Set(imports.files.map((file) => file.path.replace(/\\/g, '/')));
+const pinned = new Set([...imports.files, ...authority.readonlyPins()].map((file) => file.path.replace(/\\/g, '/')));
 
 test('every imported file matches its pinned raw and LF bytes and the published git blob; every tag resolves to its commit', T, () => {
   assert.deepEqual(verifyImports(imports), []);

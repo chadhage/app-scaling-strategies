@@ -1,0 +1,102 @@
+TAP version 13
+# Subtest: U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+ok 1 - U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+  ---
+  duration_ms: 8.8167
+  type: 'test'
+  ...
+# Subtest: U062 handoff: the actual authenticated browser root survives its compatibility launcher
+ok 2 - U062 handoff: the actual authenticated browser root survives its compatibility launcher
+  ---
+  duration_ms: 5.3419
+  type: 'test'
+  ...
+# Subtest: U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+ok 3 - U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+  ---
+  duration_ms: 5.3056
+  type: 'test'
+  ...
+# Subtest: U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+ok 4 - U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+  ---
+  duration_ms: 5.3612
+  type: 'test'
+  ...
+# Subtest: U062 foreign same-image root: a protocol PID already present before this launch is refused
+ok 5 - U062 foreign same-image root: a protocol PID already present before this launch is refused
+  ---
+  duration_ms: 1.1488
+  type: 'test'
+  ...
+# Subtest: U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+ok 6 - U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+  ---
+  duration_ms: 0.2977
+  type: 'test'
+  ...
+# Subtest: U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+ok 7 - U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+  ---
+  duration_ms: 0.2446
+  type: 'test'
+  ...
+# Subtest: U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+ok 8 - U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+  ---
+  duration_ms: 3.943
+  type: 'test'
+  ...
+# Subtest: U062 detach failure: the error stays failed but the exact sealed session and every owned handle still close
+not ok 9 - U062 detach failure: the error stays failed but the exact sealed session and every owned handle still close
+  ---
+  duration_ms: 6.1073
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:91:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a failed detach must not skip the sealed cleanup
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:95:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 native refresh failure: cleanup still runs and uncertainty remains an honest failure
+not ok 10 - U062 native refresh failure: cleanup still runs and uncertainty remains an honest failure
+  ---
+  duration_ms: 3.4249
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:101:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a failed native observation must not skip the sealed cleanup
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:105:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 173.9674

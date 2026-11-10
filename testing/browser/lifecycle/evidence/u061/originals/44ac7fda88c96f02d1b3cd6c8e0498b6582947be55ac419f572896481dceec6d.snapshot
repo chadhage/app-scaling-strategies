@@ -1,0 +1,116 @@
+'use strict';
+
+// NAIVE SPECIMEN for the U005 RED (archived evidence, never production code, never imported by production code).
+// It exports the names of owned.cjs and startup.cjs and implements the obvious wrong thing, selected by U005_NAIVE_MODE:
+//   race  (default) only races the sealed open against the deadline: the browser tree keeps running and a late session is ignored
+//   name  ends browsers by IMAGE NAME (every process called msedge.exe, a look-alike and the owner's browser included)
+//   late  ends the tree once at expiry but never watches for a late child or a late session, trusts the kill adapter and the table
+// It can only touch what the fake adapters of the tests expose, so it cannot reach a real process.
+
+const path = require('node:path');
+
+const tree = require(path.join(__dirname, '..', '..', '..', 'tree.cjs'));
+
+const MODE = process.env.U005_NAIVE_MODE || 'race';
+const MAX_TIMER_MS = 2147483647;
+const { LifecycleError } = tree;
+const EXPIRED = Symbol('expired');
+const keyOf = (row) => `${row.pid}:${row.createdAt}`;
+
+const systemClock = {
+  now: () => Number(process.hrtime.bigint() / 1000000n),
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (handle) => clearTimeout(handle),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
+
+class StartupError extends Error {
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'StartupError';
+    Object.assign(this, details);
+  }
+}
+
+// No guards: the inner adapters are used as they are (no deadline race, no cap, no table check, no helper filter).
+function createOwnedAdapters(options = {}) {
+  const { inner, clock = systemClock, selfPid = process.pid } = options;
+  return {
+    selfPid, clock, now: () => clock.now(), sleep: (ms) => clock.sleep(ms), killByName: inner.killByName,
+    list: (call) => inner.list(call),
+    kill: (identities, call) => inner.kill(identities, call),
+  };
+}
+
+async function snapshotOwned(rootPid, adapters, options = {}) {
+  const snapshot = await tree.snapshotTree(rootPid, adapters, { ownerPid: options.ownerPid });
+  return { snapshot, unverifiable: [] };
+}
+
+function createOwnedTree({ adapters, ownerPid, baseline = [] }) {
+  const before = new Set(baseline.map(keyOf));
+  const entries = new Map();
+  const self = {
+    roots: [],
+    unverifiable: [],
+    recorded: () => [...entries.values()],
+    async observe(call) {
+      const table = await adapters.list(call);
+      for (const row of table.filter((item) => item.ppid === ownerPid && !before.has(keyOf(item)) && !entries.has(item.pid))) {
+        const snapshot = await tree.snapshotTree(row.pid, { ...adapters, list: async () => table }, {});
+        for (const entry of snapshot.entries) entries.set(entry.pid, entry);
+        self.roots.push({ pid: row.pid, createdAt: row.createdAt });
+      }
+      return table;
+    },
+    async terminate(options = {}) {
+      const snapshot = { version: 1, rootPid: self.roots.length ? self.roots[0].pid : 0, capturedAtMs: adapters.now(), entries: [...entries.values()] };
+      const result = await tree.terminateOwned(snapshot, { timeoutMs: options.timeoutMs || 10000, adapters });
+      const failed = result.errors.filter((item) => item.pid);
+      return { confirmed: true, clean: result.survivors.length === 0 && result.errors.length === 0, unverifiable: [], unconfirmed: [], failed, ...result };
+    },
+  };
+  return self;
+}
+
+async function startBounded(run, options = {}) {
+  const { adapters } = options;
+  const clock = options.clock || (adapters && adapters.clock) || systemClock;
+  const owned = adapters ? createOwnedTree({ adapters, ownerPid: adapters.selfPid, baseline: await adapters.list({ timeoutMs: options.listMs }) }) : null;
+  let timer;
+  const deadline = new Promise((resolve) => { timer = clock.setTimeout(() => resolve(EXPIRED), options.deadlineMs); });
+  const first = await Promise.race([Promise.resolve().then(run).then((value) => ({ value }), (error) => ({ error })), deadline]);
+  clock.clearTimeout(timer);
+  if (first !== EXPIRED) {
+    if (first.error) throw first.error;
+    return first.value;
+  }
+  if (MODE === 'race') throw new Error('startup timed out');
+  const details = { code: 'ERR_STARTUP_DEADLINE', deadlineMs: options.deadlineMs, phase: options.getPhase ? options.getPhase() : 'unknown', watching: false };
+  if (MODE === 'name') {
+    await adapters.killByName('msedge.exe');
+    const report = { clean: true, terminated: [], alreadyGone: [], refused: [], survivors: [], failed: [], unverifiable: [], unconfirmed: [], errors: [] };
+    throw new StartupError('startup timed out', { ...details, ...report, settled: Promise.resolve(report) });
+  }
+  await owned.observe();
+  const report = await owned.terminate({ timeoutMs: options.terminateMs });
+  throw new StartupError('startup timed out', { ...details, ...report, settled: Promise.resolve(report) });
+}
+
+const openLessonBounded = (relativeRepoPath, options = {}) => {
+  const opener = options.opener || (options.loadSealed ? options.loadSealed().openIsolatedLesson : () => { throw new Error('naive specimen: no opener'); });
+  return startBounded(() => opener(relativeRepoPath), options);
+};
+
+const openLoopbackBounded = (relativeOwnedIndexPath, server, options = {}) => {
+  const opener = options.opener || (options.loadSealed ? options.loadSealed().openIsolatedLoopback : () => { throw new Error('naive specimen: no opener'); });
+  return startBounded(() => opener(relativeOwnedIndexPath, server), options);
+};
+
+const createLock = () => ({ acquire: async () => () => {} });
+const defaultLock = () => createLock();
+
+module.exports = {
+  MAX_TIMER_MS, systemClock, LifecycleError, StartupError, createOwnedAdapters, snapshotOwned, createOwnedTree,
+  startBounded, openLessonBounded, openLoopbackBounded, createLock, defaultLock,
+};

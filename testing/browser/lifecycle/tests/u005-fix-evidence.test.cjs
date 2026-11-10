@@ -9,7 +9,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { repoRoot, readManifest, verifyRun, stdoutOf, sha256, crlfToLf } = require('./u005-support-evidence.cjs');
+const { repoRoot, readManifest, stdoutOf, sha256, crlfToLf } = require('./u005-support-evidence.cjs');
+assert.equal(sha256(crlfToLf(fs.readFileSync(path.join(__dirname, 'u006-u062-evidence-v4.cjs')))), '6006c81b4f2545f44c68190be486583a044985e01fb94bd0e54a8ffee203ad45', 'U062_EVIDENCE_HELPER_PIN');
+const { verifyRun } = require('./u006-u062-evidence-v4.cjs');
 
 const T = { timeout: 120000 };
 const lifecycle = path.join(repoRoot, 'testing', 'browser', 'lifecycle');

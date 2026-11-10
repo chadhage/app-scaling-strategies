@@ -8,12 +8,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
 const { spawn, execFileSync } = require('node:child_process');
 const { readProcessTable, isAlive } = require('./support/process-table.cjs');
 const { createOwnedAdapters, systemClock } = require('../owned.cjs');
 const { openLessonBounded, StartupError } = require('../startup.cjs');
 const { readQualified } = require('../../qualify/adapters.cjs');
+const { openLookAlike } = require('./u006-owned-lookalike.cjs');
 
 const SKIP = process.env.U005_REAL_EDGE === '1' && process.env.U005_SCRATCH ? false : 'set U005_REAL_EDGE=1 and U005_SCRATCH=<scratch dir> (heavy slot, real headless Edge)';
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
@@ -71,12 +71,9 @@ async function removeLeftover(busy) {
   if (busy && busy.dir) await fs.promises.rm(busy.dir, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 }).catch(() => {});
 }
 
-// A foreign process of the same image: a second headless Edge started by the test itself BEFORE the open (not a new child).
-async function startLookAlike(profile) {
-  const child = spawn(EDGE, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--disable-extensions', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
-  const up = await waitFor(() => child.exitCode === null && readProcessTable().some((row) => row.ppid === child.pid && isEdge(row)), 60000);
-  assert.ok(up, 'the look-alike Edge started and has children');
-  return child;
+// This independent sealed session is not opened through the bounded startup under test.
+async function startLookAlike() {
+  return openLookAlike(FIXTURE, { opener: (relativePath) => require('../../isolated.cjs').openIsolatedLesson(relativePath) });
 }
 
 function watchFirstChild(excluded) {
@@ -101,14 +98,14 @@ function watchFirstChild(excluded) {
 
 test('real Edge: a forced expiry ends the launched tree, a same-image look-alike and the owner browser survive', { skip: SKIP, timeout: 1000000 }, async () => {
   const edge = inspectEdge();
-  const profile = path.join(process.env.U005_SCRATCH, `lookalike-${crypto.randomUUID()}`);
   const before = readProcessTable();
-  const lookAlike = await startLookAlike(profile);
+  const lookAlike = await startLookAlike();
   let watcher = null;
   let fireDeadline = null;
   let outcome = null;
   let releaseGate = () => {};
   try {
+    assert.equal(lookAlike.browserVersion, edge.version, 'the independent look-alike runs the inspected signed Edge');
     const watched = watchFirstChild([lookAlike.pid]);
     watcher = watched.watcher;
     assert.equal((await watched.ready).event, 'ready', 'the independent watcher is running');
@@ -156,7 +153,7 @@ test('real Edge: a forced expiry ends the launched tree, a same-image look-alike
     assert.deepEqual(after.filter((row) => owned.has(row.ppid) && living(row)), [], 'nothing below the owned tree is left');
     assert.ok(requests.length >= 1 && requests.every((item) => ownedKeys.has(`${item.pid}:${item.createdAt}`)), 'every kill request names a recorded identity');
     assert.equal(requests.some((item) => item.pid === lookAlike.pid), false, 'the look-alike was never a kill target');
-    assert.ok(isAlive(lookAlike.pid) && after.some((row) => row.pid === lookAlike.pid), 'the same-image look-alike survives');
+    assert.ok(await lookAlike.isAlive() && isAlive(lookAlike.pid) && after.some((row) => row.pid === lookAlike.pid), 'the same-image look-alike survives');
     const foreignBefore = before.filter((row) => isEdge(row) && living(row)).map((row) => row.pid);
     const foreignAfter = after.filter((row) => isEdge(row) && !owned.has(row.pid) && living(row)).map((row) => row.pid);
     assert.equal(requests.some((item) => foreignBefore.includes(item.pid)), false, 'no foreign Edge process was a kill target');
@@ -165,6 +162,7 @@ test('real Edge: a forced expiry ends the launched tree, a same-image look-alike
       terminated: final.terminated.length, alreadyGone: final.alreadyGone.length, distinctIdentities: finalKeys.size, survivors: final.survivors.length, survivorDetail: final.survivors, finalErrors: final.errors.map((item) => item.code),
       killRequests: requests.length, foreignEdgeBefore: foreignBefore.length, foreignEdgeAfter: foreignAfter.length,
       foreignVanished: foreignBefore.filter((pid) => !foreignAfter.includes(pid)), lookAlikeAlive: true,
+      lookAlikeStableIdentity: lookAlike.identity, lookAlikeBrowserVersion: lookAlike.browserVersion,
     }));
     assert.deepEqual(final.survivors, [], 'the final report lists no survivor');
     assert.equal(final.clean, true, JSON.stringify({ survivors: final.survivors, refused: final.refused, errors: final.errors }));
@@ -177,10 +175,7 @@ test('real Edge: a forced expiry ends the launched tree, a same-image look-alike
       if (result.error && result.error.settled) await result.error.settled;
     }
     if (watcher) { watcher.stdin.end(); watcher.kill(); }
-    lookAlike.kill();
-    await waitFor(() => lookAlike.exitCode !== null || lookAlike.signalCode !== null, 15000, 200);
-    await waitFor(() => !readProcessTable().some((row) => row.ppid === lookAlike.pid && isAlive(row.pid)), 45000, 1000);
-    await fs.promises.rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }).catch(() => {});
+    await lookAlike.close();
   }
 });
 

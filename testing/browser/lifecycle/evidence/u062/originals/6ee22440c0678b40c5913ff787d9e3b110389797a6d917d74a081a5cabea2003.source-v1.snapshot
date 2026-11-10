@@ -1,0 +1,89 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { FixtureWorld } = require('./u006-u062-world.cjs');
+
+const retained = process.env.U062_SUBJECT === 'retained';
+const subject = retained
+  ? require('../evidence/u062/u006-u062-retained-fixture.cjs')
+  : require('./u006-owned-lookalike.cjs');
+const open = (world) => subject.openLookAlike('testing\\browser\\fixtures\\counter.html', {
+  opener: () => world.openSealed(), adapters: world.adapters, clock: world.clock,
+  closeMs: 10, listMs: 10, terminateMs: 100, legacyWorld: world,
+});
+
+test('U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched', async () => {
+  const world = new FixtureWorld();
+  const fixture = await open(world);
+  assert.equal(fixture.pid, 10);
+  assert.equal(await fixture.isAlive(), true);
+  await world.drive(fixture.close());
+  assert.deepEqual(world.ownAlive(), []);
+  assert.equal(world.rows.get(99).createdAt, '101');
+  assert.equal(world.kills.some((entry) => entry.pid === 99), false);
+});
+
+test('U062 handoff: the actual authenticated browser root survives its compatibility launcher', async () => {
+  const world = new FixtureWorld({ handoff: true });
+  const fixture = await open(world);
+  try {
+    assert.equal(fixture.pid, 20, 'actual browser PID, not exited launcher PID');
+    assert.equal(fixture.identity.createdAt, '201');
+    assert.equal(await fixture.isAlive(), true, 'surviving owned browser is independently live');
+  } finally { await world.drive(fixture.close()); }
+});
+
+test('U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor', async () => {
+  const world = new FixtureWorld({ handoff: true });
+  const fixture = await open(world);
+  await world.drive(fixture.close());
+  assert.deepEqual(world.ownAlive(), [], 'actual browser and renderer are gone, not merely the launcher');
+  assert.equal(world.connected, false);
+  assert.equal(world.rows.get(99).createdAt, '101');
+});
+
+test('U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target', async () => {
+  const world = new FixtureWorld();
+  const fixture = await open(world);
+  world.reuseRoot();
+  assert.equal(await fixture.isAlive(), false, 'a reused PID is not the recorded creation identity');
+  await world.drive(fixture.close());
+  assert.equal(world.rows.get(10).createdAt, '999');
+  assert.equal(world.kills.some((entry) => entry.pid === 10 && entry.createdAt === '999'), false);
+});
+
+test('U062 foreign same-image root: a protocol PID already present before this launch is refused', async () => {
+  const world = new FixtureWorld({ handoff: true, protocolPid: 99 });
+  await assert.rejects(open(world), { code: 'ERR_LOOKALIKE_PREEXISTING_ROOT' });
+  assert.equal(world.rows.get(99).createdAt, '101');
+  assert.equal(world.kills.some((entry) => entry.pid === 99), false);
+});
+
+test('U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor', async () => {
+  const world = new FixtureWorld({ handoff: true, protocolChanges: true });
+  await assert.rejects(open(world), { code: 'ERR_LOOKALIKE_ROOT_CHANGED' });
+  assert.equal(world.rows.get(99).createdAt, '101');
+  assert.equal(world.kills.some((entry) => entry.pid === 99), false);
+});
+
+test('U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership', async () => {
+  const world = new FixtureWorld({ handoff: true, duplicateRoots: true });
+  await assert.rejects(open(world), { code: 'ERR_LOOKALIKE_PROTOCOL_ROOT' });
+  assert.equal(world.rows.get(99).createdAt, '101');
+});
+
+test('U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer', async () => {
+  const world = new FixtureWorld({ handoff: true, hangClose: true });
+  const fixture = await open(world);
+  const first = fixture.close();
+  const again = fixture.close();
+  assert.equal(first, again, 'close is idempotent even while it is still pending');
+  await world.drive(first);
+  assert.deepEqual(world.ownAlive(), []);
+  assert.equal(world.closeCalls, 1);
+  assert.equal(world.detachCalls, 1);
+  assert.equal(world.connected, false);
+  assert.equal(world.timers.some((timer) => timer.active), false);
+  assert.equal(world.kills.some((entry) => entry.pid === 99), false);
+});

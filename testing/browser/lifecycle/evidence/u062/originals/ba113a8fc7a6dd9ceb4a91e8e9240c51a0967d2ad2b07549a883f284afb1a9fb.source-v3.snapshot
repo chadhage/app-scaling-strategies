@@ -1,0 +1,141 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const { loadAuthority, BASE, HEAD, ADDENDUM, AMENDABLE, EPOCH } = require('./u006-u062-authority-v3.cjs');
+
+const life = path.resolve(__dirname, '..');
+const repo = path.resolve(life, '..', '..', '..');
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+const lf = (bytes) => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+const read = (file) => fs.readFileSync(path.join(life, file));
+const readImport = (file) => fs.readFileSync(path.join(repo, file));
+const json = (file) => JSON.parse(read(file).toString('utf8'));
+const buffer = (value) => Buffer.from(JSON.stringify(value, null, 2) + '\n');
+const EXPECTED_HEAD = '6bb97cb6568a3a16e219b99c23bd3781a8e90089001dd29d1448032f34cd3403';
+const checked = (overrides = new Map(), imports = new Map()) => {
+  const authority = loadAuthority((file) => overrides.has(file) ? overrides.get(file) : read(file),
+    (file) => imports.has(file) ? imports.get(file) : readImport(file));
+  assert.equal(authority.headSha256, EXPECTED_HEAD, 'the independently pinned approved head cannot be rewritten');
+  return authority;
+};
+const flipped = (bytes) => { const changed = Buffer.from(bytes); changed[Math.floor(changed.length / 2)] ^= 1; return changed; };
+
+function witness() {
+  const base = json(BASE);
+  const source = base.originals.find((entry) => entry.path === 'tests\\u005-real.test.cjs');
+  for (const capture of base.captures) {
+    const raw = read(capture.path);
+    const manifest = JSON.parse(raw.toString('utf8'));
+    const input = manifest.inputs.find((entry) => entry.path === `testing\\browser\\lifecycle\\${source.path}` && entry.crlfToLfSha256 === source.digests.lfSha256);
+    if (input) return { raw, input, source };
+  }
+  assert.fail('an immutable original capture must witness the exact original fixture');
+}
+
+test('U062 authority: the exact base/head/helper pins and all original manifest identities verify', () => {
+  const authority = checked();
+  assert.equal(authority.baseSha256, '0f7e1945a662bf72fc78f385a5ebe37b4bdb6209a5722fc4e619e833fe950af8');
+  assert.equal(sha(lf(read('tests\\u006-u062-authority.cjs'))), 'b81dc5da9779267694c6310c0cb316bbb903747d5b201a5b07ebe00f2af8f6ab');
+  assert.equal(sha(lf(read('tests\\u006-u062-evidence.cjs'))), '2cc1af290b1f3dc1db63facdcd25663340272a3f685299796f8585a232c8c93d');
+  assert.equal(sha(lf(read('tests\\u006-u062-authority-v2.cjs'))), '278b4ea1cc0f76c26e8ede8864b057ee4dc992208efd462c216e05dbfde526d2');
+  assert.equal(sha(lf(read('tests\\u006-u062-evidence-v2.cjs'))), 'efa32bbc9810f5b5af5dd1b3369b8baf1cd38dafb8ef51d65e94ffb4268561bc');
+  assert.equal(sha(lf(read('tests\\u006-u062-authority-v3.cjs'))), '0156932966d57208a60400d7a750a76b29e1c3977f6a001358e7e95545691121');
+  assert.equal(sha(lf(read('tests\\u006-u062-evidence-v3.cjs'))), 'f410d161e09e3ec7f307036f4a458fe290bdc82b47bf227b1b329e1b6fdf5d01');
+  assert.equal(json(BASE).captures.length, 64);
+  assert.equal(AMENDABLE.length, 6);
+  assert.ok(AMENDABLE.every((file) => file.startsWith('tests\\')));
+});
+
+test('U062 authority: exact LF and CRLF tooling representations pass, novel mixed line endings do not', () => {
+  const authority = checked();
+  const { raw, input, source } = witness();
+  const canonical = lf(read(source.path));
+  const crlf = Buffer.from(canonical.toString('latin1').replace(/\n/g, '\r\n'), 'latin1');
+  const mixed = Buffer.from(canonical.toString('latin1').replace('\n', '\r\n'), 'latin1');
+  assert.equal(authority.canAmend(raw, input, canonical), true);
+  assert.equal(authority.canAmend(raw, input, crlf), true);
+  assert.equal(authority.canAmend(raw, input, mixed), false);
+});
+
+test('U062 authority: unknown manifests, forged recorded input pairs and unregistered source bytes refuse', () => {
+  const authority = checked();
+  const { raw, input, source } = witness();
+  const forged = JSON.parse(raw.toString('utf8'));
+  forged.name += '-forged';
+  assert.equal(authority.canAmend(buffer(forged), input, read(source.path)), false);
+  assert.equal(authority.canAmend(raw, { ...input, crlfToLfSha256: '0'.repeat(64) }, read(source.path)), false);
+  assert.equal(authority.canAmend(raw, input, flipped(read(source.path))), false);
+  assert.equal(authority.canAmend(raw, { ...input, path: 'testing\\browser\\lifecycle\\owned.cjs' }, read('owned.cjs')), false);
+});
+
+test('U062 authority: an edited base, old source snapshot, old capture or U061 predecessor is rejected', () => {
+  const base = json(BASE);
+  for (const [file, code] of [
+    [BASE, 'U062_BASE_CHANGED'],
+    [base.originals[0].retained, 'U062_ORIGINAL_CHANGED'],
+    [base.captures[0].path, 'U062_CAPTURE_CHANGED'],
+    [base.predecessor.path, 'U062_PREDECESSOR_CHANGED'],
+  ]) assert.throws(() => checked(new Map([[file, flipped(read(file))]])), { code }, file);
+});
+
+test('U062 authority: changed readonly sealed helper and counter fixture imports are rejected without repinning imports', () => {
+  const pins = checked().readonlyPins();
+  assert.deepEqual(pins.map((entry) => entry.path), ['testing\\browser\\isolated.cjs', 'testing\\browser\\fixtures\\counter.html']);
+  for (const entry of pins) {
+    assert.throws(() => checked(new Map(), new Map([[entry.path, flipped(readImport(entry.path))]])), { code: 'U062_READONLY_CHANGED' });
+  }
+});
+
+test('U062 authority: changed current fixtures, retained replay subjects and fresh tooling are rejected', () => {
+  for (const [file, code] of [
+    ['tests\\u005-real.test.cjs', 'U062_CURRENT_CHANGED'],
+    ['tests\\u006-owned-lookalike.cjs', 'U062_FRESH_CHANGED'],
+    ['evidence\\u062\\retained-subjects\\u005-real.test.cjs.original', 'U062_REPLAY_SUBJECT_CHANGED'],
+  ]) assert.throws(() => checked(new Map([[file, flipped(read(file))]])), { code }, file);
+});
+
+test('U062 authority: a forged head/addendum cannot widen the six-file tooling scope to production', () => {
+  const addendum = json(ADDENDUM);
+  addendum.amendments.push({ ...addendum.amendments[0], path: 'owned.cjs' });
+  const addendumBytes = buffer(addendum);
+  const head = json(HEAD);
+  head.addendumSha256 = sha(addendumBytes);
+  assert.throws(() => checked(new Map([[ADDENDUM, addendumBytes], [HEAD, buffer(head)]])), { code: 'U062_ADDENDUM_SHAPE' });
+});
+
+test('U062 authority: a consistently rewritten final head still fails the independent approved-head pin', () => {
+  const addendum = json(ADDENDUM);
+  addendum.freshFiles.reverse();
+  const addendumBytes = buffer(addendum);
+  const head = json(HEAD);
+  head.addendumSha256 = sha(addendumBytes);
+  assert.throws(() => checked(new Map([[ADDENDUM, addendumBytes], [HEAD, buffer(head)]])), /independently pinned approved head/);
+});
+
+test('U062 authority: caller mutations cannot change the approved readonly or source digest snapshot', () => {
+  const authority = checked();
+  const pins = authority.readonlyPins();
+  pins[0].path = 'owned.cjs';
+  pins[0].digests.rawSha256 = '0'.repeat(64);
+  pins.push({ path: 'startup.cjs', digests: {} });
+  assert.equal(authority.readonlyPins().length, 2);
+  assert.equal(authority.readonlyPins()[0].path, 'testing\\browser\\isolated.cjs');
+  const { raw, input, source } = witness();
+  assert.equal(authority.canAmend(raw, input, read(source.path)), true);
+  assert.equal(authority.canAmend(raw, input, flipped(read(source.path))), false);
+});
+
+test('U062 authority: both earlier heads, source epochs and exact predecessor sources cannot be rewritten', () => {
+  const epoch = json(EPOCH);
+  for (const [file, code] of [
+    [EPOCH, 'U062_EPOCH_CHANGED'],
+    ['evidence\\u062\\authority-head-1.json', 'U062_EPOCH_CHANGED'],
+    ['evidence\\u062\\authority-head-2.json', 'U062_EPOCH_CHANGED'],
+    ['evidence\\u062\\source-epoch-1.json', 'U062_EPOCH_CHANGED'],
+    [epoch.files[0].retained, 'U062_EPOCH_SOURCE_CHANGED'],
+  ]) assert.throws(() => checked(new Map([[file, flipped(read(file))]])), { code }, file);
+});

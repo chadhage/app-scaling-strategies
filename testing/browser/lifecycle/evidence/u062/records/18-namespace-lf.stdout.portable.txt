@@ -1,0 +1,2021 @@
+TAP version 13
+# Subtest: a real marked Node tree is terminated by identity and every look-alike survives
+    # Subtest: terminateOwned completes without throwing
+    ok 1 - terminateOwned completes without throwing
+      ---
+      duration_ms: 0.8016
+      type: 'test'
+      ...
+    # Subtest: the snapshot is exactly the owned tree with identities that match the fixtures
+    ok 2 - the snapshot is exactly the owned tree with identities that match the fixtures
+      ---
+      duration_ms: 0.8799
+      type: 'test'
+      ...
+    # Subtest: every owned process is gone and accounted for
+    ok 3 - every owned process is gone and accounted for
+      ---
+      duration_ms: 0.1519
+      type: 'test'
+      ...
+    # Subtest: the orphan whose parent exited first is terminated and the parent is reported already gone
+    ok 4 - the orphan whose parent exited first is terminated and the parent is reported already gone
+      ---
+      duration_ms: 0.1908
+      type: 'test'
+      ...
+    # Subtest: a Node process with the same marker outside the tree survives
+    ok 5 - a Node process with the same marker outside the tree survives
+      ---
+      duration_ms: 0.0894
+      type: 'test'
+      ...
+    # Subtest: a Node process of the same image that is not owned survives
+    ok 6 - a Node process of the same image that is not owned survives
+      ---
+      duration_ms: 0.0745
+      type: 'test'
+      ...
+    # Subtest: a recorded identity with another creation time is refused and its live process survives
+    ok 7 - a recorded identity with another creation time is refused and its live process survives
+      ---
+      duration_ms: 0.0965
+      type: 'test'
+      ...
+    # Subtest: no kill was requested for any process outside the snapshot and the look-alike helpers survive
+    ok 8 - no kill was requested for any process outside the snapshot and the look-alike helpers survive
+      ---
+      duration_ms: 0.3043
+      type: 'test'
+      ...
+    1..8
+ok 1 - a real marked Node tree is terminated by identity and every look-alike survives
+  ---
+  duration_ms: 3513.4348
+  type: 'test'
+  ...
+# Subtest: seeded chaos: strangers, elders and reused pids are never removed and every live owned identity is
+ok 2 - seeded chaos: strangers, elders and reused pids are never removed and every live owned identity is
+  ---
+  duration_ms: 26.997
+  type: 'test'
+  ...
+# Subtest: snapshot holds the root and every live descendant as (pid, creation time) and nothing else
+ok 3 - snapshot holds the root and every live descendant as (pid, creation time) and nothing else
+  ---
+  duration_ms: 2.5697
+  type: 'test'
+  ...
+# Subtest: a process whose parent id names a reused pid is not a descendant of the younger holder of that pid
+ok 4 - a process whose parent id names a reused pid is not a descendant of the younger holder of that pid
+  ---
+  duration_ms: 0.4985
+  type: 'test'
+  ...
+# Subtest: a child created at exactly the creation time of its parent still counts
+ok 5 - a child created at exactly the creation time of its parent still counts
+  ---
+  duration_ms: 0.3448
+  type: 'test'
+  ...
+# Subtest: parent links that form a cycle terminate and list each process once
+ok 6 - parent links that form a cycle terminate and list each process once
+  ---
+  duration_ms: 0.2482
+  type: 'test'
+  ...
+# Subtest: a missing root gives an empty snapshot and an unreadable root or child is never recorded
+ok 7 - a missing root gives an empty snapshot and an unreadable root or child is never recorded
+  ---
+  duration_ms: 1.5466
+  type: 'test'
+  ...
+# Subtest: bad arguments and malformed adapter output are rejected with a code
+ok 8 - bad arguments and malformed adapter output are rejected with a code
+  ---
+  duration_ms: 0.9008
+  type: 'test'
+  ...
+# Subtest: a failing list adapter surfaces as an error with a code
+ok 9 - a failing list adapter surfaces as an error with a code
+  ---
+  duration_ms: 0.2406
+  type: 'test'
+  ...
+# Subtest: the caller and its ancestors can never be a snapshot root
+ok 10 - the caller and its ancestors can never be a snapshot root
+  ---
+  duration_ms: 0.8474
+  type: 'test'
+  ...
+# Subtest: ownerPid proves the root was started by the caller
+ok 11 - ownerPid proves the root was started by the caller
+  ---
+  duration_ms: 0.452
+  type: 'test'
+  ...
+# Subtest: a tree larger than maxEntries is refused instead of being recorded partially
+ok 12 - a tree larger than maxEntries is refused instead of being recorded partially
+  ---
+  duration_ms: 0.429
+  type: 'test'
+  ...
+# Subtest: refresh adds new children of live entries, keeps dead orphans and never adopts children of dead entries
+ok 13 - refresh adds new children of live entries, keeps dead orphans and never adopts children of dead entries
+  ---
+  duration_ms: 0.4849
+  type: 'test'
+  ...
+# Subtest: refresh replaces the dead identity when a new descendant reuses its pid and rejects an invalid snapshot
+ok 14 - refresh replaces the dead identity when a new descendant reuses its pid and rejects an invalid snapshot
+  ---
+  duration_ms: 0.248
+  type: 'test'
+  ...
+# Subtest: the owned tree is terminated parent first with its recorded identities and nothing else is touched
+ok 15 - the owned tree is terminated parent first with its recorded identities and nothing else is touched
+  ---
+  duration_ms: 2.8607
+  type: 'test'
+  ...
+# Subtest: an orphan recorded while its parent lived is terminated and its exited parent is already gone
+ok 16 - an orphan recorded while its parent lived is terminated and its exited parent is already gone
+  ---
+  duration_ms: 1.0913
+  type: 'test'
+  ...
+# Subtest: processes that already exited are listed as already gone without any kill and without throwing
+ok 17 - processes that already exited are listed as already gone without any kill and without throwing
+  ---
+  duration_ms: 0.2776
+  type: 'test'
+  ...
+# Subtest: a live pid with another creation time is refused and never killed (pid reuse)
+ok 18 - a live pid with another creation time is refused and never killed (pid reuse)
+  ---
+  duration_ms: 0.4364
+  type: 'test'
+  ...
+# Subtest: a pid reused between verification and kill is refused by the adapter outcome
+ok 19 - a pid reused between verification and kill is refused by the adapter outcome
+  ---
+  duration_ms: 0.3195
+  type: 'test'
+  ...
+# Subtest: a process that exits between verification and kill is already gone, not terminated
+ok 20 - a process that exits between verification and kill is already gone, not terminated
+  ---
+  duration_ms: 0.8849
+  type: 'test'
+  ...
+# Subtest: a refused kill is an error and a survivor and is not retried
+ok 21 - a refused kill is an error and a survivor and is not retried
+  ---
+  duration_ms: 0.4302
+  type: 'test'
+  ...
+# Subtest: a process that survives every kill is reported at the deadline instead of looping
+ok 22 - a process that survives every kill is reported at the deadline instead of looping
+  ---
+  duration_ms: 0.2921
+  type: 'test'
+  ...
+# Subtest: a process that dies after a survived outcome is terminated
+ok 23 - a process that dies after a survived outcome is terminated
+  ---
+  duration_ms: 0.4926
+  type: 'test'
+  ...
+# Subtest: a failing list or kill adapter is reported, every entry stays a survivor and nothing is retried forever
+ok 24 - a failing list or kill adapter is reported, every entry stays a survivor and nothing is retried forever
+  ---
+  duration_ms: 0.8044
+  type: 'test'
+  ...
+# Subtest: a slow list is cut off by the deadline and nothing is killed after it
+ok 25 - a slow list is cut off by the deadline and nothing is killed after it
+  ---
+  duration_ms: 0.2886
+  type: 'test'
+  ...
+# Subtest: children found alive under a verified owned process during termination are adopted and terminated
+ok 26 - children found alive under a verified owned process during termination are adopted and terminated
+  ---
+  duration_ms: 0.2021
+  type: 'test'
+  ...
+# Subtest: the caller, its ancestors and unreadable processes are refused with a reason and never killed
+ok 27 - the caller, its ancestors and unreadable processes are refused with a reason and never killed
+  ---
+  duration_ms: 0.1961
+  type: 'test'
+  ...
+# Subtest: invalid snapshots, timeouts and adapters are rejected before anything runs
+ok 28 - invalid snapshots, timeouts and adapters are rejected before anything runs
+  ---
+  duration_ms: 0.965
+  type: 'test'
+  ...
+# Subtest: the evidence folder holds exactly the archived runs, the specimen and nothing else
+ok 29 - the evidence folder holds exactly the archived runs, the specimen and nothing else
+  ---
+  duration_ms: 7.4451
+  type: 'test'
+  ...
+# Subtest: every archived run verifies: transcripts, hashes, exit codes and summaries are the ones recorded
+ok 30 - every archived run verifies: transcripts, hashes, exit codes and summaries are the ones recorded
+  ---
+  duration_ms: 115.5891
+  type: 'test'
+  ...
+# Subtest: the first-publication final runs pin the bytes they ran on; what the fix changed is tied to the archived first-publication snapshot
+ok 31 - the first-publication final runs pin the bytes they ran on; what the fix changed is tied to the archived first-publication snapshot
+  ---
+  duration_ms: 90.1875
+  type: 'test'
+  ...
+# Subtest: the draft REDs pin the naive specimen and the accepted U004 files, which never changed
+ok 32 - the draft REDs pin the naive specimen and the accepted U004 files, which never changed
+  ---
+  duration_ms: 28.4279
+  type: 'test'
+  ...
+# Subtest: every RED fails on assertions about the specified behavior, never on a missing module or a syntax error
+ok 33 - every RED fails on assertions about the specified behavior, never on a missing module or a syntax error
+  ---
+  duration_ms: 11.9331
+  type: 'test'
+  ...
+# Subtest: the GREEN runs pass every test and the per-file coverage rows are at least 85/85/85
+ok 34 - the GREEN runs pass every test and the per-file coverage rows are at least 85/85/85
+  ---
+  duration_ms: 3.5313
+  type: 'test'
+  ...
+# Subtest: mutation evidence of the first publication: the control passes and every chosen guard mutant of those bytes is killed by a named failing test
+ok 35 - mutation evidence of the first publication: the control passes and every chosen guard mutant of those bytes is killed by a named failing test
+  ---
+  duration_ms: 4.6055
+  type: 'test'
+  ...
+# Subtest: the history runs stay what they were: the first full mutation run missed only a stale pattern, the earlier real runs failed
+ok 36 - the history runs stay what they were: the first full mutation run missed only a stale pattern, the earlier real runs failed
+  ---
+  duration_ms: 4.7602
+  type: 'test'
+  ...
+# Subtest: real Edge evidence: Microsoft-signed within a qualified major, tree gone, look-alike and foreign Edge untouched
+ok 37 - real Edge evidence: Microsoft-signed within a qualified major, tree gone, look-alike and foreign Edge untouched
+  ---
+  duration_ms: 10.8707
+  type: 'test'
+  ...
+# Subtest: tampering is detected: a flipped transcript byte, an edited manifest, a missing transcript, a changed input
+ok 38 - tampering is detected: a flipped transcript byte, an edited manifest, a missing transcript, a changed input
+  ---
+  duration_ms: 177.57
+  type: 'test'
+  ...
+# Subtest: F2: an abort while the baseline table is read rejects at once, never calls the opener and frees the lock
+ok 39 - F2: an abort while the baseline table is read rejects at once, never calls the opener and frees the lock
+  ---
+  duration_ms: 8.1537
+  type: 'test'
+  ...
+# Subtest: F2: an abort that arrives together with the baseline answer still launches nothing
+ok 40 - F2: an abort that arrives together with the baseline answer still launches nothing
+  ---
+  duration_ms: 1.0171
+  type: 'test'
+  ...
+# Subtest: F2: an abort while queued behind another startup rejects at once, without waiting for the holder, and the lock chain survives
+ok 41 - F2: an abort while queued behind another startup rejects at once, without waiting for the holder, and the lock chain survives
+  ---
+  duration_ms: 3.3573
+  type: 'test'
+  ...
+# Subtest: F2: the listener is attached before the first await and removed on every way out
+ok 42 - F2: the listener is attached before the first await and removed on every way out
+  ---
+  duration_ms: 3.0039
+  type: 'test'
+  ...
+# Subtest: F2: an abort after the open started still ends the owned tree like an expiry (the window after the baseline is unchanged)
+ok 43 - F2: an abort after the open started still ends the owned tree like an expiry (the window after the baseline is unchanged)
+  ---
+  duration_ms: 2.3276
+  type: 'test'
+  ...
+# Subtest: the fix evidence folder holds exactly the archived runs and the first-publication snapshot
+ok 44 - the fix evidence folder holds exactly the archived runs and the first-publication snapshot
+  ---
+  duration_ms: 4.2262
+  type: 'test'
+  ...
+# Subtest: every archived run of the fix verifies: transcripts, hashes, exit codes and summaries
+ok 45 - every archived run of the fix verifies: transcripts, hashes, exit codes and summaries
+  ---
+  duration_ms: 47.045
+  type: 'test'
+  ...
+# Subtest: every final run pins the exact bytes of every file it ran on, and the specification and README are among them
+ok 46 - every final run pins the exact bytes of every file it ran on, and the specification and README are among them
+  ---
+  duration_ms: 179.3631
+  type: 'test'
+  ...
+# Subtest: the RED fails on assertions about the specified behavior and names a failing test for every finding F1, F2, F3, F4 and F7
+ok 47 - the RED fails on assertions about the specified behavior and names a failing test for every finding F1, F2, F3, F4 and F7
+  ---
+  duration_ms: 6.4862
+  type: 'test'
+  ...
+# Subtest: the GREEN suite passes every test, the per-file rows are at least 85/85/85 and the RED tests ran unchanged inside it
+ok 48 - the GREEN suite passes every test, the per-file rows are at least 85/85/85 and the RED tests ran unchanged inside it
+  ---
+  duration_ms: 2.8186
+  type: 'test'
+  ...
+# Subtest: systematic mutation: every statement and condition was mutated, nothing survives unexplained, every equivalent carries a proof
+ok 49 - systematic mutation: every statement and condition was mutated, nothing survives unexplained, every equivalent carries a proof
+  ---
+  duration_ms: 3.8091
+  type: 'test'
+  ...
+# Subtest: real Edge evidence: signed and qualified, two live sessions, no foreign process touched, identities counted once
+ok 50 - real Edge evidence: signed and qualified, two live sessions, no foreign process touched, identities counted once
+  ---
+  duration_ms: 8.5325
+  type: 'test'
+  ...
+# Subtest: README-U005.md states exactly the figures the stored evidence shows
+ok 51 - README-U005.md states exactly the figures the stored evidence shows
+  ---
+  duration_ms: 8.0466
+  type: 'test'
+  ...
+# Subtest: the README figures table holds exactly the rows the evidence recomputes: a new row fails until it is compared
+ok 52 - the README figures table holds exactly the rows the evidence recomputes: a new row fails until it is compared
+  ---
+  duration_ms: 7.977
+  type: 'test'
+  ...
+# Subtest: every public return value of an owned tree is a copy: mutating all of it changes nothing later
+ok 53 - every public return value of an owned tree is a copy: mutating all of it changes nothing later
+  ---
+  duration_ms: 18.2285
+  type: 'test'
+  ...
+# Subtest: no U005 source or test names the sealed qualified-majors file outside a comment
+ok 54 - no U005 source or test names the sealed qualified-majors file outside a comment
+  ---
+  duration_ms: 49.53
+  type: 'test'
+  ...
+# Subtest: tampering is detected BY NAME: a README byte, a feature byte, a production byte, a test byte, a transcript byte, an edited manifest, an edited pin
+ok 55 - tampering is detected BY NAME: a README byte, a feature byte, a production byte, a test byte, a transcript byte, an edited manifest, an edited pin
+  ---
+  duration_ms: 148.7321
+  type: 'test'
+  ...
+# Subtest: the first-publication snapshot is what the manifests say and what git published when the object database is available
+ok 56 - the first-publication snapshot is what the manifests say and what git published when the object database is available
+  ---
+  duration_ms: 176.3734
+  type: 'test'
+  ...
+# Subtest: F1 (D1): with two live sessions the terminate of the first ends only its own tree
+ok 57 - F1 (D1): with two live sessions the terminate of the first ends only its own tree
+  ---
+  duration_ms: 12.3146
+  type: 'test'
+  ...
+# Subtest: F1 (D2): observing a session never records the browser of a younger session
+ok 58 - F1 (D2): observing a session never records the browser of a younger session
+  ---
+  duration_ms: 2.4764
+  type: 'test'
+  ...
+# Subtest: F1: two live sessions ended in the order first then second: each end touches only its own tree
+ok 59 - F1: two live sessions ended in the order first then second: each end touches only its own tree
+  ---
+  duration_ms: 3.4115
+  type: 'test'
+  ...
+# Subtest: F1: two live sessions ended in the order second then first: each end touches only its own tree
+ok 60 - F1: two live sessions ended in the order second then first: each end touches only its own tree
+  ---
+  duration_ms: 2.6522
+  type: 'test'
+  ...
+# Subtest: F1: two concurrent startups own disjoint trees and ending either leaves the other alone
+ok 61 - F1: two concurrent startups own disjoint trees and ending either leaves the other alone
+  ---
+  duration_ms: 6.3695
+  type: 'test'
+  ...
+# Subtest: F1 (D4): an unrelated direct child of the caller that appears after the startup is never adopted or ended
+ok 62 - F1 (D4): an unrelated direct child of the caller that appears after the startup is never adopted or ended
+  ---
+  duration_ms: 2.1534
+  type: 'test'
+  ...
+# Subtest: F1 (D6): a second terminate of an ended session ends nothing and a browser opened in between survives
+ok 63 - F1 (D6): a second terminate of an ended session ends nothing and a browser opened in between survives
+  ---
+  duration_ms: 2.7392
+  type: 'test'
+  ...
+# Subtest: F1: after the startup the descendants of the recorded identities are still refreshed and ended
+ok 64 - F1: after the startup the descendants of the recorded identities are still refreshed and ended
+  ---
+  duration_ms: 2.9838
+  type: 'test'
+  ...
+# Subtest: F1 limit: a child the caller itself starts inside the startup window is still adopted (the window is the honest limit)
+ok 65 - F1 limit: a child the caller itself starts inside the startup window is still adopted (the window is the honest limit)
+  ---
+  duration_ms: 1.4058
+  type: 'test'
+  ...
+# Subtest: F1: a session sealed by its startup can be observed and ended repeatedly without ever growing its roots
+ok 66 - F1: a session sealed by its startup can be observed and ended repeatedly without ever growing its roots
+  ---
+  duration_ms: 2.0534
+  type: 'test'
+  ...
+# Subtest: F3 (D5): the next report still lists the identities that the core found and ended inside one earlier sweep
+ok 67 - F3 (D5): the next report still lists the identities that the core found and ended inside one earlier sweep
+  ---
+  duration_ms: 10.8622
+  type: 'test'
+  ...
+# Subtest: F3 (D5): the final report after an expiry lists every identity that was ended, counted once
+ok 68 - F3 (D5): the final report after an expiry lists every identity that was ended, counted once
+  ---
+  duration_ms: 4.0498
+  type: 'test'
+  ...
+# Subtest: F4: the sweep bound is one formula, the default grace period covers it and a table that never answers arrives exactly at the stated bound
+ok 69 - F4: the sweep bound is one formula, the default grace period covers it and a table that never answers arrives exactly at the stated bound
+  ---
+  duration_ms: 3.1595
+  type: 'test'
+  ...
+# Subtest: F4: with the default budgets the watch of an open that never settles lasts at least one whole sweep, so deadline + graceMs covers the rejection
+ok 70 - F4: with the default budgets the watch of an open that never settles lasts at least one whole sweep, so deadline + graceMs covers the rejection
+  ---
+  duration_ms: 16.8778
+  type: 'test'
+  ...
+# Subtest: F4: a kill adapter that never answers cannot push the rejection past the stated bound and the survivors are listed
+ok 71 - F4: a kill adapter that never answers cannot push the rejection past the stated bound and the survivors are listed
+  ---
+  duration_ms: 2.1398
+  type: 'test'
+  ...
+# Subtest: F7: the owner pid of the real adapters cannot be injected; only injected inner adapters accept it
+ok 72 - F7: the owner pid of the real adapters cannot be injected; only injected inner adapters accept it
+  ---
+  duration_ms: 2.4269
+  type: 'test'
+  ...
+# Subtest: StartupError: a bare error is not clean and carries empty lists, every detail is carried over and a watched open is never clean
+ok 73 - StartupError: a bare error is not clean and carries empty lists, every detail is carried over and a watched open is never clean
+  ---
+  duration_ms: 1.7809
+  type: 'test'
+  ...
+# Subtest: without adapters the startup builds guarded adapters from adapterOptions, and the clock option beats the adapters clock
+ok 74 - without adapters the startup builds guarded adapters from adapterOptions, and the clock option beats the adapters clock
+  ---
+  duration_ms: 9.2476
+  type: 'test'
+  ...
+# Subtest: the poll interval defaults to 250 ms
+ok 75 - the poll interval defaults to 250 ms
+  ---
+  duration_ms: 2.1052
+  type: 'test'
+  ...
+# Subtest: the watch: a settled open ends it at once without grace expiry, an unclean sweep keeps the final outcome unclean, a broken adapter is listed with its code
+ok 76 - the watch: a settled open ends it at once without grace expiry, an unclean sweep keeps the final outcome unclean, a broken adapter is listed with its code
+  ---
+  duration_ms: 27.3752
+  type: 'test'
+  ...
+# Subtest: the messages tell an abort from a deadline, and an open that finished in the same tick as the abort is still watched and its late session closed
+ok 77 - the messages tell an abort from a deadline, and an open that finished in the same tick as the abort is still watched and its late session closed
+  ---
+  duration_ms: 1.8292
+  type: 'test'
+  ...
+# Subtest: a session without a new child process is refused clean when its close worked; a failed open that left an unreadable process is a failed startup
+ok 78 - a session without a new child process is refused clean when its close worked; a failed open that left an unreadable process is a failed startup
+  ---
+  duration_ms: 1.2066
+  type: 'test'
+  ...
+# Subtest: a plain error of the open frees the lock for the next startup
+ok 79 - a plain error of the open frees the lock for the next startup
+  ---
+  duration_ms: 0.8473
+  type: 'test'
+  ...
+# Subtest: without an injected opener the sealed helper is the default (loaded through require) and receives the path or the server
+ok 80 - without an injected opener the sealed helper is the default (loaded through require) and receives the path or the server
+  ---
+  duration_ms: 3.3377
+  type: 'test'
+  ...
+# Subtest: the abort listener is added once and a signal that is already aborted does not wait for the lock holder
+ok 81 - the abort listener is added once and a signal that is already aborted does not wait for the lock holder
+  ---
+  duration_ms: 2.6743
+  type: 'test'
+  ...
+# Subtest: an abort that arrives right after the baseline answer is still honoured, and a baseline that fails after the abort is not an unhandled rejection
+ok 82 - an abort that arrives right after the baseline answer is still honoured, and a baseline that fails after the abort is not an unhandled rejection
+  ---
+  duration_ms: 1.7119
+  type: 'test'
+  ...
+# Subtest: StartupError carries an own cause property only when a cause was given
+ok 83 - StartupError carries an own cause property only when a cause was given
+  ---
+  duration_ms: 0.1665
+  type: 'test'
+  ...
+# Subtest: an error inside the watch loop makes the final report unclean even when the open has settled by then, and the error is carried
+ok 84 - an error inside the watch loop makes the final report unclean even when the open has settled by then, and the error is carried
+  ---
+  duration_ms: 1.1433
+  type: 'test'
+  ...
+# Subtest: an open that settles during the first poll sleep costs no poll sweep: three table reads in all
+ok 85 - an open that settles during the first poll sleep costs no poll sweep: three table reads in all
+  ---
+  duration_ms: 0.6423
+  type: 'test'
+  ...
+# Subtest: an unowned session with an unreadable table is refused UNCLEAN, a failed open with an unclean sweep is a failed startup, an unreadable baseline is a clean rejection
+ok 86 - an unowned session with an unreadable table is refused UNCLEAN, a failed open with an unclean sweep is a failed startup, an unreadable baseline is a clean rejection
+  ---
+  duration_ms: 1.4298
+  type: 'test'
+  ...
+# Subtest: the abort signal is re-checked after the lock and after the baseline, and an event that leaves signal.aborted false is still an abort
+ok 87 - the abort signal is re-checked after the lock and after the baseline, and an event that leaves signal.aborted false is still an abort
+  ---
+  duration_ms: 1.6123
+  type: 'test'
+  ...
+# Subtest: describe, failureOf and checkMs read any thrown value and any duration
+ok 88 - describe, failureOf and checkMs read any thrown value and any duration
+  ---
+  duration_ms: 2.1302
+  type: 'test'
+  ...
+# Subtest: kill() refuses every malformed identity list and reaches the inner adapter only with identities it may forward
+ok 89 - kill() refuses every malformed identity list and reaches the inner adapter only with identities it may forward
+  ---
+  duration_ms: 6.3326
+  type: 'test'
+  ...
+# Subtest: F8: a plain env copy keeps its own SystemRoot, gets a missing spelling added and never gets a key with an undefined value
+ok 90 - F8: a plain env copy keeps its own SystemRoot, gets a missing spelling added and never gets a key with an undefined value
+  ---
+  duration_ms: 3.5752
+  type: 'test'
+  ...
+# Subtest: adapters made over inner adapters without lastHelperPid still work, and without a spawn option the real child_process.spawn is the default
+ok 91 - adapters made over inner adapters without lastHelperPid still work, and without a spawn option the real child_process.spawn is the default
+  ---
+  duration_ms: 1.8774
+  type: 'test'
+  ...
+# Subtest: snapshotOwned uses the table it is given and reads none of its own
+ok 92 - snapshotOwned uses the table it is given and reads none of its own
+  ---
+  duration_ms: 0.9411
+  type: 'test'
+  ...
+# Subtest: the unverifiable set is found in any row order, ignores unrelated unreadable rows and never lists an owned process
+ok 93 - the unverifiable set is found in any row order, ignores unrelated unreadable rows and never lists an owned process
+  ---
+  duration_ms: 1.6526
+  type: 'test'
+  ...
+# Subtest: the first reason recorded for an unverifiable process wins when it is reported again
+ok 94 - the first reason recorded for an unverifiable process wins when it is reported again
+  ---
+  duration_ms: 0.6436
+  type: 'test'
+  ...
+# Subtest: observing twice inside the window never records a root twice
+ok 95 - observing twice inside the window never records a root twice
+  ---
+  duration_ms: 0.6744
+  type: 'test'
+  ...
+# Subtest: terminate() has defaults for both durations and reports the failure of an unreadable table in errors
+ok 96 - terminate() has defaults for both durations and reports the failure of an unreadable table in errors
+  ---
+  duration_ms: 5.2827
+  type: 'test'
+  ...
+# Subtest: a sweep that read no table at all is never clean, even when nothing was recorded (R10)
+ok 97 - a sweep that read no table at all is never clean, even when nothing was recorded (R10)
+  ---
+  duration_ms: 1.7669
+  type: 'test'
+  ...
+# Subtest: a second terminate of an ended tree reads the table exactly once and keeps listing the ended identities as terminated
+ok 98 - a second terminate of an ended tree reads the table exactly once and keeps listing the ended identities as terminated
+  ---
+  duration_ms: 3.1197
+  type: 'test'
+  ...
+# Subtest: processes that left on their own are alreadyGone, never terminated, also in the next report
+ok 99 - processes that left on their own are alreadyGone, never terminated, also in the next report
+  ---
+  duration_ms: 1.9819
+  type: 'test'
+  ...
+# Subtest: the survivor reasons tell a listed-after-kill identity from a listed-after-reported-gone one
+ok 100 - the survivor reasons tell a listed-after-kill identity from a listed-after-reported-gone one
+  ---
+  duration_ms: 1.8458
+  type: 'test'
+  ...
+# Subtest: run(): a later pass decides who survived, what an earlier pass ended stays terminated, errors and refusals accumulate and the pause is KILL_RETRY_MS
+ok 101 - run(): a later pass decides who survived, what an earlier pass ended stays terminated, errors and refusals accumulate and the pause is KILL_RETRY_MS
+  ---
+  duration_ms: 0.7641
+  type: 'test'
+  ...
+# Subtest: an identity found by the core inside a sweep and gone again at the confirming read is reported once, as terminated
+ok 102 - an identity found by the core inside a sweep and gone again at the confirming read is reported once, as terminated
+  ---
+  duration_ms: 1.3147
+  type: 'test'
+  ...
+# Subtest: a refused identity that has left the table does not block clean, one that is still listed does
+ok 103 - a refused identity that has left the table does not block clean, one that is still listed does
+  ---
+  duration_ms: 2.6746
+  type: 'test'
+  ...
+# Subtest: a process that points into the tree but is OLDER than its parent is neither owned nor unverifiable (F10 limit)
+ok 104 - a process that points into the tree but is OLDER than its parent is neither owned nor unverifiable (F10 limit)
+  ---
+  duration_ms: 0.5018
+  type: 'test'
+  ...
+# Subtest: a root whose pid is reused inside the startup window is a NEW root with the new identity
+ok 105 - a root whose pid is reused inside the startup window is a NEW root with the new identity
+  ---
+  duration_ms: 0.4011
+  type: 'test'
+  ...
+# Subtest: strangers in the confirming table are not the identities that left: another pid with the same creation time, the same pid with another creation time
+ok 106 - strangers in the confirming table are not the identities that left: another pid with the same creation time, the same pid with another creation time
+  ---
+  duration_ms: 1.83
+  type: 'test'
+  ...
+# Subtest: survivors say why: still-listed with a readable table, unconfirmed without one; an unverifiable process is listed while it stays or the table is unreadable
+ok 107 - survivors say why: still-listed with a readable table, unconfirmed without one; an unverifiable process is listed while it stays or the table is unreadable
+  ---
+  duration_ms: 102.6063
+  type: 'test'
+  ...
+# Subtest: with every process gone and one unverifiable process gone too, the sweep is clean; the same process still listed makes it unclean
+ok 108 - with every process gone and one unverifiable process gone too, the sweep is clean; the same process still listed makes it unclean
+  ---
+  duration_ms: 3.2969
+  type: 'test'
+  ...
+# Subtest: a survivor of the kill passes that is gone at the confirming read is reported once, as terminated
+ok 109 - a survivor of the kill passes that is gone at the confirming read is reported once, as terminated
+  ---
+  duration_ms: 25.0149
+  type: 'test'
+  ...
+# Subtest: with no known helper the process table is returned whole, even a row that has no pid
+ok 110 - with no known helper the process table is returned whole, even a row that has no pid
+  ---
+  duration_ms: 0.244
+  type: 'test'
+  ...
+# Subtest: a list adapter that throws synchronously is rejected through the race, and the timer is cleared
+ok 111 - a list adapter that throws synchronously is rejected through the race, and the timer is cleared
+  ---
+  duration_ms: 5.5445
+  type: 'test'
+  ...
+# Subtest: snapshotOwned reads the table itself when none is given
+ok 112 - snapshotOwned reads the table itself when none is given
+  ---
+  duration_ms: 0.985
+  type: 'test'
+  ...
+# Subtest: a new root that cannot be recorded is listed as unverifiable with its refusal code, never dropped
+ok 113 - a new root that cannot be recorded is listed as unverifiable with its refusal code, never dropped
+  ---
+  duration_ms: 4.5591
+  type: 'test'
+  ...
+# Subtest: F3: a sleep that never settles cannot hang terminate; the outer race reports the survivor and the timeout
+ok 114 - F3: a sleep that never settles cannot hang terminate; the outer race reports the survivor and the timeout
+  ---
+  duration_ms: 2.518
+  type: 'test'
+  ...
+# Subtest: F3: a defect inside the core is reported as an error and every entry as a survivor, not thrown
+ok 115 - F3: a defect inside the core is reported as an error and every entry as a survivor, not thrown
+  ---
+  duration_ms: 1.5706
+  type: 'test'
+  ...
+# Subtest: F9: terminate rejects invalid deadlines before it reads or kills anything
+ok 116 - F9: terminate rejects invalid deadlines before it reads or kills anything
+  ---
+  duration_ms: 1.117
+  type: 'test'
+  ...
+# Subtest: F4: a lying kill that lands exactly on the deadline is still not terminated
+ok 117 - F4: a lying kill that lands exactly on the deadline is still not terminated
+  ---
+  duration_ms: 1.2128
+  type: 'test'
+  ...
+# Subtest: F10 limit: a process the caller itself starts while the open runs cannot be told apart and is recorded as new
+ok 118 - F10 limit: a process the caller itself starts while the open runs cannot be told apart and is recorded as new
+  ---
+  duration_ms: 0.6304
+  type: 'test'
+  ...
+# Subtest: a kill that failed once (a process still exiting) is retried by identity in a later pass and ends terminated
+ok 119 - a kill that failed once (a process still exiting) is retried by identity in a later pass and ends terminated
+  ---
+  duration_ms: 3.1344
+  type: 'test'
+  ...
+# Subtest: a kill that keeps failing is retried a bounded number of times, then reported as survived
+ok 120 - a kill that keeps failing is retried a bounded number of times, then reported as survived
+  ---
+  duration_ms: 1.8114
+  type: 'test'
+  ...
+# Subtest: F10 limit: a younger stranger whose parent id points into the tree is adopted and ended, an older one never
+ok 121 - F10 limit: a younger stranger whose parent id points into the tree is adopted and ended, an older one never
+  ---
+  duration_ms: 1.361
+  type: 'test'
+  ...
+# Subtest: the children of a refused entry are never adopted: a stranger that took a recorded pid keeps its child
+ok 122 - the children of a refused entry are never adopted: a stranger that took a recorded pid keeps its child
+  ---
+  duration_ms: 1.2213
+  type: 'test'
+  ...
+# Subtest: F1: an empty process table fails closed, never success-shaped
+ok 123 - F1: an empty process table fails closed, never success-shaped
+  ---
+  duration_ms: 6.0046
+  type: 'test'
+  ...
+# Subtest: F1: a truncated table without the caller fails closed, one with the caller is accepted
+ok 124 - F1: a truncated table without the caller fails closed, one with the caller is accepted
+  ---
+  duration_ms: 0.9893
+  type: 'test'
+  ...
+# Subtest: F1: terminating over an empty table reports nothing gone and nothing terminated
+ok 125 - F1: terminating over an empty table reports nothing gone and nothing terminated
+  ---
+  duration_ms: 4.6221
+  type: 'test'
+  ...
+# Subtest: helper rows: the helper that printed the table is not a new child, a stranger with that pid is kept
+ok 126 - helper rows: the helper that printed the table is not a new child, a stranger with that pid is kept
+  ---
+  duration_ms: 1.4798
+  type: 'test'
+  ...
+# Subtest: F2: an unreadable descendant and everything below it is listed as unverifiable, not dropped
+ok 127 - F2: an unreadable descendant and everything below it is listed as unverifiable, not dropped
+  ---
+  duration_ms: 0.496
+  type: 'test'
+  ...
+# Subtest: F2: the owned tree counts an unverifiable descendant against clean while it is listed, not once it is gone
+ok 128 - F2: the owned tree counts an unverifiable descendant against clean while it is listed, not once it is gone
+  ---
+  duration_ms: 1.8232
+  type: 'test'
+  ...
+# Subtest: F3: a list adapter that never settles is raced against its deadline and the timer is cleared
+ok 129 - F3: a list adapter that never settles is raced against its deadline and the timer is cleared
+  ---
+  duration_ms: 0.8604
+  type: 'test'
+  ...
+# Subtest: F3: a kill adapter that never settles cannot hang terminate, nothing is claimed
+ok 130 - F3: a kill adapter that never settles cannot hang terminate, nothing is claimed
+  ---
+  duration_ms: 1.7282
+  type: 'test'
+  ...
+# Subtest: F3: a list adapter that never settles cannot hang terminate either
+ok 131 - F3: a list adapter that never settles cannot hang terminate either
+  ---
+  duration_ms: 1.4744
+  type: 'test'
+  ...
+# Subtest: F4: a lying kill adapter cannot make a live process terminated
+ok 132 - F4: a lying kill adapter cannot make a live process terminated
+  ---
+  duration_ms: 37.3384
+  type: 'test'
+  ...
+# Subtest: F4: terminated is claimed only after a confirming fresh table, otherwise it is unconfirmed
+ok 133 - F4: terminated is claimed only after a confirming fresh table, otherwise it is unconfirmed
+  ---
+  duration_ms: 1.4864
+  type: 'test'
+  ...
+# Subtest: a real kill is confirmed by the table: terminated, clean, and history keeps terminated over alreadyGone
+ok 134 - a real kill is confirmed by the table: terminated, clean, and history keeps terminated over alreadyGone
+  ---
+  duration_ms: 1.3369
+  type: 'test'
+  ...
+# Subtest: F5: ownerPid is required, a foreign owner, a foreign root, system pids and the caller are refused
+ok 135 - F5: ownerPid is required, a foreign owner, a foreign root, system pids and the caller are refused
+  ---
+  duration_ms: 1.0942
+  type: 'test'
+  ...
+# Subtest: F5: the caller and system pids are never forwarded to the kill adapter
+ok 136 - F5: the caller and system pids are never forwarded to the kill adapter
+  ---
+  duration_ms: 0.8675
+  type: 'test'
+  ...
+# Subtest: F5: an all-protected batch reaches no adapter at all and a bogus outcome list is ignored
+ok 137 - F5: an all-protected batch reaches no adapter at all and a bogus outcome list is ignored
+  ---
+  duration_ms: 0.3843
+  type: 'test'
+  ...
+# Subtest: F9: timers are capped at 2147483647 ms and invalid deadlines are rejected
+ok 138 - F9: timers are capped at 2147483647 ms and invalid deadlines are rejected
+  ---
+  duration_ms: 0.8165
+  type: 'test'
+  ...
+# Subtest: F8: process.env itself reaches the Windows adapters and a plain copy with other casing works too
+ok 139 - F8: process.env itself reaches the Windows adapters and a plain copy with other casing works too
+  ---
+  duration_ms: 3.952
+  type: 'test'
+  ...
+# Subtest: the real Windows adapters record their helper pid so the helper never looks like a new child
+ok 140 - the real Windows adapters record their helper pid so the helper never looks like a new child
+  ---
+  duration_ms: 0.643
+  type: 'test'
+  ...
+# Subtest: the owned tree records exactly the new children of the caller, not the baseline, and replaces a reused pid
+ok 141 - the owned tree records exactly the new children of the caller, not the baseline, and replaces a reused pid
+  ---
+  duration_ms: 0.4608
+  type: 'test'
+  ...
+# Subtest: a new direct child with an unreadable creation time is unverifiable, a protected one is refused, nothing throws
+ok 142 - a new direct child with an unreadable creation time is unverifiable, a protected one is refused, nothing throws
+  ---
+  duration_ms: 0.169
+  type: 'test'
+  ...
+# Subtest: pid reuse between the snapshot and the kill is refused as an identity mismatch and the stranger survives
+ok 143 - pid reuse between the snapshot and the kill is refused as an identity mismatch and the stranger survives
+  ---
+  duration_ms: 1.3684
+  type: 'test'
+  ...
+# Subtest: a protected or unverifiable refusal that is still listed is not clean
+ok 144 - a protected or unverifiable refusal that is still listed is not clean
+  ---
+  duration_ms: 1.579
+  type: 'test'
+  ...
+# Subtest: the system clock and the shared exports behave
+ok 145 - the system clock and the shared exports behave
+  ---
+  duration_ms: 12.0077
+  type: 'test'
+  ...
+# Subtest: expiry during launch ends only the owned tree and rejects with a typed error
+ok 146 - expiry during launch ends only the owned tree and rejects with a typed error
+  ---
+  duration_ms: 14.1539
+  type: 'test'
+  ...
+# Subtest: expiry during new context ends only the owned tree and rejects with a typed error
+ok 147 - expiry during new context ends only the owned tree and rejects with a typed error
+  ---
+  duration_ms: 1.693
+  type: 'test'
+  ...
+# Subtest: expiry during new page ends only the owned tree and rejects with a typed error
+ok 148 - expiry during new page ends only the owned tree and rejects with a typed error
+  ---
+  duration_ms: 2.1806
+  type: 'test'
+  ...
+# Subtest: expiry during navigation ends only the owned tree and rejects with a typed error
+ok 149 - expiry during navigation ends only the owned tree and rejects with a typed error
+  ---
+  duration_ms: 1.9935
+  type: 'test'
+  ...
+# Subtest: expiry before any child exists rejects at once and keeps watching; a late browser and a late session are cleaned
+ok 150 - expiry before any child exists rejects at once and keeps watching; a late browser and a late session are cleaned
+  ---
+  duration_ms: 3.2901
+  type: 'test'
+  ...
+# Subtest: a session that resolves late, after its tree was ended at expiry, is closed and never left behind
+ok 151 - a session that resolves late, after its tree was ended at expiry, is closed and never left behind
+  ---
+  duration_ms: 2.0506
+  type: 'test'
+  ...
+# Subtest: a late session whose close fails is reported, not hidden, and is not clean
+ok 152 - a late session whose close fails is reported, not hidden, and is not clean
+  ---
+  duration_ms: 2.7249
+  type: 'test'
+  ...
+# Subtest: a late session whose close never settles is abandoned after the grace period and its tree is still ended
+ok 153 - a late session whose close never settles is abandoned after the grace period and its tree is still ended
+  ---
+  duration_ms: 2.3791
+  type: 'test'
+  ...
+# Subtest: an open that never settles and spawns nothing is abandoned after the grace period and reported unclean
+ok 154 - an open that never settles and spawns nothing is abandoned after the grace period and reported unclean
+  ---
+  duration_ms: 9.571
+  type: 'test'
+  ...
+# Subtest: a browser that cannot be ended is reported as survived: never success-shaped
+ok 155 - a browser that cannot be ended is reported as survived: never success-shaped
+  ---
+  duration_ms: 11.1442
+  type: 'test'
+  ...
+# Subtest: an access-denied browser process is listed as failed and survived
+ok 156 - an access-denied browser process is listed as failed and survived
+  ---
+  duration_ms: 4.089
+  type: 'test'
+  ...
+# Subtest: F4 at startup: a kill adapter that lies about a kill cannot produce terminated
+ok 157 - F4 at startup: a kill adapter that lies about a kill cannot produce terminated
+  ---
+  duration_ms: 47.1318
+  type: 'test'
+  ...
+# Subtest: F3 at startup: a list adapter that stops answering still lets the rejection arrive, unclean
+ok 158 - F3 at startup: a list adapter that stops answering still lets the rejection arrive, unclean
+  ---
+  duration_ms: 2.1827
+  type: 'test'
+  ...
+# Subtest: F3 at startup: a kill adapter that never settles still lets the rejection arrive, with survivors
+ok 159 - F3 at startup: a kill adapter that never settles still lets the rejection arrive, with survivors
+  ---
+  duration_ms: 1.8059
+  type: 'test'
+  ...
+# Subtest: F1 at startup: an empty table at expiry is never read as everything gone
+ok 160 - F1 at startup: an empty table at expiry is never read as everything gone
+  ---
+  duration_ms: 6.5104
+  type: 'test'
+  ...
+# Subtest: F2 at startup: an unreadable descendant is listed as unverifiable and counted until it is gone
+ok 161 - F2 at startup: an unreadable descendant is listed as unverifiable and counted until it is gone
+  ---
+  duration_ms: 1.785
+  type: 'test'
+  ...
+# Subtest: pid reuse between snapshot and kill: the stranger is refused, never killed, and survives
+ok 162 - pid reuse between snapshot and kill: the stranger is refused, never killed, and survives
+  ---
+  duration_ms: 3.8777
+  type: 'test'
+  ...
+# Subtest: a startup inside the deadline returns the session with the owned tree and kills nothing
+ok 163 - a startup inside the deadline returns the session with the owned tree and kills nothing
+  ---
+  duration_ms: 9.7438
+  type: 'test'
+  ...
+# Subtest: an open that fails inside the deadline with nothing left rethrows the original error unchanged
+ok 164 - an open that fails inside the deadline with nothing left rethrows the original error unchanged
+  ---
+  duration_ms: 1.2138
+  type: 'test'
+  ...
+# Subtest: an opener that throws synchronously is treated like a rejection and is still swept for leftovers
+ok 165 - an opener that throws synchronously is treated like a rejection and is still swept for leftovers
+  ---
+  duration_ms: 0.6288
+  type: 'test'
+  ...
+# Subtest: an open that fails but leaves a browser behind is swept by identity and reported
+ok 166 - an open that fails but leaves a browser behind is swept by identity and reported
+  ---
+  duration_ms: 3.3197
+  type: 'test'
+  ...
+# Subtest: a session without a new child process of the caller is closed and refused, never returned unowned
+ok 167 - a session without a new child process of the caller is closed and refused, never returned unowned
+  ---
+  duration_ms: 0.9912
+  type: 'test'
+  ...
+# Subtest: a session whose process table cannot be read after the open is closed and refused
+ok 168 - a session whose process table cannot be read after the open is closed and refused
+  ---
+  duration_ms: 0.7576
+  type: 'test'
+  ...
+# Subtest: a process table that cannot be read before the open fails closed before anything is launched
+ok 169 - a process table that cannot be read before the open fails closed before anything is launched
+  ---
+  duration_ms: 1.2071
+  type: 'test'
+  ...
+# Subtest: F9 at startup: deadlines are validated before the lock or the opener are touched and capped at 2147483647 ms
+ok 170 - F9 at startup: deadlines are validated before the lock or the opener are touched and capped at 2147483647 ms
+  ---
+  duration_ms: 3.8862
+  type: 'test'
+  ...
+# Subtest: two concurrent startups are serialised and each records only its own browser
+ok 171 - two concurrent startups are serialised and each records only its own browser
+  ---
+  duration_ms: 1.7705
+  type: 'test'
+  ...
+# Subtest: the default lock is shared per process and a call after a timeout works once the first cleanup ended
+ok 172 - the default lock is shared per process and a call after a timeout works once the first cleanup ended
+  ---
+  duration_ms: 2.0566
+  type: 'test'
+  ...
+# Subtest: the opener is injectable for the lesson and the loopback entry points and the sealed helper is the default
+ok 173 - the opener is injectable for the lesson and the loopback entry points and the sealed helper is the default
+  ---
+  duration_ms: 2.3815
+  type: 'test'
+  ...
+# Subtest: the phase is unknown when the opener cannot report one, and the error shape is stable
+ok 174 - the phase is unknown when the opener cannot report one, and the error shape is stable
+  ---
+  duration_ms: 2.5066
+  type: 'test'
+  ...
+# Subtest: an abort signal ends the owned tree like an expiry and rejects with ERR_STARTUP_ABORTED
+ok 175 - an abort signal ends the owned tree like an expiry and rejects with ERR_STARTUP_ABORTED
+  ---
+  duration_ms: 10.4675
+  type: 'test'
+  ...
+# Subtest: a signal that is already aborted launches nothing and reads nothing
+ok 176 - a signal that is already aborted launches nothing and reads nothing
+  ---
+  duration_ms: 0.973
+  type: 'test'
+  ...
+# Subtest: an abort after the session was returned changes nothing, and an invalid signal is refused up front
+ok 177 - an abort after the session was returned changes nothing, and an invalid signal is refused up front
+  ---
+  duration_ms: 2.3679
+  type: 'test'
+  ...
+# Subtest: a phase probe that throws cannot mask the cleanup: the phase is unknown
+ok 178 - a phase probe that throws cannot mask the cleanup: the phase is unknown
+  ---
+  duration_ms: 1.3625
+  type: 'test'
+  ...
+# Subtest: a timer that breaks while watching ends the watch with an unclean final outcome and still frees the lock
+ok 179 - a timer that breaks while watching ends the watch with an unclean final outcome and still frees the lock
+  ---
+  duration_ms: 2.0944
+  type: 'test'
+  ...
+# Subtest: an open abandoned after the grace period has its late session closed, and only its own
+ok 180 - an open abandoned after the grace period has its late session closed, and only its own
+  ---
+  duration_ms: 7.7835
+  type: 'test'
+  ...
+# Subtest: without a lock option the process-wide lock is used and released
+ok 181 - without a lock option the process-wide lock is used and released
+  ---
+  duration_ms: 2.6997
+  type: 'test'
+  ...
+# Subtest: a session without an owned root whose close also fails is refused and not clean
+ok 182 - a session without an owned root whose close also fails is refused and not clean
+  ---
+  duration_ms: 2.2531
+  type: 'test'
+  ...
+# Subtest: a normal close leaves nothing, kills nothing and removes the scratch once
+ok 183 - a normal close leaves nothing, kills nothing and removes the scratch once
+  ---
+  duration_ms: 10.4961
+  type: 'test'
+  ...
+# Subtest: a graceful close that succeeds but leaves an owned process behind still ends it, by identity
+ok 184 - a graceful close that succeeds but leaves an owned process behind still ends it, by identity
+  ---
+  duration_ms: 3.7667
+  type: 'test'
+  ...
+# Subtest: a stuck context.close() is bounded, the owned tree is ended by identity, then the sealed cleanup still runs
+ok 185 - a stuck context.close() is bounded, the owned tree is ended by identity, then the sealed cleanup still runs
+  ---
+  duration_ms: 4.6589
+  type: 'test'
+  ...
+# Subtest: a stuck browser.close() is bounded, the owned tree is ended by identity, then the sealed cleanup still runs
+ok 186 - a stuck browser.close() is bounded, the owned tree is ended by identity, then the sealed cleanup still runs
+  ---
+  duration_ms: 3.4196
+  type: 'test'
+  ...
+# Subtest: a failed scratch removal is reported, not hidden, and the tree is still reported gone
+ok 187 - a failed scratch removal is reported, not hidden, and the tree is still reported gone
+  ---
+  duration_ms: 10.4354
+  type: 'test'
+  ...
+# Subtest: a sealed cleanup that never settles is reported as unconfirmed after the bounded wait
+ok 188 - a sealed cleanup that never settles is reported as unconfirmed after the bounded wait
+  ---
+  duration_ms: 3.6803
+  type: 'test'
+  ...
+# Subtest: a never-settling graceful seam is bounded; the sealed close is never reached, so the scratch is unconfirmed
+ok 189 - a never-settling graceful seam is bounded; the sealed close is never reached, so the scratch is unconfirmed
+  ---
+  duration_ms: 2.5905
+  type: 'test'
+  ...
+# Subtest: survivors, an access-denied kill and a lying kill adapter reject with a typed error that lists them
+ok 190 - survivors, an access-denied kill and a lying kill adapter reject with a typed error that lists them
+  ---
+  duration_ms: 23.4653
+  type: 'test'
+  ...
+# Subtest: a close after the browser died does not hang, reports the tree already gone and lets the scratch removal run
+ok 191 - a close after the browser died does not hang, reports the tree already gone and lets the scratch removal run
+  ---
+  duration_ms: 3.3069
+  type: 'test'
+  ...
+# Subtest: a second close and concurrent closes share one promise and the first outcome, a rejection included
+ok 192 - a second close and concurrent closes share one promise and the first outcome, a rejection included
+  ---
+  duration_ms: 3.6933
+  type: 'test'
+  ...
+# Subtest: hostile adapters cannot hang the close: a table that never answers and a kill that never settles
+ok 193 - hostile adapters cannot hang the close: a table that never answers and a kill that never settles
+  ---
+  duration_ms: 5.6469
+  type: 'test'
+  ...
+# Subtest: F9: invalid deadlines and sessions that do not come from the bounded startup are refused, timers are capped
+ok 194 - F9: invalid deadlines and sessions that do not come from the bounded startup are refused, timers are capped
+  ---
+  duration_ms: 4.0656
+  type: 'test'
+  ...
+# Subtest: the evidence folder holds exactly the archived runs, the specimen and nothing else
+ok 195 - the evidence folder holds exactly the archived runs, the specimen and nothing else
+  ---
+  duration_ms: 5.6757
+  type: 'test'
+  ...
+# Subtest: every archived run verifies, and the first-publication final runs pin the bytes they ran on except what the fix changed
+ok 196 - every archived run verifies, and the first-publication final runs pin the bytes they ran on except what the fix changed
+  ---
+  duration_ms: 159.8829
+  type: 'test'
+  ...
+# Subtest: what the fix changed is tied to the archived first-publication snapshots: the final runs ran on those bytes
+ok 197 - what the fix changed is tied to the archived first-publication snapshots: the final runs ran on those bytes
+  ---
+  duration_ms: 72.3942
+  type: 'test'
+  ...
+# Subtest: every input of the first-publication final runs is the blob that git published as the first U006 commit (when the object database is available)
+ok 198 - every input of the first-publication final runs is the blob that git published as the first U006 commit (when the object database is available)
+  ---
+  duration_ms: 8981.7373
+  type: 'test'
+  ...
+# Subtest: the draft REDs pin the naive specimen and the accepted U004 tree.cjs, which never changed
+ok 199 - the draft REDs pin the naive specimen and the accepted U004 tree.cjs, which never changed
+  ---
+  duration_ms: 27.664
+  type: 'test'
+  ...
+# Subtest: every RED fails on assertions about the specified behavior, never on a missing module or a syntax error
+ok 200 - every RED fails on assertions about the specified behavior, never on a missing module or a syntax error
+  ---
+  duration_ms: 15.3903
+  type: 'test'
+  ...
+# Subtest: the GREEN runs pass every test and the per-file coverage rows are at least 85/85/85
+ok 201 - the GREEN runs pass every test and the per-file coverage rows are at least 85/85/85
+  ---
+  duration_ms: 4.366
+  type: 'test'
+  ...
+# Subtest: mutation evidence: the control passes and every guard mutant of the final bytes is killed by a named failing test
+ok 202 - mutation evidence: the control passes and every guard mutant of the final bytes is killed by a named failing test
+  ---
+  duration_ms: 4.6055
+  type: 'test'
+  ...
+# Subtest: real Edge evidence: a normal close and a forced stuck close, signed and qualified, look-alike and foreign Edge untouched
+ok 203 - real Edge evidence: a normal close and a forced stuck close, signed and qualified, look-alike and foreign Edge untouched
+  ---
+  duration_ms: 6.0829
+  type: 'test'
+  ...
+# Subtest: tampering is detected: a flipped transcript byte, an edited manifest, a missing transcript, a changed input
+ok 204 - tampering is detected: a flipped transcript byte, an edited manifest, a missing transcript, a changed input
+  ---
+  duration_ms: 171.9089
+  type: 'test'
+  ...
+# Subtest: K18: close() hands the tree the kill deadline as timeoutMs and the table deadline as listMs, not the other way round
+ok 205 - K18: close() hands the tree the kill deadline as timeoutMs and the table deadline as listMs, not the other way round
+  ---
+  duration_ms: 13.2989
+  type: 'test'
+  ...
+# Subtest: K23: the clock option is the clock of every timer the close sets
+ok 206 - K23: the clock option is the clock of every timer the close sets
+  ---
+  duration_ms: 3.4402
+  type: 'test'
+  ...
+# Subtest: L05: a failed startup that nobody awaits is not an unhandled rejection
+ok 207 - L05: a failed startup that nobody awaits is not an unhandled rejection
+  ---
+  duration_ms: 3.801
+  type: 'test'
+  ...
+# Subtest: F5: the close budgets are one formula and a table that never answers rejects at exactly the stated bound
+ok 208 - F5: the close budgets are one formula and a table that never answers rejects at exactly the stated bound
+  ---
+  duration_ms: 5.9705
+  type: 'test'
+  ...
+# Subtest: F7: a process that is still exiting at the confirming table is re-read once after a bounded settle and reported as exiting, not as a survivor
+ok 209 - F7: a process that is still exiting at the confirming table is re-read once after a bounded settle and reported as exiting, not as a survivor
+  ---
+  duration_ms: 29.3531
+  type: 'test'
+  ...
+# Subtest: F7: a process that never leaves stays a survivor after the single re-read, and the re-read sends no further kill
+ok 210 - F7: a process that never leaves stays a survivor after the single re-read, and the re-read sends no further kill
+  ---
+  duration_ms: 21.5275
+  type: 'test'
+  ...
+# Subtest: F7: a re-read that fails keeps the survivors, records the failure and never claims clean
+ok 211 - F7: a re-read that fails keeps the survivors, records the failure and never claims clean
+  ---
+  duration_ms: 17.1242
+  type: 'test'
+  ...
+# Subtest: F7: exitSettleMs is validated like every other duration
+ok 212 - F7: exitSettleMs is validated like every other duration
+  ---
+  duration_ms: 2.2922
+  type: 'test'
+  ...
+# Subtest: SR5: the outcome of a close is ONE deep-frozen value: nothing a caller does to it changes what the next caller of the shared close() receives
+ok 213 - SR5: the outcome of a close is ONE deep-frozen value: nothing a caller does to it changes what the next caller of the shared close() receives
+  ---
+  duration_ms: 4.0766
+  type: 'test'
+  ...
+# Subtest: SR5: the CloseError of an unclean close is frozen as well and shares nothing with the tree report it was built from
+ok 214 - SR5: the CloseError of an unclean close is frozen as well and shares nothing with the tree report it was built from
+  ---
+  duration_ms: 12.825
+  type: 'test'
+  ...
+# Subtest: SR7: options that are not an object are a typed refusal before anything runs, and a missing options argument means the defaults
+ok 215 - SR7: options that are not an object are a typed refusal before anything runs, and a missing options argument means the defaults
+  ---
+  duration_ms: 3.1159
+  type: 'test'
+  ...
+# Subtest: SR7: an option whose getter throws is a typed refusal that names the option
+ok 216 - SR7: an option whose getter throws is a typed refusal that names the option
+  ---
+  duration_ms: 2.0845
+  type: 'test'
+  ...
+# Subtest: SR7: every close option is read exactly once, so a getter cannot pass the check and then deliver another value
+ok 217 - SR7: every close option is read exactly once, so a getter cannot pass the check and then deliver another value
+  ---
+  duration_ms: 2.1895
+  type: 'test'
+  ...
+# Subtest: the fix evidence folder holds exactly the archived runs and the first-publication snapshot
+ok 218 - the fix evidence folder holds exactly the archived runs and the first-publication snapshot
+  ---
+  duration_ms: 4.2178
+  type: 'test'
+  ...
+# Subtest: every archived run of the fix verifies: transcripts, hashes, exit codes and summaries
+ok 219 - every archived run of the fix verifies: transcripts, hashes, exit codes and summaries
+  ---
+  duration_ms: 42.3775
+  type: 'test'
+  ...
+# Subtest: every final run pins the exact bytes of every file it ran on, and the specification and README are among them
+ok 220 - every final run pins the exact bytes of every file it ran on, and the specification and README are among them
+  ---
+  duration_ms: 208.5515
+  type: 'test'
+  ...
+# Subtest: the REDs fail on assertions about the specified behavior and name a failing test for every finding the first publication still had: F3, F5, F7 (and SR5, SR7 on the final tests)
+ok 221 - the REDs fail on assertions about the specified behavior and name a failing test for every finding the first publication still had: F3, F5, F7 (and SR5, SR7 on the final tests)
+  ---
+  duration_ms: 3.3887
+  type: 'test'
+  ...
+# Subtest: the GREEN suite passes every test, the per-file rows are at least 85/85/85 and the RED tests ran unchanged inside it
+ok 222 - the GREEN suite passes every test, the per-file rows are at least 85/85/85 and the RED tests ran unchanged inside it
+  ---
+  duration_ms: 2.7628
+  type: 'test'
+  ...
+# Subtest: systematic mutation: every statement and condition was mutated, nothing survives unexplained, every equivalent carries a proof
+ok 223 - systematic mutation: every statement and condition was mutated, nothing survives unexplained, every equivalent carries a proof
+  ---
+  duration_ms: 2.1837
+  type: 'test'
+  ...
+# Subtest: real Edge evidence: signed and qualified, normal close, forced stuck close and two live sessions, no foreign process touched; a scratch-removal EBUSY is recorded, nothing else tolerated
+ok 224 - real Edge evidence: signed and qualified, normal close, forced stuck close and two live sessions, no foreign process touched; a scratch-removal EBUSY is recorded, nothing else tolerated
+  ---
+  duration_ms: 3.832
+  type: 'test'
+  ...
+# Subtest: README-U006.md states exactly the figures the stored evidence shows
+ok 225 - README-U006.md states exactly the figures the stored evidence shows
+  ---
+  duration_ms: 7.5586
+  type: 'test'
+  ...
+# Subtest: the README figures table holds exactly the rows the evidence recomputes: a new row fails until it is compared
+ok 226 - the README figures table holds exactly the rows the evidence recomputes: a new row fails until it is compared
+  ---
+  duration_ms: 8.2045
+  type: 'test'
+  ...
+# Subtest: no lifecycle source or test names the sealed qualified-majors file outside a comment
+ok 227 - no lifecycle source or test names the sealed qualified-majors file outside a comment
+  ---
+  duration_ms: 99.261
+  type: 'test'
+  ...
+# Subtest: tampering is detected BY NAME: a README byte, a feature byte, a production byte, a test byte, a transcript byte, an edited manifest, an edited pin
+ok 228 - tampering is detected BY NAME: a README byte, a feature byte, a production byte, a test byte, a transcript byte, an edited manifest, an edited pin
+  ---
+  duration_ms: 182.1012
+  type: 'test'
+  ...
+# Subtest: the first-publication snapshot is what the manifests say and what git published when the object database is available
+ok 229 - the first-publication snapshot is what the manifests say and what git published when the object database is available
+  ---
+  duration_ms: 301.1614
+  type: 'test'
+  ...
+# Subtest: F1: two live sessions opened through openLessonSession, closed first then second: each close ends only its own browser
+ok 230 - F1: two live sessions opened through openLessonSession, closed first then second: each close ends only its own browser
+  ---
+  duration_ms: 16.5668
+  type: 'test'
+  ...
+# Subtest: F1: two live sessions opened through openLessonSession, closed second then first: each close ends only its own browser
+ok 231 - F1: two live sessions opened through openLessonSession, closed second then first: each close ends only its own browser
+  ---
+  duration_ms: 5.9775
+  type: 'test'
+  ...
+# Subtest: F1: a graceful close that leaves its own tree behind ends that tree by identity and never the browser of another live session
+ok 232 - F1: a graceful close that leaves its own tree behind ends that tree by identity and never the browser of another live session
+  ---
+  duration_ms: 4.2719
+  type: 'test'
+  ...
+# Subtest: F2: close() during the baseline read ends the startup at once: nothing is launched and no virtual time passes
+ok 233 - F2: close() during the baseline read ends the startup at once: nothing is launched and no virtual time passes
+  ---
+  duration_ms: 4.2347
+  type: 'test'
+  ...
+# Subtest: F2: close() while the startup is queued behind another startup does not wait for the lock holder
+ok 234 - F2: close() while the startup is queued behind another startup does not wait for the lock holder
+  ---
+  duration_ms: 10.9937
+  type: 'test'
+  ...
+# Subtest: F3: every real test closes the sessions it opens in a finally block and asserts the root and a lower bound, never that every recorded process is alive
+ok 235 - F3: every real test closes the sessions it opens in a finally block and asserts the root and a lower bound, never that every recorded process is alive
+  ---
+  duration_ms: 1.1642
+  type: 'test'
+  ...
+# Subtest: F3: a failing assertion inside a guarded real test still closes the sessions it opened (the cleanup ran)
+ok 236 - F3: a failing assertion inside a guarded real test still closes the sessions it opened (the cleanup ran)
+  ---
+  duration_ms: 19.1605
+  type: 'test'
+  ...
+# Subtest: SR5: the outcome of a close during a failed startup is a frozen copy: nothing a caller does to it is visible to the next failed startup
+ok 237 - SR5: the outcome of a close during a failed startup is a frozen copy: nothing a caller does to it is visible to the next failed startup
+  ---
+  duration_ms: 4.3916
+  type: 'test'
+  ...
+# Subtest: SR7: a signal that is not an AbortSignal, or whose getter throws, is a typed refusal before the opener is called
+ok 238 - SR7: a signal that is not an AbortSignal, or whose getter throws, is a typed refusal before the opener is called
+  ---
+  duration_ms: 7.4118
+  type: 'test'
+  ...
+# Subtest: F3: the real tests tolerate ONLY the scratch-removal EBUSY of the sealed close and every other close error fails them
+ok 239 - F3: the real tests tolerate ONLY the scratch-removal EBUSY of the sealed close and every other close error fails them
+  ---
+  duration_ms: 4.1556
+  type: 'test'
+  ...
+# Subtest: F3: the leftover session directory is taken from the error text only: another folder, a malformed id or a missing path name nothing
+ok 240 - F3: the leftover session directory is taken from the error text only: another folder, a malformed id or a missing path name nothing
+  ---
+  duration_ms: 0.2823
+  type: 'test'
+  ...
+# Subtest: F3: closeRecording removes exactly the leftover directory the EBUSY names, and the guard removes it after a failed body
+ok 241 - F3: closeRecording removes exactly the leftover directory the EBUSY names, and the guard removes it after a failed body
+  ---
+  duration_ms: 14.0238
+  type: 'test'
+  ...
+# Subtest: F3: a typed launch timeout of the sealed helper is retried ONCE and counted; a second timeout and every other error fail the test
+ok 242 - F3: a typed launch timeout of the sealed helper is retried ONCE and counted; a second timeout and every other error fail the test
+  ---
+  duration_ms: 0.6536
+  type: 'test'
+  ...
+# Subtest: F7: no re-read happens when the confirming table could not be read; a readable one that lists a survivor is followed by exactly one re-read
+ok 243 - F7: no re-read happens when the confirming table could not be read; a readable one that lists a survivor is followed by exactly one re-read
+  ---
+  duration_ms: 57.429
+  type: 'test'
+  ...
+# Subtest: F7: a stranger that took the pid of an exiting process is not that process (identity, never a bare pid)
+ok 244 - F7: a stranger that took the pid of an exiting process is not that process (identity, never a bare pid)
+  ---
+  duration_ms: 14.6233
+  type: 'test'
+  ...
+# Subtest: F7: the re-read recomputes clean from the new table: an unverifiable process that is still listed keeps it unclean, one that left does not
+ok 245 - F7: the re-read recomputes clean from the new table: an unverifiable process that is still listed keeps it unclean, one that left does not
+  ---
+  duration_ms: 46.065
+  type: 'test'
+  ...
+# Subtest: F7: a refused identity that is still listed keeps the close unclean after the re-read
+ok 246 - F7: a refused identity that is still listed keeps the close unclean after the re-read
+  ---
+  duration_ms: 12.9184
+  type: 'test'
+  ...
+# Subtest: the texts: the rejection says what is left, the graceful timeout and a graceful failure are described
+ok 247 - the texts: the rejection says what is left, the graceful timeout and a graceful failure are described
+  ---
+  duration_ms: 21.5841
+  type: 'test'
+  ...
+# Subtest: startSession: the outcome of a close during an expired or failed startup carries every field
+ok 248 - startSession: the outcome of a close during an expired or failed startup carries every field
+  ---
+  duration_ms: 5.0448
+  type: 'test'
+  ...
+# Subtest: the outcome fields are exact: no error text on a clean close, the sealed error of a forced termination never leaks into scratchError, an unsettled cleanup has no sealed error
+ok 249 - the outcome fields are exact: no error text on a clean close, the sealed error of a forced termination never leaks into scratchError, an unsettled cleanup has no sealed error
+  ---
+  duration_ms: 9.3664
+  type: 'test'
+  ...
+# Subtest: F7: a close that leaves no survivor neither waits for exitSettleMs nor reads the table again
+ok 250 - F7: a close that leaves no survivor neither waits for exitSettleMs nor reads the table again
+  ---
+  duration_ms: 3.5856
+  type: 'test'
+  ...
+# Subtest: F7: a different process that carries the creation time of the exiting one is not the survivor (identity is pid AND creation time)
+ok 251 - F7: a different process that carries the creation time of the exiting one is not the survivor (identity is pid AND creation time)
+  ---
+  duration_ms: 12.6136
+  type: 'test'
+  ...
+# Subtest: F7: a refused identity-mismatch whose pid is listed (a stranger) does not block, and a refused unverifiable process that has left the table does not block
+ok 252 - F7: a refused identity-mismatch whose pid is listed (a stranger) does not block, and a refused unverifiable process that has left the table does not block
+  ---
+  duration_ms: 24.8364
+  type: 'test'
+  ...
+# Subtest: K24: a graceful close that fails after the close could not even start its timer is not an unhandled rejection
+ok 253 - K24: a graceful close that fails after the close could not even start its timer is not an unhandled rejection
+  ---
+  duration_ms: 2.8858
+  type: 'test'
+  ...
+# Subtest: SR7: the clock option must provide setTimeout and clearTimeout, and REPORT_KEYS is frozen
+ok 254 - SR7: the clock option must provide setTimeout and clearTimeout, and REPORT_KEYS is frozen
+  ---
+  duration_ms: 1.8024
+  type: 'test'
+  ...
+# Subtest: a startup that fails with a foreign error that merely carries a settled property is "nothing to close", and that property is never awaited
+ok 255 - a startup that fails with a foreign error that merely carries a settled property is "nothing to close", and that property is never awaited
+  ---
+  duration_ms: 1.4998
+  type: 'test'
+  ...
+# Subtest: every imported file matches its pinned raw and LF bytes and the published git blob; every tag resolves to its commit
+ok 256 - every imported file matches its pinned raw and LF bytes and the published git blob; every tag resolves to its commit
+  ---
+  duration_ms: 1605.3814
+  type: 'test'
+  ...
+# Subtest: the pin list covers every file outside U006 that the U006 sources and tests require
+ok 257 - the pin list covers every file outside U006 that the U006 sources and tests require
+  ---
+  duration_ms: 14.2943
+  type: 'test'
+  ...
+# Subtest: tampering is detected: an edited import, a missing import, a forged pin, a wrong commit or tag
+ok 258 - tampering is detected: an edited import, a missing import, a forged pin, a wrong commit or tag
+  ---
+  duration_ms: 6731.1761
+  type: 'test'
+  ...
+# Subtest: invalid options are refused before anything is launched
+ok 259 - invalid options are refused before anything is launched
+  ---
+  duration_ms: 9.9174
+  type: 'test'
+  ...
+# Subtest: a caller signal aborts the startup too, and the options reach the session close
+ok 260 - a caller signal aborts the startup too, and the options reach the session close
+  ---
+  duration_ms: 11.7412
+  type: 'test'
+  ...
+# Subtest: close() during an unfinished startup aborts it, ends its tree, frees the lock and says so
+ok 261 - close() during an unfinished startup aborts it, ends its tree, frees the lock and says so
+  ---
+  duration_ms: 7.7916
+  type: 'test'
+  ...
+# Subtest: close() after the startup produced a session is the bounded close of that session
+ok 262 - close() after the startup produced a session is the bounded close of that session
+  ---
+  duration_ms: 3.1784
+  type: 'test'
+  ...
+# Subtest: close() on a startup that failed by itself has nothing to close and says so
+ok 263 - close() on a startup that failed by itself has nothing to close and says so
+  ---
+  duration_ms: 2.0429
+  type: 'test'
+  ...
+# Subtest: close() on a startup that expired waits for the watch and reports its final outcome
+ok 264 - close() on a startup that expired waits for the watch and reports its final outcome
+  ---
+  duration_ms: 14.2333
+  type: 'test'
+  ...
+# Subtest: the convenience openers pass their arguments to the injected opener and return a bounded session
+ok 265 - the convenience openers pass their arguments to the injected opener and return a bounded session
+  ---
+  duration_ms: 5.9988
+  type: 'test'
+  ...
+# Subtest: U062 authority: the exact base/head/helper pins and all original manifest identities verify
+ok 266 - U062 authority: the exact base/head/helper pins and all original manifest identities verify
+  ---
+  duration_ms: 104.3452
+  type: 'test'
+  ...
+# Subtest: U062 authority: exact LF and CRLF tooling representations pass, novel mixed line endings do not
+ok 267 - U062 authority: exact LF and CRLF tooling representations pass, novel mixed line endings do not
+  ---
+  duration_ms: 107.2143
+  type: 'test'
+  ...
+# Subtest: U062 authority: unknown manifests, forged recorded input pairs and unregistered source bytes refuse
+ok 268 - U062 authority: unknown manifests, forged recorded input pairs and unregistered source bytes refuse
+  ---
+  duration_ms: 105.6341
+  type: 'test'
+  ...
+# Subtest: U062 authority: an edited base, old source snapshot, old capture or U061 predecessor is rejected
+ok 269 - U062 authority: an edited base, old source snapshot, old capture or U061 predecessor is rejected
+  ---
+  duration_ms: 37.3712
+  type: 'test'
+  ...
+# Subtest: U062 authority: changed readonly sealed helper and counter fixture imports are rejected without repinning imports
+ok 270 - U062 authority: changed readonly sealed helper and counter fixture imports are rejected without repinning imports
+  ---
+  duration_ms: 464.5314
+  type: 'test'
+  ...
+# Subtest: U062 authority: changed current fixtures, retained replay subjects and fresh tooling are rejected
+ok 271 - U062 authority: changed current fixtures, retained replay subjects and fresh tooling are rejected
+  ---
+  duration_ms: 416.4914
+  type: 'test'
+  ...
+# Subtest: U062 authority: a forged head/addendum cannot widen the six-file tooling scope to production
+ok 272 - U062 authority: a forged head/addendum cannot widen the six-file tooling scope to production
+  ---
+  duration_ms: 133.6999
+  type: 'test'
+  ...
+# Subtest: U062 authority: a consistently rewritten final head still fails the independent approved-head pin
+ok 273 - U062 authority: a consistently rewritten final head still fails the independent approved-head pin
+  ---
+  duration_ms: 108.7903
+  type: 'test'
+  ...
+# Subtest: U062 authority: caller mutations cannot change the approved readonly or source digest snapshot
+ok 274 - U062 authority: caller mutations cannot change the approved readonly or source digest snapshot
+  ---
+  duration_ms: 97.4564
+  type: 'test'
+  ...
+# Subtest: U062 authority: version1 head, source epoch and exact predecessor sources cannot be rewritten
+ok 275 - U062 authority: version1 head, source epoch and exact predecessor sources cannot be rewritten
+  ---
+  duration_ms: 5.7631
+  type: 'test'
+  ...
+# Subtest: U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+ok 276 - U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+  ---
+  duration_ms: 11.2361
+  type: 'test'
+  ...
+# Subtest: U062 handoff: the actual authenticated browser root survives its compatibility launcher
+ok 277 - U062 handoff: the actual authenticated browser root survives its compatibility launcher
+  ---
+  duration_ms: 4.963
+  type: 'test'
+  ...
+# Subtest: U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+ok 278 - U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+  ---
+  duration_ms: 4.2855
+  type: 'test'
+  ...
+# Subtest: U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+ok 279 - U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+  ---
+  duration_ms: 5.3791
+  type: 'test'
+  ...
+# Subtest: U062 foreign same-image root: a protocol PID already present before this launch is refused
+ok 280 - U062 foreign same-image root: a protocol PID already present before this launch is refused
+  ---
+  duration_ms: 1.1496
+  type: 'test'
+  ...
+# Subtest: U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+ok 281 - U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+  ---
+  duration_ms: 0.346
+  type: 'test'
+  ...
+# Subtest: U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+ok 282 - U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+  ---
+  duration_ms: 0.1991
+  type: 'test'
+  ...
+# Subtest: U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+ok 283 - U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+  ---
+  duration_ms: 4.9638
+  type: 'test'
+  ...
+# Subtest: U062 detach failure: the error stays failed but the exact sealed session and every owned handle still close
+ok 284 - U062 detach failure: the error stays failed but the exact sealed session and every owned handle still close
+  ---
+  duration_ms: 5.8799
+  type: 'test'
+  ...
+# Subtest: U062 native refresh failure: cleanup still runs and uncertainty remains an honest failure
+ok 285 - U062 native refresh failure: cleanup still runs and uncertainty remains an honest failure
+  ---
+  duration_ms: 2.2429
+  type: 'test'
+  ...
+# Subtest: U061-A001: the exact original inventory and current append-only head verify
+ok 286 - U061-A001: the exact original inventory and current append-only head verify
+  ---
+  duration_ms: 27.1665
+  type: 'test'
+  ...
+# Subtest: U061-A002: exact LF current verifier and helper representations verify without normalizing other variants
+ok 287 - U061-A002: exact LF current verifier and helper representations verify without normalizing other variants
+  ---
+  duration_ms: 68.6876
+  type: 'test'
+  ...
+# Subtest: U061-A003: a valid later addendum chains exact predecessors and leaves earlier records intact
+ok 288 - U061-A003: a valid later addendum chains exact predecessors and leaves earlier records intact
+  ---
+  duration_ms: 22.0712
+  type: 'test'
+  ...
+# Subtest: U061-A004: unknown shape is refused by name
+ok 289 - U061-A004: unknown shape is refused by name
+  ---
+  duration_ms: 16.3142
+  type: 'test'
+  ...
+# Subtest: U061-A004: wrong item is refused by name
+ok 290 - U061-A004: wrong item is refused by name
+  ---
+  duration_ms: 15.0954
+  type: 'test'
+  ...
+# Subtest: U061-A004: wrong sequence is refused by name
+ok 291 - U061-A004: wrong sequence is refused by name
+  ---
+  duration_ms: 11.9414
+  type: 'test'
+  ...
+# Subtest: U061-A004: wrong base is refused by name
+ok 292 - U061-A004: wrong base is refused by name
+  ---
+  duration_ms: 14.4628
+  type: 'test'
+  ...
+# Subtest: U061-A004: wrong predecessor is refused by name
+ok 293 - U061-A004: wrong predecessor is refused by name
+  ---
+  duration_ms: 15.0202
+  type: 'test'
+  ...
+# Subtest: U061-A004: unknown helper is refused by name
+ok 294 - U061-A004: unknown helper is refused by name
+  ---
+  duration_ms: 14.0662
+  type: 'test'
+  ...
+# Subtest: U061-A004: missing amendment is refused by name
+ok 295 - U061-A004: missing amendment is refused by name
+  ---
+  duration_ms: 17.3372
+  type: 'test'
+  ...
+# Subtest: U061-A004: unapproved file is refused by name
+ok 296 - U061-A004: unapproved file is refused by name
+  ---
+  duration_ms: 16.8745
+  type: 'test'
+  ...
+# Subtest: U061-A004: duplicate file is refused by name
+ok 297 - U061-A004: duplicate file is refused by name
+  ---
+  duration_ms: 14.4152
+  type: 'test'
+  ...
+# Subtest: U061-A004: changed predecessor is refused by name
+ok 298 - U061-A004: changed predecessor is refused by name
+  ---
+  duration_ms: 14.0391
+  type: 'test'
+  ...
+# Subtest: U061-A004: no-op is refused by name
+ok 299 - U061-A004: no-op is refused by name
+  ---
+  duration_ms: 13.9098
+  type: 'test'
+  ...
+# Subtest: U061-A005: head extra field is refused by name
+ok 300 - U061-A005: head extra field is refused by name
+  ---
+  duration_ms: 13.1744
+  type: 'test'
+  ...
+# Subtest: U061-A005: head wrong item is refused by name
+ok 301 - U061-A005: head wrong item is refused by name
+  ---
+  duration_ms: 12.6597
+  type: 'test'
+  ...
+# Subtest: U061-A005: head wrong sequence is refused by name
+ok 302 - U061-A005: head wrong sequence is refused by name
+  ---
+  duration_ms: 13.5064
+  type: 'test'
+  ...
+# Subtest: U061-A005: head unbounded sequence is refused by name
+ok 303 - U061-A005: head unbounded sequence is refused by name
+  ---
+  duration_ms: 13.3596
+  type: 'test'
+  ...
+# Subtest: U061-A005: head wrong base is refused by name
+ok 304 - U061-A005: head wrong base is refused by name
+  ---
+  duration_ms: 13.7826
+  type: 'test'
+  ...
+# Subtest: U061-A005: head changed head digest is refused by name
+ok 305 - U061-A005: head changed head digest is refused by name
+  ---
+  duration_ms: 12.4583
+  type: 'test'
+  ...
+# Subtest: U061-A005: head changed head path is refused by name
+ok 306 - U061-A005: head changed head path is refused by name
+  ---
+  duration_ms: 12.8193
+  type: 'test'
+  ...
+# Subtest: U061-A006: base and original-manifest/retained-source bytes cannot be rewritten
+ok 307 - U061-A006: base and original-manifest/retained-source bytes cannot be rewritten
+  ---
+  duration_ms: 43.8762
+  type: 'test'
+  ...
+# Subtest: U061-A007: changed helper/current verifiers and missing authority records fail explicitly
+ok 308 - U061-A007: changed helper/current verifiers and missing authority records fail explicitly
+  ---
+  duration_ms: 72.6377
+  type: 'test'
+  ...
+# Subtest: U061-A008: every byte of the head is bound by closed shape or exact addendum identity
+ok 309 - U061-A008: every byte of the head is bound by closed shape or exact addendum identity
+  ---
+  duration_ms: 5746.4744
+  type: 'test'
+  ...
+# Subtest: U061-A009: the U006-owned current helper checks every unchanged behavioral raw/LF vector
+ok 310 - U061-A009: the U006-owned current helper checks every unchanged behavioral raw/LF vector
+  ---
+  duration_ms: 20.0758
+  type: 'test'
+  ...
+# Subtest: U061-R001: all 15 actual retained historical raw input pins still pass exactly
+ok 311 - U061-R001: all 15 actual retained historical raw input pins still pass exactly
+  ---
+  duration_ms: 24.3328
+  type: 'test'
+  ...
+# Subtest: U061-R002 u005: exact LF-canonical historical pins pass without changing original raw bytes
+ok 312 - U061-R002 u005: exact LF-canonical historical pins pass without changing original raw bytes
+  ---
+  duration_ms: 16.3831
+  type: 'test'
+  ...
+# Subtest: U061-R002 u006: exact LF-canonical historical pins pass without changing original raw bytes
+ok 313 - U061-R002 u006: exact LF-canonical historical pins pass without changing original raw bytes
+  ---
+  duration_ms: 20.6408
+  type: 'test'
+  ...
+# Subtest: U061-R003: content mutations and mixed newline variants cannot borrow canonical provenance
+ok 314 - U061-R003: content mutations and mixed newline variants cannot borrow canonical provenance
+  ---
+  duration_ms: 83.5454
+  type: 'test'
+  ...
+# Subtest: U061-R004: a matching digest at an unrecorded path or manifest is refused
+ok 315 - U061-R004: a matching digest at an unrecorded path or manifest is refused
+  ---
+  duration_ms: 2.5759
+  type: 'test'
+  ...
+# Subtest: U061-R005: caller mutation cannot replace a recorded raw/canonical provenance pair
+ok 316 - U061-R005: caller mutation cannot replace a recorded raw/canonical provenance pair
+  ---
+  duration_ms: 23.9137
+  type: 'test'
+  ...
+# Subtest: the real process table holds this process with its real creation time and parent
+ok 317 - the real process table holds this process with its real creation time and parent
+  ---
+  duration_ms: 854.6443
+  type: 'test'
+  ...
+# Subtest: the real kill verifies the identity on the handle it terminates and reports gone processes
+ok 318 - the real kill verifies the identity on the handle it terminates and reports gone processes
+  ---
+  duration_ms: 3704.9189
+  type: 'test'
+  ...
+# Subtest: the real helper is ended at its deadline and the call returns promptly with a timeout
+ok 319 - the real helper is ended at its deadline and the call returns promptly with a timeout
+  ---
+  duration_ms: 18.9875
+  type: 'test'
+  ...
+# Subtest: a child that dies with its parent while the batch runs is reported killed or gone, never as an error
+ok 320 - a child that dies with its parent while the batch runs is reported killed or gone, never as an error
+  ---
+  duration_ms: 1961.3786
+  type: 'test'
+  ...
+# Subtest: only Windows is supported and the helper needs a system root
+ok 321 - only Windows is supported and the helper needs a system root
+  ---
+  duration_ms: 2.2055
+  type: 'test'
+  ...
+# Subtest: list runs one hidden Windows PowerShell 5.1 helper through standard input and parses the table
+ok 322 - list runs one hidden Windows PowerShell 5.1 helper through standard input and parses the table
+  ---
+  duration_ms: 7.0075
+  type: 'test'
+  ...
+# Subtest: kill sends pids and creation times only on standard input and maps every outcome
+ok 323 - kill sends pids and creation times only on standard input and maps every outcome
+  ---
+  duration_ms: 2.8207
+  type: 'test'
+  ...
+# Subtest: kill validates identities and does not start a helper for an empty request
+ok 324 - kill validates identities and does not start a helper for an empty request
+  ---
+  duration_ms: 0.89
+  type: 'test'
+  ...
+# Subtest: a hung helper is ended at the deadline and reported as a timeout
+ok 325 - a hung helper is ended at the deadline and reported as a timeout
+  ---
+  duration_ms: 22.8582
+  type: 'test'
+  ...
+# Subtest: helper failures surface as errors with the helper message
+ok 326 - helper failures surface as errors with the helper message
+  ---
+  duration_ms: 2.2956
+  type: 'test'
+  ...
+# Subtest: the clock is monotonic, sleep waits and the caller pid is exposed
+ok 327 - the clock is monotonic, sleep waits and the caller pid is exposed
+  ---
+  duration_ms: 17.9759
+  type: 'test'
+  ...
+1..327
+# tests 335
+# suites 0
+# pass 335
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 57824.0791

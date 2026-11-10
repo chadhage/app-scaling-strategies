@@ -6,10 +6,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { spawn, execFileSync } = require('node:child_process');
+const { execFileSync } = require('node:child_process');
 const { readProcessTable, isAlive } = require('./support/process-table.cjs');
 const { createOwnedAdapters, systemClock } = require('../owned.cjs');
 const { readQualified } = require('../../qualify/adapters.cjs');
+const { openLookAlike } = require('./u006-owned-lookalike.cjs');
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const POWERSHELL = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
@@ -46,19 +47,13 @@ function recordingAdapters(clock = systemClock) {
   return { requests, adapters: { ...base, kill: async (identities, call) => { requests.push(...identities.map(({ pid, createdAt }) => ({ pid, createdAt }))); return base.kill(identities, call); } } };
 }
 
-// A foreign process of the same image: a second headless Edge started by the test BEFORE the open (never a new child of the caller).
-async function startLookAlike(profile) {
-  const child = spawn(EDGE, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--disable-extensions', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore', windowsHide: true });
-  const up = await waitFor(() => child.exitCode === null && readProcessTable().some((row) => row.ppid === child.pid && isEdge(row)), 60000);
-  assert.ok(up, 'the look-alike Edge started and has children');
-  return child;
+// The sealed opener owns its own unique session/profile; a caller label is never process or deletion authority.
+async function startLookAlike(_profile) {
+  return openLookAlike('testing\\browser\\fixtures\\counter.html', { opener: (relativePath) => require('../../isolated.cjs').openIsolatedLesson(relativePath) });
 }
 
-async function stopLookAlike(child, profile) {
-  child.kill();
-  await waitFor(() => child.exitCode !== null || child.signalCode !== null, 15000, 200);
-  await waitFor(() => !readProcessTable().some((row) => row.ppid === child.pid && isAlive(row.pid)), 45000, 1000);
-  await fs.promises.rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }).catch(() => {});
+async function stopLookAlike(child, _profile) {
+  return child.close();
 }
 
 const sessionDirs = (runtime) => new Set(fs.readdirSync(runtime).filter((name) => name.startsWith('session-')));

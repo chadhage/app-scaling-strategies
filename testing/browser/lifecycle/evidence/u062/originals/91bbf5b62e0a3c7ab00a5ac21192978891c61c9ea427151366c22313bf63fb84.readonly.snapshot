@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Independent browser counter fixture</title>
+</head>
+<body>
+  <form>
+    <label for="message">Message</label>
+    <input id="message" autocomplete="off">
+    <button type="submit">Increment</button>
+  </form>
+  <p>Count: <output id="count">0</output></p>
+  <p>Last message: <output id="last-message"></output></p>
+  <script>
+    const form = document.querySelector('form');
+    const message = document.querySelector('#message');
+    const count = document.querySelector('#count');
+    const lastMessage = document.querySelector('#last-message');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      count.value = String(Number(count.value) + 1);
+      lastMessage.value = message.value;
+    });
+  </script>
+</body>
+</html>

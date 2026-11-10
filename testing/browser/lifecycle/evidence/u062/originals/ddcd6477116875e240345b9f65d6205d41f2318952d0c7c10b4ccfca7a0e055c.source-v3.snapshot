@@ -1,0 +1,48 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const vm = require('node:vm');
+
+function refusedVersion(kind) {
+  const file = path.join(__dirname, `${kind}-real.test.cjs`);
+  const callbacks = [];
+  const fixture = { browserVersion: '157.0.2.2', closeCalls: 0, close: async () => { fixture.closeCalls++; } };
+  const edge = { status: 'Valid', subject: 'CN=Microsoft Corporation, O=Microsoft Corporation, C=US', version: '157.0.1.1', sha256: 'a'.repeat(64), qualifiedMajors: [156, 157] };
+  const mustNotRun = () => { throw new Error('version refusal must occur before the subject or watcher starts'); };
+  const real = {
+    inspectEdge: () => edge, readProcessTable: () => [], isAlive: () => true, isEdge: () => true,
+    startLookAlike: async () => fixture, stopLookAlike: async () => fixture.close(),
+  };
+  const requireFixture = (id) => {
+    if (id === 'node:test') return (_name, _options, callback) => { callbacks.push(callback); };
+    if (id === 'node:fs') return { existsSync: () => true, readdirSync: () => [], promises: { rm: async () => {} } };
+    if (id === 'node:child_process') return { execFileSync: () => JSON.stringify(edge), spawn: mustNotRun };
+    if (id === './support/process-table.cjs') return { readProcessTable: () => [], isAlive: () => true };
+    if (id === './u006-owned-lookalike.cjs') return { openLookAlike: async () => fixture };
+    if (id === './u006-support-real.cjs') return real;
+    if (id === '../owned.cjs') return { createOwnedAdapters: mustNotRun, systemClock: {} };
+    if (id === '../startup.cjs') return { StartupError: class StartupError extends Error {}, openLessonBounded: mustNotRun };
+    if (id === '../session.cjs') return { openLessonSession: mustNotRun };
+    if (id === '../../qualify/adapters.cjs') return { readQualified: () => ({ qualifiedMajors: [156, 157] }) };
+    if (id.startsWith('node:')) return require(id);
+    throw new Error(`unexpected version-guard dependency ${id}`);
+  };
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
+    require: requireFixture, module: { exports: {} }, __dirname, __filename: file,
+    process: { pid: 1, env: { U005_REAL_EDGE: '1', U005_SCRATCH: 'owned-fixture-label', U006_REAL_EDGE: '1', U006_SCRATCH: 'owned-fixture-label' } },
+    console, Buffer, setTimeout, clearTimeout,
+  }, { filename: file, timeout: 10000 });
+  assert.equal(callbacks.length, 3);
+  return { run: () => callbacks[kind === 'u005' ? 0 : 1](), fixture };
+}
+
+for (const kind of ['u005', 'u006']) {
+  test(`U062 ${kind} version refusal: the exact independent fixture is closed even when its signed-version assertion fails`, async () => {
+    const observed = refusedVersion(kind);
+    await assert.rejects(observed.run(), (error) => error.code === 'ERR_ASSERTION' && /independent look-alike/.test(error.message));
+    assert.equal(observed.fixture.closeCalls, 1, 'a version refusal must not escape the real reader cleanup guard');
+  });
+}

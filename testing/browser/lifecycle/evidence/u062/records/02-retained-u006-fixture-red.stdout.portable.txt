@@ -1,0 +1,163 @@
+TAP version 13
+# Subtest: U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+ok 1 - U062 direct control: the actual owned browser is live and cleanup leaves the same-image neighbor untouched
+  ---
+  duration_ms: 10.9404
+  type: 'test'
+  ...
+# Subtest: U062 handoff: the actual authenticated browser root survives its compatibility launcher
+not ok 2 - U062 handoff: the actual authenticated browser root survives its compatibility launcher
+  ---
+  duration_ms: 9.1485
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    actual browser PID, not exited launcher PID
+    
+    10 !== 20
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 20
+  actual: 10
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:32:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+not ok 3 - U062 handoff cleanup: every actual fixture identity and handle settles without ending the neighbor
+  ---
+  duration_ms: 10.4765
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:38:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    actual browser and renderer are gone, not merely the launcher
+    + actual - expected
+    
+    + [
+    +   20,
+    +   21
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 20
+    1: 21
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:42:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+not ok 4 - U062 PID reuse: an unrelated same-image replacement never counts as the original live browser or a kill target
+  ---
+  duration_ms: 1.9735
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a reused PID is not the recorded creation identity
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:51:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 foreign same-image root: a protocol PID already present before this launch is refused
+not ok 5 - U062 foreign same-image root: a protocol PID already present before this launch is refused
+  ---
+  duration_ms: 1.7691
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:57:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'ERR_LOOKALIKE_PREEXISTING_ROOT'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:59:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+not ok 6 - U062 protocol handoff guard: a changed authenticated root is refused rather than adopting the neighbor
+  ---
+  duration_ms: 1.3325
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:64:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'ERR_LOOKALIKE_ROOT_CHANGED'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:66:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+not ok 7 - U062 ambiguous protocol root: multiple browser processes cannot manufacture ownership
+  ---
+  duration_ms: 2.0456
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:71:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    code: 'ERR_LOOKALIKE_PROTOCOL_ROOT'
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (<CANDIDATE_CHECKOUT>\testing\browser\lifecycle\tests\u006-u062-fixture.test.cjs:73:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+not ok 8 - U062 exact close: one shared promise, one sealed close, detached protocol and no live owned identity or timer
+  ---
+  duration_ms: 2.3191
+  type: 'test'
+  location: '<CANDIDATE_CHECKOUT>\\testing\\browser\\lifecycle\\tests\\u006-u062-fixture.test.cjs:77:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    close is idempotent even while it is still pending
+    + actual - expected
+    
+      Promise {
+        <pending>,
+    +   [Symbol(async_id_symbol)]: 6721,
+    -   [Symbol(async_id_symbol)]: 6726,
+        [Symbol(trigger_async_id_symbol)]: 6708
+      }
+    
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 1
+# fail 7
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 149.085

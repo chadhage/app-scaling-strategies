@@ -1,0 +1,16 @@
+'use strict';
+const { createHash } = require('node:crypto');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+function createAuthority(base, read) {
+  return Object.freeze({
+    verifyStable(manifestPath, inputPath, bytes) {
+      const entry = base.captures.find((capture) => capture.path === manifestPath);
+      if (!entry || hash(read(manifestPath)) !== entry.rawSha256) return { ok: false, code: 'U061_MANIFEST_CHANGED' };
+      const input = entry.inputs.find((item) => item.path === inputPath);
+      if (!input || !Buffer.isBuffer(bytes)) return { ok: false, code: 'U061_INPUT_UNKNOWN' };
+      const ok = hash(bytes) === input.rawSha256;
+      return { ok, code: ok ? 'U061_PROVENANCE_MATCH' : 'U061_STABLE_BYTES_CHANGED', representation: ok ? 'raw' : null };
+    },
+  });
+}
+module.exports = { createAuthority };

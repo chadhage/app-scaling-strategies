@@ -1,0 +1,57 @@
+'use strict';
+
+// NAIVE SPECIMEN for the U006 RED (archived evidence, never production code, never imported by production code).
+// It exports the names of close.cjs and session.cjs and implements the obvious wrong thing, selected by U006_NAIVE_MODE:
+//   await (default) awaits the graceful close first, then ends the tree: a stuck context.close() hangs it, nothing is shared, nothing is confirmed
+//   name            bounds the graceful close but then ends browsers by IMAGE NAME (a look-alike and the owner's browser die)
+//   ignore          bounds the graceful close and ends the owned tree, but ignores survivors and the scratch outcome and never shares a promise
+// It can only touch what the fake adapters of the tests expose, so it cannot reach a real process.
+
+const path = require('node:path');
+
+const { startBounded } = require(path.join(__dirname, '..', '..', '..', 'startup.cjs'));
+
+const MODE = process.env.U006_NAIVE_MODE || 'await';
+const clockOf = (session, options) => options.clock || session.owned.adapters.clock;
+
+class CloseError extends Error {
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'CloseError';
+    Object.assign(this, details);
+  }
+}
+
+function wrapSession(session, options = {}) {
+  const graceful = options.graceful || (() => session.close());
+  const close = async () => {
+    if (MODE === 'await') {
+      await graceful();
+      const report = await session.owned.terminate({ timeoutMs: options.terminateMs, listMs: options.listMs });
+      return { graceful: 'closed', clean: report.clean, ...report };
+    }
+    const clock = clockOf(session, options);
+    let timer;
+    const timeout = new Promise((resolve) => { timer = clock.setTimeout(() => resolve('timeout'), options.gracefulMs); });
+    const first = await Promise.race([Promise.resolve().then(graceful).then(() => 'closed', () => 'failed'), timeout]);
+    clock.clearTimeout(timer);
+    if (MODE === 'name') {
+      await options.killByName('msedge.exe');
+      return { graceful: first, clean: true, terminated: [], alreadyGone: [], survivors: [], failed: [], unverifiable: [], unconfirmed: [], errors: [], scratch: 'removed', sealed: 'settled' };
+    }
+    const report = await session.owned.terminate({ timeoutMs: options.terminateMs, listMs: options.listMs });
+    return { ...report, graceful: first, clean: true, scratch: 'removed', sealed: 'settled' };
+  };
+  return { ...session, close };
+}
+
+function startSession(run, options = {}) {
+  const ready = startBounded(run, options).then((session) => wrapSession(session, options));
+  ready.catch(() => {});
+  return { ready, close: async () => (await ready).close() };
+}
+
+const openLessonSession = async (relativeRepoPath, options = {}) => wrapSession(await startBounded(() => options.opener(relativeRepoPath), options), options);
+const openLoopbackSession = async (relativeOwnedIndexPath, server, options = {}) => wrapSession(await startBounded(() => options.opener(relativeOwnedIndexPath, server), options), options);
+
+module.exports = { wrapSession, CloseError, startSession, openLessonSession, openLoopbackSession };

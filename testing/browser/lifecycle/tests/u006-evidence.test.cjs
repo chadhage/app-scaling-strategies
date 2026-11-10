@@ -82,11 +82,21 @@ test('every input of the first-publication final runs is the blob that git publi
 });
 
 test('the draft REDs pin the naive specimen and the accepted U004 tree.cjs, which never changed', T, () => {
+  const lifecycle = path.resolve(__dirname, '..');
+  const helper = fs.readFileSync(path.join(__dirname, 'u006-u061-authority.cjs'));
+  const helperHash = crypto.createHash('sha256').update(helper).digest('hex');
+  assert.ok(['6b78b899e55598f45c8863d841d2f79040483b49ca829e7bc3d222a16336f182', 'ae059820be272488a69073aed011708c8bee01d3aa2113c65e96f8154de6c249'].includes(helperHash), 'U061_HELPER_PIN');
+  const authority = require('./u006-u061-authority.cjs').loadAuthority((p) => fs.readFileSync(path.join(lifecycle, p)));
   for (const name of DRAFT_REDS) {
     const manifest = readManifest(dirOf(name), name);
     const stable = manifest.inputs.filter((input) => /naive-close\.cjs\.txt$|[\\/]tree\.cjs$/.test(input.path));
     assert.equal(stable.length, 2, name);
-    for (const input of stable) assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(repoRoot, input.path))).digest('hex'), input.rawSha256, `${name} ${input.path}`);
+    for (const input of stable) {
+      const bytes = fs.readFileSync(path.join(repoRoot, input.path));
+      const manifestPath = path.relative(lifecycle, path.join(dirOf(name), `${name}.json`));
+      const inputPath = input.path.replace(/\//g, '\\').slice('testing\\browser\\lifecycle\\'.length);
+      assert.equal(authority.verifyStable(manifestPath, inputPath, bytes).ok, true, `${name} ${input.path}`);
+    }
   }
 });
 

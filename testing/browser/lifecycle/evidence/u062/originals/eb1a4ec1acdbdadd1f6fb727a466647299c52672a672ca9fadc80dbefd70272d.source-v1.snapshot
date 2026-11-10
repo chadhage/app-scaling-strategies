@@ -1,0 +1,145 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+
+class FixtureWorld {
+  constructor(options = {}) {
+    this.options = options;
+    this.time = 0;
+    this.rows = new Map([
+      [1, { pid: 1, ppid: 0, createdAt: '100', name: 'node.exe' }],
+      [99, { pid: 99, ppid: 1, createdAt: '101', name: 'msedge.exe' }],
+    ]);
+    this.timers = [];
+    this.kills = [];
+    this.removedProfiles = [];
+    this.closeCalls = 0;
+    this.detachCalls = 0;
+    this.protocolCalls = 0;
+    this.connected = false;
+    this.clock = {
+      now: () => this.time,
+      setTimeout: (fn, ms) => { const timer = { fn, at: this.time + ms, active: true }; this.timers.push(timer); return timer; },
+      clearTimeout: (timer) => { timer.active = false; },
+      sleep: async (ms) => { this.advance(this.time + ms); },
+    };
+    this.adapters = {
+      selfPid: 1, clock: this.clock, now: this.clock.now, sleep: this.clock.sleep,
+      list: async () => this.table(),
+      kill: async (identities) => identities.map((identity) => {
+        this.kills.push({ ...identity });
+        const row = this.rows.get(identity.pid);
+        if (!row) return { ...identity, outcome: 'gone' };
+        if (row.createdAt !== identity.createdAt) return { ...identity, outcome: 'mismatch' };
+        this.rows.delete(identity.pid);
+        this.react();
+        return { ...identity, outcome: 'killed' };
+      }),
+    };
+  }
+
+  table() { return [...this.rows.values()].map(({ pid, ppid, createdAt }) => ({ pid, ppid, createdAt })); }
+
+  advance(at) {
+    this.time = at;
+    for (const timer of this.timers.filter((entry) => entry.active && entry.at <= at)) { timer.active = false; timer.fn(); }
+  }
+
+  async drive(promise) {
+    let result;
+    promise.then((value) => { result = { value }; }, (error) => { result = { error }; });
+    for (let step = 0; step < 100; step++) {
+      for (let turn = 0; turn < 1000; turn++) await Promise.resolve();
+      if (result) {
+        if (result.error) throw result.error;
+        return result.value;
+      }
+      const next = this.timers.filter((entry) => entry.active).sort((a, b) => a.at - b.at)[0];
+      assert.ok(next, 'controlled fixture promise has work or an owned timer');
+      this.advance(next.at);
+    }
+    assert.fail('controlled fixture iteration bound was exceeded');
+  }
+
+  launch() {
+    this.browserPid = this.options.handoff ? 20 : 10;
+    this.rendererPid = this.options.handoff ? 21 : 11;
+    this.rows.set(10, { pid: 10, ppid: 1, createdAt: '200', name: 'msedge.exe' });
+    if (this.options.handoff) this.rows.set(20, { pid: 20, ppid: 10, createdAt: '201', name: 'msedge.exe' });
+    this.rows.set(this.rendererPid, { pid: this.rendererPid, ppid: this.browserPid, createdAt: '202', name: 'msedge.exe' });
+    this.owned = new Map([this.browserPid, this.rendererPid].map((pid) => [pid, this.rows.get(pid).createdAt]));
+    this.connected = true;
+  }
+
+  closeOwned() {
+    for (const [pid, createdAt] of this.owned) if (this.rows.get(pid)?.createdAt === createdAt) this.rows.delete(pid);
+    this.connected = false;
+    if (this.resolveClose) this.resolveClose();
+  }
+
+  react() { if (!this.ownAlive().length && this.resolveClose) { this.connected = false; this.resolveClose(); } }
+
+  ownAlive() { return [...(this.owned || [])].filter(([pid, createdAt]) => this.rows.get(pid)?.createdAt === createdAt).map(([pid]) => pid); }
+
+  reuseRoot() {
+    this.rows.set(this.browserPid, { pid: this.browserPid, ppid: 99, createdAt: '999', name: 'msedge.exe' });
+    this.connected = false;
+  }
+
+  async openSealed() {
+    this.launch();
+    if (this.options.handoff) this.rows.delete(10);
+    const protocol = {
+      send: async (method) => {
+        assert.equal(method, 'SystemInfo.getProcessInfo');
+        this.protocolCalls++;
+        if (this.options.protocolChanges && this.protocolCalls === 2) return { processInfo: [{ type: 'browser', id: 99 }] };
+        const roots = [{ type: 'browser', id: this.options.protocolPid || this.browserPid }];
+        if (this.options.duplicateRoots) roots.push({ type: 'browser', id: 99 });
+        return { processInfo: roots };
+      },
+      detach: async () => { this.detachCalls++; },
+    };
+    const browser = { isConnected: () => this.connected, newBrowserCDPSession: async () => protocol };
+    let closing;
+    return {
+      browserVersion: '157.0.4341.42',
+      page: { context: () => ({ browser: () => browser }) },
+      close: () => {
+        if (!closing) {
+          this.closeCalls++;
+          closing = this.options.hangClose ? new Promise((resolve) => { this.resolveClose = resolve; }) : Promise.resolve().then(() => this.closeOwned());
+        }
+        return closing;
+      },
+    };
+  }
+
+  legacySpawn() {
+    this.launch();
+    const child = {
+      pid: 10, exitCode: null, signalCode: null,
+      kill: () => {
+        if (this.rows.get(10)?.createdAt !== '200') return false;
+        this.closeOwned();
+        this.rows.delete(10);
+        child.signalCode = 'SIGTERM';
+        return true;
+      },
+    };
+    this.legacyChild = child;
+    return child;
+  }
+
+  legacyTable() {
+    const rows = [...this.rows.values()].map((row) => ({ ...row }));
+    if (this.options.handoff && !this.legacyHandedOff) {
+      this.legacyHandedOff = true;
+      this.rows.delete(10);
+      this.legacyChild.exitCode = 0;
+    }
+    return rows;
+  }
+}
+
+module.exports = { FixtureWorld };

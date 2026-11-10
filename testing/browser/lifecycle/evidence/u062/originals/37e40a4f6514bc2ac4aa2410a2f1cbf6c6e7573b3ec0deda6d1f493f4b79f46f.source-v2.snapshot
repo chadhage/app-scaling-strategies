@@ -1,0 +1,83 @@
+'use strict';
+
+// U006 imports: the U005 and U004 files that U006 consumes read-only are pinned and recomputed against the files and against git.
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { lifecycleRoot, repoRoot, git, readImports, verifyImports, crlfToLf } = require('./u006-support-imports.cjs');
+assert.equal(require('node:crypto').createHash('sha256').update(crlfToLf(fs.readFileSync(path.join(__dirname, 'u006-u062-authority-v2.cjs')))).digest('hex'),
+  '278b4ea1cc0f76c26e8ede8864b057ee4dc992208efd462c216e05dbfde526d2', 'U062_AUTHORITY_HELPER_PIN');
+const authority = require('./u006-u062-authority-v2.cjs').loadAuthority(
+  (file) => fs.readFileSync(path.join(lifecycleRoot, file)),
+  (file) => fs.readFileSync(path.join(repoRoot, file)),
+);
+
+const T = { timeout: 60000 };
+const imports = readImports();
+const pinned = new Set([...imports.files, ...authority.readonlyPins()].map((file) => file.path.replace(/\\/g, '/')));
+
+test('every imported file matches its pinned raw and LF bytes and the published git blob; every tag resolves to its commit', T, () => {
+  assert.deepEqual(verifyImports(imports), []);
+  assert.deepEqual(Object.keys(imports.accepted).sort(), ['U004', 'U005', 'U018']);
+  for (const accepted of Object.values(imports.accepted)) assert.match(accepted.commit, /^[0-9a-f]{40}$/);
+});
+
+test('the pin list covers every file outside U006 that the U006 sources and tests require', T, () => {
+  const own = (name) => /^u006-/.test(name) || ['close.cjs', 'session.cjs'].includes(name);
+  const files = [path.join(lifecycleRoot, 'close.cjs'), path.join(lifecycleRoot, 'session.cjs'), ...fs.readdirSync(path.join(lifecycleRoot, 'tests')).filter((name) => /^u006-.*\.cjs$/.test(name)).map((name) => path.join(lifecycleRoot, 'tests', name))];
+  const required = new Set();
+  for (const file of files) {
+    for (const match of fs.readFileSync(file, 'utf8').matchAll(/require\('(\.[^']+)'\)/g)) {
+      const target = path.resolve(path.dirname(file), match[1]);
+      if (!own(path.basename(target)) && !target.endsWith('.json')) required.add(path.relative(repoRoot, target).replace(/\\/g, '/'));
+    }
+  }
+  assert.ok(required.size >= 6);
+  for (const target of required) assert.ok(pinned.has(target) || pinned.has(`${target}.cjs`), `${target} is pinned`);
+});
+
+function scratch(run) {
+  const dir = fs.mkdtempSync(path.join(__dirname, 'u006-tamper-'));
+  try {
+    const root = path.join(dir, 'root');
+    for (const file of imports.files) {
+      const target = path.join(root, file.path);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.copyFileSync(path.join(repoRoot, file.path), target);
+    }
+    return run(root);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('tampering is detected: an edited import, a missing import, a forged pin, a wrong commit or tag', T, () => {
+  scratch((root) => assert.deepEqual(verifyImports(imports, { root }), []));
+  scratch((root) => {
+    fs.appendFileSync(path.join(root, imports.files[0].path), '\n// tampered\n');
+    assert.ok(verifyImports(imports, { root, checkGit: false }).some((item) => /raw bytes changed/.test(item)));
+  });
+  scratch((root) => {
+    fs.rmSync(path.join(root, imports.files[1].path));
+    assert.ok(verifyImports(imports, { root, checkGit: false }).some((item) => /missing/.test(item)));
+  });
+  const forged = JSON.parse(JSON.stringify(imports));
+  forged.files[0].crlfToLfSha256 = '0'.repeat(64);
+  assert.ok(verifyImports(forged, { checkGit: false }).some((item) => /raw bytes changed/.test(item)));
+  assert.ok(verifyImports({ ...imports, schema: 'x' }, { checkGit: false }).some((item) => /unknown schema/.test(item)));
+  // the git object checks need the object database: a git archive tree has none (the checks are then skipped, as verifyImports itself does)
+  if (git(['rev-parse', '--git-dir']).status !== 0) return;
+  const reSigned = JSON.parse(JSON.stringify(imports));
+  reSigned.files[0].acceptedGitSha256 = '1'.repeat(64);
+  reSigned.files[0].crlfToLfSha256 = '1'.repeat(64);
+  reSigned.files[0].rawSha256 = '1'.repeat(64);
+  assert.ok(verifyImports(reSigned).some((item) => /published blob differs/.test(item)));
+  const wrongCommit = JSON.parse(JSON.stringify(imports));
+  wrongCommit.accepted.U005.commit = imports.accepted.U004.commit;
+  assert.ok(verifyImports(wrongCommit).length > 0);
+  const wrongTag = JSON.parse(JSON.stringify(imports));
+  wrongTag.accepted.U005.tag = imports.accepted.U004.tag;
+  assert.ok(verifyImports(wrongTag).some((item) => /does not resolve/.test(item)));
+});

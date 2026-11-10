@@ -72,6 +72,7 @@ test('real Edge: a forced stuck close is ended by owned-tree termination, the se
   const foreignBefore = real.readProcessTable().filter(real.isEdge).filter((row) => real.isAlive(row.pid)).map((row) => row.pid);
   const lookAlike = await real.startLookAlike(profile);
   try {
+    assert.equal(lookAlike.browserVersion, edge.version, 'the independent look-alike runs the inspected signed Edge');
     const { requests, adapters } = real.recordingAdapters();
     const dirsBefore = real.sessionDirs(RUNTIME);
     const profilesBefore = profileDirs();
@@ -100,7 +101,7 @@ test('real Edge: a forced stuck close is ended by owned-tree termination, the se
       assert.equal(requests.some((item) => item.pid === lookAlike.pid), false, 'the look-alike was never a kill target');
       const after = real.readProcessTable();
       assert.deepEqual(after.filter((row) => recorded.includes(row.pid) && real.isEdge(row) && real.isAlive(row.pid)), [], 'the owned tree is gone (independent table)');
-      assert.ok(real.isAlive(lookAlike.pid) && after.some((row) => row.pid === lookAlike.pid), 'the same-image look-alike survives');
+      assert.ok(await lookAlike.isAlive() && real.isAlive(lookAlike.pid) && after.some((row) => row.pid === lookAlike.pid), 'the same-image look-alike survives');
       const foreignAfter = after.filter(real.isEdge).filter((row) => real.isAlive(row.pid) && !recorded.includes(row.pid)).map((row) => row.pid);
       assert.equal(requests.some((item) => foreignBefore.includes(item.pid)), false, 'no foreign Edge process was a kill target');
       const leftover = dirs.filter((name) => real.sessionDirs(RUNTIME).has(name));
@@ -109,7 +110,8 @@ test('real Edge: a forced stuck close is ended by owned-tree termination, the se
         case: 'forced-stuck-close', edge, recorded: recorded.length, graceful: outcome.graceful, gracefulError: outcome.gracefulError, sealedError: outcome.sealedError,
         terminated: outcome.terminated.length, alreadyGone: outcome.alreadyGone.length, exiting: outcome.exiting.length, scratch: outcome.scratch, closeBusy: busy ? busy.code : null, openRetries, killRequests: requests.length,
         foreignEdgeBefore: foreignBefore.length, foreignEdgeAfter: foreignAfter.length, foreignVanished: foreignBefore.filter((pid) => !foreignAfter.includes(pid)),
-        lookAlikeAlive: true, newSessionDirs: dirs.length, sessionDirsLeft: leftover.length, profileDirsLeft: profilesLeft.length,
+        lookAlikeAlive: true, lookAlikeStableIdentity: lookAlike.identity, lookAlikeBrowserVersion: lookAlike.browserVersion,
+        newSessionDirs: dirs.length, sessionDirsLeft: leftover.length, profileDirsLeft: profilesLeft.length,
       }));
       if (dirs.length === 1) assert.equal(leftover.length, 0, 'the sealed scratch removal really ran');
     });

@@ -1,0 +1,98 @@
+'use strict';
+
+const core = require('../tree.cjs');
+const { bounded, createOwnedAdapters, systemClock } = require('../owned.cjs');
+
+const fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
+const same = (left, right) => left.pid === right.pid && left.createdAt === right.createdAt;
+
+async function openLookAlike(relativePath, options = {}) {
+  const { opener, adapters = createOwnedAdapters(), clock = adapters.clock || systemClock,
+    closeMs = 60000, listMs = 60000, terminateMs = 120000 } = options;
+  if (typeof opener !== 'function') throw fail('ERR_LOOKALIKE_OPENER', 'an independent sealed opener is required');
+  const table = async () => {
+    const rows = await bounded(clock, listMs, 'look-alike native identities', () => adapters.list({ timeoutMs: listMs }));
+    if (!Array.isArray(rows) || !rows.some((row) => row.pid === adapters.selfPid && typeof row.createdAt === 'string')) {
+      throw fail('ERR_LOOKALIKE_TABLE', 'the native table must contain the caller identity');
+    }
+    return rows;
+  };
+  const before = await table();
+  let session;
+  let protocol;
+  let browser;
+  let snapshot;
+  const rootPid = async () => {
+    const info = await bounded(clock, listMs, 'look-alike authenticated browser process', () => protocol.send('SystemInfo.getProcessInfo'));
+    const roots = info && Array.isArray(info.processInfo) ? info.processInfo.filter((entry) => entry.type === 'browser') : [];
+    if (roots.length !== 1 || !Number.isSafeInteger(roots[0].id) || roots[0].id <= 0 || roots[0].id === adapters.selfPid) {
+      throw fail('ERR_LOOKALIKE_PROTOCOL_ROOT', 'the owned browser connection must name exactly one browser process');
+    }
+    return roots[0].id;
+  };
+  try {
+    session = await opener(relativePath);
+    browser = session.page.context().browser();
+    if (!browser || !browser.isConnected()) throw fail('ERR_LOOKALIKE_CONNECTION', 'the independently opened browser is not connected');
+    protocol = await browser.newBrowserCDPSession();
+    const pid = await rootPid();
+    const first = (await table()).find((row) => row.pid === pid);
+    if (!first || typeof first.createdAt !== 'string' || !/^\d+$/.test(first.createdAt)) {
+      throw fail('ERR_LOOKALIKE_ROOT_IDENTITY', 'the authenticated browser must have a readable native creation identity');
+    }
+    if (before.some((row) => same(row, first))) throw fail('ERR_LOOKALIKE_PREEXISTING_ROOT', 'the browser root predates this independent launch');
+    const confirmedPid = await rootPid();
+    const confirmedTable = await table();
+    const confirmed = confirmedTable.find((row) => row.pid === pid);
+    if (confirmedPid !== pid || !confirmed || !same(first, confirmed) || !browser.isConnected()) {
+      throw fail('ERR_LOOKALIKE_ROOT_CHANGED', 'the authenticated root changed while its native identity was recorded');
+    }
+    snapshot = await core.snapshotTree(pid, { ...adapters, list: async () => confirmedTable }, { timeoutMs: listMs });
+    if (!snapshot.entries.length || !same(snapshot.entries[0], first)) throw fail('ERR_LOOKALIKE_ROOT_CHANGED', 'the native snapshot does not match the authenticated root');
+  } catch (error) {
+    if (protocol) await bounded(clock, closeMs, 'refused look-alike protocol detach', () => protocol.detach()).catch(() => {});
+    if (session) await bounded(clock, closeMs, 'refused look-alike sealed close', () => session.close());
+    throw error;
+  }
+  const identity = Object.freeze({ pid: snapshot.entries[0].pid, createdAt: snapshot.entries[0].createdAt });
+  let closing;
+  const isAlive = async () => {
+    if (closing || !browser.isConnected()) return false;
+    const first = (await table()).find((row) => row.pid === identity.pid);
+    if (!first || !same(first, identity)) return false;
+    if (await rootPid() !== identity.pid || !browser.isConnected()) return false;
+    return (await table()).some((row) => same(row, identity));
+  };
+  const close = () => {
+    if (!closing) {
+      closing = (async () => {
+        snapshot = await core.refreshTree(snapshot, adapters, { timeoutMs: listMs });
+        await bounded(clock, closeMs, 'look-alike protocol detach', () => protocol.detach());
+        let settled = false;
+        let closeError = null;
+        const sealedClose = Promise.resolve().then(() => session.close()).then(
+          () => { settled = true; },
+          (error) => { settled = true; closeError = error; },
+        );
+        await bounded(clock, closeMs, 'look-alike sealed close', () => sealedClose).catch((error) => {
+          if (error.code !== 'ERR_TIMEOUT') throw error;
+        });
+        const current = await table();
+        const live = snapshot.entries.filter((entry) => current.some((row) => same(row, entry)));
+        let termination = { terminated: [], alreadyGone: [], survivors: [], refused: [], errors: [] };
+        if (live.length) termination = await core.terminateOwned({ ...snapshot, entries: live }, { timeoutMs: terminateMs, adapters });
+        await bounded(clock, terminateMs, 'look-alike sealed close settlement', () => sealedClose);
+        const after = await table();
+        const survivors = snapshot.entries.filter((entry) => after.some((row) => same(row, entry)));
+        if (!settled || survivors.length || termination.survivors.length || termination.errors.length || closeError) {
+          throw fail('ERR_LOOKALIKE_CLEANUP', JSON.stringify({ settled, survivors, errors: termination.errors, sealedCloseError: closeError && String(closeError.message) }));
+        }
+        return Object.freeze({ clean: true, sealedSettled: true, protocolDetached: true, survivors: [], identity });
+      })();
+    }
+    return closing;
+  };
+  return Object.freeze({ pid: identity.pid, identity, browserVersion: session.browserVersion, isAlive, close });
+}
+
+module.exports = { openLookAlike };

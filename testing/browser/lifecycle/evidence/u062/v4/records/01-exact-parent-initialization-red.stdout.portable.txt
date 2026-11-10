@@ -1,0 +1,67 @@
+TAP version 13
+# Subtest: U062 parent: initialization refusal preserves detach failure and closes the sealed session (closeFails=false)
+not ok 1 - U062 parent: initialization refusal preserves detach failure and closes the sealed session (closeFails=false)
+  ---
+  duration_ms: 2.8506
+  type: 'test'
+  location: '<REPOSITORY>\\.git\\kanban-orchestrator\\<PRIVATE_EXECUTION>\\recovery-20261109-r1424\\u062-review\\initialization-errors.test.cjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /owned protocol detach cleanup failed/. Input:
+    
+    'ERR_LOOKALIKE_PROTOCOL_ROOT: the owned browser connection must name exactly one browser process\n' +
+      'ERR_LOOKALIKE_PROTOCOL_ROOT'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    ERR_LOOKALIKE_PROTOCOL_ROOT: the owned browser connection must name exactly one browser process
+    ERR_LOOKALIKE_PROTOCOL_ROOT
+  operator: 'match'
+  stack: |-
+    Object.<anonymous> (<REPOSITORY>\.git\kanban-orchestrator\<PRIVATE_EXECUTION>\recovery-20261109-r1424\u062-review\initialization-errors.test.cjs:39:14)
+    expectedException (node:assert:576:17)
+    expectsError (node:assert:701:21)
+    Function.rejects (node:assert:767:3)
+    async TestContext.<anonymous> (<REPOSITORY>\.git\kanban-orchestrator\<PRIVATE_EXECUTION>\recovery-20261109-r1424\u062-review\initialization-errors.test.cjs:30:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: U062 parent: initialization refusal preserves detach failure and closes the sealed session (closeFails=true)
+not ok 2 - U062 parent: initialization refusal preserves detach failure and closes the sealed session (closeFails=true)
+  ---
+  duration_ms: 1.7779
+  type: 'test'
+  location: '<REPOSITORY>\\.git\\kanban-orchestrator\\<PRIVATE_EXECUTION>\\recovery-20261109-r1424\\u062-review\\initialization-errors.test.cjs:15:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /ERR_LOOKALIKE_PROTOCOL_ROOT|exactly one browser process/. Input:
+    
+    'owned sealed close cleanup failed\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    owned sealed close cleanup failed
+    
+  operator: 'match'
+  stack: |-
+    Object.<anonymous> (<REPOSITORY>\.git\kanban-orchestrator\<PRIVATE_EXECUTION>\recovery-20261109-r1424\u062-review\initialization-errors.test.cjs:38:14)
+    expectedException (node:assert:576:17)
+    expectsError (node:assert:701:21)
+    Function.rejects (node:assert:767:3)
+    async TestContext.<anonymous> (<REPOSITORY>\.git\kanban-orchestrator\<PRIVATE_EXECUTION>\recovery-20261109-r1424\u062-review\initialization-errors.test.cjs:30:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 110.3876
