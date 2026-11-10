@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "revision": 1470,
+  "revision": 1471,
   "controllerId": "942b9aec-aa3f-4179-b6ed-e2bc57abeed2",
   "status": "running",
-  "updatedAtUtc": "2026-11-10T13:22:06.3180276Z",
+  "updatedAtUtc": "2026-11-10T13:26:48.7766773Z",
   "baseline": "8e7fb3cbcc61d3aa85116204735f10687f608b1c",
   "branch": "main",
   "sessionBound": true,
@@ -218,13 +218,13 @@
     "zeroCreditWork": "U (unblock, slice, tooling) and K (quality debt) work has kanoCredit 0, is never counted in s, l or d, and never funds a quota."
   },
   "kanoDone": {
+    "L": 2,
     "S": 177,
-    "D": 13,
-    "L": 2
+    "D": 13
   },
   "reservations": {
-    "D": 4,
-    "L": 0
+    "L": 0,
+    "D": 4
   },
   "gateAliases": {
     "JAVA": "C097, C098, HOSTJAVA.",
@@ -77878,6 +77878,59 @@
       "readiness": false,
       "id": "U067",
       "acceptance": "Exercise the shared input/presentation data boundary with reproducible seeded holes, cycles and throwing getters. Require the documented typed refusal or explicitly safe rendering and no unintended effects, with counted work bounds where needed rather than absolute timing assertions. Keep original synthetic-data/API semantics and prove every behavior change with exact source-bound evidence."
+    },
+    {
+      "admittedAtUtc": "2026-11-10T13:26:47Z",
+      "agentId": "31693848-7789-47dc-bceb-35700370f690",
+      "tdd": "RED first (archived under a NEW directory of capability/C041): the service-starting tests run in an LF-converted tree and fail on the published bytes with the asset integrity mismatch (0 of 8 catalog asset pins match the LF bytes, 8 of 8 match after CRLF conversion: the reviewer probe pin.cjs in RUN/results/C059-review); then the change; the RED replayed unchanged; no absolute timing bound.",
+      "id": "U054",
+      "owner": "worker-U054",
+      "kanoCredit": 0,
+      "heartbeatUtc": "2026-11-10T13:26:47Z",
+      "kind": "hardening",
+      "readiness": false,
+      "title": "C041 lesson assets: serve() verifyAsset accepts the LF-normalized form of each pinned asset (record raw and LF like the import pins) so a Linux or LF checkout can start the service of every consumer",
+      "startedAtUtc": "2026-11-10T13:26:47Z",
+      "executionBudgetUntilUtc": "2026-11-10T17:26:47.7191642Z",
+      "coverage": "85/85/85 per file on every first-party production file of capability/C041 that is changed or added.",
+      "createdAtUtc": "2026-11-06T19:59:39Z",
+      "state": "In Progress",
+      "parentLiveApplicationAuthorized": false,
+      "acceptance": "In capability/C041 verifyAsset (called from serve.cjs, and by C059 server.cjs loadAssets) accepts a lesson asset whose raw SHA-256 OR whose CRLF-to-LF canonical SHA-256 equals the pin, the catalog records both hashes for each of the 8 pinned lesson assets, a tampered asset (a changed byte in either line-ending form) is still refused by name and a test per branch proves it; the services of C041 and of its consumers (C059 and any other importer) start from a git-archive tree whose text files were converted to LF, proved by running the service-starting suites of C041 and C059 in an LF tree; the changes reach the sealed card only through a chained append-only addendum or NEW files without editing a pinned file in place; per-file 85/85/85 still holds for every changed production file.",
+      "serves": "C041",
+      "hints": [
+        {
+          "kind": "plan",
+          "confidence": 4,
+          "text": "From the C059 second-fix review (Q9 and M2): git archive on this machine applies core.autocrlf so the 8 pinned lesson assets come out CRLF and everything passes here; a Linux clone of blobs stored as LF fails every test that starts the service (Pinned lesson asset integrity mismatch from capability/C041/serve.cjs verifyAsset, sha256 of the RAW bytes). The reviewer probes heavy2.ps1, conv.cjs and pin.cjs in RUN/results/C059-review reproduce it with an LF-converted copy of C041, C042 and learning/S001, S003. Entry gate C059 Done so that the C059 README limit (service-starting suites need CRLF assets) can be lifted in a later amendment of C059.",
+          "evidence": "reviews/C059.fix2.verdict.json (Q9, M2)"
+        },
+        {
+          "kind": "trap",
+          "confidence": 5,
+          "text": "C041 is an accepted sealed card: amend only through the addendum chain (orders/B1-U020.md, orders/A1-U021+U019.md, orders/U032.md). PUBLISHER ROUTE (check the map of the publisher BEFORE you order a worker to use it: the U040 order named the wrong one): C041 (class S) is NOT in the closed map of publish-ext.ps1 and has no GO file, but it IS in the map of the legacy publish.ps1 (localCapabilityClasses: C041='S'): publish with the legacy publisher, `publish.ps1 -CardId C041 -WorkerId worker-U054 -Paths ... -Message '[C041][S] U054 ...'`, one amendment commit. Add no local Windows user name and no session id to any added file (rule 15).",
+          "evidence": "orders/U032.md; orders/_CONTROLLER-UPDATE.md rule 15; .git/kanban-orchestrator/publish.ps1 line 24"
+        }
+      ],
+      "lineage": "OP-C041-LF-ASSETS",
+      "attemptHistory": [
+        {
+          "preservedOriginalWorkerId": true,
+          "by": "parent-execution-coordinator",
+          "to": "In Progress",
+          "scope": "Private C041 only; accepted live C041/C059 and S001/S003 lesson bytes read-only. Exact original LF integrity acceptance, source/consumer/publisher scope gaps remain real gates.",
+          "atUtc": "2026-11-10T13:26:47Z",
+          "actorId": "31693848-7789-47dc-bceb-35700370f690",
+          "kind": "first-private-pull-after-actual-gate",
+          "liveApplicationPermission": false,
+          "kanoCredit": 0,
+          "from": "To Do"
+        }
+      ],
+      "source": "reviews/C059.fix2.verdict.json (Q9, M2)",
+      "createdBy": "controller-2026-11-06",
+      "entryGate": "C059 Done (its README states the limit until this item lands)",
+      "unblocks": []
     }
   ],
   "localPublisherAuthorization": {
@@ -81429,6 +81482,21 @@
       "measuredOpen": 241,
       "reason": "Memory availability increased from7.67 to16.74GiB. Three disjoint existing pieces, one owned heavy/normal child each, use current3heavy/4normal lanes without new reservations or pre-review bulk assignment.",
       "freeMemoryGiB": 16.74
+    },
+    {
+      "selectedContributors": 3,
+      "inheritedRevision": 1470,
+      "liveApplicationPermission": false,
+      "resumedAtUtc": "2026-11-10T13:26:47Z",
+      "preservationSnapshot": "<RUN>/recovery-20261109-r1424/nextwave-live-protected-1470.json",
+      "by": "parent-execution-coordinator",
+      "measuredOpen": 244,
+      "totalMemoryGiB": 31.82,
+      "freeMemoryGiB": 12.2,
+      "reason": "Refill only the released C059 owner slot with its actual U054 successor; C011/C022 remain disjoint. One heavy/normal child each; preserve original reservations and zero-credit work.",
+      "measuredDepth": 9,
+      "logicalProcessors": 8,
+      "measuredReady": 19
     }
   ]
 }
