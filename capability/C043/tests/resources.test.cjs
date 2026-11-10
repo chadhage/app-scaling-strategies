@@ -107,6 +107,7 @@ test('REFUSAL FLOOD (table over every refusal the server emits, attacker in its 
         const stats = await child.stats();
         const reads = await child.reads();
         subtest.diagnostic(`flood ${kind}: server event-loop lag ${Math.round(stats.lagMaxMs)} ms, ${probes} probes, the server read at most ${reads.max} bytes from one connection (reported, never asserted)`);
+        if (stats.stallObservation) subtest.diagnostic(`stall-observation ${kind}: ${JSON.stringify(stats.stallObservation)}`);
         assert.equal(reads.count >= FLOOD, true, `the server saw the ${FLOOD} attacker connections close`);
         assert.equal(reads.max <= READ_BOUND, true, `the server parsed ${reads.max} bytes from one connection, a refusal stops reading (bound ${READ_BOUND})`);
         assert.equal(stats.heapUsed < 32 * MB, true, `retained heap ${(stats.heapUsed / MB).toFixed(1)} MB once the connections are gone`);

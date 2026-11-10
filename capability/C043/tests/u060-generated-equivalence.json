@@ -1,0 +1,18 @@
+{
+  "schema": "C043-U060-generated-equivalence/1",
+  "file": "server.cjs",
+  "sourceSha256": "ab44978d9d98b72c63bd2044dbfc6c09c4b393fd5295623ae1785324e1f17aa4",
+  "proofs": [
+    { "id": "6686:if-true", "from": "earlier !== null", "to": "true", "family": "queue", "reason": "The only added await receives null; a non-null predecessor is still awaited. Paired actual HTTP traces retain request order and effects, including a held first request." },
+    { "id": "7570:swap >=", "from": ">=", "to": ">", "family": "statuses", "reason": "With the accepted production runner, status 300 is unreachable: accepted build branches emit only 200/201/202 and every refusal status is 4xx/5xx. The exact branch domain and real response traces are checked." },
+    { "id": "4515:return value dropped", "from": "return;", "to": "return undefined;", "family": "void-return", "reason": "Both statements return the same primitive undefined and evaluate no expression; paired actual over-limit and closed-parser paths preserve responses and effects." },
+    { "id": "12807:return value dropped", "from": "return;", "to": "return undefined;", "family": "void-return", "reason": "Both statements return the same primitive undefined and evaluate no expression; paired actual over-limit and closed-parser paths preserve responses and effects." },
+    { "id": "8786:return value dropped", "from": "return false;", "to": "return undefined;", "family": "falsy-return", "reason": "The private only/key helpers are used solely as boolean conditions; false and undefined take the same refusal branches. Paired HTTP method, query, GET-body and invalid-key traces cover each use." },
+    { "id": "8854:return value dropped", "from": "return false;", "to": "return undefined;", "family": "falsy-return", "reason": "The private only/key helpers are used solely as boolean conditions; false and undefined take the same refusal branches. Paired HTTP method, query, GET-body and invalid-key traces cover each use." },
+    { "id": "8941:return value dropped", "from": "return false;", "to": "return undefined;", "family": "falsy-return", "reason": "The private only/key helpers are used solely as boolean conditions; false and undefined take the same refusal branches. Paired HTTP method, query, GET-body and invalid-key traces cover each use." },
+    { "id": "9250:return value dropped", "from": "return false;", "to": "return undefined;", "family": "falsy-return", "reason": "The private only/key helpers are used solely as boolean conditions; false and undefined take the same refusal branches. Paired HTTP method, query, GET-body and invalid-key traces cover each use." },
+    { "id": "6758:statement deleted", "from": "socket.destroy();", "to": ";", "family": "post-closed", "reason": "On the queued closing branch, the predecessor's finish/close has already destroyed the connection. Native Socket.destroy is idempotent; paired refused pipelines have one close, no later answer and no later effect." },
+    { "id": "6783:statement deleted", "from": "release();", "to": ";", "family": "post-closed", "reason": "The queued closing branch is reached after socket close has already resolved its turn. Resolving that promise again is idempotent; paired refused pipelines preserve answers, closure and both journals." },
+    { "id": "12677:statement deleted", "from": "closing.add(socket);", "to": ";", "family": "parser-marker", "reason": "A terminal parser refusal follows every already parsed request, then closes the socket; Node parses no request after the fatal parse error. Paired actual parser and CONNECT pipelines show no later request or effect." }
+  ]
+}

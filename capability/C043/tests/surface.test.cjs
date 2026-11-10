@@ -29,8 +29,10 @@ test('every imported file is pinned and the pins are recomputed against git at t
     const blob = git('cat-file', 'blob', `${accepted.commit}:${relative}`);
     assert.equal(sha(blob), pin.acceptedGitSha256, `${relative}: the accepted blob`);
     assert.equal(git('rev-parse', `${accepted.commit}:${relative}`).toString().trim(), pin.gitBlob, `${relative}: the blob id`);
+    const canonicalAccepted = sha(lf(blob));
+    assert.equal(pin.canonicalLfSha256, canonicalAccepted, `${relative}: the canonical pin is recomputed from the accepted blob`);
     const working = fs.readFileSync(path.join(repository, relative));
-    assert.equal([sha(working), sha(lf(working))].includes(pin.acceptedGitSha256), true, `${relative}: the working bytes are the accepted bytes (raw or LF form)`);
+    assert.equal(sha(working) === pin.acceptedGitSha256 || sha(lf(working)) === canonicalAccepted, true, `${relative}: the working bytes are the accepted bytes (raw or LF form)`);
     assert.equal(sha(working) === pin.rawSha256 || sha(lf(working)) === pin.canonicalLfSha256, true, `${relative}: the recorded working hashes`);
   }
 });

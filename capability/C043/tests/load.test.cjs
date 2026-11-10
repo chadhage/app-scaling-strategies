@@ -4,12 +4,13 @@
 // within 16475 ms' on a loaded machine). The SERVER CHILD of every resource test is stalled once, at its first accepted
 // connection, for longer than the wall-clock bounds the first version of the tests asserted (event-loop lag 4 s, GET
 // latency 6 s, flood 12 s, keep-alive close 3 s). A CORRECT server that the scheduler did not run must still pass: the
-// facts the tests decide on are closed sockets, answered probes, a collected heap and the configured timers. The stall
-// is proven by the lag the child itself measured (a diagnostic line of the flood test), so the test cannot pass vacuously.
+// facts the tests decide on are closed sockets, answered probes, a collected heap and the configured timers. Requested
+// blocks are proved by explicitly armed counters, not a native histogram that may miss its first sample.
 const path = require('node:path');
 const test = require('node:test');
 const { spawnSync } = require('node:child_process');
 const { assert } = require('./support.cjs');
+const { observationProblems } = require('./u059-stall-observer.cjs');
 
 const root = path.resolve(__dirname, '..');
 const repository = path.resolve(root, '..', '..');
@@ -28,7 +29,8 @@ test('a correct server that is stalled for 5 s still passes every resource test:
   assert.match(output, /^# fail 0$/m);
   const counted = (name) => Number(new RegExp(`^# ${name} (\\d+)$`, 'm').exec(output)?.[1] ?? NaN);
   assert.deepEqual([counted('tests'), counted('pass'), counted('skipped'), counted('cancelled')], [11, 11, 0, 0], 'nine tests and two flood kinds, every one passed');
-  const lags = [...output.matchAll(/flood (\S+): server event-loop lag (\d+) ms/g)].map((match) => Number(match[2]));
-  assert.equal(lags.length, 2, 'the flood test reports the lag of the server it measured, once per kind');
-  assert.equal(Math.max(...lags) >= STALL_MS * 0.9, true, `the stall took effect (the child measured ${Math.max(...lags)} ms of lag)`);
+  const observations = [...output.matchAll(/stall-observation (\S+): (\{[^\r\n]+\})/g)]
+    .map((match) => ({ kind: match[1], facts: JSON.parse(match[2]) }));
+  assert.deepEqual(observations.map((entry) => entry.kind).sort(), ['get-body', 'invalid-preset-400'], 'each declared flood kind reports exactly one armed observation');
+  for (const { kind, facts } of observations) assert.deepEqual(observationProblems(facts, STALL_MS), [], `${kind}: requested block is explicitly exercised`);
 });

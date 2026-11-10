@@ -1,0 +1,44 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const test = require('node:test');
+const authority = require('./u060-authority.cjs');
+const read = authority.readRepository(path.resolve(__dirname, '..', '..', '..'));
+const overlay = (relative, value) => (key) => key === relative ? value : read(key);
+const flip = (bytes) => { const altered = Buffer.from(bytes); altered[altered.length - 1] ^= 1; return altered; };
+
+test('U060 authority: exact eight tooling changes, all223 baseline files and previous D1-D4 validate', () => {
+  const verified = authority.verifyAuthority(read);
+  assert.deepEqual(verified.errors, []);
+  assert.equal(verified.baseline60.files.length, 223);
+  assert.deepEqual([...verified.replacements60.keys()], [...authority.MODIFIED60]);
+});
+
+test('U060 authority: every newest amendment byte is independently anchored', () => {
+  const relative = authority.addendumPath(6);
+  const original = read(relative);
+  // Immutable fixture bytes avoid repeatedly reading the OS for the same head inputs.
+  const cache = new Map([authority.HEAD, authority.CHECKER, authority.BASELINE60,
+    'capability\\C043\\evidence-u058-head.json', 'capability\\C043\\tests\\u058-authority.cjs', authority.BASELINE,
+    'capability\\C043\\evidence-u059-head.json', 'capability\\C043\\tests\\u059-authority.cjs', authority.JOINT_BASELINE,
+    authority.addendumPath(2), authority.addendumPath(4), relative].map((file) => [file, read(file)]));
+  for (let index = 0; index < original.length; index += 1) {
+    const altered = Buffer.from(original); altered[index] ^= 1;
+    const fixtureRead = (file) => file === relative ? altered : cache.has(file) ? cache.get(file) : read(file);
+    assert.deepEqual(authority.verifyHead(fixtureRead).errors, [`HEAD_BYTES_CHANGED ${relative}`], `byte${index}`);
+  }
+});
+
+test('U060 authority: current, retained, helper, source and original raw bytes remain fail-closed', () => {
+  const verified = authority.verifyAuthority(read);
+  for (const relative of authority.MODIFIED60) {
+    assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.includes(`LIVE_AUTHORITY_BYTES_CHANGED ${relative}`));
+    const copy = verified.replacements60.get(relative).supersededCopy;
+    assert.ok(authority.verifyAuthority(overlay(copy, flip(read(copy)))).errors.includes(`SUPERSEDED_COPY_MISMATCH ${relative}`));
+  }
+  for (const relative of authority.SOURCES60) assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.some((error) => error.endsWith(relative)));
+  for (const relative of ['capability\\C043\\runner.cjs', 'capability\\C043\\evidence-u059-head.json']) {
+    assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.some((error) => error.endsWith(relative)));
+  }
+});

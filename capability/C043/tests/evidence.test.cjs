@@ -12,7 +12,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const {
-  gitReader, manifestsUnder, sha, verifyManifest, workingReader,
+  gitReader, manifestsUnder, sha, verifyManifest, manifestReader,
 } = require('./evidence.cjs');
 const { assert, cleanup, scratch } = require('./support.cjs');
 
@@ -27,13 +27,17 @@ const CAPTURES = [
   ['red-load-flake.json', 'red', false], ['red-connect-upgrade.json', 'red', false], ['red-gaps-f2-f6-f7.json', 'red', false], ['red-aliasing.json', 'red', false],
   ['green-02.json', 'green', false], ['coverage-02.json', 'coverage', false], ['mutants-02.json', 'mutants', false], ['browser-02.json', 'browser', false],
   ['evidence-02.json', 'evidence', false, true],
+  ['u058-red.json', 'repair-red', false], ['u058-green.json', 'repair-green', false], ['u058-focused.json', 'repair-focused', false],
+  ['u059-red.json', 'repair-red', false], ['u059-green.json', 'repair-green', false], ['u059-focused.json', 'repair-focused', false],
+  ['u060-red-timeout-bookkeeping.json', 'repair-red', false], ['u060-green-timeout-bookkeeping.json', 'repair-green', false], ['u060-focused.json', 'repair-focused', false],
+  ['u060-red-startup-gate.json', 'repair-red', false], ['u060-green-startup-gate.json', 'repair-green', false],
 ];
 const KINDS = [
   ['a README byte', /README\.md$/],
   ['a production file byte', /^capability\\C043\\(?:[a-z-]+\.c?js|evidence\\red\\(?:stubs\\[^\\]+\.cjs|old-subject\\[^\\]+\.txt))$/],
   ['a test byte', /\\(?:tests\\[^\\]+\.cjs|[^\\]+\.snapshot\.cjs)$/],
 ];
-const readerFor = (sealed) => (sealed ? gitReader(FIRST, repository) : workingReader(repository));
+const readerFor = (sealed, manifestFile) => (sealed ? gitReader(FIRST, repository) : manifestReader(manifestFile, repository));
 const flip = (bytes) => { const copy = Buffer.from(bytes); copy[copy.length - 1] ^= 1; return copy; };
 
 test('every capture manifest under evidence is found (the raw folder included), exactly the expected ones, and each is recomputed', { timeout: 120000 }, () => {
@@ -42,7 +46,7 @@ test('every capture manifest under evidence is found (the raw folder included), 
   assert.deepEqual(present.sort(), CAPTURES.filter(([name, , , optional]) => !optional || present.includes(name)).map(([name]) => name).sort(), 'no capture is skipped and none is missing');
   for (const file of found) {
     const [, , sealed] = CAPTURES.find(([name]) => name === path.basename(file));
-    assert.deepEqual(verifyManifest(file, repository, readerFor(sealed)), [], file);
+    assert.deepEqual(verifyManifest(file, repository, readerFor(sealed, file)), [], file);
   }
 });
 
@@ -56,7 +60,7 @@ test('the retained code of the first publication is exactly that commit (the RED
 // A scratch "repository" holding the pinned inputs of ONE capture, its manifest and its transcripts.
 function stage(manifestFile, sealed, out) {
   const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
-  const read = readerFor(sealed);
+  const read = readerFor(sealed, manifestFile);
   const repo = path.join(out, 'repo');
   const inputs = new Map(manifest.inputs.map((input) => [input.path, read(input.path)]));
   for (const [relative, bytes] of inputs) {
@@ -85,7 +89,7 @@ test('every kind of tampering with every capture is a named failure: a README by
       for (const [label, pattern] of KINDS) {
         const input = staged.manifest.inputs.find((item) => pattern.test(item.path));
         // The four large captures pin the README, the production code and the tests; a RED pins what it ran.
-        if (!input) { assert.equal(kind === 'red', true, `${path.basename(file)} (${kind}) must pin ${label}`); continue; }
+        if (!input) { assert.equal(kind === 'red' || kind.startsWith('repair-'), true, `${path.basename(file)} (${kind}) must pin ${label}`); continue; }
         const original = fs.readFileSync(path.join(staged.repo, input.path));
         fs.writeFileSync(path.join(staged.repo, input.path), flip(original));
         check(label, `input ${input.path} differs from the recorded bytes`, verifyManifest(staged.target, staged.repo));
@@ -109,7 +113,7 @@ test('every kind of tampering with every capture is a named failure: a README by
 });
 
 test('the large captures of both generations pin the README, the production code, the tests and the tooling', { timeout: 60000 }, () => {
-  for (const [name, kind, , optional] of CAPTURES.filter(([, kind]) => kind !== 'red')) {
+  for (const [name, kind, , optional] of CAPTURES.filter(([, kind]) => kind !== 'red' && !kind.startsWith('repair-'))) {
     const file = manifestsUnder(path.join(root, 'evidence')).find((item) => path.basename(item) === name);
     if (!file) { assert.equal(optional, true, `${name} must exist`); continue; }
     const { inputs } = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -117,5 +121,27 @@ test('the large captures of both generations pin the README, the production code
     for (const needle of ['\\README.md', '\\runner.cjs', '\\server.cjs', '\\tests\\surface.test.cjs', '\\tests\\evidence.cjs', '\\tests\\browser.cjs']) {
       assert.equal(paths.some((item) => item.endsWith(needle)), true, `${name} (${kind}) pins ${needle}`);
     }
+  }
+});
+
+test('U058 repair captures pin their executed tooling and retain explicit positive or assertion-RED counts', () => {
+  for (const name of ['u058-red', 'u058-green', 'u058-focused', 'u059-red', 'u059-green', 'u059-focused',
+    'u060-red-timeout-bookkeeping', 'u060-green-timeout-bookkeeping', 'u060-focused', 'u060-red-startup-gate', 'u060-green-startup-gate']) {
+    const card = name.slice(0, 4);
+    const file = path.join(root, 'evidence', card, `${name}.json`);
+    const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+    for (const relative of card === 'u058' ? ['tests\\browser.cjs', 'tests\\u058-driver-fixture.cjs', 'tests\\u058-admission.cjs']
+      : card === 'u059' ? ['tests\\stall.preload.cjs', 'tests\\u059-stall-fixture.cjs']
+        : name.includes('startup-gate') ? ['tests\\u060-startup-oracle.cjs', 'tests\\u060-startup.fixture.cjs'] : ['tests\\mutants.test.cjs', 'tests\\u060-runner-fixture.cjs']) {
+      assert.equal(manifest.inputs.some((entry) => entry.path === `capability\\C043\\${relative}`), true, `${name}: ${relative}`);
+    }
+    assert.equal(manifest.timedOut, false);
+    assert.equal(manifest.spawnError, null);
+    assert.equal(manifest.summary.tests > 0, true);
+    assert.deepEqual([manifest.summary.cancelled, manifest.summary.skipped, manifest.summary.todo], [0, 0, 0]);
+    const red = name.includes('-red');
+    assert.equal(manifest.exitCode, red ? 1 : 0);
+    assert.equal(manifest.summary.fail, red ? 1 : 0);
+    assert.equal(manifest.summary.pass, red ? 0 : manifest.summary.tests);
   }
 });

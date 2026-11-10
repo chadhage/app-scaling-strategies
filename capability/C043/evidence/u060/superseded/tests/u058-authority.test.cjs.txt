@@ -1,0 +1,147 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const zlib = require('node:zlib');
+const vm = require('node:vm');
+const authority = require('./u059-authority.cjs');
+const legacy = require('./u058-authority.cjs');
+const repository = path.resolve(__dirname, '..', '..', '..');
+const read = authority.readRepository(repository);
+const overlay = (changes) => (relative) => changes.has(relative) ? changes.get(relative) : read(relative);
+const bytes = (value) => Buffer.from(JSON.stringify(value));
+const flip = (value) => { const changed = Buffer.from(value); changed[changed.length - 1] ^= 1; return changed; };
+
+function resignFixture(edit, sequence = 1) {
+  const first = JSON.parse(read(authority.addendumPath(1)));
+  const second = JSON.parse(read(authority.addendumPath(2)));
+  edit(sequence === 1 ? first : second);
+  const firstBytes = bytes(first);
+  second.previous.rawSha256 = authority.sha(firstBytes);
+  const secondBytes = bytes(second);
+  const oldHead = JSON.parse(read(legacy.HEAD));
+  oldHead.rawSha256 = authority.sha(secondBytes);
+  const third = JSON.parse(read(authority.addendumPath(3)));
+  third.previous.rawSha256 = authority.sha(secondBytes);
+  const thirdBytes = bytes(third);
+  const fourth = JSON.parse(read(authority.addendumPath(4)));
+  fourth.previous.rawSha256 = authority.sha(thirdBytes);
+  const fourthBytes = bytes(fourth);
+  const head = JSON.parse(read(authority.HEAD));
+  head.rawSha256 = authority.sha(fourthBytes);
+  return overlay(new Map([
+    [authority.addendumPath(1), firstBytes], [authority.addendumPath(2), secondBytes], [legacy.HEAD, bytes(oldHead)],
+    [authority.addendumPath(3), thirdBytes], [authority.addendumPath(4), fourthBytes], [authority.HEAD, bytes(head)],
+  ]));
+}
+
+test('U058 authority: independent head, pinned checker, exact amendments and all171 original files verify', () => {
+  const result = authority.verifyAuthority(read);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.baseline.files.length, 171);
+  assert.equal(result.baseline.productionFiles.length, 13);
+  assert.deepEqual([...result.replacements.keys()], [...authority.MODIFIED]);
+  assert.equal(result.baseline.files.filter((entry) => entry.path.includes('\\evidence\\')).length, 99);
+});
+
+test('U058 authority: every single-byte newest-head change fails by the complete amendment identity', () => {
+  const relative = authority.addendumPath(2);
+  const original = read(relative);
+  for (let index = 0; index < original.length; index += 1) {
+    const changed = Buffer.from(original);
+    changed[index] ^= 1;
+    assert.deepEqual(authority.verifyHead(overlay(new Map([[relative, changed]]))).errors,
+      [`HEAD_BYTES_CHANGED ${relative}`], `byte ${index}`);
+  }
+});
+
+test('U058 authority: missing anchor/head, checker and base tampering, and unanchored successors fail by name', () => {
+  const cases = [
+    [authority.HEAD, null, 'MISSING'],
+    [authority.addendumPath(2), null, 'HEAD_MISSING'],
+    [authority.addendumPath(1), null, 'MISSING'],
+    [authority.CHECKER, flip(read(authority.CHECKER)), 'CHECKER_CHANGED'],
+    [authority.BASELINE, flip(read(authority.BASELINE)), 'BASELINE_CHANGED'],
+    [authority.addendumPath(5), Buffer.from('{}'), 'UNANCHORED_ADDENDUM'],
+  ];
+  for (const [relative, value, rule] of cases) {
+    assert.ok(authority.verifyAuthority(overlay(new Map([[relative, value]]))).errors.includes(`${rule} ${relative}`));
+  }
+});
+
+test('U058 authority: the evidence reader checks its frozen helper pin before loading an untrusted checker', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'evidence.cjs'), 'utf8');
+  let loaded = false;
+  const fakeRequire = (name) => {
+    if (name === 'node:fs') return {
+      ...fs,
+      readFileSync(relative, ...args) {
+        return relative.endsWith('u059-authority.cjs') ? Buffer.from('permissive fixture checker') : fs.readFileSync(relative, ...args);
+      },
+    };
+    if (name === './u059-authority.cjs') { loaded = true; throw new Error('untrusted checker executed'); }
+    return require(name);
+  };
+  const module = { exports: {} };
+  vm.compileFunction(source, ['require', '__dirname', 'module'], { filename: 'capability\\C043\\tests\\evidence.cjs' })(fakeRequire, __dirname, module);
+  assert.throws(() => module.exports.manifestReader('fixture.json', repository), /CHECKER_BYTES_CHANGED/);
+  assert.equal(loaded, false);
+});
+
+test('U058 authority: re-signed fixtures cannot authorize reordered, duplicate, foreign or gapped paths', () => {
+  for (const edit of [
+    (first) => first.amendments.reverse(),
+    (first) => { first.amendments[1] = first.amendments[0]; },
+    (first) => { first.amendments[0].path = 'capability\\C043\\runner.cjs'; },
+  ]) {
+    assert.ok(authority.verifyAuthority(resignFixture(edit)).errors.includes(`AMENDMENT_SET_CHANGED ${authority.addendumPath(1)}`));
+  }
+  const gap = resignFixture((first) => { first.amendments[0].previousRawSha256 = '0'.repeat(64); });
+  assert.ok(authority.verifyAuthority(gap).errors.includes(`GAP_IN_CHAIN ${authority.MODIFIED[0]}`));
+  const foreign = resignFixture((first) => { first.additions[0].path = 'capability\\C043\\package.json'; });
+  assert.ok(authority.verifyAuthority(foreign).errors.includes(`ADDITION_SET_CHANGED ${authority.addendumPath(1)}`));
+  const link = resignFixture((second) => { second.previous.path = authority.addendumPath(9); }, 2);
+  assert.ok(authority.verifyAuthority(link).errors.includes(`CHAIN_BROKEN ${authority.addendumPath(2)}`));
+});
+
+test('U058 authority: changed live verifier, retained original, production, README and original capture stay failures', () => {
+  const verified = authority.verifyAuthority(read);
+  for (const relative of authority.MODIFIED) {
+    assert.ok(authority.verifyAuthority(overlay(new Map([[relative, flip(read(relative))]]))).errors.includes(`LIVE_AUTHORITY_BYTES_CHANGED ${relative}`));
+    const copy = verified.replacements.get(relative).supersededCopy;
+    assert.ok(authority.verifyAuthority(overlay(new Map([[copy, flip(read(copy))]]))).errors.includes(`SUPERSEDED_COPY_MISMATCH ${relative}`));
+  }
+  const originals = verified.baseline.files;
+  for (const relative of [verified.baseline.productionFiles[0], 'capability\\C043\\README.md', originals.find((entry) => entry.path.endsWith('red-initial.json')).path]) {
+    assert.ok(authority.verifyAuthority(overlay(new Map([[relative, flip(read(relative))]]))).errors.includes(`ORIGINAL_BYTES_CHANGED ${relative}`));
+  }
+  for (const relative of authority.SOURCES) {
+    const result = authority.verifyAuthority(overlay(new Map([[relative, flip(read(relative))]])));
+    assert.ok(result.errors.some((error) => error.endsWith(relative)), relative);
+  }
+});
+
+test('U058 evidence: original RED is assertion-only, inputs are historically resolved, and raw bytes are immutable', () => {
+  const file = path.join(repository, 'capability', 'C043', 'evidence', 'u058', 'u058-red.json');
+  const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const reader = authority.manifestReader(file, repository);
+  const pin = manifest.inputs.find((entry) => entry.path === authority.MODIFIED[0]);
+  assert.equal(authority.sha(reader(pin.path)), pin.rawSha256);
+  assert.notEqual(authority.sha(read(pin.path)), pin.rawSha256);
+  const stream = (name) => zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(file), manifest.transcripts[name].path))).toString('utf8');
+  assert.match(stream('stdout'), /QUALIFIED_FIXTURE Microsoft-signed 157/);
+  assert.match(stream('stderr'), /ERR_ASSERTION/);
+  assert.match(stream('stderr'), /'157' !== '156'/);
+  assert.doesNotMatch(stream('stdout') + stream('stderr'), /MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
+  assert.equal(manifest.exitCode, 1);
+});
+
+test('U058 evidence: repair transcript and manifest tampering is rejected by exact additions', () => {
+  for (const name of authority.CAPTURES) {
+    for (const relative of [`capability\\C043\\evidence\\u058\\${name}.json`, `capability\\C043\\evidence\\u058\\raw\\${name}.stdout.raw.gz`]) {
+      assert.ok(authority.verifyAuthority(overlay(new Map([[relative, flip(read(relative))]]))).errors.includes(`ADDITION_BYTES_CHANGED ${relative}`));
+    }
+  }
+});

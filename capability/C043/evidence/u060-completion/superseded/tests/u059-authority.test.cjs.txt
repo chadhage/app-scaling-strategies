@@ -1,0 +1,64 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+const zlib = require('node:zlib');
+const authority = require('./u060-authority.cjs');
+const repository = path.resolve(__dirname, '..', '..', '..');
+const read = authority.readRepository(repository);
+const overlay = (relative, value) => (name) => name === relative ? value : read(name);
+const flip = (bytes) => { const changed = Buffer.from(bytes); changed[changed.length - 1] ^= 1; return changed; };
+
+test('U059 joint authority: immutable U058 root and exact six tooling amendments verify independently', () => {
+  const result = authority.verifyAuthority(read);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.jointBaseline.files.length, 195);
+  assert.equal(result.baseline.files.length, 171);
+  assert.deepEqual([...result.jointReplacements.keys()], [...authority.MODIFIED59]);
+  const third = JSON.parse(read(authority.addendumPath(3)));
+  assert.deepEqual(third.previous, { path: authority.addendumPath(2), rawSha256: authority.sha(read(authority.addendumPath(2))) });
+});
+
+test('U059 joint authority: every newest amendment byte is bound by the independent full-head anchor', () => {
+  const relative = authority.addendumPath(4);
+  const original = read(relative);
+  for (let index = 0; index < original.length; index += 1) {
+    const changed = Buffer.from(original); changed[index] ^= 1;
+    assert.deepEqual(authority.verifyHead(overlay(relative, changed)).errors, [`HEAD_BYTES_CHANGED ${relative}`], `byte${index}`);
+  }
+});
+
+test('U059 joint authority: current and retained tooling, every new artifact, production and old captures remain pinned', () => {
+  const current = authority.verifyAuthority(read);
+  for (const relative of authority.MODIFIED59) {
+    assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.includes(`LIVE_AUTHORITY_BYTES_CHANGED ${relative}`));
+    const copy = current.jointReplacements.get(relative).supersededCopy;
+    assert.ok(authority.verifyAuthority(overlay(copy, flip(read(copy)))).errors.includes(`SUPERSEDED_COPY_MISMATCH ${relative}`));
+  }
+  for (const relative of authority.SOURCES59) assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.some((error) => error.endsWith(relative)));
+  for (const relative of [current.jointBaseline.productionFiles[0], 'capability\\C043\\evidence\\u058\\u058-red.json']) {
+    assert.ok(authority.verifyAuthority(overlay(relative, flip(read(relative)))).errors.includes(`ORIGINAL_BYTES_CHANGED ${relative}`));
+  }
+});
+
+test('U059 joint authority: missing heads, broken previous links and unanchored successors fail closed', () => {
+  assert.ok(authority.verifyAuthority(overlay(authority.HEAD, null)).errors.includes(`MISSING ${authority.HEAD}`));
+  assert.ok(authority.verifyAuthority(overlay(authority.addendumPath(3), null)).errors.includes(`MISSING ${authority.addendumPath(3)}`));
+  assert.ok(authority.verifyHead(overlay(authority.addendumPath(7), Buffer.from('{}'))).errors.includes(`UNANCHORED_ADDENDUM ${authority.addendumPath(7)}`));
+});
+
+test('U059 RED: deterministic pre-arm failure is retained separately from historical native-lag observations', () => {
+  const file = path.join(repository, 'capability', 'C043', 'evidence', 'u059', 'u059-red.json');
+  const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const reader = authority.manifestReader(file, repository);
+  const input = manifest.inputs.find((entry) => entry.path.endsWith('\\tests\\stall.preload.cjs'));
+  assert.equal(authority.sha(reader(input.path)), input.rawSha256);
+  const stdout = zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(file), manifest.transcripts.stdout.path))).toString('utf8');
+  const stderr = zlib.gunzipSync(fs.readFileSync(path.join(path.dirname(file), manifest.transcripts.stderr.path))).toString('utf8');
+  assert.match(stdout, /before-arm calls=2; after-arm calls=0/);
+  assert.match(stderr, /ERR_ASSERTION.*must not be consumed before observation is armed/s);
+  assert.doesNotMatch(stdout + stderr, /MODULE_NOT_FOUND|SyntaxError|ReferenceError/);
+  assert.equal(manifest.summary.fail, 1);
+});

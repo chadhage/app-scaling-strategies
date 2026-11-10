@@ -19,6 +19,7 @@ let applied = false;
 function mutate(content) {
   const parts = content.split(spec.from);
   if (parts.length !== 2) throw new Error(`MUTANT_TARGET_NOT_UNIQUE (${parts.length - 1} occurrences): ${spec.from}`);
+  if (!applied) process.stderr.write(`U060_MUTANT_APPLIED ${spec.file}\n`);
   applied = true;
   const result = parts.join(spec.to);
   produced.add(result);

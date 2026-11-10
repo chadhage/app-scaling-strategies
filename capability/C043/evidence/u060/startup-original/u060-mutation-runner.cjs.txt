@@ -1,0 +1,141 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const childProcess = require('node:child_process');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { randomUUID } = require('node:crypto');
+const WORKERS = 2;
+const root = path.resolve(__dirname, '..');
+
+function parse(output) {
+  const count = (key) => Number(new RegExp(`^# ${key} (\\d+)$`, 'm').exec(output)?.[1]);
+  return {
+    tests: count('tests'), pass: count('pass'), fail: count('fail'), cancelled: count('cancelled'), todo: count('todo'), skipped: count('skipped'),
+    failing: [...output.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim()),
+    assertion: /ERR_ASSERTION|AssertionError|U060_ITERATION_BOUND/.test(output),
+    infrastructure: /MODULE_NOT_FOUND|SyntaxError|ReferenceError|MUTANT_BASE_DIFFERS|MUTANT_TARGET_NOT_UNIQUE/.test(output),
+  };
+}
+
+function judge(outcome, expected, control = false) {
+  if (outcome.timedOut) return { decided: false, reason: 'UNDECIDED TIMEOUT' };
+  if (outcome.error || outcome.signal || !outcome.cleanup?.clean || !outcome.streamsClosed) return { decided: false, reason: 'UNDECIDED CHILD_LIFETIME_OR_SPAWN' };
+  const facts = parse(outcome.output);
+  if (!Number.isInteger(facts.tests) || facts.tests < 1 || facts.cancelled !== 0 || facts.todo !== 0 || facts.infrastructure) {
+    return { decided: false, reason: 'UNDECIDED INCOMPLETE_OR_INFRASTRUCTURE' };
+  }
+  if (control) return { decided: outcome.code === 0 && facts.pass > 0 && facts.fail === 0, reason: 'CONTROL', facts };
+  if (!/U060_MUTANT_APPLIED /.test(outcome.output)) return { decided: false, reason: 'UNDECIDED MUTATION_NOT_APPLIED', facts };
+  const killed = outcome.code === 1 && facts.fail > 0 && facts.assertion && facts.failing.some((name) => name.includes(expected));
+  return { decided: killed, reason: killed ? 'NAMED_ASSERTION' : 'SURVIVOR', facts };
+}
+
+function createRunner(options = {}) {
+  const spawn = options.spawn ?? childProcess.spawn;
+  const executable = options.executable ?? process.execPath;
+  const sourceEnv = options.env ?? process.env;
+  const selfPid = options.selfPid ?? process.pid;
+  const schedule = options.setTimeout ?? setTimeout;
+  const cancel = options.clearTimeout ?? clearTimeout;
+  const gated = options.register === undefined;
+  const progress = options.progress ?? ((event) => console.log(`U060 ${JSON.stringify(event)}`));
+  let adapters;
+  let lifecycle;
+  let tree;
+  if (gated) {
+    lifecycle = require('../../../testing/browser/lifecycle/owned.cjs');
+    tree = require('../../../testing/browser/lifecycle/tree.cjs');
+    adapters = lifecycle.createOwnedAdapters({ listMs: 60000, killMs: 120000 });
+  }
+  const register = options.register ?? (async (pid) => {
+    const owned = await lifecycle.snapshotOwned(pid, adapters, { ownerPid: selfPid, timeoutMs: 60000 });
+    assert.ok(owned.snapshot.entries.length > 0, 'U060 child identity must be recorded before it starts');
+    assert.equal(owned.unverifiable.length, 0, 'U060 child ownership must be verifiable');
+    return owned.snapshot;
+  });
+  const cleanup = options.cleanup ?? (async (snapshot) => {
+    const result = await tree.terminateOwned(snapshot, { adapters, timeoutMs: 120000, pollMs: 100 });
+    return { clean: result.survivors.length === 0 && result.refused.length === 0 && result.errors.length === 0, ...result };
+  });
+
+  function runNode(args, additions = {}, timeoutMs = 900000) {
+    return new Promise((resolve) => {
+      const env = { ...sourceEnv };
+      for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'NODE_OPTIONS', 'C043_MUTANT', 'C043_MUTANT_AT',
+        'C043_RED_SUBJECT', 'C043_KINDS', 'C043_FLOOD', 'C043_LIVENESS_MS', 'C043_STALL_MS', 'C043_MUTANTS_ONLY']) delete env[key];
+      Object.assign(env, additions);
+      const token = randomUUID();
+      const actualArgs = gated ? ['--import', pathToFileURL(path.join(__dirname, 'u060-child-gate.mjs')).href, ...args] : args;
+      if (gated) Object.assign(env, { C043_U060_PARENT_PID: String(selfPid), C043_U060_START_TOKEN: token });
+      const chunks = [];
+      let code = null, signal = null, error = null, timedOut = false, streamsClosed = false;
+      let child, snapshot, registration, refresh, refreshTimer, timeout, finishing = false;
+      const finish = async () => {
+        if (finishing) return;
+        finishing = true;
+        cancel(timeout); cancel(refreshTimer);
+        let cleaned = { clean: false };
+        try {
+          await registration;
+          await refresh;
+          if (snapshot) cleaned = await cleanup(snapshot);
+          else if (!child?.pid) cleaned = { clean: true };
+          else if (child.exitCode !== null || child.signalCode !== null) cleaned = { clean: true };
+          else { child.kill('SIGKILL'); error ??= 'BOOTSTRAP_IDENTITY_UNAVAILABLE'; }
+        } catch (failure) { error ??= String(failure.message); }
+        if (!streamsClosed && !timedOut && !error) {
+          await new Promise((done) => {
+            const limit = schedule(done, 1000);
+            child.once('close', () => { cancel(limit); done(); });
+          });
+        }
+        child?.stdout?.destroy(); child?.stderr?.destroy();
+        if (child?.connected) child.disconnect();
+        const result = { code, signal, error, timedOut, streamsClosed, cleanup: cleaned, output: Buffer.concat(chunks).toString('utf8') };
+        progress({ event: 'child-finished', pid: child?.pid ?? null, code, signal, timedOut, error, clean: cleaned.clean });
+        resolve(result);
+      };
+      const observe = () => {
+        if (finishing || !snapshot || !gated) return;
+        refresh = tree.refreshTree(snapshot, adapters, { timeoutMs: 60000 }).then((next) => { snapshot = next; }, (failure) => { error = String(failure.message); });
+        refresh.finally(() => { if (!finishing) refreshTimer = schedule(observe, 1000); });
+      };
+      const start = () => {
+        if (registration) return;
+        registration = register(child.pid).then((identity) => {
+          snapshot = identity;
+          if (finishing) return;
+          if (gated) child.send({ type: 'u060-start', token });
+          observe();
+        }, (failure) => { error = String(failure.message); finish(); });
+      };
+      try {
+        child = spawn(executable, actualArgs, { cwd: root, env, windowsHide: true, ...(gated ? { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] } : {}) });
+        child.stdout.on('data', (chunk) => chunks.push(chunk));
+        child.stderr.on('data', (chunk) => chunks.push(chunk));
+        child.on('error', (failure) => { error = String(failure.message); finish(); });
+        child.on('exit', (exitCode, exitSignal) => { code = exitCode; signal = exitSignal; finish(); });
+        child.on('close', (exitCode, exitSignal) => { streamsClosed = true; code = exitCode; signal = exitSignal; finish(); });
+        if (gated) child.on('message', (message) => { if (message?.type === 'u060-ready' && message.token === token) start(); });
+        else child.on('spawn', start);
+        timeout = schedule(() => { timedOut = true; finish(); }, timeoutMs);
+        progress({ event: 'child-started', pid: child.pid, args });
+      } catch (failure) { error = String(failure.message); finish(); }
+    });
+  }
+
+  const focused = (file, pattern) => ['--test', '--test-concurrency=1', '--test-reporter=tap', `--test-name-pattern=${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, file];
+  const pool = async (items, size, work) => {
+    assert.ok(Number.isInteger(size) && size >= 1 && size <= WORKERS, 'U060 mutation worker cap is two');
+    const results = new Array(items.length);
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(size, items.length) }, async () => {
+      while (next < items.length) { const index = next++; results[index] = await work(items[index], index); }
+    }));
+    return results;
+  };
+  return Object.freeze({ runNode, focused, pool, WORKERS });
+}
+
+module.exports = Object.freeze({ createRunner, judge, parse, WORKERS });

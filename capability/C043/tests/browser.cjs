@@ -6,7 +6,6 @@
 // test started from Node, and the server-produced transcript. The browser signature and the qualified major version are
 // asserted; no equality pin on the browser version or hash. Nothing is written unless CAPTURE_BROWSER_EVIDENCE=1.
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -18,8 +17,8 @@ const {
 
 const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
 const { openIsolatedLoopback } = require(path.join(repositoryRoot, 'testing', 'browser', 'isolated.cjs'));
+const { qualifyEdge } = require(path.join(repositoryRoot, 'testing', 'browser', 'qualify', 'qualify.cjs'));
 const capture = process.env.CAPTURE_BROWSER_EVIDENCE === '1';
-const QUALIFIED_MAJOR = '156';
 const DONE = 'demo-preset-0001';
 const LIVE = 'browser-run-0002';
 const record = {
@@ -33,11 +32,6 @@ function checked(name, observed) {
   console.log(`PASS ${name}`);
 }
 
-function signedEdge() {
-  const script = "$ErrorActionPreference='Stop';$edge=@((Join-Path ${env:ProgramFiles(x86)} 'Microsoft\\Edge\\Application\\msedge.exe'),(Join-Path $env:ProgramFiles 'Microsoft\\Edge\\Application\\msedge.exe'))|Where-Object{Test-Path -LiteralPath $_}|Select-Object -First 1;$s=Get-AuthenticodeSignature -LiteralPath $edge;[ordered]@{path=$edge;status=[string]$s.Status;signer=$s.SignerCertificate.Subject;fileVersion=(Get-Item -LiteralPath $edge).VersionInfo.FileVersion;sha256=(Get-FileHash -LiteralPath $edge -Algorithm SHA256).Hash.ToLower()}|ConvertTo-Json -Compress";
-  return JSON.parse(execFileSync('pwsh', ['-NoProfile', '-Command', script], { encoding: 'utf8', windowsHide: true }));
-}
-
 async function main() {
   let service;
   let session;
@@ -45,12 +39,14 @@ async function main() {
   let pending;
   const held = gate();
   try {
-    const edge = signedEdge();
-    assert.equal(edge.status, 'Valid');
-    assert.match(edge.signer, /Microsoft Corporation/);
-    assert.equal(edge.fileVersion.split('.')[0], QUALIFIED_MAJOR, 'the installed Edge must stay within the qualified major version');
-    record.signedEdge = edge;
-    checked('the installed Edge is Microsoft-signed and within the qualified major version', { version: edge.fileVersion, sha256: edge.sha256 });
+    const edge = await qualifyEdge();
+    record.edgeQualification = edge;
+    assert.ok(edge && typeof edge === 'object', 'Edge qualification must return a report');
+    assert.equal(edge.ok, true, JSON.stringify({ reasons: edge.reasons, reasonCodes: edge.reasonCodes }));
+    assert.equal(edge.signature.status, 'Valid');
+    assert.equal(edge.signature.publisher, 'Microsoft Corporation');
+    record.signedEdge = { path: edge.path, status: edge.signature.status, signer: edge.signature.subject, fileVersion: edge.version, sha256: edge.sha256 };
+    checked('the installed Edge is Microsoft-signed and within the qualified major version', { version: edge.version, major: edge.major, sha256: edge.sha256, qualifiedVia: edge.qualifiedVia });
 
     service = await startService({ executor: held.executor, transcript: produceTranscript });
     const hold = (key) => held.release(key);
@@ -65,7 +61,7 @@ async function main() {
     record.server = { pid: process.pid, address: service.server.address(), ownership: 'this process, exact returned http.Server handle' };
     session = await openIsolatedLoopback(path.join('capability', 'C043', 'index.html'), service.server);
     record.browserVersion = session.browserVersion;
-    assert.equal(session.browserVersion.split('.')[0], QUALIFIED_MAJOR);
+    assert.equal(session.browserVersion, edge.version, 'the launched browser must match the currently qualified binary version');
     record.playwrightVersion = require(path.join(repositoryRoot, 'testing', 'browser', 'node_modules', 'playwright', 'package.json')).version;
     const { page } = session;
     const pageErrors = [];

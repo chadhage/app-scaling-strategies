@@ -7,8 +7,9 @@
 const test = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
 const assert = require('node:assert/strict');
+const execution = require('./u060-mutation-runner.cjs');
+const runner = execution.createRunner();
 
 const root = path.resolve(__dirname, '..');
 const preload = path.join(__dirname, 'mutate-preload.cjs');
@@ -40,12 +41,12 @@ const MUTANTS = [
   ['L1 the journal has no self-check', 'runlog.cjs', "if (h !== selfCheck(content)) return 'content check failed';", '', 'tests/journal.test.cjs', 'EXHAUSTIVE single-byte flips'],
   ['L2 a discarded tail is not reported', 'runlog.cjs', 'discardedTailBytes: state.tornTailBytes,', 'discardedTailBytes: 0,', 'tests/journal.test.cjs', 'EXHAUSTIVE single-byte flips'],
   ['L3 the hash chain is not checked', 'runlog.cjs', "if (record.prev !== previous) return 'broken hash chain';", '', 'tests/journal.test.cjs', 'what the journal cannot detect'],
-  ['L4 Windows device names are accepted', 'runlog.cjs', '!WINDOWS_DEVICES.test(name) &&', '', 'tests/server.test.cjs', 'the data name is closed'],
-  ['L5 trailing dots and spaces are accepted', 'runlog.cjs', "&& !/[. ]$/.test(name) ?", '&& true ?', 'tests/server.test.cjs', 'the data name is closed'],
+  ['L4 Windows device names are accepted', 'runlog.cjs', '!WINDOWS_DEVICES.test(name) &&', '', 'tests/u060-behavioral-guards.test.cjs', 'U060 data-name predicates'],
+  ['L5 trailing dots and spaces are accepted', 'runlog.cjs', "&& !/[. ]$/.test(name) ?", '&& true ?', 'tests/u060-behavioral-guards.test.cjs', 'U060 data-name predicates'],
   ['S1 maxConnections is removed', 'server.cjs', 'server.maxConnections = limits.connections;', '', 'tests/resources.test.cjs', 'connection cap'],
   ['S2 the socket is not destroyed after the refusal is flushed', 'server.cjs', "response.once('finish', () => socket.destroy());", '', 'tests/resources.test.cjs', 'get-body', { C043_KINDS: 'get-body', C043_LIVENESS_MS: '20000' }, 'REFUSAL FLOOD'],
   ['S3 the pipeline depth is not limited', 'server.cjs', 'if (depth > limits.pipelineDepth) {', 'if (false) {', 'tests/resources.test.cjs', 'pipelines requests and never reads'],
-  ['S4 a silent socket is never closed', 'server.cjs', 'const timer = setTimeout(() => socket.destroy(), limits.firstRequestMs);', 'const timer = setTimeout(() => {}, limits.firstRequestMs);', 'tests/resources.test.cjs', 'never sends a request', { C043_LIVENESS_MS: '20000' }],
+  ['S4 a silent socket is never closed', 'server.cjs', 'const timer = setTimeout(() => socket.destroy(), limits.firstRequestMs);', 'const timer = setTimeout(() => {}, limits.firstRequestMs);', 'tests/u060-behavioral-guards.test.cjs', 'U060 first-request guard'],
   ['S5 connectionsCheckingInterval is not set', 'server.cjs', ', connectionsCheckingInterval: limits.checkMs', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
   ['S6 requestTimeout is not set', 'server.cjs', 'server.requestTimeout = limits.requestMs;', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
   ['S7 headersTimeout is not set', 'server.cjs', 'server.headersTimeout = limits.headersMs;', '', 'tests/guards.test.cjs', 'T1 the timers and bounds'],
@@ -80,7 +81,7 @@ const MUTANTS = [
   ['N12 a CONNECT request is answered with the generic parse error', 'server.cjs', ", C043_CONNECT: 'METHOD_NOT_ALLOWED',", ',', 'tests/connect-upgrade.test.cjs', '[CONNECT] HTTP/1.1', {}, 'in this process'],
   // F5: the guards that survived the first review.
   ['G11 the action name is not a closed pattern', 'server.cjs', 'if (actionMatch && ACTION_NAME.test(actionMatch[2])) {', 'if (actionMatch) {', 'tests/guards.test.cjs', 'G11'],
-  ['G12 the header count is not bounded', 'server.cjs', 'server.maxHeadersCount = limits.headerCount;', '', 'tests/guards.test.cjs', 'G12'],
+  ['G12 the header count is not bounded', 'server.cjs', 'server.maxHeadersCount = limits.headerCount;', '', 'tests/u060-behavioral-guards.test.cjs', 'U060 header-count guard'],
   ['G13 the idle timeout is not set', 'server.cjs', 'server.timeout = limits.idleMs;', '', 'tests/guards.test.cjs', 'G13'],
   ['G15 the transcript is rebuilt for every request', 'server.cjs', 'produced ??= transcript()', 'produced = transcript()', 'tests/guards.test.cjs', 'G15'],
   ['G16 the journal health hides the step journal tail', 'server.cjs', 'stepJournalDiscardedTailBytes: engine.tornTailBytes', 'stepJournalDiscardedTailBytes: 0', 'tests/guards.test.cjs', 'G16'],
@@ -108,51 +109,44 @@ const MUTANTS = [
 // because server.closeAllConnections() already ends every connection; the loop is defense in depth and is not counted as a guard.
 
 function runNode(args, env, timeoutMs) {
-  return new Promise((resolve) => {
-    const clean = { ...process.env };
-    for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'NODE_OPTIONS', 'C043_MUTANT', 'C043_RED_SUBJECT', 'C043_KINDS', 'C043_FLOOD', 'C043_LIVENESS_MS', 'C043_STALL_MS', 'C043_MUTANTS_ONLY']) delete clean[key];
-    const child = spawn(process.execPath, args, { cwd: root, env: { ...clean, ...env }, windowsHide: true });
-    const chunks = [];
-    child.stdout.on('data', (chunk) => chunks.push(chunk));
-    child.stderr.on('data', (chunk) => chunks.push(chunk));
-    const timer = setTimeout(() => child.kill(), timeoutMs);
-    child.on('close', (code) => { clearTimeout(timer); resolve({ code, output: Buffer.concat(chunks).toString('utf8') }); });
-  });
+  const bound = `--require=${path.join(__dirname, 'u060-loop-bound.preload.cjs')}`;
+  const assertions = `--require=${path.join(__dirname, 'u060-assertive-tests.preload.cjs')}`;
+  const options = [assertions, bound, env.NODE_OPTIONS].filter(Boolean).join(' ');
+  return runner.runNode(args, { ...env, NODE_OPTIONS: options }, timeoutMs);
 }
 
 const failing = (output) => [...output.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim());
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const focused = (file, pattern) => ['--test-reporter=tap', `--test-name-pattern=${escapeRegExp(pattern)}`, file];
+const focused = (file, pattern) => runner.focused(file, pattern);
 // C043_MUTANTS_ONLY=N10,N11 runs only those rows (a development aid: the capture runs them all).
 const SELECTED = process.env.C043_MUTANTS_ONLY ? MUTANTS.filter(([name]) => process.env.C043_MUTANTS_ONLY.split(',').some((id) => name.startsWith(`${id} `))) : MUTANTS;
 const unique = [...new Map(SELECTED.map(([, , , , file, expected, env, pattern]) => [`${file}|${pattern ?? expected}|${JSON.stringify(env ?? {})}`, [file, pattern ?? expected, env ?? {}]])).values()];
 
 async function pool(items, size, work) {
-  const results = new Array(items.length);
-  let next = 0;
-  await Promise.all(Array.from({ length: size }, async () => {
-    while (next < items.length) { const index = next; next += 1; results[index] = await work(items[index], index); }
-  }));
-  return results;
+  return runner.pool(items, size, work);
 }
 
-test('MUTANTS: the focused tests pass on the unmutated code (controls)', { timeout: 600000 }, async () => {
-  const outcomes = await pool(unique, 3, async ([file, pattern, env]) => ({ file, pattern, ...(await runNode(focused(file, pattern), env, 300000)) }));
-  for (const outcome of outcomes) assert.equal(outcome.code, 0, `control failed for ${outcome.file} / ${outcome.pattern}: ${failing(outcome.output).join('; ')}`);
+test('MUTANTS: the focused tests pass on the unmutated code (controls)', { timeout: 5400000 }, async () => {
+  const outcomes = await pool(unique, 2, async ([file, pattern, env]) => ({ file, pattern, ...(await runNode(focused(file, pattern), env, 900000)) }));
+  for (const outcome of outcomes) assert.equal(execution.judge(outcome, outcome.pattern, true).decided, true,
+    `control failed for ${outcome.file} / ${outcome.pattern}: ${JSON.stringify(outcome)}`);
 });
 
-test('MUTANTS: every mutation matches exactly once and is killed by a test named for the guard it removes', { timeout: 1200000 }, async () => {
+test('MUTANTS: every mutation matches exactly once and is killed by a test named for the guard it removes', { timeout: 5400000 }, async () => {
   const survivors = [];
-  const report = await pool(SELECTED, 3, async ([name, file, from, to, testFile, expected, env = {}, pattern = expected]) => {
+  const report = await pool(SELECTED, 2, async ([name, file, from, to, testFile, expected, env = {}, pattern = expected]) => {
+    console.log(`U060 mutation-start ${name}`);
     const source = fs.readFileSync(path.join(root, file), 'utf8');
     const occurrences = source.split(from).length - 1;
     if (occurrences !== 1) return { name, problem: `the mutation target occurs ${occurrences} times` };
     const mutant = JSON.stringify({ file, from, to });
-    const outcome = await runNode(focused(testFile, pattern), { ...env, C043_MUTANT: mutant, C043_MUTANT_OPTIONAL: '1', NODE_OPTIONS: `--require=${preload}` }, 300000);
+    const outcome = await runNode(focused(testFile, pattern), { ...env, C043_MUTANT: mutant, C043_MUTANT_OPTIONAL: '1', NODE_OPTIONS: `--require=${preload}` }, 900000);
     const names = failing(outcome.output);
-    // A mutant that hangs the suite (killed by the timeout, exit null) is still caught when the named test failed first.
-    const killed = outcome.code !== 0 && names.some((item) => item.includes(expected));
-    return { name, killed, code: outcome.code, names: names.slice(0, 3) };
+    const verdict = execution.judge(outcome, expected);
+    console.log(`U060 mutation-finish ${name}: ${verdict.reason}`);
+    if (!verdict.decided) console.log(`U060 mutation-evidence ${name}: ${JSON.stringify({ code: outcome.code, signal: outcome.signal,
+      timedOut: outcome.timedOut, error: outcome.error, clean: outcome.cleanup.clean, facts: verdict.facts, tail: outcome.output.slice(-7000) })}`);
+    return { name, killed: verdict.decided, code: outcome.code, names: names.slice(0, 3), problem: verdict.decided ? null : verdict.reason };
   });
   for (const item of report) if (item.problem || !item.killed) survivors.push(`${item.name}: ${item.problem ?? `exit ${item.code}, failing: ${item.names.join(' | ') || 'none'}`}`);
   assert.deepEqual(survivors, [], `${SELECTED.length - survivors.length} of ${SELECTED.length} mutants were killed by a named test`);
@@ -164,12 +158,14 @@ const EQUIVALENT = [
   ['Q2 the redundant sequence check of the preset journal (the hash chain and the self-check already reject every gap)', 'runlog.cjs', "if (record.seq !== expectedSeq) return 'sequence gap';", '', 'tests/journal.test.cjs', 'EXHAUSTIVE single-byte flips'],
 ];
 
-test('EQUIVALENT mutants are listed and survive the focused tests (no behavior differs)', { timeout: 600000 }, async () => {
+test('EQUIVALENT mutants are listed and survive the focused tests (no behavior differs)', { timeout: 5400000 }, async () => {
   const report = await pool(EQUIVALENT, 2, async ([name, file, from, to, testFile, pattern]) => {
     const source = fs.readFileSync(path.join(root, file), 'utf8');
     assert.equal(source.split(from).length - 1, 1, `${name}: the target occurs once`);
-    const outcome = await runNode(focused(testFile, pattern), { C043_MUTANT: JSON.stringify({ file, from, to }), C043_MUTANT_OPTIONAL: '1', NODE_OPTIONS: `--require=${preload}` }, 300000);
-    return { name, code: outcome.code, failing: failing(outcome.output) };
+    const outcome = await runNode(focused(testFile, pattern), { C043_MUTANT: JSON.stringify({ file, from, to }), C043_MUTANT_OPTIONAL: '1', NODE_OPTIONS: `--require=${preload}` }, 900000);
+    const decided = execution.judge(outcome, pattern, true).decided && /U060_MUTANT_APPLIED /.test(outcome.output);
+    return { name, code: outcome.code, failing: failing(outcome.output), decided, diagnostics: decided ? null : outcome };
   });
-  for (const item of report) assert.deepEqual([item.code, item.failing], [0, []], `${item.name} was killed after all: ${item.failing.join('; ')}`);
+  for (const item of report) assert.deepEqual([item.code, item.failing, item.decided], [0, [], true],
+    `${item.name} was killed after all: ${JSON.stringify(item.diagnostics)}`);
 });

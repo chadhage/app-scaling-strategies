@@ -163,6 +163,70 @@ The page prints **no server prose**: every answer is validated against the close
 - Every refusal (any non-2xx answer) goes through ONE central send path that marks the connection, sends `Connection: close` and destroys the socket once the answer is flushed, and the requests of one connection run strictly one after the other so nothing pipelined behind a refusal runs in the tested matrix (every pair of it, in HTTP/1.1 and HTTP/1.0 framing, in this process and in a separate one; this is a statement about the pairs tested, not a proof for every possible byte sequence; see the review fixes); a table-driven test (`tests\server.test.cjs`) covers every refusal the server can emit, the pipelining matrix pipelines a valid mutation behind 19 of them, and the flood test covers ten of them against a real child. Bodies: at most 2048 bytes (declared larger is refused before reading, streamed larger is cut off at the limit); headers at most 8192 bytes; at most 4 pipelined requests per connection; at most 128 connections; a socket that sends no request is closed after 5 s; `connectionsCheckingInterval` is set to 1 s together with the header and request timeouts so the configured bound is the real bound (the configured values are read from the server object by `tests\guards.test.cjs` T1, and a trickling client is cut off by the real timers, with a hang detector and no duration assertion); idle keep-alive after 1 s.
 - Limits that remain: the duration bound is checked between steps and counts per drive (a step that takes longer than the whole bound is only noticed afterwards; after a restart and a resume only the new drive is measured); the preset journal and the step journal are two files, so a crash between them is reconciled by resume, never repaired automatically, and a step journal that lost records is detected only through the cross-check against the step service (a contradicted run is shown, never repaired); a request pipelined behind a refusal is dropped (a legitimate pipeline behind a refusal must be resent); no authentication, role boundary, TLS, rate limit or multi-process locking; the transcript is built once and shared.
 
+## Current zero-credit U058/U059/U060 tooling authority
+
+The third-round commands and observations above are historical evidence, not
+the current bundle's acceptance recipe. U058 uses the qualification API for a
+Microsoft-signed report and exact installed/browser-version matching; its
+hermetic156/157 fixtures do not qualify installed157. U034 has not run.
+U059 explicitly arms and counts each injected stall. Native lag is diagnostic,
+never an absolute-duration success condition.
+
+[U060](./U060.md) preserves the complete original79 mutation replacements and
+adds finite counted HTTP/composition observations before network-dependent
+mutation suites. The unfiltered generated command covers every server line:
+278 generated positions,269 compiling positions. Every kill needs a named
+assertion, positive application, completed TAP and verified owned-child cleanup.
+The11 declared equivalences require paired original/mutated actual-loopback
+response, effect and journal witnesses; a reasoning string alone is not enough.
+Timeouts, crashes, missing application and incomplete execution remain failures.
+
+```powershell
+node --test --test-concurrency=1 capability\C043\tests\mutants.test.cjs
+node capability\C043\tests\mutgen.cjs --file=server.cjs --parallel=2
+```
+
+Both commands require the caller's shared mutation slot, at most two workers,
+normal priority and finally-based release. The D7/D8 completion checkpoint is
+[the completion head](./evidence-u060-completion-head.json): append-only D7/D8
+bind seven exact tooling/document replacements, nine new sources and their
+retained predecessors while every D1-D6 seal and old raw capture stays unchanged.
+The evidence reader pins the newest checker before loading it. Historical
+negative fixtures use their retained view only after the newest authority
+validates; separate newest-authority tests tamper every new/current source,
+predecessor, production file and head byte. Original captures are not repinned.
+
+The [D9/D10 final checkpoint](./evidence-u060-final-head.json) adds exact D9/D10
+authority without changing D1-D8. A real complete LF replay exposed an import
+assertion that compared normalized working bytes to a raw accepted CRLF hash.
+The [fresh-import specification](./U060-fresh-import.feature) and unchanged
+five-case retained-predicate RED/GREEN prove the repair: both working forms are
+checked against the recomputed accepted blob and its canonical LF bytes.
+Canonical pins are recomputed too; neither producer bytes nor `imports.json`
+is repinned. D9/D10 bind eight exact tooling/document replacements and four
+new sources, with every predecessor retained.
+
+The [current review head](./evidence-u060-review-head.json) appends D11/D12
+without rewriting any D1-D10 bytes. Parent full480 review failures exposed a
+startup publication defect: a final identity file could exist before its JSON
+was complete. Privately recorded scheduler interleavings reproduced the exact
+file-level failures in the failed control/equivalent cases; those diagnostic
+SyntaxErrors are not behavioral REDs or mutant kills.
+[The publication specification](./U060-startup-publication.feature) preceded
+the four-assertion retained-publisher RED. The same oracle passes after all
+three publication sites share a complete-pending-file, atomic no-replace link.
+Duplicate targets and failed writes surface errors and preserve neighbours.
+File-level failures are explicitly undecided, and failed controls/equivalents
+print their complete underlying child result. The original79+2 identities,
+generated269 positions and480000ms final gate remain unchanged.
+
+Full current and fresh LF/CRLF receipts, all13 unchanged production hashes,
+privacy checks and separate per-card acceptance records remain required.
+Focused successes alone do not complete any card. The coordinator alone
+accepts/publishes under existing C043[S]; this tooling bundle implies no Done,
+new satisfier credit, reader-complete, installed157 qualification or live
+application permission.
+
 ## Files
 
 `C043.feature` (specification, written first) and `C043-review-fixes.feature` (specification of the second round, written before the fixes), `contract.js`, `validate.js`, `envelope.js`, `verify.js` (browser-loadable, shared by the server tests and the page), `preset.cjs` (strict reader, bounds, digest, declared presets), `runlog.cjs` (preset journal), `result.cjs` (envelope builder), `runner.cjs` (the automatic runner), `server.cjs`, `transcript.cjs`, `index.html`, `page.js`, `styles.css`, `imports.json`, `.gitattributes` (`* -text`: byte-exact files), `.gitignore`, `tests\` (suites, `support.cjs`, `dom-stub.cjs`, `child-server.cjs`, `f3-child.cjs`, `attacker.cjs`, `pipe-support.cjs`, `mutate-preload.cjs`, `coverage*.cjs`, `evidence.cjs`, `build-imports.cjs`, `browser.cjs`), `evidence\red\` (stubs, retained initial tests, the archived REDs `red-01` and, for the fixes, `red-02-f1`, `red-03-f3`, `red-04-f4`, the retained first-publication code `old-subject\` and its two preloads), `evidence\raw\` (archived GREEN, mutant, coverage and browser runs of both rounds), `evidence\browser\` (the browser observations). Third round: the specifications `C043-r3-load.feature`, `C043-r3-connect.feature`, `C043-r3-hardening.feature` and `C043-r3-aliasing.feature`; the tests `load`, `connect-upgrade`, `two-instances`, `aliasing`, `boundaries`, `round1-gaps` and `claims`; the tooling `tests\stall.preload.cjs`, `tests\child-server-r3.cjs`, `tests\mutate-at.cjs`, `tests\mutgen.cjs`, `tests\mutgen-equivalent.json`, `tests\fresh-tree.cjs` and `tests\loop.cjs`; the evidence `red-06-load` to `red-09-aliasing`, `old-subject-r2\`, `old-subject-tests\`, the preloads `old-subject-r2`, `old-flood` and `old-round1`, and the retained campaign output.

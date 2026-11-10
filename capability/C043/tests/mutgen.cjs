@@ -5,16 +5,17 @@
 // `if` condition (false, true), EVERY `&&` `||` `===` `!==` `<` `<=` `>` `>=` (swapped), EVERY unary `!` (removed), EVERY
 // expression statement (deleted) and EVERY `return` (its value dropped), drops the mutants that do not compile, and runs each
 // one against the suites in stages (the fast suites first, the slow process suites only for survivors). A mutant is killed
-// when any suite fails; a survivor must be listed with a one-line proof in tests\mutgen-equivalent.json (id -> reason), or the
-// campaign exits 1. A position-based mutant (tests\mutate-at.cjs) is applied or it throws MUTANT_BASE_DIFFERS (the file is not
+// by a completed named assertion, or a declared equivalence must pass paired original/mutated observable witnesses.
+// A reasoning string alone cannot decide a survivor. A position-based mutant (tests\mutate-at.cjs) is applied or it throws MUTANT_BASE_DIFFERS (the file is not
 // the text the mutant was generated from): that is a campaign error, never a kill. A suite that never loads the file cannot
 // kill a mutant of it, so it passes and the mutant moves on to the next suite.
-// Usage: node tests\mutgen.cjs [--file=server.cjs] [--lines=90-130,196-262] [--parallel=4] [--list]
+// Usage: node tests\mutgen.cjs [--file=server.cjs] [--lines=90-130,196-262] [--parallel=2] [--list]
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { spawn } = require('node:child_process');
+const execution = require('./u060-mutation-runner.cjs');
+const runner = execution.createRunner();
 
 const root = path.resolve(__dirname, '..');
 const OPERATORS = ['===', '!==', '&&', '||', '<=', '>=', '=>', '==', '!=', '++', '--', '+=', '-=', '...', '?.', '??', '<', '>', '=', '+', '-', '*', '/', '%', '!', '?', ':', '.', ',', ';', '(', ')', '{', '}', '[', ']', '&', '|', '^', '~'];
@@ -125,6 +126,7 @@ function generate(source) {
   }), generated: mutants.length };
 }
 
+const FINITE = ['u060-generated-root', 'u060-generated-guards', 'u060-generated-behavior'].map((name) => ({ file: `tests/${name}.test.cjs`, env: {} }));
 const STAGE_ONE = ['server', 'boundaries', 'guards', 'node-own', 'pipelining', 'two-instances'].map((name) => ({ file: `tests/${name}.test.cjs`, env: {} }));
 // The slow suites, cheapest first; the flood runs two kinds with four sockets (the full table is the GREEN run's job).
 const STAGE_TWO = [
@@ -135,31 +137,74 @@ const STAGE_TWO = [
 ];
 
 function runSuite(suite, spec) {
-  return new Promise((resolve) => {
-    const env = { ...process.env };
-    for (const key of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'C043_MUTANT', 'C043_KINDS', 'C043_FLOOD', 'C043_LIVENESS_MS']) delete env[key];
-    Object.assign(env, suite.env, { C043_MUTANT_AT: JSON.stringify(spec), NODE_OPTIONS: `--require=${path.join(__dirname, 'mutate-at.cjs')}` });
-    const child = spawn(process.execPath, ['--test', '--test-concurrency=1', suite.file], { cwd: root, env, windowsHide: true });
-    const chunks = [];
-    child.stdout.on('data', (chunk) => chunks.push(chunk));
-    child.stderr.on('data', (chunk) => chunks.push(chunk));
-    const timer = setTimeout(() => child.kill(), 240000);
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      const output = Buffer.concat(chunks).toString('utf8');
-      resolve({ code, baseDiffers: /MUTANT_BASE_DIFFERS/.test(output), failing: [...output.matchAll(/^\s*not ok \d+ - (.+)$/gm)].map((match) => match[1].trim().slice(0, 120)).slice(0, 3) });
-    });
-  });
+  return runner.runNode(['--test', '--test-concurrency=1', suite.file], {
+    C043_EQ_ID: '', ...suite.env, C043_MUTANT_AT: JSON.stringify(spec),
+    NODE_OPTIONS: `--require=${path.join(__dirname, 'u060-assertive-tests.preload.cjs')} --require=${path.join(__dirname, 'u060-loop-bound.preload.cjs')} --require=${path.join(__dirname, 'mutate-at.cjs')}`,
+  }, 900000);
 }
 
-async function attack(mutant, sha256, file) {
-  const spec = { file, start: mutant.start, end: mutant.end, to: mutant.to, sha256 };
-  for (const suite of [...STAGE_ONE, ...STAGE_TWO]) {
-    const outcome = await runSuite(suite, spec);
-    if (outcome.baseDiffers) return { killedBy: null, problem: 'MUTANT_BASE_DIFFERS' };
-    if (outcome.code !== 0) return { killedBy: suite.file.replace('tests/', ''), failing: outcome.failing, timedOut: outcome.code === null };
+function judgeEquivalence(control, mutated, id) {
+  for (const [label, outcome] of [['control', control], ['mutated', mutated]]) {
+    const judged = execution.judge(outcome, '', true);
+    if (!judged.decided || judged.facts.tests !== 1 || judged.facts.pass !== 1 || judged.facts.skipped !== 0) {
+      return { decided: false, reason: `UNDECIDED EQUIVALENCE_${label.toUpperCase()} ${judged.reason}` };
+    }
   }
-  return { killedBy: null };
+  if (!/(?:^|\n)(?:# )?U060_MUTANT_APPLIED server\.cjs(?:\r?\n|$)/.test(mutated.output)) {
+    return { decided: false, reason: 'UNDECIDED EQUIVALENCE_MUTATION_NOT_APPLIED' };
+  }
+  const trace = (output) => {
+    const prefix = `U060_EQ_TRACE_BASE64 ${id} `;
+    const lines = output.split(/\r?\n/).filter((line) => line.replace(/^# /, '').startsWith(prefix));
+    if (lines.length !== 1) return null;
+    const encoded = lines[0].replace(/^# /, '').slice(prefix.length);
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) return null;
+    const decoded = Buffer.from(encoded, 'base64');
+    if (decoded.toString('base64') !== encoded) return null;
+    const value = JSON.parse(decoded.toString('utf8'));
+    if (typeof value.family !== 'string' || value.observed === null || typeof value.observed !== 'object'
+      || (Array.isArray(value.observed) && value.observed.length === 0) || typeof value.state?.stepJournal !== 'string') return null;
+    return JSON.stringify(value);
+  };
+  const before = trace(control.output);
+  const after = trace(mutated.output);
+  if (before === null || after === null) return { decided: false, reason: 'UNDECIDED EQUIVALENCE_TRACE_MISSING_OR_MALFORMED' };
+  if (before !== after) return { decided: false, reason: 'UNDECIDED EQUIVALENCE_TRACE_DIFFERS' };
+  return { decided: true, reason: 'PAIRED_OBSERVABLE_EQUIVALENCE', traceSha256: crypto.createHash('sha256').update(before).digest('hex') };
+}
+
+function recordAttempt(id, suite, outcome) {
+  console.log(JSON.stringify({ event: 'generated-attempt', id, suite, ...outcome }));
+}
+
+async function attack(mutant, sha256, file, proof) {
+  const spec = { file, start: mutant.start, end: mutant.end, to: mutant.to, sha256 };
+  const execute = async (suite) => {
+    const outcome = await runSuite(suite, spec);
+    recordAttempt(mutant.id, suite.file, outcome);
+    if (outcome.code === 0 && execution.judge(outcome, '', true).decided) return null;
+    const verdict = execution.judge(outcome, '');
+    if (!verdict.decided) return { killedBy: null, problem: verdict.reason, failing: verdict.facts?.failing ?? [], timedOut: outcome.timedOut };
+    return { killedBy: suite.file.replace('tests/', ''), failing: verdict.facts.failing, timedOut: false, evidence: 'NAMED_ASSERTION' };
+  };
+  for (const suite of FINITE) {
+    const decided = await execute(suite);
+    if (decided) return decided;
+  }
+  if (proof) {
+    const witness = 'tests/u060-generated-equivalence.test.cjs';
+    const control = await runner.runNode(['--test', '--test-concurrency=1', witness], { C043_EQ_ID: mutant.id });
+    recordAttempt(mutant.id, `${witness}:original`, control);
+    const mutated = await runSuite({ file: witness, env: { C043_EQ_ID: mutant.id } }, spec);
+    recordAttempt(mutant.id, `${witness}:mutated`, mutated);
+    const equivalence = judgeEquivalence(control, mutated, mutant.id);
+    return { killedBy: null, equivalence, proof: proof.reason, ...(equivalence.decided ? {} : { problem: equivalence.reason }) };
+  }
+  for (const suite of [...STAGE_ONE, ...STAGE_TWO]) {
+    const decided = await execute(suite);
+    if (decided) return decided;
+  }
+  return { killedBy: null, problem: 'UNDECIDED SURVIVOR_WITHOUT_DEMONSTRATED_EQUIVALENCE' };
 }
 
 async function main() {
@@ -171,25 +216,34 @@ async function main() {
   const to = Number(options['to-line'] ?? Infinity);
   const ranges = options.lines ? options.lines.split(',').map((range) => range.split('-').map(Number)) : [[from, to]];
   const mutants = all.filter((mutant) => ranges.some(([start, end]) => mutant.line >= start && mutant.line <= end));
-  const equivalentFile = path.join(__dirname, 'mutgen-equivalent.json');
-  const equivalent = fs.existsSync(equivalentFile) ? JSON.parse(fs.readFileSync(equivalentFile, 'utf8')) : {};
+  const proofs = new Map();
+  if (file === 'server.cjs') {
+    const equivalent = require('./u060-generated-equivalence.json');
+    if (equivalent.schema !== 'C043-U060-generated-equivalence/1' || equivalent.file !== file || equivalent.sourceSha256 !== sha256) throw new Error('EQUIVALENCE_BASE_DIFFERS');
+    for (const proof of equivalent.proofs) {
+      const mutant = all.find((entry) => entry.id === proof.id);
+      if (!mutant || mutant.from !== proof.from || mutant.to !== proof.to || proofs.has(proof.id)) throw new Error(`EQUIVALENCE_POSITION_DIFFERS ${proof.id}`);
+      proofs.set(proof.id, proof);
+    }
+  }
   console.log(JSON.stringify({ event: 'plan', file, sha256, generated, compiling: all.length, selected: mutants.length, lines: options.lines ?? 'all' }));
   if (options.list) { for (const mutant of mutants) console.log(JSON.stringify({ id: mutant.id, line: mutant.line, op: mutant.op, from: mutant.from.slice(0, 80), to: mutant.to })); return; }
   const results = [];
   let next = 0;
-  const parallel = Number(options.parallel ?? 4);
+  const parallel = Number(options.parallel ?? 2);
+  if (!Number.isInteger(parallel) || parallel < 1 || parallel > 2) throw new Error('U060 mutation holder allows at most two subprocess workers.');
   await Promise.all(Array.from({ length: parallel }, async () => {
     while (next < mutants.length) {
       const mutant = mutants[next];
       next += 1;
-      const outcome = await attack(mutant, sha256, file);
+      const outcome = await attack(mutant, sha256, file, proofs.get(mutant.id));
       const entry = { id: mutant.id, line: mutant.line, op: mutant.op, from: mutant.from.slice(0, 100), to: mutant.to, ...outcome };
       results.push(entry);
       console.log(JSON.stringify(entry));
     }
   }));
   const survivors = results.filter((entry) => entry.killedBy === null);
-  const unexplained = survivors.filter((entry) => !equivalent[entry.id]);
+  const unexplained = survivors.filter((entry) => entry.problem || !entry.equivalence?.decided);
   console.log(JSON.stringify({
     event: 'summary', file, generated, compiling: all.length, selected: mutants.length, killed: results.length - survivors.length, survivors: survivors.length,
     equivalentListed: survivors.length - unexplained.length, unexplained: unexplained.map((entry) => `${entry.id} line ${entry.line} ${entry.op}: ${entry.from}`),
@@ -198,4 +252,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch((error) => { console.error(error); process.exitCode = 2; });
-module.exports = Object.freeze({ lex, generate });
+module.exports = Object.freeze({ lex, generate, judgeEquivalence });

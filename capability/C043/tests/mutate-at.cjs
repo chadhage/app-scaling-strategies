@@ -14,9 +14,12 @@ const target = path.resolve(__dirname, '..', spec.file);
 const original = Module.prototype._compile;
 const read = fs.readFileSync;
 const produced = new Set();
+let applied = false;
 
 function mutate(content) {
   if (crypto.createHash('sha256').update(content).digest('hex') !== spec.sha256) throw new Error('MUTANT_BASE_DIFFERS: the file is not the text the mutant was generated from');
+  if (!applied) process.stderr.write(`U060_MUTANT_APPLIED ${spec.file}\n`);
+  applied = true;
   const result = `${content.slice(0, spec.start)}${spec.to}${content.slice(spec.end)}`;
   produced.add(result);
   return result;

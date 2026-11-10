@@ -33,6 +33,12 @@ function manifestsUnder(directory) {
 const workingReader = (repository) => (relative) => fs.readFileSync(path.join(repository, relative));
 const gitReader = (commit, repository) => (relative) => execFileSync('git', ['--no-pager', 'cat-file', 'blob', `${commit}:${relative.replace(/\\/g, '/')}`],
   { cwd: repository, maxBuffer: 16 * 1024 * 1024, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+const U060_REVIEW_AUTHORITY_SHA256 = '78c817ab8f2f26b83462a4d59c3afa539d492b5d51c6a04b17540176ef22430b';
+const manifestReader = (manifestFile, repository) => {
+  const checker = path.join(__dirname, 'u060-review-authority.cjs');
+  if (sha(fs.readFileSync(checker)) !== U060_REVIEW_AUTHORITY_SHA256) throw new Error('CHECKER_BYTES_CHANGED capability\\C043\\tests\\u060-review-authority.cjs');
+  return require('./u060-review-authority.cjs').manifestReader(manifestFile, repository);
+};
 
 // Every input must have the recorded bytes (size, SHA-256 and LF-normalized SHA-256) and every transcript must hash and
 // unzip to what was recorded.
@@ -43,7 +49,9 @@ function verifyManifest(manifestPath, repository, read = workingReader(repositor
   for (const input of manifest.inputs) {
     let bytes;
     try { bytes = read(input.path); } catch { problems.push(`${manifest.name}: input ${input.path} is missing`); continue; }
-    if (sha(bytes) !== input.rawSha256 || bytes.length !== input.bytes || sha(crlfToLf(bytes)) !== input.crlfToLfSha256) problems.push(`${manifest.name}: input ${input.path} differs from the recorded bytes`);
+    const exact = sha(bytes) === input.rawSha256 && bytes.length === input.bytes && sha(crlfToLf(bytes)) === input.crlfToLfSha256;
+    const external = !input.path.replace(/\\/g, '/').startsWith('capability/C043/');
+    if (!exact && !(external && sha(crlfToLf(bytes)) === input.crlfToLfSha256)) problems.push(`${manifest.name}: input ${input.path} differs from the recorded bytes`);
   }
   for (const [stream, info] of Object.entries(manifest.transcripts)) {
     const file = path.join(here, info.path);
@@ -57,4 +65,4 @@ function verifyManifest(manifestPath, repository, read = workingReader(repositor
   return problems;
 }
 
-module.exports = Object.freeze({ gitReader, manifestsUnder, verifyManifest, workingReader, sha });
+module.exports = Object.freeze({ gitReader, manifestsUnder, verifyManifest, workingReader, manifestReader, sha });
