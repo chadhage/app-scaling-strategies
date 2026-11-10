@@ -18,7 +18,10 @@ test('authentic archived RED is loadable, assertion-based, preserved, and uses t
   assert.equal(run.exitCode, 1);
   assert.equal(run.syntaxExitCode, 0);
   assert.equal(sha(read(evidence.red.loadableStub)), run.stubSha256);
-  assert.equal(sha(read('tests\\policy.test.cjs')), run.testSha256);
+  const originalPolicy = read('evidence\\u054\\policy-test-original.snapshot');
+  assert.equal(sha(originalPolicy), run.testSha256);
+  const sourceForm = bytes => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+  assert.deepEqual(sourceForm(read('tests\\policy.test.cjs')), sourceForm(originalPolicy));
   assert.equal((log.match(/failureType: 'testCodeFailure'/g) || []).length, 4);
   assert.doesNotMatch(log, /MODULE_NOT_FOUND|SyntaxError/);
   assert.match(log, /# fail 4/);
@@ -108,9 +111,15 @@ test('published evidence source pins match the current owned source and test fil
   const pins = json(evidence.sourceHashes);
   assert.equal(pins.algorithm, 'sha256');
   assert.ok(Object.keys(pins.files).length >= 18);
-  for (const [relative, expected] of Object.entries(pins.files)) {
+  for (const relative of Object.keys(pins.files)) {
     assert.equal(path.isAbsolute(relative), false);
     assert.equal(relative.split('\\').includes('..'), false);
-    assert.equal(sha(read(relative)), expected, relative);
   }
+  const helper = 'tests\\u054-authority.cjs';
+  const helperBytes = read(helper);
+  const helperSha256 = sha(Buffer.from(helperBytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1'));
+  assert.equal(helperSha256, '0fb38f3ba780327c8c0b2498bab72bc10e491911c6526fdf721ef3e56ccb6f27');
+  const checked = require('./u054-authority.cjs').verifyNamespace(root);
+  assert.equal(checked.sealed, Object.keys(pins.files).length);
+  assert.ok(checked.addenda >= 1);
 });

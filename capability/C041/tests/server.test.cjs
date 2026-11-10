@@ -41,7 +41,10 @@ test('real loopback HTTP exposes only the exact host and pinned lesson allowlist
       for (const asset of lesson.assets) {
         const response = await request(`/c041-lessons/${lesson.id}/${asset.file}`);
         assert.equal(response.status, 200);
-        assert.equal(crypto.createHash('sha256').update(response.bytes).digest('hex'), asset.sha256);
+        const rawSha256 = crypto.createHash('sha256').update(response.bytes).digest('hex');
+        const canonical = Buffer.from(response.bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+        const canonicalSha256 = crypto.createHash('sha256').update(canonical).digest('hex');
+        assert.ok(rawSha256 === asset.rawSha256 || canonicalSha256 === asset.crlfToLfSha256, asset.path);
         assert.equal(response.headers['content-security-policy'], lessonCsp);
         assert.match(response.headers['content-security-policy'], /sandbox allow-scripts(?:;|$)/);
         assert.doesNotMatch(response.headers['content-security-policy'], /allow-same-origin|unsafe-inline|unsafe-eval/);

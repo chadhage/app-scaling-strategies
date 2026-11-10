@@ -1,0 +1,16 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { test } = require('node:test');
+const root = path.join(process.env.U054_SUBJECT_ROOT || path.resolve(__dirname, '..', 'I'), 'capability', 'C041');
+const authority = require(path.join(root, 'tests', 'u054-authority.cjs'));
+const first = 'c0f1eaca270d81308689c06d327905d795d48186718515c0010335114cc321ab';
+test('new append-only root metadata survives the actual C041 text eol=crlf checkout representation', () => {
+  const value = authority.readNamespace(root);
+  const addenda = value.addenda.map(row => ({ name: row.name,
+    bytes: Buffer.from(authority.lf(row.bytes).toString('latin1').replace(/\n/g, '\r\n'), 'latin1') }));
+  assert.notDeepEqual(addenda[0].bytes, authority.lf(addenda[0].bytes), 'the CRLF shape is genuinely different');
+  assert.doesNotThrow(() => authority.verifyChain({ ...value, addenda, trustedFirstSha256: first }),
+    'C041 addendum identity must survive its declared Git text checkout form');
+});

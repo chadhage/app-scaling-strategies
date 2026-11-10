@@ -38,7 +38,11 @@ function validateCatalog(value) {
     for (const asset of lesson.assets) {
       if (!/^[a-z][a-z0-9-]*\.(html|js|css)$/.test(asset.file) || files.has(asset.file) ||
           asset.path !== `learning\\${lesson.id.slice(2)}\\${asset.file}` ||
-          !/^[a-f0-9]{64}$/.test(asset.sha256 || '')) throw new Error('Invalid pinned asset.');
+          !/^[a-f0-9]{64}$/.test(asset.sha256 || '') ||
+          (asset.rawSha256 !== undefined && asset.rawSha256 !== asset.sha256) ||
+          (asset.crlfToLfSha256 !== undefined && !/^[a-f0-9]{64}$/.test(asset.crlfToLfSha256))) {
+        throw new Error('Invalid pinned asset.');
+      }
       files.add(asset.file);
     }
     if (!files.has('index.html')) throw new Error('Missing pinned entry.');
@@ -47,8 +51,10 @@ function validateCatalog(value) {
 }
 
 function verifyAsset(asset, bytes) {
-  if (crypto.createHash('sha256').update(bytes).digest('hex') !== asset.sha256) {
-    throw new Error('Pinned lesson asset integrity mismatch.');
+  const rawSha256 = crypto.createHash('sha256').update(bytes).digest('hex');
+  if (rawSha256 !== (asset.rawSha256 ?? asset.sha256) &&
+      crypto.createHash('sha256').update(Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1')).digest('hex') !== asset.crlfToLfSha256) {
+    throw new Error(`Pinned lesson asset integrity mismatch: ${asset.path ?? asset.file ?? '(unnamed asset)'}.`);
   }
   return bytes;
 }

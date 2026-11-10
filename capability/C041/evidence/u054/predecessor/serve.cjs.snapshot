@@ -1,0 +1,162 @@
+'use strict';
+
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const catalog = require('./accepted-catalog.js');
+
+const root = path.resolve(__dirname, '..', '..');
+const hostFiles = ['index.html', 'host.css', 'accepted-catalog.js', 'host-policy.js', 'lesson-host.js', 'host-page.js'];
+const hostCsp = "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; frame-ancestors 'none'";
+const lessonCsp = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'none'; frame-ancestors 'self'; sandbox allow-scripts";
+const permissions = 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-read=(), clipboard-write=(), fullscreen=(), display-capture=()';
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+
+function validateCatalog(value) {
+  if (value.schemaVersion !== 1 || value.gate?.id !== 'C001' || value.gate.state !== 'Done' ||
+      value.gate.frontend !== 'Portable HTML/JavaScript lessons' ||
+      !/^[a-f0-9]{64}$/.test(value.source?.sha256 || '') ||
+      !Array.isArray(value.lessons) || !value.lessons.length) throw new Error('Unapproved catalog.');
+  for (const field of ['liveAzureExecutionApproved', 'iacGenerationApproved', 'scaffoldApproved',
+    'deploymentApproved', 'identityRegistrationApproved', 'expenditureApproved']) {
+    if (value.gate[field] !== false) throw new Error('Unexpected catalog authorization.');
+  }
+  const ids = new Set();
+  for (const lesson of value.lessons) {
+    const approval = lesson.acceptance;
+    if (!/^A-S\d{3}$/.test(lesson.id) || ids.has(lesson.id) ||
+        lesson.entry !== `/c041-lessons/${lesson.id}/index.html` ||
+        approval?.state !== 'Done' || !/^[a-f0-9]{40}$/.test(approval.commit || '') ||
+        approval.tag !== `kanban/${lesson.id}/${approval.commit.slice(0, 12)}` ||
+        !approval.acceptedAtUtc || !Array.isArray(lesson.assets) || !lesson.assets.length ||
+        ['accepted', 'focusedTestsPassed', 'browserObserved', 'remoteVerified'].some(key => approval.review?.[key] !== true)) {
+      throw new Error('Unaccepted lesson.');
+    }
+    ids.add(lesson.id);
+    const files = new Set();
+    for (const asset of lesson.assets) {
+      if (!/^[a-z][a-z0-9-]*\.(html|js|css)$/.test(asset.file) || files.has(asset.file) ||
+          asset.path !== `learning\\${lesson.id.slice(2)}\\${asset.file}` ||
+          !/^[a-f0-9]{64}$/.test(asset.sha256 || '')) throw new Error('Invalid pinned asset.');
+      files.add(asset.file);
+    }
+    if (!files.has('index.html')) throw new Error('Missing pinned entry.');
+  }
+  return true;
+}
+
+function verifyAsset(asset, bytes) {
+  if (crypto.createHash('sha256').update(bytes).digest('hex') !== asset.sha256) {
+    throw new Error('Pinned lesson asset integrity mismatch.');
+  }
+  return bytes;
+}
+
+function readOwned(relative) {
+  const expected = path.join(root, ...relative.split('\\'));
+  const actual = fs.realpathSync(expected);
+  const comparable = value => process.platform === 'win32' ? value.toLowerCase() : value;
+  if (comparable(actual) !== comparable(expected) || !fs.statSync(actual).isFile()) {
+    throw new Error('Asset must be an owned regular file without redirected paths.');
+  }
+  return fs.readFileSync(actual);
+}
+
+function loadAssets() {
+  validateCatalog(catalog);
+  const routes = new Map();
+  for (const file of hostFiles) {
+    routes.set(`/${file}`, {
+      bytes: readOwned(`capability\\C041\\${file}`), type: mime[path.extname(file)], csp: hostCsp, lesson: false
+    });
+  }
+  routes.set('/', routes.get('/index.html'));
+  for (const lesson of catalog.lessons) {
+    for (const asset of lesson.assets) {
+      routes.set(`/c041-lessons/${lesson.id}/${asset.file}`, {
+        bytes: verifyAsset(asset, readOwned(asset.path)), type: mime[path.extname(asset.file)], csp: lessonCsp, lesson: true
+      });
+    }
+  }
+  return routes;
+}
+
+async function startHost({ port = 0, ttlMs = 900000 } = {}) {
+  if (!Number.isInteger(port) || port < 0 || port > 65535 ||
+      !Number.isInteger(ttlMs) || ttlMs < 1000 || ttlMs > 900000) {
+    throw new RangeError('A valid local port and a 1s–15min lifetime are required.');
+  }
+  const routes = loadAssets();
+  let authority;
+  const server = http.createServer((request, response) => {
+    const headers = {
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'Permissions-Policy': permissions,
+      'Content-Security-Policy': hostCsp,
+      'Content-Type': 'text/plain; charset=utf-8'
+    };
+    function refuse(code, additional = {}) {
+      response.writeHead(code, { ...headers, ...additional });
+      response.end(request.method === 'HEAD' ? undefined : 'Not available.\n');
+    }
+    if (request.headers.host !== authority) return refuse(421);
+    if (request.headers.origin !== undefined && request.headers.origin !== `http://${authority}`) return refuse(403);
+    if (!['GET', 'HEAD'].includes(request.method)) return refuse(405, { Allow: 'GET, HEAD' });
+    // Match raw targets, never normalized URL paths: normalization can hide traversal.
+    if (!/^\/[A-Za-z0-9/._-]*$/.test(request.url) || /(?:^|\/)\.{1,2}(?:\/|$)|\/\//.test(request.url)) {
+      return refuse(400);
+    }
+    const asset = routes.get(request.url);
+    if (!asset) return refuse(404);
+    response.writeHead(200, {
+      ...headers, 'Content-Type': asset.type, 'Content-Security-Policy': asset.csp,
+      'Content-Length': asset.bytes.length,
+      ...(asset.lesson ? {} : { 'X-Frame-Options': 'DENY' })
+    });
+    response.end(request.method === 'HEAD' ? undefined : asset.bytes);
+  });
+  server.requestTimeout = 5000;
+  server.headersTimeout = 5000;
+  server.maxHeadersCount = 30;
+  server.on('clientError', (_error, socket) => socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n'));
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', resolve);
+  });
+  authority = `127.0.0.1:${server.address().port}`;
+  let stopped = false;
+  async function close() {
+    if (stopped) return;
+    stopped = true;
+    clearTimeout(deadline);
+    const closing = new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+    server.closeAllConnections();
+    await closing;
+  }
+  const deadline = setTimeout(() => { close().catch(() => { process.exitCode = 1; }); }, ttlMs);
+  deadline.unref();
+  return Object.freeze({ server, url: `http://${authority}/`, close });
+}
+
+module.exports = Object.freeze({ startHost, validateCatalog, verifyAsset, hostCsp, lessonCsp });
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  if (args.length && (args.length !== 2 || args[0] !== '--port' || !/^\d+$/.test(args[1]))) {
+    console.error('Usage: node capability\\C041\\serve.cjs [--port 0..65535]');
+    process.exitCode = 1;
+  } else {
+    startHost({ port: args.length ? Number(args[1]) : 0 }).then(host => {
+      console.log(JSON.stringify({ event: 'listening', pid: process.pid, url: host.url, lifetimeMs: 900000, scope: 'C041 owned host + two pinned accepted A lessons only' }));
+      for (const signal of ['SIGINT', 'SIGTERM']) {
+        process.once(signal, () => { host.close().catch(() => { process.exitCode = 1; }); });
+      }
+    }).catch(() => {
+      console.error('C041 helper refused startup. Check approved catalog, asset integrity, and local port.');
+      process.exitCode = 1;
+    });
+  }
+}

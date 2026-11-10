@@ -1,0 +1,172 @@
+'use strict';
+
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const BASE_SHA256 = 'fc9d99d07f1f576ac65df017778276e29dcee3c31c8b24352165f67d2e110046';
+const BASE = 'evidence\\source-hashes.json';
+const REPLACEABLE = Object.freeze([
+  'accepted-catalog.js', 'serve.cjs', 'tests\\catalog.test.cjs',
+  'tests\\server.test.cjs', 'tests\\evidence.test.cjs'
+]);
+const ARTIFACT_REPLACEABLE = Object.freeze(['tests\\u054-authority.cjs', 'tests\\u054-eol.test.cjs']);
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const lf = bytes => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+const hash = /^[a-f0-9]{64}$/;
+const sourceText = relative => !relative.startsWith('evidence\\') &&
+  /\.(?:js|cjs|mjs|html|css|md|feature)$/.test(relative);
+const closed = (value, names) => value !== null && typeof value === 'object' && !Array.isArray(value) &&
+  Object.keys(value).sort().join('\0') === [...names].sort().join('\0');
+
+function fail(code, file) {
+  throw Object.assign(new Error(`${code} ${file}`), { code });
+}
+
+function relative(file) {
+  if (typeof file !== 'string' || !/^[A-Za-z0-9_.-]+(?:\\[A-Za-z0-9_.-]+)*$/.test(file) ||
+      file.split('\\').some(segment => segment === '.' || segment === '..')) fail('AUTHORITY_PATH', String(file));
+  return file;
+}
+
+function readOwned(directory, file) {
+  const expected = path.join(directory, ...relative(file).split('\\'));
+  const actual = fs.realpathSync(expected);
+  const stat = fs.lstatSync(expected);
+  if (actual !== expected || !stat.isFile() || stat.nlink !== 1) fail('AUTHORITY_REGULAR_FILE', file);
+  return fs.readFileSync(expected);
+}
+
+function verifyPair(row, read, code) {
+  const bytes = read(row.path);
+  if (sha(bytes) !== row.rawSha256 && !(row.acceptLf && sha(lf(bytes)) === row.crlfToLfSha256)) fail(code, row.path);
+}
+
+function verifyChain({ baseBytes, addenda, read, names, trustedFirstSha256, trustedAddendaSha256 }) {
+  if (sha(baseBytes) !== BASE_SHA256) fail('SOURCE_HASH_BASE_CHANGED', BASE);
+  const base = JSON.parse(baseBytes);
+  if (base.algorithm !== 'sha256' || base.pathBase !== 'capability\\C041') fail('SOURCE_HASH_BASE_SHAPE', BASE);
+  if (!addenda.length) fail('MISSING_ADDENDUM', 'evidence-index-addendum-1.json');
+  if (trustedFirstSha256 && sha(lf(addenda[0].bytes)) !== trustedFirstSha256) fail('TRUSTED_ADDENDUM_CHANGED', addenda[0].name);
+  if (trustedAddendaSha256) {
+    if (trustedAddendaSha256.length !== addenda.length) fail('TRUSTED_ADDENDUM_SET', 'evidence-index-addendum-N.json');
+    for (const [index, addendum] of addenda.entries()) {
+      if (sha(lf(addendum.bytes)) !== trustedAddendaSha256[index]) fail('TRUSTED_ADDENDUM_CHANGED', addendum.name);
+    }
+  }
+  let current;
+  const retained = new Map();
+  const artifacts = new Map();
+  let previous = null;
+  for (const [offset, addendum] of addenda.entries()) {
+    const sequence = offset + 1;
+    if (addendum.name !== `evidence-index-addendum-${sequence}.json`) fail('ADDENDUM_SEQUENCE', addendum.name);
+    let value;
+    try { value = JSON.parse(addendum.bytes); } catch { fail('ADDENDUM_JSON', addendum.name); }
+    const extended = value.schema === 'C041-evidence-index-addendum/2';
+    const keys = ['schema', 'cardId', 'item', 'sequence', 'base', 'previous', 'sourceForms', 'retainedFiles', 'replacements', 'additions'];
+    if (extended) keys.push('artifactReplacements');
+    if (!closed(value, keys) ||
+        (offset === 0 ? value.schema !== 'C041-evidence-index-addendum/1' : !extended) || value.cardId !== 'C041' ||
+        value.item !== 'U054' || value.sequence !== sequence ||
+        !closed(value.base, ['path', 'rawSha256']) || value.base.path !== BASE || value.base.rawSha256 !== BASE_SHA256 ||
+        !Array.isArray(value.replacements) || !value.replacements.length || !Array.isArray(value.additions)) {
+      fail('ADDENDUM_SHAPE', addendum.name);
+    }
+    if (JSON.stringify(value.previous) !== JSON.stringify(previous)) fail('ADDENDUM_CHAIN', addendum.name);
+    if (offset === 0) {
+      if (!Array.isArray(value.sourceForms) || value.sourceForms.length !== Object.keys(base.files).length) fail('SOURCE_FORMS_SET', addendum.name);
+      current = new Map();
+      for (const row of value.sourceForms) {
+        if (!closed(row, ['path', 'rawSha256', 'crlfToLfSha256', 'acceptLf']) ||
+            !Object.hasOwn(base.files, row.path) || current.has(row.path) ||
+            row.rawSha256 !== base.files[row.path] || !hash.test(row.crlfToLfSha256) ||
+            row.acceptLf !== sourceText(row.path)) fail('SOURCE_FORMS_ENTRY', row.path);
+        current.set(row.path, row);
+      }
+      if (!Array.isArray(value.retainedFiles)) fail('RETAINED_FILES_SET', addendum.name);
+      for (const row of value.retainedFiles) {
+        if (!closed(row, ['path', 'rawSha256', 'crlfToLfSha256', 'acceptLf']) ||
+            Object.hasOwn(base.files, relative(row.path)) || retained.has(row.path) ||
+            !row.path.startsWith('evidence\\') || row.acceptLf !== false ||
+            !hash.test(row.rawSha256) || !hash.test(row.crlfToLfSha256)) fail('RETAINED_FILES_ENTRY', row.path);
+        retained.set(row.path, row);
+      }
+    } else if (value.sourceForms !== null || value.retainedFiles !== null) fail('SOURCE_FORMS_REDECLARED', addendum.name);
+    const seen = new Set();
+    for (const step of value.replacements) {
+      if (!closed(step, ['path', 'previousRawSha256', 'previousCrlfToLfSha256', 'rawSha256', 'crlfToLfSha256', 'beforeWitness']) ||
+          !REPLACEABLE.includes(step.path) || seen.has(step.path)) fail('REPLACEMENT_PATH', step.path);
+      seen.add(step.path);
+      const before = current.get(step.path);
+      if (step.previousRawSha256 !== before.rawSha256 || step.previousCrlfToLfSha256 !== before.crlfToLfSha256 ||
+          !hash.test(step.rawSha256) || !hash.test(step.crlfToLfSha256) ||
+          step.rawSha256 === before.rawSha256) fail('REPLACEMENT_PREDECESSOR', step.path);
+      relative(step.beforeWitness);
+      if (!step.beforeWitness.startsWith('evidence\\u054\\predecessor\\')) fail('PREDECESSOR_SCOPE', step.path);
+      const witness = read(step.beforeWitness);
+      if (sha(witness) !== before.rawSha256 || sha(lf(witness)) !== before.crlfToLfSha256) fail('PREDECESSOR_CHANGED', step.path);
+      current.set(step.path, { path: step.path, rawSha256: step.rawSha256,
+        crlfToLfSha256: step.crlfToLfSha256, acceptLf: true });
+    }
+    for (const row of value.additions) {
+      if (!closed(row, ['path', 'rawSha256', 'crlfToLfSha256', 'acceptLf']) ||
+          Object.hasOwn(base.files, relative(row.path)) || artifacts.has(row.path) ||
+          !hash.test(row.rawSha256) || !hash.test(row.crlfToLfSha256) ||
+          row.acceptLf !== sourceText(row.path)) fail('ADDITION_ENTRY', row.path);
+      artifacts.set(row.path, row);
+    }
+    if (extended) {
+      if (!Array.isArray(value.artifactReplacements)) fail('ARTIFACT_REPLACEMENTS_SET', addendum.name);
+      const artifactSeen = new Set();
+      for (const step of value.artifactReplacements) {
+        const before = artifacts.get(step.path);
+        if (!closed(step, ['path', 'previousRawSha256', 'previousCrlfToLfSha256', 'rawSha256', 'crlfToLfSha256', 'beforeWitness']) ||
+            !ARTIFACT_REPLACEABLE.includes(step.path) || !before || artifactSeen.has(step.path)) fail('ARTIFACT_REPLACEMENT_PATH', step.path);
+        artifactSeen.add(step.path);
+        if (step.previousRawSha256 !== before.rawSha256 || step.previousCrlfToLfSha256 !== before.crlfToLfSha256 ||
+            !hash.test(step.rawSha256) || !hash.test(step.crlfToLfSha256) ||
+            step.rawSha256 === before.rawSha256) fail('ARTIFACT_PREDECESSOR', step.path);
+        relative(step.beforeWitness);
+        if (!step.beforeWitness.startsWith('evidence\\u054\\predecessor\\')) fail('PREDECESSOR_SCOPE', step.path);
+        const witness = read(step.beforeWitness);
+        if (sha(witness) !== before.rawSha256 || sha(lf(witness)) !== before.crlfToLfSha256) fail('PREDECESSOR_CHANGED', step.path);
+        artifacts.set(step.path, { path: step.path, rawSha256: step.rawSha256,
+          crlfToLfSha256: step.crlfToLfSha256, acceptLf: true });
+      }
+    }
+    previous = { name: addendum.name, rawSha256: sha(lf(addendum.bytes)) };
+  }
+  for (const row of current.values()) verifyPair(row, read, 'SEALED_BYTES_CHANGED');
+  for (const row of retained.values()) verifyPair(row, read, 'RETAINED_BYTES_CHANGED');
+  for (const row of artifacts.values()) verifyPair(row, read, 'ADDED_BYTES_CHANGED');
+  if (names) {
+    const expected = new Set([...current.keys(), ...retained.keys(), ...artifacts.keys(),
+      ...addenda.map(value => value.name), 'tests\\u054-authority.test.cjs']);
+    for (const name of names) if (!expected.delete(name)) fail('UNINDEXED_FILE', name);
+    if (expected.size) fail('INDEXED_FILE_MISSING', [...expected][0]);
+  }
+  return { sealed: current.size, retained: retained.size, additions: artifacts.size, addenda: addenda.length, head: previous,
+    headRepresentation: { rawSha256: sha(addenda.at(-1).bytes), crlfToLfSha256: sha(lf(addenda.at(-1).bytes)) } };
+}
+
+function readNamespace(directory) {
+  const read = file => readOwned(directory, file);
+  const addenda = fs.readdirSync(directory).filter(name => name.startsWith('evidence-index-addendum-')).map(name => {
+    if (!/^evidence-index-addendum-[1-9][0-9]*\.json$/.test(name)) fail('ADDENDUM_NAME', name);
+    return { name, bytes: read(name) };
+  }).sort((a, b) => Number(a.name.match(/-(\d+)\.json$/)[1]) - Number(b.name.match(/-(\d+)\.json$/)[1]));
+  const walk = (location, prefix = '') => fs.readdirSync(location, { withFileTypes: true }).flatMap(entry => {
+    const name = prefix ? `${prefix}\\${entry.name}` : entry.name;
+    const full = path.join(location, entry.name);
+    if (fs.realpathSync(full) !== full || fs.lstatSync(full).isSymbolicLink()) fail('AUTHORITY_REGULAR_FILE', name);
+    return entry.isDirectory() ? walk(full, name) : [name];
+  });
+  return { baseBytes: read(BASE), addenda, read, names: walk(directory) };
+}
+
+function verifyNamespace(directory, trustedFirstSha256, trustedAddendaSha256) {
+  return verifyChain({ ...readNamespace(directory), trustedFirstSha256, trustedAddendaSha256 });
+}
+
+module.exports = Object.freeze({ BASE, BASE_SHA256, REPLACEABLE, ARTIFACT_REPLACEABLE, sha, lf, sourceText, readOwned, readNamespace, verifyChain, verifyNamespace });

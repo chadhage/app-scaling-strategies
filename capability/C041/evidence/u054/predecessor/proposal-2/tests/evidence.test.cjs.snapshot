@@ -1,0 +1,122 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const zlib = require('node:zlib');
+const { test } = require('node:test');
+const root = path.resolve(__dirname, '..');
+const read = relative => fs.readFileSync(path.join(root, ...relative.split('\\')));
+const json = relative => JSON.parse(read(relative).toString('utf8'));
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const evidence = json('evidence.json');
+
+test('authentic archived RED is loadable, assertion-based, preserved, and uses the same policy tests', () => {
+  const run = json(evidence.red.run);
+  const log = read(evidence.red.log).toString('utf8');
+  assert.equal(run.exitCode, 1);
+  assert.equal(run.syntaxExitCode, 0);
+  assert.equal(sha(read(evidence.red.loadableStub)), run.stubSha256);
+  assert.equal(sha(read('tests\\policy.test.cjs')), run.testSha256);
+  assert.equal((log.match(/failureType: 'testCodeFailure'/g) || []).length, 4);
+  assert.doesNotMatch(log, /MODULE_NOT_FOUND|SyntaxError/);
+  assert.match(log, /# fail 4/);
+  const archives = json(evidence.rawTapArchives);
+  assert.equal(archives.files.length, 3);
+  for (const archive of archives.files) {
+    const compressed = read(archive.archive);
+    const raw = zlib.gunzipSync(compressed);
+    const normalized = Buffer.from(raw.toString('utf8').split(/\r?\n/).map(line => line.replace(/[ \t]+$/u, '')).join('\n'));
+    assert.equal(sha(compressed), archive.archiveSha256);
+    assert.equal(sha(raw), archive.rawSha256);
+    assert.equal(sha(read(archive.display)), archive.normalizedSha256);
+    assert.deepEqual(normalized, read(archive.display));
+  }
+});
+
+test('every declared owned evidence reference is relative, confined, and persistent', () => {
+  const references = [
+    evidence.entry, evidence.bdd, evidence.catalog, evidence.acceptanceSnapshot,
+    evidence.acceptedAssetProvenance, evidence.red.run, evidence.red.log, evidence.red.loadableStub,
+    evidence.red.replayRun, evidence.red.replayLog, evidence.green.run, evidence.green.log, evidence.originBoundaryRefinementRed.run,
+    evidence.originBoundaryRefinementRed.log, evidence.syntax, evidence.browser.checks,
+    evidence.browser.runner, evidence.browser.observations, evidence.browser.attempts,
+    evidence.browser.log, evidence.sourceHashes, evidence.queueRefinements, evidence.rawTapArchives,
+    evidence.red.rawLog, evidence.red.rawReplayLog, evidence.originBoundaryRefinementRed.rawLog
+  ];
+  for (const relative of references) {
+    assert.equal(path.isAbsolute(relative), false, relative);
+    assert.equal(relative.split('\\').includes('..'), false, relative);
+    assert.ok(fs.statSync(path.join(root, ...relative.split('\\'))).isFile(), relative);
+  }
+});
+
+test('real browser evidence proves interaction, opaque origin, CSP, exact child bodies, and cleanup', () => {
+  const observed = json(evidence.browser.observations);
+  assert.equal(observed.passed, true);
+  assert.equal(observed.integratedBrowserUsed, false);
+  assert.equal(observed.browserVersion, '156.0.4314.50');
+  assert.equal(observed.playwrightVersion, '1.56.1');
+  assert.equal(observed.stages.length, 4);
+  assert.ok(observed.stages.every(stage => stage.passed));
+  assert.equal(observed.stages[0].warmed, 'READY');
+  assert.equal(observed.stages[0].childVerdict, 'PASS');
+  assert.equal(observed.stages[1].regressedPromotion, 'held at 25%');
+  const isolation = observed.stages[2];
+  assert.equal(isolation.parentObservation.sandbox, 'allow-scripts');
+  assert.equal(isolation.childObservation.effectiveOrigin, 'null');
+  for (const key of ['parentDocument', 'parentManagement', 'storage']) {
+    assert.equal(isolation.childObservation[key], 'SecurityError');
+  }
+  assert.equal(isolation.childObservation.frameElementIsNull, true);
+  assert.equal(isolation.childObservation.inlineRan, false);
+  assert.deepEqual(isolation.childObservation.violations, ['connect-src', 'frame-src', 'script-src-elem']);
+  assert.equal(observed.stages[3].messages.length, 5);
+  assert.ok(observed.stages[3].messages.every(message => message.origin === 'null'));
+  assert.deepEqual(observed.stages[3].messageTriggeredRequests, []);
+  assert.equal(observed.stages[3].refused.length, 10);
+  assert.equal(observed.childDocumentResponses.length, 2);
+  for (const response of observed.childDocumentResponses) {
+    assert.equal(response.status, 200);
+    assert.equal(response.bodyMatchesPinned, true);
+    assert.equal(response.bodySha256, response.expectedSha256);
+    assert.match(response.csp, /sandbox allow-scripts/);
+    assert.doesNotMatch(response.csp, /allow-same-origin|unsafe-inline|unsafe-eval/);
+  }
+  assert.deepEqual(observed.cleanup, { browserCloseResolved: true, pageClosed: true, ownedHelperStopped: true });
+  assert.match(observed.transportBoundary, /not native Chromium TCP transport certification/);
+});
+
+test('accepted asset provenance, scope, and bounded queue refinements claim no extra authority or credit', () => {
+  const provenance = json(evidence.acceptedAssetProvenance);
+  assert.deepEqual(provenance.map(lesson => lesson.id), ['A-S001', 'A-S003']);
+  assert.ok(provenance.every(lesson => lesson.gitNormalizedSourceMatchesAcceptedCommit && lesson.diffExitCode === 0));
+  assert.equal(evidence.scope.managementDelegation, false);
+  assert.equal(evidence.scope.nativeOrParentProof, false);
+  assert.equal(evidence.scope.cloudCalls, 0);
+  assert.equal(evidence.iac.status, 'N/A');
+  const refinements = json(evidence.queueRefinements);
+  assert.equal(refinements.kanoUnit, 'C041');
+  assert.equal(refinements.creditAwarded, 0);
+  assert.equal(refinements.queueEdited, false);
+  assert.equal(refinements.boundedRefinements.length, 2);
+  assert.ok(refinements.boundedRefinements.every(item => item.noNewAdmissionOrCredit));
+});
+
+test('published evidence source pins match the current owned source and test files', () => {
+  const pins = json(evidence.sourceHashes);
+  assert.equal(pins.algorithm, 'sha256');
+  assert.ok(Object.keys(pins.files).length >= 18);
+  for (const relative of Object.keys(pins.files)) {
+    assert.equal(path.isAbsolute(relative), false);
+    assert.equal(relative.split('\\').includes('..'), false);
+  }
+  const helper = 'tests\\u054-authority.cjs';
+  const helperBytes = read(helper);
+  const helperSha256 = sha(Buffer.from(helperBytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1'));
+  assert.equal(helperSha256, 'b0484ae2c96979816d16ffd0b469a7a026d7ac4055c3a073a213623b7f76e1cc');
+  const checked = require('./u054-authority.cjs').verifyNamespace(root);
+  assert.equal(checked.sealed, Object.keys(pins.files).length);
+  assert.ok(checked.addenda >= 1);
+});

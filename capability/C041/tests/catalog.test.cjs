@@ -10,7 +10,16 @@ const clone = () => structuredClone(catalog);
 
 test('runtime read-only catalog exactly matches the captured acceptance snapshot', () => {
   const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'evidence', 'accepted-ledger-snapshot.json'), 'utf8'));
-  assert.deepEqual(catalog, snapshot);
+  const acceptedShape = clone();
+  for (const lesson of acceptedShape.lessons) {
+    for (const asset of lesson.assets) {
+      assert.equal(asset.rawSha256, asset.sha256);
+      assert.match(asset.crlfToLfSha256, /^[a-f0-9]{64}$/);
+      delete asset.rawSha256;
+      delete asset.crlfToLfSha256;
+    }
+  }
+  assert.deepEqual(acceptedShape, snapshot);
   assert.equal(validateCatalog(catalog), true);
 });
 

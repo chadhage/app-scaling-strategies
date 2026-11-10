@@ -1,0 +1,59 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { test } = require('node:test');
+const policy = require(process.env.C041_POLICY_MODULE
+  ? path.resolve(process.env.C041_POLICY_MODULE)
+  : path.join(__dirname, '..', 'host-policy.js'));
+
+test('only the two explicitly accepted delivered A lessons are selectable', () => {
+  assert.deepEqual(policy.listLessons().map(lesson => lesson.id), ['A-S001', 'A-S003']);
+  for (const lesson of policy.listLessons()) {
+    assert.equal(lesson.acceptance.state, 'Done');
+    assert.equal(lesson.acceptance.review.accepted, true);
+    assert.equal(lesson.acceptance.review.remoteVerified, true);
+    assert.match(lesson.acceptance.commit, /^[a-f0-9]{40}$/);
+    assert.ok(Object.isFrozen(lesson));
+    assert.ok(Object.isFrozen(lesson.assets));
+  }
+  assert.ok(Object.isFrozen(policy.listLessons()));
+});
+
+test('an exact accepted ID resolves to its fixed entry, never a caller URL', () => {
+  const selection = policy.resolveLesson('A-S001');
+  assert.equal(selection.accepted, true);
+  assert.equal(selection.id, 'A-S001');
+  assert.equal(selection.entry, '/c041-lessons/A-S001/index.html');
+  assert.equal(selection.title, 'Warm v2, then hand off');
+  assert.ok(Object.isFrozen(selection));
+});
+
+test('the second accepted lesson resolves independently', () => {
+  const selection = policy.resolveLesson('A-S003');
+  assert.equal(selection.accepted, true);
+  assert.equal(selection.entry, '/c041-lessons/A-S003/index.html');
+});
+
+for (const value of [
+  '', 'A-S009', 'A-S005', 'B-S001', 'S001', 'a-s001', ' A-S001', 'A-S001 ',
+  'A-S001/index.html', '/learning/S001/index.html', '../../learning/S001/index.html',
+  '..\\..\\learning\\S001\\index.html', 'https://example.invalid/lesson',
+  '//example.invalid/lesson', 'file:///C:/repo/learning/S001/index.html',
+  'javascript:alert(1)', 'data:text/html,test', '%41-S001', '__proto__', 'constructor',
+  undefined, null, 1, {}, ['A-S001'], { toString() { throw new Error('must not coerce'); } }
+]) {
+  test(`refuse unapproved selection ${typeof value === 'string' ? JSON.stringify(value) : typeof value}`, () => {
+    assert.deepEqual(policy.resolveLesson(value), {
+      accepted: false, reason: 'unapproved-lesson'
+    });
+  });
+}
+
+test('a caller cannot mutate the read-only selection catalog', () => {
+  const lessons = policy.listLessons();
+  assert.throws(() => lessons.push({ id: 'A-S009' }), TypeError);
+  assert.throws(() => { lessons[0].id = 'A-S009'; }, TypeError);
+  assert.equal(policy.resolveLesson('A-S009').accepted, false);
+  assert.equal(policy.resolveLesson('A-S001').accepted, true);
+});
