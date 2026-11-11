@@ -1,0 +1,61 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {verify}=require('./current-v2-final.cjs');
+const {sha}=require('./integrity.cjs');
+const {physical}=require('./source.cjs');
+const {DEADLINE}=require('./budget.cjs');
+const ns=path.resolve(__dirname,'..'),root=path.resolve(ns,'..','..'),run=process.env.C012_RUN,metadata=process.env.C012_METADATA;
+const audit=verify(),patch=process.env.C012_PATCH_OUTPUT;
+assert.equal(audit.pass,true);assert.ok(patch);
+const patchReport=JSON.parse(fs.readFileSync(patch+'.json'));assert.equal(patchReport.sha256,sha(fs.readFileSync(patch)));assert.equal(patchReport.applied,false);assert.equal(patchReport.readOnlyGitApplyCheckExit,0);
+const originalResult=path.join(run,'results','C012.json');
+assert.equal(sha(fs.readFileSync(originalResult)),'5935e75284e32c6c16c183ae37de872093e734985087c33c0c3481f2ca085d07');
+assert.equal(fs.existsSync(path.join(process.env.C012_GIT_REPOSITORY,'capability','C012')),false);
+for(const directory of ['heavy-locks','mutation-locks']){
+  const folder=path.join(run,directory);
+  for(const entry of fs.readdirSync(folder,{withFileTypes:true})){
+    if(entry.isFile())assert.equal(fs.readFileSync(path.join(folder,entry.name),'utf8').startsWith('worker-C012-current-v2-'),false);
+    if(entry.name==='queue')for(const name of fs.readdirSync(path.join(folder,entry.name)))assert.equal(name.includes('worker-C012-current-v2-'),false);
+  }
+}
+const runtime=process.env.C012_RUNTIME;assert.equal(runtime,path.join(root,'.git','kanban-orchestrator','browser-runtime'));
+const own=physical(runtime),freeze=JSON.parse(fs.readFileSync(process.env.C012_CURRENT_FREEZE));assert.deepEqual(own,freeze.runtime);
+function noAliases(directory){for(const entry of fs.readdirSync(directory,{withFileTypes:true})){const file=path.join(directory,entry.name);assert.equal(fs.lstatSync(file).isSymbolicLink(),false);if(entry.isDirectory())noAliases(file);}}
+noAliases(runtime);fs.rmSync(runtime,{recursive:true,force:false,maxRetries:3,retryDelay:100});assert.equal(fs.existsSync(runtime),false);
+function ref(file,role){const bytes=fs.readFileSync(file);return{path:file,bytes:bytes.length,sha256:sha(bytes),role};}
+const final=path.join(ns,'evidence','current-v2','final');
+const artifacts=[ref(patch,'current-v2 additive binary patch, read-only apply check, not applied'),
+  ref(process.env.C012_CURRENT_FREEZE,'current complete source freeze'),
+  ref(path.join(final,'whole-seal.json'),'current whole physical namespace exact-set seal'),
+  ref(path.join(final,'authority.json'),'current original-byte evidence authority'),
+  ref(path.join(metadata,'mutations-current-v2','inventory.json'),'actual full457-definition independent inventory'),
+  ref(path.join(metadata,'closure-current-v2','report.json'),'all435 valid positions with actual bound proofs and recomputed unresolved'),
+  ref(path.join(metadata,'parent-green','report.json'),'unchanged parent invariant actual full-domain GREEN'),
+  ref(path.join(metadata,'reuse-current-v2.json'),'exact historical producer/UI/data/control source reuse; no second native campaign')];
+const result={schemaVersion:2,schema:'C012-same-original-unit-current-v2-private-review/2',cardId:'C012',workerId:'worker-C012',kanoUnit:'C012',frozenClass:'S',packet:'H003',
+  outcome:'readyForReview',readyForReview:true,deadlineUtc:DEADLINE,deadlineExtended:false,completedAtUtc:new Date().toISOString(),
+  candidate:root,paths:['capability\\C012'],commit:null,tag:null,originalResultUnacceptedAndImmutable:true,
+  originalResultSha256:'5935e75284e32c6c16c183ae37de872093e734985087c33c0c3481f2ca085d07',
+  artifactrefs:artifacts,audit,patch:patchReport,
+  closure:{definitions:457,validChanged:435,acceptedProofs:audit.proofs,semanticUnresolved:audit.semanticUnresolved,counts:audit.counts,
+    faultsPromotedToKills:false,newWitnessesAreScopedContrastsNotGlobalEquivalence:true,old17EquivalenceDomainsUnchanged:true,existingVersionBound:1024,
+    actualNonthrowingNamedContractsMayIndependentlyKill:true,prooflessLabelsRemainUnresolved:true},
+  sourceGates:{whole:audit.currentTests,completeFresh:audit.freshKinds,coverage:audit.coverage,productionChanged:false},
+  historicalCampaigns:{resourceTotal:64,resourceConcurrency:8,nativeMajor:157,nativeSessions:2,exactActualRecordedInputBindings:true,
+    role:'original-c historical campaigns only, not c2 native requalification',secondNativeCampaignAdmitted:false,secondNativeCampaignRun:false,cleanupAuthorityReused:false},
+  cleanup:{exactOwnedCurrentRuntimeRemoved:true,runtimeIdentity:own,ownCurrentLeasesAbsent:true,oldRootNotTouched:true,globalOrNameKill:false,newNativeProcesses:0},
+  authority:{applied:false,published:false,ledgerOrIndexWritten:false,done:false,creditGranted:false,newUnitOrBonus:false,logicalWip:1,parentIndependentAcceptanceRequired:true},
+  permissions:{azure:false,iac:false,scaffold:false,identity:false,deploy:false,expenditure:false},nativeAzureRuns:0,nativeAzureSpend:0,
+  hints:[
+    {kind:'test',text:'All435 valid changed positions derive closure from actual proof bindings; 63 prior fault classifications alone were unresolved. Contrast witnesses are not equivalence or fault kills.',evidence:'tests\\current-v2-close.cjs'},
+    {kind:'test',text:'The unchanged parent test consumes actual final full inventory/decisions via C012_PARENT_INVENTORY and C012_PARENT_DECISIONS. No tailored subset.',evidence:'tests\\current-v2-parent.cjs'},
+    {kind:'process',text:'Original c/5935 result remains immutable and unaccepted. c2 only; no second native campaign. Historical reuse binds all104 recorded producer/UI/data/control bytes per campaign.',evidence:'tests\\current-v2-reuse.cjs'}
+  ],
+  limitations:['New contrast witnesses characterize exact declared initialized public operations, not global equivalence.',
+    'No second native/resource campaign is claimed. Old actual campaigns are historical exact-byte reuse only.',
+    'The first current-v2 selector-probe raw failure remains; retained selector preimage is preserved. Its complete early helper source preimage is not retrospectively certified.'],
+  obstacles:[],notes:'Same original C012 S unit. Private handoff only; await explicit parent application authority.'};
+const file=path.join(run,'results','C012-current-v2.json');
+if(fs.existsSync(file))fs.copyFileSync(file,path.join(run,'results','C012-current-v2-prev-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json'),fs.constants.COPYFILE_EXCL);
+fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify({cardId:'C012',outcome:result.outcome,validChanged:435,proofs:audit.proofs,semanticUnresolved:audit.semanticUnresolved,resultSha256:sha(fs.readFileSync(file)),applied:false,creditGranted:false}));

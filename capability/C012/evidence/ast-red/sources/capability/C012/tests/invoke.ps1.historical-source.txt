@@ -1,0 +1,59 @@
+param(
+  [Parameter(Mandatory=$true)][string]$Name,
+  [Parameter(Mandatory=$true)][string[]]$NodeArgs,
+  [int]$MaximumSeconds=1200
+)
+$ErrorActionPreference='Stop'
+$deadline=[DateTimeOffset]::Parse('2026-11-11T23:06:54.4385459Z')
+$remaining=($deadline-[DateTimeOffset]::UtcNow).TotalSeconds
+if($remaining -le 60){throw 'C012 hard deadline / cleanup reserve: no new capture'}
+$root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
+$physical=[IO.Path]::GetFullPath((Join-Path $root '..'))
+$repo=[IO.Path]::GetFullPath((Join-Path $physical '..\..'))
+$meta=Join-Path $repo '.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\C012'
+$runtime=Join-Path $root '.git\kanban-orchestrator\browser-runtime'
+[IO.Directory]::CreateDirectory($meta)|Out-Null
+[IO.Directory]::CreateDirectory($runtime)|Out-Null
+$env:TEMP=$runtime; $env:TMP=$runtime; $env:TMPDIR=$runtime
+$env:NODE_PATH=Join-Path $repo 'testing\browser\node_modules'
+$env:C012_METADATA=$meta
+$env:C012_RUNTIME=$runtime
+$env:C012_GIT_REPOSITORY=$repo
+$env:C012_DEADLINE=$deadline.ToString('o')
+Remove-Item Env:NODE_TEST_CONTEXT,Env:NODE_V8_COVERAGE,Env:CAPTURE_BROWSER_EVIDENCE -ErrorAction SilentlyContinue
+function Identity($process,$role) {
+  $birth=$process.StartTime.ToUniversalTime()
+  @{role=$role;pid=$process.Id;createdAtUtc7=$birth.ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ');createdAtFileTimeUtc=$birth.ToFileTimeUtc().ToString();observedAtUtc7=[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ');name=$Name;authority='exact process started/owned by this invocation'}
+}
+$journal=Join-Path $meta 'processes.jsonl'
+(Identity (Get-Process -Id $PID) 'synchronous-tool-shell-not-shared-neighbour')|ConvertTo-Json -Compress|Add-Content -LiteralPath $journal
+$epoch=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffffff')
+$stdout=Join-Path $meta "$Name-$epoch.stdout.raw"
+$stderr=Join-Path $meta "$Name-$epoch.stderr.raw"
+$quoted=@($NodeArgs|ForEach-Object {'"'+($_ -replace '"','\"')+'"'})
+$node=(Get-Command node).Source
+$process=Start-Process -FilePath $node -ArgumentList $quoted -WorkingDirectory $root -NoNewWindow -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+$birth=Identity $process 'own-capture-root'
+$birth|ConvertTo-Json -Compress|Add-Content -LiteralPath $journal
+$limit=[Math]::Min($MaximumSeconds,[Math]::Floor($remaining-60))
+$started=[DateTimeOffset]::UtcNow
+try {
+  while(-not $process.WaitForExit(1000)) {
+    $now=[DateTimeOffset]::UtcNow
+    "$($now.ToString('o')) $Name own-private-capture"|Set-Content -LiteralPath (Join-Path $meta 'heartbeat.txt')
+    if($now -ge $deadline.AddSeconds(-60) -or ($now-$started).TotalSeconds -ge $limit) {
+      $current=Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+      if($current -and $current.StartTime.ToUniversalTime().ToFileTimeUtc().ToString() -eq $birth.createdAtFileTimeUtc){Stop-Process -Id $process.Id -Force}
+      throw "C012 own root bounded stop: $Name; any unconfirmed child remains NOT cleanup authority"
+    }
+  }
+  $process.WaitForExit()
+  $status=$process.ExitCode
+  @{name=$Name;pid=$process.Id;birth=$birth;exitCode=$status;completedAtUtc7=[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ');stdout=$stdout;stderr=$stderr;watchdogSeconds=$limit;deadlineUtc=$deadline.ToString('o')}|ConvertTo-Json -Depth 6|Set-Content -LiteralPath (Join-Path $meta "$Name-$epoch.completion.json")
+  Get-Content -LiteralPath $stdout -Tail 35
+  Get-Content -LiteralPath $stderr -Tail 20
+  if($status -ne 0){throw "C012 command exit $status : $Name (original raw retained)"}
+} finally {
+  "$([DateTimeOffset]::UtcNow.ToString('o')) $Name settled"|Set-Content -LiteralPath (Join-Path $meta 'heartbeat.txt')
+  $process.Dispose()
+}

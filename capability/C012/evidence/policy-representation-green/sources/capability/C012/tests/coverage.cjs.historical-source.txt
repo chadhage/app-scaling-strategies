@@ -1,0 +1,39 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { run, remaining, write } = require('./budget.cjs');
+const { sha } = require('./integrity.cjs');
+const root = path.resolve(__dirname, '..');
+const production = ['fixtures.js', 'model.js', 'page.js', 'index.html'];
+const actual = fs.readdirSync(root).filter(name => /\.(?:js|cjs|html)$/.test(name)).sort();
+assert.deepEqual(actual, [...production].sort(), 'Every executable production file and inline owner is enumerated');
+const tests = ['acceptance', 'model', 'page'].map(name => 'capability\\C012\\tests\\' + name + '.test.cjs');
+const out = process.env.C012_COVERAGE_OUTPUT;
+assert.ok(out && path.isAbsolute(out), 'an exclusive owned coverage output is required');
+fs.mkdirSync(out, { recursive: false });
+const rows = [];
+for (const file of production) {
+  remaining(60000);
+  const source = fs.readFileSync(path.join(root, file));
+  const executable = file === 'index.html' ? Buffer.from(/<script>([\s\S]*?)<\/script>/.exec(source.toString())[1]) : source;
+  const measuredFile = file === 'index.html' ? path.join('tests', 'inline-theme-source.js') : file;
+  if (file === 'index.html') assert.equal(executable.toString().replace(/\r\n/g, '\n'),
+    fs.readFileSync(path.join(root, measuredFile), 'utf8').replace(/\r\n/g, '\n'), 'Actual inline bytes equal the complete executable V8 source projection');
+  const args = ['--test', '--experimental-test-isolation=none', '--test-concurrency=1', '--test-timeout=120000', '--experimental-test-coverage',
+    '--test-coverage-include=' + path.join(root, measuredFile), '--test-coverage-lines=85', '--test-coverage-branches=85', '--test-coverage-functions=85', ...tests];
+  const result = run(args);
+  fs.writeFileSync(path.join(out, file + '.stdout.raw'), result.stdout || '', { flag: 'wx' });
+  fs.writeFileSync(path.join(out, file + '.stderr.raw'), result.stderr || '', { flag: 'wx' });
+  const text = (result.stdout || '').toString();
+  const match = new RegExp('^#\\s+' + path.basename(measuredFile).replaceAll('.', '\\.') + '\\s+\\|\\s+([\\d.]+)\\s+\\|\\s+([\\d.]+)\\s+\\|\\s+([\\d.]+)\\s+\\|', 'm').exec(text);
+  const metrics = match ? { lines: Number(match[1]), branches: Number(match[2]), functions: Number(match[3]) } : { lines: 0, branches: 0, functions: 0 };
+  const row = { file, measuredFile, sourceReadSha256: sha(source), executableSourceSha256: sha(executable),
+    executableScope: file === 'index.html' ? 'exact sole inline first theme fragment; HTML/CSS are non-executable markup' : 'complete actual production module',
+    loaded: Boolean(match), ...metrics, exit: result.status, signal: result.signal, error: result.error?.code || null, args };
+  row.pass = row.loaded && Object.values(metrics).every(value => value >= 85) && result.status === 0 && !result.error && !result.signal;
+  rows.push(row);
+}
+const report = { schema: 'C012-per-executable-file-coverage/1', floor: { lines: 85, branches: 85, functions: 85 },
+  fileSet: production, noUnloadedFalse100: true, files: rows, pass: rows.every(row => row.pass) };
+write(path.join(out, 'report.json'), report);
+console.log(JSON.stringify(report, null, 2));
+if (!report.pass) process.exitCode = 1;

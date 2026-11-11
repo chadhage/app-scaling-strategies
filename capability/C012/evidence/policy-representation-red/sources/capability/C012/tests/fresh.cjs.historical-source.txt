@@ -1,0 +1,67 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { run, remaining, write } = require('./budget.cjs');
+const { sha, lf } = require('./integrity.cjs');
+const { physical, copyTree, list } = require('./source.cjs');
+const namespace = path.resolve(__dirname, '..'), root = path.resolve(namespace, '..', '..');
+async function main() {
+  remaining(60000);
+  const privateRoot = process.env.C012_PRIVATE_ROOT, output = process.env.C012_FRESH_OUTPUT;
+  assert.ok(privateRoot && path.isAbsolute(privateRoot) && output && path.isAbsolute(output));
+  const owner = JSON.parse(fs.readFileSync(path.join(privateRoot, '.owner-C012.json')));
+  assert.equal(owner.workerId, 'worker-C012'); assert.equal(owner.physicalCopiesOnly, true);
+  const freezeFile = process.env.C012_SOURCE_FREEZE || path.join(namespace, 'evidence', 'final-source', 'freeze.json');
+  const freeze = JSON.parse(fs.readFileSync(freezeFile));
+  for (const item of freeze.sources) assert.equal(sha(fs.readFileSync(path.join(namespace, item.path))), item.sha256);
+  fs.mkdirSync(output, { recursive: false });
+  const work = path.join(privateRoot, process.env.C012_FRESH_WORK_NAME || 'w');
+  fs.mkdirSync(work, { recursive: false });
+  const workIdentity = physical(work), results = [];
+  try {
+    for (const kind of ['lf', 'crlf']) {
+      remaining(60000);
+      const target = path.join(work, kind);
+      fs.mkdirSync(target, { recursive: false });
+      const targetNs = path.join(target, 'capability', 'C012');
+      fs.mkdirSync(path.dirname(targetNs), { recursive: true });
+      copyTree(namespace, targetNs);
+      for (const item of freeze.sources) {
+        const source = fs.readFileSync(path.join(path.dirname(freezeFile), 'sources', item.path));
+        assert.equal(sha(source), item.sha256);
+        const bytes = kind === 'lf' ? lf(source) : Buffer.from(lf(source).toString('utf8').replace(/\n/g, '\r\n'));
+        fs.writeFileSync(path.join(targetNs, item.path), bytes);
+      }
+      const imports = require('../imports.json'), imported = [];
+      for (const item of imports.entries) {
+        const source = fs.readFileSync(path.join(path.dirname(freezeFile), 'accepted-producer-sources', item.path));
+        const bytes = kind === 'lf' ? lf(source) : Buffer.from(lf(source).toString('utf8').replace(/\n/g, '\r\n'));
+        const file = path.join(target, item.path);
+        fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, bytes, { flag: 'wx' });
+        imported.push({ path: item.path, actualSha256: sha(bytes), canonicalLfSha256: sha(lf(bytes)) });
+      }
+      const before = list(targetNs), directoryIdentity = physical(target);
+      const result = run(['capability\\C012\\tests\\suite.cjs'], { cwd: target, timeout: 900000 });
+      fs.writeFileSync(path.join(output, kind + '.stdout.raw'), result.stdout || '', { flag: 'wx' });
+      fs.writeFileSync(path.join(output, kind + '.stderr.raw'), result.stderr || '', { flag: 'wx' });
+      const summary = Object.fromEntries(['tests', 'pass', 'fail', 'cancelled', 'skipped', 'todo'].map(key => [key, Number(new RegExp('^# ' + key + ' (\\d+)$', 'm').exec((result.stdout || '').toString())?.[1] ?? -1)]));
+      const after = list(targetNs);
+      assert.deepEqual(after, before, kind + ' whole source stayed unchanged');
+      const row = { kind, sourceAuthority: 'byte-complete private freeze for NEW C012 plus fixed accepted Git-object-verified imports; no C012 HEAD is invented',
+        directoryIdentity, sources: before, imports: imported, exit: result.status, signal: result.signal, error: result.error?.code || null, summary,
+        synchronousChild: { pid: result.pid, fullyReaped: result.status !== null, noBirthNoAdoptionOrKillAuthority: true },
+        stdoutSha256: sha(result.stdout || ''), stderrSha256: sha(result.stderr || '') };
+      results.push(row);
+      assert.equal(result.error, undefined); assert.equal(result.signal, null); assert.equal(result.status, 0, (result.stderr || '').toString());
+      assert.ok(summary.tests > 20); assert.equal(summary.pass, summary.tests);
+      for (const key of ['fail', 'cancelled', 'skipped', 'todo']) assert.equal(summary[key], 0);
+    }
+  } finally {
+    assert.deepEqual(physical(work), workIdentity, 'never remove a replacement fresh workspace');
+    fs.rmSync(work, { recursive: true, force: false });
+    write(path.join(output, 'report.json'), { schema: 'C012-complete-fresh-physical-LF-CRLF/1', results,
+      freezeSha256: sha(fs.readFileSync(freezeFile)), workspaceRemoved: !fs.existsSync(work), workIdentity,
+      pass: results.length === 2 && results.every(row => row.exit === 0 && !row.error && !row.signal) });
+  }
+  console.log(JSON.stringify({ freshKinds: results.map(row => row.kind), tests: results.map(row => row.summary), complete: true, workspaceRemoved: true }));
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });

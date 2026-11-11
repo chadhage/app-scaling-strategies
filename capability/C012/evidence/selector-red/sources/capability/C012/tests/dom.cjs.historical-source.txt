@@ -1,0 +1,53 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), crypto = require('node:crypto');
+const { pathToFileURL } = require('node:url');
+const root = path.resolve(__dirname, '..');
+const sha = value => crypto.createHash('sha256').update(value).digest('hex');
+function create(options = {}) {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const elements = new Map(), executed = [], callbacks = new Map();
+  let document;
+  class Element {
+    constructor(id = '', tag = '') {
+      this.id = id; this.tagName = tag.toUpperCase(); this.children = []; this.attributes = {};
+      this.value = ''; this.disabled = id === 'acknowledge'; this.checked = false; this._text = '';
+    }
+    set textContent(value) { this._text = String(value); this.children = []; }
+    get textContent() { return this._text + this.children.map(child => child.textContent).join(''); }
+    appendChild(child) { this.children.push(child); return child; }
+    replaceChildren(...children) { this._text = ''; this.children = children; }
+    setAttribute(name, value) { this.attributes[name] = String(value); }
+    getAttribute(name) { return this.attributes[name] ?? null; }
+    addEventListener(type, callback) {
+      const key = this.id + ':' + type;
+      callbacks.set(key, [...callbacks.get(key) || [], callback]);
+    }
+    focus() { document.activeElement = this; }
+  }
+  for (const match of html.matchAll(/<([a-z0-9-]+)\b[^>]*\bid="([^"]+)"/g)) elements.set(match[2], new Element(match[2], match[1]));
+  elements.get('scenario').value = 'held';
+  document = { documentElement: new Element('', 'html'), activeElement: null,
+    getElementById(id) { if (!elements.has(id)) throw new Error('Unknown actual DOM id ' + id); return elements.get(id); },
+    createElement(tag) { return new Element('', tag); } };
+  const window = { location: { search: options.search || '' }, matchMedia: () => ({ matches: Boolean(options.dark) }) };
+  const context = vm.createContext({ document, window, URLSearchParams, TextEncoder, Uint8Array,
+    crypto: options.crypto === undefined ? crypto.webcrypto : options.crypto, console });
+  function execute(name, source) {
+    const file = path.join(root, name);
+    const text = source === undefined ? fs.readFileSync(file, 'utf8') : source;
+    new vm.Script(text, { filename: pathToFileURL(file).href }).runInContext(context, { timeout: 10000 });
+    executed.push({ file: name, readSha256: sha(Buffer.from(text)), executedSha256: sha(Buffer.from(text)) });
+  }
+  const theme = /<script>([\s\S]*?)<\/script>/.exec(html)[1];
+  if (options.theme !== false) execute('index.html', theme);
+  execute('fixtures.js', options.sources?.['fixtures.js']);
+  execute('model.js', options.sources?.['model.js']);
+  execute('page.js', options.sources?.['page.js']);
+  async function emit(id, type, force = false) {
+    if (elements.get(id).disabled && !force) return;
+    for (const callback of callbacks.get(id + ':' + type) || []) await callback({ target: elements.get(id) });
+  }
+  return { context, elements, document, emit, execute, executed, html, theme,
+    rows: () => elements.get('facts').children.map(row => [row.attributes['data-fact'], ...row.children.map(cell => cell.textContent)]) };
+}
+module.exports = { create, root, sha };

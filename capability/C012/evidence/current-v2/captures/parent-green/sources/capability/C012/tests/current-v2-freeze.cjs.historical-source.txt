@@ -1,0 +1,23 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {list,physical}=require('./source.cjs');
+const {remaining}=require('./budget.cjs');
+const {sha,pin}=require('./integrity.cjs');
+remaining(60000);
+const ns=path.resolve(__dirname,'..'),root=path.resolve(ns,'..','..');
+const name=process.env.C012_CURRENT_FREEZE_NAME||'source';
+assert.match(name,/^source(?:-[0-9]+)?$/);
+const out=path.join(ns,'evidence','current-v2','freeze',name);
+fs.mkdirSync(path.dirname(out),{recursive:true});fs.mkdirSync(out,{recursive:false});
+const sources=list(ns);
+for(const item of sources){const target=path.join(out,'sources',item.path);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(ns,item.path),target,fs.constants.COPYFILE_EXCL);}
+for(const item of require('../imports.json').entries){
+  const bytes=fs.readFileSync(path.join(root,item.path));assert.equal(pin(bytes,item),true);
+  const target=path.join(out,'imports',item.path);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes,{flag:'wx'});
+}
+const runtime=physical(process.env.C012_RUNTIME);
+const report={schema:'C012-current-v2-last-source-freeze/2',createdAtUtc:new Date().toISOString(),sources,
+  sourceSetSha256:sha(JSON.stringify(sources)),root:physical(root),runtime,
+  originalDeadlineUtc:'2026-11-11T23:06:54.4385459Z',noProductionChanges:true,originalResultUnacceptedAndImmutable:true};
+fs.writeFileSync(path.join(out,'freeze.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({sources:sources.length,sourceSetSha256:report.sourceSetSha256,freeze:path.relative(ns,path.join(out,'freeze.json'))}));

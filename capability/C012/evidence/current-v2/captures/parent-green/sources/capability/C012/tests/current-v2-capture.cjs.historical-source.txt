@@ -1,0 +1,25 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib');
+const {list}=require('./source.cjs');
+const {run,remaining}=require('./budget.cjs');
+const {sha,lf}=require('./integrity.cjs');
+const ns=path.resolve(__dirname,'..'),root=path.resolve(ns,'..','..');
+const name=process.argv[2],expected=Number(process.argv[3]),args=process.argv.slice(4);
+if(!/^[a-z0-9-]+$/.test(name)||!args.length)throw Error('closed capture command');
+remaining(60000);
+const out=path.join(ns,'evidence','current-v2','captures',name);
+fs.mkdirSync(path.dirname(out),{recursive:true});fs.mkdirSync(out,{recursive:false});
+const inputs=[...list(ns).map(row=>path.join('capability','C012',row.path)),...require('../imports.json').entries.map(row=>row.path)].map(relative=>{
+  const bytes=fs.readFileSync(path.join(root,relative)),target=path.join(out,'sources',relative);
+  fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes,{flag:'wx'});
+  return {path:relative,bytes:bytes.length,sha256:sha(bytes),lfSha256:sha(lf(bytes))};
+});
+const startedAtUtc=new Date().toISOString(),result=run(args,{timeout:Math.min(remaining(60000),1800000)});
+function stream(kind){const bytes=result[kind]||Buffer.alloc(0),gzip=zlib.gzipSync(bytes);fs.writeFileSync(path.join(out,kind+'.raw.gz'),gzip,{flag:'wx'});return{file:kind+'.raw.gz',rawBytes:bytes.length,rawSha256:sha(bytes),gzipSha256:sha(gzip)};}
+const manifest={schema:'C012-current-v2-source-complete-capture/2',name,startedAtUtc,completedAtUtc:new Date().toISOString(),
+  command:[process.execPath,...args],expectedExit:expected,exit:result.status,error:result.error?{code:result.error.code,message:result.error.message}:null,
+  signal:result.signal,inputs,stdout:stream('stdout'),stderr:stream('stderr'),
+  synchronousChild:{pid:result.pid,fullyReaped:result.status!==null,noBirthNoAdoptionOrKillAuthority:true}};
+fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({name,exit:result.status,expected,inputs:inputs.length}));
+if(result.status!==expected||result.signal||result.error)process.exitCode=1;

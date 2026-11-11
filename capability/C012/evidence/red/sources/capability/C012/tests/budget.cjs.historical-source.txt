@@ -1,0 +1,30 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const DEADLINE = '2026-11-11T23:06:54.4385459Z';
+const end = Date.parse(DEADLINE);
+function remaining(reserve = 0) {
+  const ms = end - Date.now() - reserve;
+  if (!(ms > 0)) throw Object.assign(new Error('C012 absolute deadline: metadata/owned cleanup only'), { code: 'C012_DEADLINE' });
+  return ms;
+}
+function environment(extra = {}) {
+  const env = { ...process.env, ...extra, C012_DEADLINE: DEADLINE };
+  delete env.NODE_TEST_CONTEXT;
+  delete env.NODE_V8_COVERAGE;
+  return env;
+}
+function run(args, options = {}) {
+  const timeout = Math.min(remaining(60000), options.timeout || 600000);
+  return spawnSync(process.execPath, args, {
+    cwd: path.resolve(__dirname, '..', '..', '..'), env: environment(options.env),
+    windowsHide: true, maxBuffer: 64 * 1024 * 1024, ...options, timeout
+  });
+}
+function write(file, value) {
+  remaining();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx' });
+}
+module.exports = { DEADLINE, remaining, environment, run, write };

@@ -1,0 +1,50 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
+const { remaining, write } = require('./budget.cjs');
+const root = path.resolve(__dirname, '..', '..', '..');
+const repo = path.resolve(root, '..', '..', '..');
+const sha = value => crypto.createHash('sha256').update(value).digest('hex');
+function git(args) {
+  remaining();
+  const result = spawnSync('git', ['--no-pager', '-C', repo, ...args], { windowsHide: true, timeout: Math.min(remaining(), 30000), maxBuffer: 16 * 1024 * 1024 });
+  if (result.status !== 0 || result.error) throw new Error(String(result.stderr || result.error));
+  return result.stdout;
+}
+const fixed = {
+  C001: ['cfff04364ade947aa398004b21548a15272021e7', 'kanban/C001/cfff04364ade', ['approved-contract.js', 'contract-guard.js']],
+  C002: ['5feaab2929a615aa7f6968fd39355868dd321e4f', 'kanban/C002/5feaab2929a6', ['run-envelope-contract.js', 'validator.js', 'synthetic-fixture.js', 'json-input.js']],
+  C003: ['1583da90c1013ba95fdf268d6901f8a14bdf900a', 'kanban/C003/1583da90c101', ['matrix-contract.js', 'matrix-data.js']],
+  C004: ['a7a980284fd4f46608e82911a5a6242606a13bbd', 'kanban/C004/a7a980284fd4', ['README.md', 'plan-model.js', 'plan-provenance.js', 'plan-fixtures.js']],
+  C009: ['0da3ff6eea40c6051a103f96c04ab668b95538d6', 'kanban/C009/0da3ff6eea40', ['contract.js']],
+  C011: ['2b7e681098ea463c21cd9e624474d3c26c86440a', 'kanban/C011/2b7e681098ea', ['README.md', 'imports.json', 'codes.cjs', 'config.cjs', 'contract.js', 'json.cjs', 'page.js', 'server.cjs', 'store.cjs', 'tests\\u074-parser.cjs', 'tests\\u074-domain-oracle.cjs']]
+};
+const entries = [];
+function copy(relative, commit, tag, role) {
+  const gitPath = relative.replaceAll('\\', '/');
+  const raw = fs.readFileSync(path.join(repo, relative));
+  const blob = git(['show', commit + ':' + gitPath]);
+  const lf = Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'));
+  if (!lf.equals(Buffer.from(blob.toString('utf8').replace(/\r\n/g, '\n')))) throw new Error('Accepted source drift: ' + relative);
+  const target = path.join(root, relative);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  if (fs.existsSync(target)) {
+    if (!fs.readFileSync(target).equals(raw)) throw new Error('Private existing copy differs: ' + relative);
+  } else fs.writeFileSync(target, raw, { flag: 'wx' });
+  entries.push({ path: relative, commit, tag, role, raw: sha(raw), lf: sha(lf), git: sha(blob), oid: git(['rev-parse', commit + ':' + gitPath]).toString().trim() });
+}
+for (const [card, [commit, tag, files]] of Object.entries(fixed)) {
+  for (const file of files) copy(path.join('capability', card, file), commit, tag, 'accepted producer; immutable physical source copy');
+}
+copy('capability\\C003\\README.md', '82789c163ff7fc5467bd1105f03417e406871243', 'kanban/C003/82789c163ff7',
+  'accepted documentation-only deliberate-capture amendment; runtime matrix pins remain original accepted publication');
+for (const sub of ['', 'lifecycle', 'qualify']) {
+  const directory = path.join('testing', 'browser', sub);
+  for (const file of fs.readdirSync(path.join(repo, directory)).filter(name => /\.(cjs|json|jsonl)$/.test(name) && !name.includes('.test.') && !name.startsWith('package'))) {
+    const relative = path.join(directory, file);
+    const commit = git(['log', '-1', '--format=%H', '--', relative]).toString().trim();
+    copy(relative, commit, null, 'existing accepted read-only browser helper; no testing quality access');
+  }
+}
+write(path.join(__dirname, '..', 'imports.json'), { schema: 'C012-fixed-accepted-imports/1', entries, accepted: fixed, producerValidationReimplemented: false });
+console.log(JSON.stringify({ copied: entries.length, root, source: repo }));

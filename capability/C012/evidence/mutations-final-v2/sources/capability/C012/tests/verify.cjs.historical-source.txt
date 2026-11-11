@@ -1,0 +1,130 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), zlib = require('node:zlib');
+const { sha, pin, capture } = require('./integrity.cjs');
+const { whole, compressed, tallies } = require('./evidence-core.cjs');
+const { inventory, sources } = require('./ast.cjs');
+const { choose, RULES } = require('./pairs.cjs');
+const { classify } = require('./verdict.cjs');
+const { utc7 } = require('./journal.cjs');
+const { auditCapture } = require('./history.cjs');
+const ns = path.resolve(__dirname, '..'), root = path.resolve(ns, '..', '..');
+function verify() {
+  const final = path.join(ns, 'evidence', 'final'), seal = JSON.parse(fs.readFileSync(path.join(final, 'whole-seal.json')));
+  const actual = {};
+  function walk(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name);
+      assert.equal(fs.lstatSync(file).isSymbolicLink(), false);
+      if (entry.isDirectory()) walk(file);
+      else if (file !== path.join(final, 'whole-seal.json')) actual[path.relative(ns, file)] = fs.readFileSync(file);
+    }
+  }
+  walk(ns); assert.deepEqual(whole(seal, actual), [], 'whole actual namespace exact set and every byte');
+  const authority = JSON.parse(fs.readFileSync(path.join(final, 'authority.json'))), originals = new Map();
+  for (const item of authority.originals) {
+    const checked = compressed(item, fs.readFileSync(path.join(final, item.artifact)));
+    assert.deepEqual(checked.issues, [], item.metadataRelativePath);
+    originals.set(item.metadataRelativePath, checked.raw);
+  }
+  const read = relative => { assert.ok(originals.has(relative), 'retained original ' + relative); return originals.get(relative); };
+  const json = relative => JSON.parse(read(relative).toString('utf8'));
+  const reports = Object.fromEntries(Object.entries(authority.phaseReports).map(([name, relative]) => [name, json(relative)]));
+  const reportDirs = Object.fromEntries(Object.entries(authority.phaseReports).map(([name, relative]) => [name, path.dirname(relative)]));
+  const historicalUnexpectedFailures = [];
+  assert.equal(sha(fs.readFileSync(path.join(ns, authority.sourceFreeze))), authority.sourceFreezeSha256);
+  const frozen = JSON.parse(fs.readFileSync(path.join(ns, authority.sourceFreeze)));
+  for (const item of frozen.sources) assert.equal(sha(fs.readFileSync(path.join(ns, item.path))), item.sha256, item.path);
+  for (const entry of fs.readdirSync(path.join(ns, 'evidence'), { withFileTypes: true })) {
+    const directory = path.join(ns, 'evidence', entry.name);
+    if (entry.isDirectory() && fs.existsSync(path.join(directory, 'manifest.json'))) {
+      const audited = auditCapture(directory);
+      assert.deepEqual(audited.issues, [], entry.name);
+      if (audited.role.startsWith('historical-')) historicalUnexpectedFailures.push(audited);
+    }
+  }
+  const currentDir = path.dirname(path.join(ns, authority.currentCapture)), current = JSON.parse(fs.readFileSync(path.join(currentDir, 'manifest.json')));
+  assert.equal(current.exit, 0); assert.equal(current.error, null); assert.equal(current.signal, null);
+  const stdout = zlib.gunzipSync(fs.readFileSync(path.join(currentDir, current.stdout.file))).toString('utf8');
+  const count = key => Number(new RegExp('^# ' + key + ' (\\d+)$', 'm').exec(stdout)?.[1] ?? -1);
+  assert.ok(count('tests') > 20); assert.equal(count('tests'), count('pass'));
+  for (const key of ['fail', 'cancelled', 'skipped', 'todo']) assert.equal(count(key), 0);
+  assert.equal(reports.replay.originalNaiveBehavioralRed.exit, 1); assert.equal(reports.replay.identicalFinalGreen.exit, 0);
+  assert.equal(reports.fresh.pass, true); assert.equal(reports.fresh.workspaceRemoved, true);
+  for (const row of reports.fresh.results) {
+    assert.equal(row.exit, 0); assert.equal(row.summary.tests, count('tests')); assert.equal(row.summary.pass, count('tests'));
+  }
+  for (const row of reports.coverage.files) {
+    const source = fs.readFileSync(path.join(ns, row.file));
+    const executable = row.file === 'index.html' ? Buffer.from(/<script>([\s\S]*?)<\/script>/.exec(source.toString())[1]) : source;
+    assert.equal(sha(source), row.sourceReadSha256); assert.equal(sha(executable), row.executableSourceSha256);
+    assert.equal(row.loaded, true); assert.equal(row.pass, true);
+    const raw = read(path.join(reportDirs.coverage, row.file + '.stdout.raw')).toString('utf8');
+    const match = new RegExp('^#\\s+' + path.basename(row.measuredFile).replaceAll('.', '\\.') + '\\s+\\|\\s+([\\d.]+)\\s+\\|\\s+([\\d.]+)\\s+\\|\\s+([\\d.]+)\\s+\\|', 'm').exec(raw);
+    assert.ok(match, 'unloaded never becomes 100%');
+    for (const [index, metric] of ['lines', 'branches', 'functions'].entries()) {
+      assert.equal(Number(match[index + 1]), row[metric]); assert.ok(row[metric] >= 85);
+    }
+  }
+  const domain = inventory(sources()), savedDomain = json(path.join(reportDirs.mutations, 'inventory.json'));
+  assert.deepEqual(domain, savedDomain);
+  const outcomes = read(path.join(reportDirs.mutations, 'outcomes.original.ndjson')).toString().trimEnd().split('\n').map(line => JSON.parse(line));
+  assert.equal(outcomes.length, domain.definitions.length);
+  assert.deepEqual(tallies(reports.pairs.decisions), Object.fromEntries(Object.entries(reports.pairs.counts).sort(([a], [b]) => a.localeCompare(b))));
+  for (const definition of domain.definitions) {
+    const actual = outcomes.find(row => row.id === definition.id), decision = reports.pairs.decisions.find(row => row.id === definition.id);
+    assert.equal(classify(definition, actual), actual.classification);
+    assert.equal(actual.sourceReadSha256, definition.sourceSha256); assert.equal(actual.executedSourceSha256, definition.mutantSha256);
+    if (decision.decision === 'named-assertion-kill') {
+      assert.equal(actual.failures.length, 1); assert.equal(actual.faults.length, 0);
+      assert.equal(actual.failures[0].code, 'ERR_ASSERTION'); assert.equal(decision.name, actual.failures[0].name);
+    } else if (decision.decision === 'specific-runnable-scoped-pair') {
+      const meta = reports.pairs.proofs.find(row => row.definitionId === definition.id), rule = choose(definition, sources());
+      assert.ok(rule); assert.equal(meta.rule, rule.rule); assert.equal(meta.counterfactualSha256, definition.mutantSha256);
+      const gzip = read(path.join(reportDirs.pairs, meta.artifact));
+      assert.equal(sha(gzip), meta.gzipSha256);
+      const raw = zlib.gunzipSync(gzip), proof = JSON.parse(raw);
+      assert.equal(sha(raw), meta.originalJsonSha256);
+      assert.deepEqual(proof.pristineTrace, proof.counterfactualTrace);
+      for (const pair of proof.extra) assert.deepEqual(pair.pristine, pair.counterfactual);
+      assert.equal(proof.cases, proof.assertedPairs);
+    } else { assert.ok(decision.decision.startsWith('nonkill-')); assert.equal(decision.noKillCredit, true); }
+  }
+  assert.equal(reports.pairs.proofs.length, Object.values(RULES).flat().length); assert.equal(reports.pairs.semanticUnresolved, 0);
+  const resource = reports.resource;
+  assert.equal(resource.completed, 64); assert.equal(resource.peak, 8); assert.equal(resource.pass, true); assert.equal(resource.allExited, true);
+  assert.deepEqual(resource.groups.map(row => row.job).sort((a, b) => a - b), Array.from({ length: 64 }, (_, n) => n + 1));
+  for (const row of resource.groups) { assert.equal(row.checks, 298); assert.equal(row.producerTransitions, 15); assert.equal(row.clientOperations, 32); }
+  const ipc = read(path.join(reportDirs.resource, 'ipc.original.ndjson')).toString().trimEnd().split('\n').map(line => JSON.parse(line));
+  assert.equal(ipc.filter(row => row.kind === 'dispatch').length, 64); assert.equal(ipc.filter(row => row.kind === 'result').length, 64);
+  assert.equal(ipc.filter(row => row.kind === 'exit' && row.code === 0 && row.signal === null).length, 8);
+  const journal = read('processes.jsonl').toString().trimEnd().split('\n').map(line => JSON.parse(line));
+  for (const worker of resource.workers) {
+    const birth = journal.find(row => row.pid === worker.pid && row.createdAtFileTimeUtc === worker.identity.createdAt && row.role === 'resource8-worker-born-before-any-resource-group');
+    assert.ok(birth); assert.equal(utc7(birth.createdAtFileTimeUtc), birth.createdAtUtc7);
+  }
+  const native = reports.native;
+  assert.equal(native.qualification.ok, true); assert.equal(native.qualification.major, 157);
+  assert.equal(native.qualification.signature.status, 'Valid'); assert.equal(native.qualification.signature.publisher, 'Microsoft Corporation');
+  assert.equal(native.sessions.length, 2); assert.equal(native.sessions[1].injectedFailure.code, 'ERR_ASSERTION');
+  for (const session of native.sessions) {
+    assert.equal(session.cleanup.clean, true); assert.ok(session.cleanup.ownedNativeIdentities.length >= 1);
+    assert.ok(session.cleanup.ownedNativeIdentities.some(row => row.pid === session.cleanup.root.pid && row.createdAt === session.cleanup.root.createdAt));
+    const birth = journal.find(row => row.pid === session.cleanup.root.pid && row.createdAtFileTimeUtc === session.cleanup.root.createdAt && row.role.startsWith('authenticated-browser-root-before-UI-campaign:'));
+    assert.ok(birth); assert.equal(utc7(birth.createdAtFileTimeUtc), birth.createdAtUtc7);
+  }
+  for (const observation of native.observations) {
+    assert.equal(new Set(observation.ids).size, observation.ids.length); assert.equal(observation.live, 1);
+    assert.ok([0, 22].includes(observation.rows.length)); assert.equal(new Set(observation.rows.map(row => row[0])).size, observation.rows.length);
+    assert.ok(observation.visible.every(Boolean)); assert.equal(observation.scripts.filter(row => !row.src).length, 1);
+  }
+  for (const item of require('../imports.json').entries) assert.equal(pin(fs.readFileSync(path.join(root, item.path)), item), true);
+  assert.equal(authority.liveApplicationAuthorized, false); assert.equal(authority.publicationAuthorized, false);
+  return { schema: 'C012-read-only-final-independent-byte-audit/1', pass: true, sourceFiles: frozen.sources.length,
+    sealedFiles: seal.files.length, preservedPrivateOriginals: originals.size, tests: count('tests'),
+    freshKinds: reports.fresh.results.map(row => row.kind), coverageFiles: reports.coverage.files.length,
+    mutationDefinitions: domain.definitions.length, mutationCounts: reports.pairs.counts, resourceGroups: 64,
+    resourceConcurrency: 8, nativeSessions: 2, nativeObservations: native.observations.length,
+    historicalUnexpectedFailures, wholeSealSha256: sha(fs.readFileSync(path.join(final, 'whole-seal.json'))) };
+}
+if (require.main === module) { try { console.log(JSON.stringify(verify(), null, 2)); } catch (error) { console.error(error); process.exitCode = 1; } }
+module.exports = { verify };

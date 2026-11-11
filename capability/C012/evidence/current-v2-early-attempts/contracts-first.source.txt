@@ -1,0 +1,147 @@
+'use strict';
+const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+const { browser, cjs, root } = require('./current-v2-realm.cjs');
+const { expected } = require('./oracle.cjs');
+const fixtures = require('../fixtures.js');
+const { EXPECTED_REASONS } = require('./probes.cjs');
+const { sha, pin } = require('./integrity.cjs');
+const MODULE_BROWSER = [10, 16, 253, 259], MODULE_CJS = [25, 276], THEME = [442, 443];
+const MODEL = {
+  28:'held',29:'held',30:'missing',31:'held',36:'held',45:'held',46:'held',51:'held',52:'held',53:'integrity-unavailable',54:'integrity-unavailable',
+  55:'held',56:'held',66:'held',69:'held',82:'missing',85:'missing',88:'missing',91:'missing',94:'missing',97:'missing',
+  100:'absent',103:'missing',133:'absent',135:'expired',151:'absent',166:'absent',169:'missing',212:'number-input',266:'held',270:'held'
+};
+const PAGE = {
+  291:'ack',304:'review',307:'review',312:'review',313:'review',315:'review',323:'load-owner',324:'unknown-selector',
+  325:'unknown-selector',326:'load',327:'load',336:'load',345:'load',346:'load',347:'load',364:'blank-ack',
+  389:'unknown-selector',391:'unknown-selector',394:'prototype-selector',414:'review',415:'review',417:'review',425:'load-owner',438:'load'
+};
+const IDS = [...MODULE_BROWSER,...MODULE_CJS,...THEME,...Object.keys(MODEL).map(Number),...Object.keys(PAGE).map(Number)].sort((a,b)=>a-b);
+const normalized = value => value === undefined ? null : JSON.parse(JSON.stringify(value));
+function complete(name) {
+  return { state: name === 'held' ? 'ready' : 'blocked', reviewable: name === 'held', reasons: EXPECTED_REASONS[name], rows: expected(name),
+    executionAuthorized: false, cloudExecutionAuthorized: false, expenditureAuthorized: false, liveAzureRuns: 0,
+    nativeAzureQualified: false, productionRuntimeValidated: false,
+    permissions: { native:false, iac:false, scaffold:false, identity:false, deploy:false, expenditure:false } };
+}
+async function dependencies(source) {
+  assert.equal(process.version, 'v22.23.4');
+  for (const item of require('../imports.json').entries) assert.equal(pin(fs.readFileSync(path.resolve(root, '..', '..', item.path)), item), true, item.path);
+  const real = require('../fixtures.js');
+  assert.deepEqual(real, fixtures);
+  for (const entry of Object.values(fixtures)) assert.equal(sha(entry.text), entry.sha256);
+  const digest = Buffer.from(await crypto.webcrypto.subtle.digest('SHA-256', new TextEncoder().encode('C012 fixed dependency canary'))).toString('hex');
+  assert.equal(digest, sha('C012 fixed dependency canary'));
+  const requiredIds = ['scenario','load','packet','owner','reservation-id','as-of','review','acknowledge','facts','status','reset'];
+  const realm = browser(source);
+  for (const id of requiredIds) assert.ok(realm.elements.has(id), 'actual page supplies declared id ' + id);
+  for (const file of ['index.html#theme','fixtures.js','model.js','page.js']) realm.run(file);
+  assert.deepEqual(realm.faults, [], 'unchanged initialized browser contract is a prerequisite');
+  await realm.emit('load','click'); await realm.emit('review','click');
+  assert.deepEqual(realm.snapshot().rows, expected('held'), 'real initialized public positive contract');
+  return { node: process.version, dependencyManifestSha256: sha(fs.readFileSync(path.join(root,'imports.json'))),
+    sourceBindings: Object.fromEntries(Object.entries(source).map(([file,text])=>[file,sha(text)])), nativeCryptoCanary: digest,
+    actualMarkupIds: requiredIds, pristineInitializedPublicContract: true };
+}
+function family(id) {
+  if (MODULE_BROWSER.includes(id)) return { kind:'browser-module-export', operation:id < 20 ? 'fixture-global' : 'model-global' };
+  if (MODULE_CJS.includes(id)) return { kind:'commonjs-module-export', operation:'model-export' };
+  if (THEME.includes(id)) return { kind:'theme-public-attribute', operation:'system-light' };
+  if (MODEL[id]) return { kind:'model-public-return', operation:MODEL[id] };
+  if (PAGE[id]) return { kind:'client-public-operation', operation:PAGE[id] };
+  return null;
+}
+async function observe(definition, source) {
+  const spec = family(definition.id);
+  assert.ok(spec, 'no default fault witness');
+  const faultDiagnostics = [], steps = [];
+  if (spec.kind === 'commonjs-module-export') {
+    const loaded = cjs(source['model.js'], 'model.js');
+    if (loaded.fault) faultDiagnostics.push(loaded.fault);
+    const publicData = { keys:Object.keys(loaded.api || {}), reviewType:typeof loaded.api?.review, frozen:Object.isFrozen(loaded.api) };
+    if (typeof loaded.api?.review === 'function') publicData.held = normalized(await loaded.api.review(fixtures.held.text,'conductor-a','rsv-00000001',1000));
+    return { spec, publicData, faultDiagnostics, steps };
+  }
+  const realm = browser(source, { cryptoUnavailable:spec.operation==='integrity-unavailable' });
+  realm.run('index.html#theme');
+  if (spec.kind === 'theme-public-attribute') return { spec, publicData:{theme:realm.snapshot().theme}, faultDiagnostics:realm.faults, steps:realm.reads };
+  realm.run('fixtures.js');
+  if (spec.kind === 'browser-module-export' && spec.operation === 'fixture-global') {
+    const api = realm.context.C012Fixtures;
+    return { spec, publicData:{exists:!!api, keys:Object.keys(api || {}), data:normalized(api), frozen:Object.isFrozen(api)},
+      faultDiagnostics:realm.faults, steps:realm.reads };
+  }
+  realm.run('model.js');
+  if (spec.kind === 'browser-module-export') {
+    const api = realm.context.C012Model;
+    return { spec, publicData:{exists:!!api, keys:Object.keys(api || {}), reviewType:typeof api?.review, frozen:Object.isFrozen(api)},
+      faultDiagnostics:realm.faults, steps:realm.reads };
+  }
+  if (spec.kind === 'model-public-return') {
+    assert.equal(typeof realm.context.C012Model?.review, 'function', 'public model initialized before operation');
+    const name = ['integrity-unavailable','number-input'].includes(spec.operation) ? 'held' : spec.operation;
+    const packet = JSON.parse(fixtures[name].text);
+    let returned = null, returnedNormally = false;
+    try { returned = normalized(await realm.context.C012Model.review(spec.operation==='number-input'?42:fixtures[name].text,packet.subject,packet.reservationId,packet.observedAtMs)); returnedNormally=true; }
+    catch(error) { realm.faults.push({phase:'public-review', name:error.name,code:error.code||null,message:error.message}); }
+    return {spec,publicData:{returnedNormally,returned},faultDiagnostics:realm.faults,steps:realm.reads};
+  }
+  realm.run('page.js');
+  const action = async(id,type) => {const completion=await realm.emit(id,type);steps.push({completion,snapshot:realm.snapshot()});};
+  if (spec.operation === 'unknown-selector' || spec.operation === 'prototype-selector') {
+    const cases = [];
+    for (const choice of ['unknown-choice','__proto__','constructor','']) {
+      realm.elements.get('scenario').value=choice;
+      const completion=await realm.emit('load','click');
+      cases.push({choice,completion,snapshot:realm.snapshot()});
+    }
+    return {spec,publicData:cases.map(row=>({choice:row.choice,snapshot:row.snapshot})), eventCompletions:cases.map(row=>row.completion),
+      faultDiagnostics:realm.faults,steps:realm.reads};
+  }
+  if (spec.operation === 'blank-ack') {
+    realm.elements.get('acknowledge').checked=true;await action('acknowledge','change');
+  } else {
+    await action('load','click');
+    if (['review','ack'].includes(spec.operation)) await action('review','click');
+    if (spec.operation === 'ack') {realm.elements.get('acknowledge').checked=true;await action('acknowledge','change');}
+  }
+  return {spec,publicData:realm.snapshot(),faultDiagnostics:realm.faults,steps};
+}
+function assertPristine(observation) {
+  assert.deepEqual(observation.faultDiagnostics, [], 'same-environment original operation has no diagnostic fault');
+  const {kind,operation}=observation.spec, data=observation.publicData;
+  if(kind==='commonjs-module-export') {assert.deepEqual(data.keys,['review']);assert.equal(data.reviewType,'function');assert.equal(data.frozen,true);assert.deepEqual(data.held,complete('held'));}
+  if(kind==='browser-module-export'&&operation==='fixture-global'){assert.equal(data.exists,true);assert.deepEqual(data.data,fixtures);assert.equal(data.frozen,true);}
+  if(kind==='browser-module-export'&&operation==='model-global'){assert.equal(data.exists,true);assert.deepEqual(data.keys,['review']);assert.equal(data.reviewType,'function');}
+  if(kind==='theme-public-attribute')assert.equal(data.theme,'light');
+  if(kind==='model-public-return') {
+    assert.equal(data.returnedNormally,true);
+    if(operation==='number-input')assert.deepEqual(data.returned.reasons,['INPUT_REJECTED']);
+    else if(operation==='integrity-unavailable')assert.deepEqual(data.returned.reasons,['INTEGRITY_UNAVAILABLE']);
+    else assert.deepEqual(data.returned,complete(operation));
+  }
+  if(kind==='client-public-operation') {
+    if(['load','load-owner','review','ack'].includes(operation)) {
+      assert.equal(data.fields.packet,fixtures.held.text);assert.equal(data.fields.owner,'conductor-a');assert.equal(data.fields['reservation-id'],'rsv-00000001');assert.equal(data.fields['as-of'],'1000');
+    }
+    if(['review','ack'].includes(operation))assert.deepEqual(data.rows,expected('held'));
+    if(operation==='ack')assert.equal(data.status,'Local facts marked reviewed only. This is not server consent or permission to run.');
+    if(operation==='blank-ack')assert.equal(data.checked,false);
+    if(['unknown-selector','prototype-selector'].includes(operation))for(const item of data){assert.equal(item.snapshot.fields.packet,'');assert.equal(item.snapshot.checked,false);assert.equal(item.snapshot.disabled,true);assert.deepEqual(item.snapshot.rows,[]);}
+  }
+}
+function qualify(original, changed) {
+  assertPristine(original);
+  const spec=original.spec;
+  assert.deepEqual(changed.spec,spec);
+  if(changed.faultDiagnostics.some(row=>['EACCES','EPERM','ENOENT','MODULE_NOT_FOUND','ERR_MODULE_NOT_FOUND','ERR_SCRIPT_EXECUTION_TIMEOUT','ETIMEDOUT'].includes(row.code)))return {accepted:false,reason:'environment-or-timeout-NONCLOSURE'};
+  if(!require('node:util').isDeepStrictEqual(original.publicData,changed.publicData))
+    return {accepted:true,kind:'initialized-public-contract-contrast',equivalent:false,domain:spec};
+  if(spec.kind==='client-public-operation'&&['unknown-selector','prototype-selector'].includes(spec.operation)) {
+    const a=original.eventCompletions,b=changed.eventCompletions;
+    if(a.every(row=>row.completed)&&b.some(row=>!row.completed&&['TypeError','SyntaxError'].includes(row.fault?.name)&&/null.*text|undefined.*JSON|valid JSON/.test(row.fault.message)))
+      return {accepted:true,kind:'source-bound-safe-selector-state-and-completion-witness',equivalent:false,publicDataEquivalentOnly:true,domain:spec};
+  }
+  return {accepted:false,reason:'fault-only-or-identical-public-observation-is-not-proof'};
+}
+module.exports = {IDS,MODEL,PAGE,family,dependencies,observe,assertPristine,qualify,complete};

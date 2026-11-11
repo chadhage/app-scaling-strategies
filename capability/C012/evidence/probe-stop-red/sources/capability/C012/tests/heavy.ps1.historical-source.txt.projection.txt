@@ -1,0 +1,35 @@
+param(
+  [Parameter(Mandatory=$true)][string]$Name,
+  [Parameter(Mandatory=$true)][string[]]$NodeArgs,
+  [int]$MaximumSeconds=1200,
+  [switch]$Normal
+)
+$ErrorActionPreference='Stop'
+$deadline=[DateTimeOffset]::Parse('2026-11-11T23:06:54.4385459Z')
+if(($deadline-[DateTimeOffset]::UtcNow).TotalSeconds -le 120){throw 'C012 absolute deadline reserve'}
+$repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\..\..\..'))
+$run=Join-Path $repo '.git\kanban-orchestrator\execution-20261108-64927fc0'
+$meta=Join-Path $run 'scratch\C012'
+[IO.Directory]::CreateDirectory($meta)|Out-Null
+$self=Get-Process -Id $PID
+@{role='own-lease-controller';pid=$PID;createdAtUtc7=$self.StartTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ');createdAtFileTimeUtc=$self.StartTime.ToUniversalTime().ToFileTimeUtc().ToString();phase=$Name}|ConvertTo-Json -Compress|Add-Content -LiteralPath (Join-Path $meta 'processes.jsonl')
+$directory=Join-Path $run $(if($Normal){'mutation-locks'}else{'heavy-locks'})
+$slots=if($Normal){4}else{3}
+$helper='<PRIVATE_PROFILE>\.copilot\session-state\210238f0-8473-4dfc-9876-83e34cbd2624\files\run-2026-11-04\scripts\heavy-slot.ps1'
+$owner="worker-C012-$Name"
+foreach($file in Get-ChildItem -LiteralPath $directory -File -ErrorAction SilentlyContinue) {
+  if($file.LastWriteTimeUtc -lt [DateTime]::UtcNow.AddMinutes(-55)){throw "Foreign near-stale lease must not be deleted: $($file.Name)"}
+}
+foreach($ticket in Get-ChildItem -LiteralPath (Join-Path $directory 'queue') -File -ErrorAction SilentlyContinue) {
+  $foreignPid=0
+  if(-not [int]::TryParse(($ticket.BaseName -split '-')[-1],[ref]$foreignPid) -or -not(Get-Process -Id $foreignPid -ErrorAction SilentlyContinue)){throw "Foreign stale ticket must not be deleted: $($ticket.Name)"}
+}
+$slot=$null
+try {
+  $slot=& $helper -Action Acquire -Owner $owner -Slots $slots -LockDir $directory -MaxWaitMinutes 1
+  @{phase=$Name;owner=$owner;slot=$slot;normal=[bool]$Normal;acquiredAtUtc=[DateTimeOffset]::UtcNow.ToString('o')}|ConvertTo-Json -Compress|Add-Content -LiteralPath (Join-Path $meta 'leases.jsonl')
+  & (Join-Path $PSScriptRoot 'invoke.ps1') -Name $Name -NodeArgs $NodeArgs -MaximumSeconds $MaximumSeconds
+} finally {
+  if($null -ne $slot){ & $helper -Action Release -Owner $owner -Slots $slots -LockDir $directory }
+  @{phase=$Name;owner=$owner;releasedAtUtc=[DateTimeOffset]::UtcNow.ToString('o')}|ConvertTo-Json -Compress|Add-Content -LiteralPath (Join-Path $meta 'leases.jsonl')
+}

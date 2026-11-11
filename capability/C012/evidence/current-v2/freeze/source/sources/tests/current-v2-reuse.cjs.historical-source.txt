@@ -1,0 +1,41 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {sha,lf}=require('./integrity.cjs');
+const root=path.resolve(__dirname,'..','..','..'),ns=path.resolve(__dirname,'..');
+function reuse(){
+  const run=process.env.C012_RUN,old=path.join(run,'scratch','C012'),original=path.join(process.env.C012_PRIVATE_ROOT,'c','capability','C012');
+  const prior=fs.readFileSync(path.join(run,'results','C012.json'));
+  assert.equal(sha(prior),'5935e75284e32c6c16c183ae37de872093e734985087c33c0c3481f2ca085d07');
+  const bindings=[];
+  for(const phase of ['resource64-final','browser-final']){
+    const manifestFile=path.join(original,'evidence',phase,'manifest.json'),manifest=JSON.parse(fs.readFileSync(manifestFile));
+    assert.equal(manifest.exit,0);assert.equal(manifest.error,null);assert.equal(manifest.signal,null);
+    const inputs=manifest.inputs.map(item=>{
+      const current=fs.readFileSync(path.join(root,item.path));
+      const archived=fs.readFileSync(path.join(original,'evidence',phase,'sources',item.path));
+      assert.equal(sha(archived),item.sha256);
+      const exact=sha(current)===item.sha256;
+      if(process.env.C012_FRESH_KIND)assert.equal(sha(lf(current)),sha(lf(archived)),'explicit fresh source representation '+item.path);
+      else assert.equal(exact,true,'exact current loaded/snapshotted source binding '+item.path);
+      return {path:item.path,sha256:item.sha256,currentSha256:sha(current),bytes:current.length,exact};
+    });
+    const reportFile=path.join(old,phase==='browser-final'?'browser-final.json':'resource64-final\\report.json');
+    const report=JSON.parse(fs.readFileSync(reportFile));
+    bindings.push({phase,manifestSha256:sha(fs.readFileSync(manifestFile)),reportSha256:sha(fs.readFileSync(reportFile)),inputBindings:inputs,
+      role:process.env.C012_FRESH_KIND?'Fresh source-encoding comparison only; not a claim of exact historical native/resource qualification for this LF/CRLF clone.':'HISTORICAL original-c actual campaign; all recorded producer/UI/data/control input bytes are exact in c2. New closure harness files were not loaded by that campaign and are not represented as native/resource requalification.',
+      actualNewCampaigns:0,cleanupAuthorityReused:false});
+    if(phase==='resource64-final'){assert.equal(report.completed,64);assert.equal(report.peak,8);assert.equal(report.pass,true);assert.equal(report.allExited,true);}
+    else {assert.equal(report.qualification.major,157);assert.equal(report.qualification.signature.status,'Valid');assert.equal(report.sessions.length,2);assert.ok(report.sessions.every(row=>row.cleanup.clean));}
+  }
+  const html=fs.readFileSync(path.join(ns,'index.html'),'utf8');
+  assert.deepEqual([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(row=>row[1]),['fixtures.js','model.js','page.js'],'new closure test sources are not reachable from the unchanged UI script list');
+  return {schema:'C012-current-v2-explicit-exact-historical-campaign-reuse/2',bindings,
+    producerBehaviorChanged:false,UIChanged:false,dataChanged:false,loadedControlsChanged:false,freshRepresentationOnly:!!process.env.C012_FRESH_KIND,
+    secondNativeCampaignAdmitted:false,secondNativeCampaignRun:false,oldResultAccepted:false};
+}
+module.exports={reuse};
+if(require.main===module){
+  const output=process.env.C012_REUSE_OUTPUT;assert.ok(output&&path.isAbsolute(output));
+  const report=reuse();fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
+  console.log(JSON.stringify({phases:report.bindings.map(row=>({phase:row.phase,exactInputs:row.inputBindings.length})),newNativeCampaigns:0,allExact:true}));
+}

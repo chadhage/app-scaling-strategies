@@ -1,0 +1,23 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path');
+const { sha } = require('./integrity.cjs');
+const { remaining, write } = require('./budget.cjs');
+const ns = path.resolve(__dirname, '..');
+remaining();
+const destination = path.join(ns, 'evidence', 'final', 'whole-seal.json'), files = [];
+function walk(directory) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const file = path.join(directory, entry.name);
+    if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Whole seal refuses aliases');
+    if (entry.isDirectory()) walk(file);
+    else {
+      const bytes = fs.readFileSync(file);
+      files.push({ path: path.relative(ns, file), bytes: bytes.length, sha256: sha(bytes) });
+    }
+  }
+}
+walk(ns);
+write(destination, { schema: 'C012-whole-physical-namespace-exact-set-seal/1', createdAtUtc: new Date().toISOString(),
+  selfExcludedOnly: 'evidence\\final\\whole-seal.json', files: files.sort((a, b) => a.path.localeCompare(b.path)),
+  fileSetSha256: sha(JSON.stringify(files)), noProducerOrLiveApplicationMutation: true });
+console.log(JSON.stringify({ files: files.length, sealSha256: sha(fs.readFileSync(destination)) }));

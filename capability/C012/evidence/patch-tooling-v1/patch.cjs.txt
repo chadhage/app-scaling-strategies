@@ -1,0 +1,43 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { remaining, environment } = require('./budget.cjs');
+const { sha } = require('./integrity.cjs');
+const { physical } = require('./source.cjs');
+const root = path.resolve(__dirname, '..', '..', '..');
+remaining(60000);
+const output = process.env.C012_PATCH_OUTPUT, repository = process.env.C012_GIT_REPOSITORY;
+assert.ok(output && path.isAbsolute(output) && repository && path.isAbsolute(repository));
+const empty = path.join(root, 'C012-empty-patch-side');
+fs.mkdirSync(empty, { recursive: false });
+const identity = physical(empty);
+try {
+  const result = spawnSync('git', ['--no-pager', 'diff', '--no-index', '--binary', '--', 'C012-empty-patch-side', 'capability\\C012'], {
+    cwd: root, env: environment(), windowsHide: true, timeout: Math.min(remaining(60000), 300000), maxBuffer: 256 * 1024 * 1024
+  });
+  fs.writeFileSync(output, result.stdout || '', { flag: 'wx' });
+  fs.writeFileSync(output + '.diff.stderr.raw', result.stderr || '', { flag: 'wx' });
+  assert.equal(result.error, undefined); assert.equal(result.signal, null); assert.equal(result.status, 1, String(result.stderr));
+  const bytes = result.stdout, text = bytes.toString('utf8');
+  const headers = [...text.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)];
+  assert.ok(headers.length > 10);
+  for (const header of headers) {
+    assert.equal(header[1], header[2]);
+    assert.ok(header[2].startsWith('capability/C012/'), 'only the exact NEW C012 namespace');
+    assert.ok(!header[2].split('/').some(part => part === '..' || part === '.'));
+  }
+  const checked = spawnSync('git', ['--no-pager', '-C', repository, 'apply', '--check', '--whitespace=nowarn', output], {
+    env: environment(), windowsHide: true, timeout: Math.min(remaining(60000), 300000), maxBuffer: 8 * 1024 * 1024
+  });
+  fs.writeFileSync(output + '.check.stdout.raw', checked.stdout || '', { flag: 'wx' });
+  fs.writeFileSync(output + '.check.stderr.raw', checked.stderr || '', { flag: 'wx' });
+  assert.equal(checked.error, undefined); assert.equal(checked.signal, null); assert.equal(checked.status, 0, String(checked.stderr));
+  const report = { schema: 'C012-private-additive-binary-patch-not-application/1', sha256: sha(bytes), bytes: bytes.length,
+    files: headers.length, paths: headers.map(header => header[2]), readOnlyGitApplyCheckExit: checked.status,
+    noIndexWrite: true, applied: false, commit: null, tag: null };
+  fs.writeFileSync(output + '.json', JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+  console.log(JSON.stringify({ files: report.files, bytes: report.bytes, sha256: report.sha256, readOnlyApplyCheck: 0, applied: false }));
+} finally {
+  assert.deepEqual(physical(empty), identity);
+  fs.rmdirSync(empty);
+}

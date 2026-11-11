@@ -1,0 +1,101 @@
+'use strict';
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs'), path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { sha, lf, pin, capture } = require('./integrity.cjs');
+const { remaining } = require('./budget.cjs');
+const root = path.resolve(__dirname, '..', '..', '..'), ns = path.resolve(__dirname, '..');
+const imports = require('../imports.json');
+function git(args) {
+  const repository = process.env.C012_GIT_REPOSITORY;
+  assert.ok(repository, 'explicit owning repository only, never current HEAD/index');
+  const value = spawnSync('git', ['--no-pager', '-C', repository, ...args], { timeout: Math.min(remaining(), 30000), windowsHide: true });
+  assert.equal(value.error, undefined);
+  assert.equal(value.status, 0, String(value.stderr));
+  return value.stdout;
+}
+test('all accepted imports retain raw LF Git source commit tag and blob identities', () => {
+  for (const item of imports.entries) {
+    const bytes = fs.readFileSync(path.join(root, item.path));
+    assert.equal(pin(bytes, item), true, item.path);
+    const source = item.commit + ':' + item.path.replaceAll('\\', '/');
+    const blob = git(['show', source]);
+    assert.equal(sha(blob), item.git, item.path + ' fixed Git blob');
+    assert.equal(sha(lf(blob)), item.lf);
+    assert.equal(git(['rev-parse', source]).toString().trim(), item.oid);
+    if (item.tag) assert.equal(git(['rev-parse', item.tag + '^{commit}']).toString().trim(), item.commit);
+  }
+});
+test('import tamper is detected by name rather than silently repinned', () => {
+  for (const item of imports.entries) {
+    const bytes = Buffer.concat([fs.readFileSync(path.join(root, item.path)), Buffer.from('tamper')]);
+    assert.equal(pin(bytes, item), false, 'IMPORT_TAMPER:' + item.path);
+  }
+});
+test('all seven current C011 production files remain the accepted cbd45aa production bytes', () => {
+  for (const file of ['codes.cjs', 'config.cjs', 'contract.js', 'json.cjs', 'page.js', 'server.cjs', 'store.cjs']) {
+    const bytes = fs.readFileSync(path.join(root, 'capability', 'C011', file));
+    const historical = git(['show', 'cbd45aa88753fbbe54958629b770fd1b2aef2e85:capability/C011/' + file]);
+    assert.equal(sha(lf(bytes)), sha(lf(historical)), 'C011_SEVEN_PRODUCTION_UNCHANGED:' + file);
+  }
+});
+test('every completed capture preserves all source and original compressed raw bytes', () => {
+  const directories = fs.readdirSync(path.join(ns, 'evidence'), { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && fs.existsSync(path.join(ns, 'evidence', entry.name, 'manifest.json')));
+  assert.ok(directories.length >= 5);
+  for (const entry of directories) {
+    const directory = path.join(ns, 'evidence', entry.name);
+    assert.deepEqual(capture(directory), [], entry.name);
+  }
+  const red = JSON.parse(fs.readFileSync(path.join(ns, 'evidence', 'red', 'manifest.json')));
+  const original = red.inputs.find(input => input.path === 'capability\\C012\\tests\\acceptance.test.cjs');
+  assert.equal(sha(lf(fs.readFileSync(path.join(__dirname, 'acceptance.test.cjs')))), original.lfSha256, 'ORIGINAL_RED_ASSERTIONS_UNCHANGED; explicit LF/CRLF representations only');
+  for (const [phase, archivedFile, currentFile] of [
+    ['hostile-red', 'model.test.cjs', 'retained-hostile.test.cjs'],
+    ['selector-red2', 'page.test.cjs', 'page.test.cjs'],
+    ['ast-red', 'ast.test.cjs', 'ast.test.cjs'],
+    ['probe-stop-red', 'probes.test.cjs', 'probes.test.cjs']
+  ]) {
+    const manifest = JSON.parse(fs.readFileSync(path.join(ns, 'evidence', phase, 'manifest.json')));
+    const expected = manifest.inputs.find(input => input.path === 'capability\\C012\\tests\\' + archivedFile);
+    assert.equal(sha(lf(fs.readFileSync(path.join(__dirname, currentFile)))), expected.lfSha256, 'UNCHANGED_RETAINED_ASSERTIONS:' + phase);
+  }
+});
+test('source raw gzip and outcome tamper kinds each fail their own named integrity assertion', () => {
+  const directory = path.join(ns, 'evidence', 'red');
+  const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json')));
+  for (const kind of ['source', 'stdout', 'stderr', 'outcome']) {
+    const reader = file => {
+      const bytes = fs.readFileSync(file);
+      if (kind === 'source' && file === path.join(directory, 'sources', manifest.inputs[0].path)) return Buffer.concat([bytes, Buffer.from('x')]);
+      if (kind === 'outcome' && file === path.join(directory, 'manifest.json')) return Buffer.from(JSON.stringify({ ...manifest, exit: 0 }));
+      if (kind !== 'source' && kind !== 'outcome' && file === path.join(directory, manifest[kind].file)) {
+        const changed = Buffer.from(bytes); changed[changed.length - 1] ^= 1; return changed;
+      }
+      return bytes;
+    };
+    const issues = capture(directory, reader);
+    assert.ok(issues.some(code => code.startsWith({ source: 'CAPTURE_SOURCE:', stdout: 'CAPTURE_GZIP:stdout', stderr: 'CAPTURE_GZIP:stderr', outcome: 'CAPTURE_OUTCOME' }[kind])), kind);
+  }
+});
+test('strict CSP binds only the exact first inline theme prelude and style bytes', () => {
+  const html = fs.readFileSync(path.join(ns, 'index.html'), 'utf8').replace(/\r\n/g, '\n');
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 4);
+  assert.equal(scripts[0][1], '');
+  const exact = '\n  (() => {\n    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");\n    const theme =\n      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");\n    document.documentElement.setAttribute("data-theme", theme);\n  })();\n';
+  assert.equal(scripts[0][2], exact, 'MANDATORY_THEME_EXACT_BYTES');
+  const crypto = require('node:crypto'), b64 = text => crypto.createHash('sha256').update(text).digest('base64');
+  assert.ok(html.includes("script-src 'self' 'sha256-" + b64(exact) + "'"));
+  const style = /<style>([\s\S]*?)<\/style>/.exec(html)[1];
+  const exactVariables = fs.readFileSync(path.join(__dirname, 'clawpilot.css.txt'), 'utf8').replace(/\r\n/g, '\n').trimEnd();
+  assert.equal(style.slice(0, style.indexOf('* { box-sizing')).trim(), exactVariables, 'MANDATORY_CLAWPILOT_VARIABLE_BLOCKS_EXACT');
+  assert.ok(html.includes("style-src 'sha256-" + b64(style) + "'"));
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval|<script[^>]+https?:|on(?:click|load|error)\s*=/i);
+  assert.deepEqual(scripts.slice(1).map(item => /src="([^"]+)"/.exec(item[1])[1]), ['fixtures.js', 'model.js', 'page.js']);
+  const components = style.slice(style.indexOf('* { box-sizing'));
+  assert.doesNotMatch(components, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, 'component colors use Clawpilot variables only');
+  assert.match(components, /"Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif/);
+  assert.match(components, /:focus-visible \{ outline: 3px solid var\(--cp-accent\)/);
+});

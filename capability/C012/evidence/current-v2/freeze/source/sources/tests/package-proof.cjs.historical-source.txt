@@ -1,0 +1,82 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), zlib = require('node:zlib');
+const { remaining, write } = require('./budget.cjs');
+const { sha, pin, capture } = require('./integrity.cjs');
+const { list } = require('./source.cjs');
+const plan = require('./phase-plan.json');
+const ns = path.resolve(__dirname, '..'), root = path.resolve(ns, '..', '..');
+function main() {
+  remaining(60000);
+  const metadata = process.env.C012_METADATA;
+  assert.ok(metadata && path.isAbsolute(metadata));
+  const output = path.join(ns, 'evidence', 'final');
+  fs.mkdirSync(output, { recursive: false });
+  const sourceFreeze = JSON.parse(fs.readFileSync(path.join(ns, plan.sourceFreeze)));
+  assert.deepEqual(list(ns), sourceFreeze.sources, 'all source and documentation are still the exact final freeze');
+  const reports = Object.fromEntries(Object.entries(plan.phaseReports).map(([name, file]) => [name, JSON.parse(fs.readFileSync(path.join(metadata, file)))]));
+  const current = JSON.parse(fs.readFileSync(path.join(ns, plan.currentCapture)));
+  assert.equal(current.exit, 0); assert.equal(current.error, null); assert.equal(current.signal, null);
+  assert.deepEqual(capture(path.dirname(path.join(ns, plan.currentCapture))), []);
+  assert.equal(reports.replay.originalNaiveBehavioralRed.exit, 1);
+  assert.equal(reports.replay.identicalFinalGreen.exit, 0);
+  assert.equal(reports.fresh.pass, true); assert.equal(reports.fresh.results.length, 2);
+  assert.equal(reports.coverage.pass, true); assert.equal(reports.coverage.files.length, 4);
+  for (const file of reports.coverage.files) {
+    assert.equal(file.loaded, true);
+    for (const metric of ['lines', 'branches', 'functions']) assert.ok(file[metric] >= 85, file.file + ':' + metric);
+  }
+  assert.equal(reports.pairs.pass, true); assert.equal(reports.pairs.semanticUnresolved, 0);
+  assert.equal(reports.pairs.totalDefinitions, reports.mutations.outcomes.length);
+  assert.equal(reports.resource.pass, true); assert.equal(reports.resource.completed, 64); assert.equal(reports.resource.peak, 8);
+  assert.equal(reports.resource.allExited, true); assert.equal(reports.resource.forcedCleanup, null);
+  assert.equal(reports.native.qualification.ok, true); assert.equal(reports.native.qualification.major, 157);
+  assert.equal(reports.native.sessions.length, 2); assert.ok(reports.native.sessions.every(row => row.cleanup.clean));
+  assert.equal(reports.native.sessions[0].injectedFailure, null);
+  assert.equal(reports.native.sessions[1].injectedFailure.code, 'ERR_ASSERTION');
+  const imports = require('../imports.json');
+  for (const item of imports.entries) assert.equal(pin(fs.readFileSync(path.join(root, item.path)), item), true, item.path);
+  const originals = [];
+  function collect(directory, prefix = '') {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name), relative = path.join(prefix, entry.name);
+      if (fs.lstatSync(file).isSymbolicLink()) throw new Error('No metadata aliases');
+      if (entry.isDirectory()) collect(file, relative);
+      else {
+        if (!prefix && /^(?:package-proof-final|verify-final|patch-final)-/.test(entry.name)) continue;
+        const bytes = fs.readFileSync(file), gzip = zlib.gzipSync(bytes);
+        const relativeArtifact = path.join('private-raw-gzip', relative + '.gz'), target = path.join(output, relativeArtifact);
+        fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, gzip, { flag: 'wx' });
+        originals.push({ metadataRelativePath: relative, artifact: relativeArtifact, rawBytes: bytes.length, rawSha256: sha(bytes), gzipSha256: sha(gzip),
+          role: 'unaltered original private bytes; paths and UTC precision are not normalized' });
+      }
+    }
+  }
+  collect(metadata);
+  const summary = {
+    schema: 'C012-public-readable-projection-not-original-raw/1', sourceFreeze: plan.sourceFreeze,
+    current: { exit: current.exit, capture: plan.currentCapture },
+    fresh: reports.fresh.results.map(row => ({ kind: row.kind, summary: row.summary, exit: row.exit })),
+    coverage: reports.coverage.files.map(row => ({ file: row.file, measuredFile: row.measuredFile, lines: row.lines, branches: row.branches, functions: row.functions, loaded: row.loaded })),
+    mutation: { totalDefinitions: reports.pairs.totalDefinitions, counts: reports.pairs.counts, semanticUnresolved: reports.pairs.semanticUnresolved, defaultEquivalence: false },
+    resource: { total: reports.resource.completed, concurrency: reports.resource.peak, allExited: reports.resource.allExited, standaloneBurners: 0, nativeBrowsers: 0 },
+    native: { qualifiedMajor: reports.native.qualification.major, actualVersion: reports.native.qualification.version,
+      actualExecutableSha256: reports.native.qualification.sha256, sessions: reports.native.sessions.map(row => ({ label: row.label, clean: row.cleanup.clean,
+        injectedFailure: row.injectedFailure, root: row.cleanup.root })), observations: reports.native.observations.length },
+    permissions: { azure: false, iac: false, scaffold: false, identity: false, deploy: false, expenditure: false },
+    warning: 'This is a derivative summary. Original private manifests/source archives and gzip bytes retain their actual paths, times, failures and hashes. No old result is relabelled.'
+  };
+  write(path.join(output, 'summary.projection.json'), summary);
+  const authority = {
+    schema: 'C012-private-evidence-authority/1', createdAtUtc: new Date().toISOString(),
+    sourceFreeze: plan.sourceFreeze, sourceFreezeSha256: sha(fs.readFileSync(path.join(ns, plan.sourceFreeze))),
+    currentCapture: plan.currentCapture, phaseReports: plan.phaseReports, originals,
+    projection: { artifact: 'summary.projection.json', sha256: sha(fs.readFileSync(path.join(output, 'summary.projection.json'))), notOriginalRaw: true },
+    liveApplicationAuthorized: false, publicationAuthorized: false, parentIndependentAcceptanceRequired: true,
+    metadataSnapshotLimit: 'The current metadata-only packager/verifier/patcher tails remain separately in the owned result directory; no later tail is claimed to be in this snapshot.',
+    rawChronology: 'Original pre-implementation RED and all later failures remain in their exact historical roles; private raw source archives are data, not current test discovery targets.'
+  };
+  write(path.join(output, 'authority.json'), authority);
+  console.log(JSON.stringify({ retainedOriginalMetadataFiles: originals.length, projection: 'evidence\\final\\summary.projection.json',
+    sourceSetSha256: sourceFreeze.sourcesSha256, readyForIndependentReview: true, notApplied: true }));
+}
+try { main(); } catch (error) { console.error(error); process.exitCode = 1; }

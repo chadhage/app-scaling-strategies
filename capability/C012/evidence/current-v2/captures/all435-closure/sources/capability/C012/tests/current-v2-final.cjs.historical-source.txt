@@ -1,0 +1,110 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),zlib=require('node:zlib');
+const {sha,lf,capture}=require('./integrity.cjs');
+const {whole,compressed}=require('./evidence-core.cjs');
+const {list}=require('./source.cjs');
+const {inventory,sources}=require('./ast.cjs');
+const {derive,validProof}=require('./current-v2-close.cjs');
+const ns=path.resolve(__dirname,'..'),metadata=process.env.C012_METADATA;
+const final=path.join(ns,'evidence','current-v2','final');
+const locations={mutations:'mutations-current-v2',closure:'closure-current-v2',parent:'parent-green',fresh:'fresh-current-v2',coverage:'coverage-current-v2'};
+function json(file){return JSON.parse(fs.readFileSync(file));}
+function packageProof(){
+  fs.mkdirSync(final,{recursive:false});
+  const freezeFile=process.env.C012_CURRENT_FREEZE;
+  assert.ok(freezeFile);const freeze=json(freezeFile);
+  assert.deepEqual(list(ns),freeze.sources,'all current source remains the final frozen set');
+  const closure=json(path.join(metadata,locations.closure,'report.json')),parent=json(path.join(metadata,locations.parent,'report.json'));
+  const fresh=json(path.join(metadata,locations.fresh,'report.json')),coverage=json(path.join(metadata,locations.coverage,'report.json'));
+  assert.equal(closure.semanticUnresolved,0);assert.equal(parent.exit,0);assert.equal(parent.expectedExit,0);
+  assert.equal(fresh.pass,true);assert.equal(coverage.pass,true);
+  const reuse=json(path.join(metadata,'reuse-current-v2.json'));assert.equal(reuse.secondNativeCampaignRun,false);
+  assert.ok(reuse.bindings.every(row=>row.inputBindings.every(input=>input.exact)));
+  const originals=[];
+  function collect(directory,prefix=''){
+    for(const entry of fs.readdirSync(directory,{withFileTypes:true})){
+      const file=path.join(directory,entry.name),relative=path.join(prefix,entry.name);
+      assert.equal(fs.lstatSync(file).isSymbolicLink(),false);
+      if(entry.isDirectory())collect(file,relative);
+      else {
+        if(!prefix&&/^(?:current-v2-package|current-v2-seal|current-v2-verify|current-v2-patch|current-v2-result)-/.test(entry.name))continue;
+        const bytes=fs.readFileSync(file),gzip=zlib.gzipSync(bytes),artifact=path.join('originals',relative+'.gz');
+        fs.mkdirSync(path.dirname(path.join(final,artifact)),{recursive:true});fs.writeFileSync(path.join(final,artifact),gzip,{flag:'wx'});
+        originals.push({metadataRelativePath:relative,artifact,rawBytes:bytes.length,rawSha256:sha(bytes),gzipSha256:sha(gzip)});
+      }
+    }
+  }
+  collect(metadata);
+  const authority={schema:'C012-current-v2-private-evidence-authority/2',createdAtUtc:new Date().toISOString(),
+    freeze:path.relative(ns,freezeFile),freezeSha256:sha(fs.readFileSync(freezeFile)),originals,locations,
+    currentCapture:'evidence\\current-v2\\captures\\whole-current\\manifest.json',
+    parentUnchanged:true,oldResultAccepted:false,newNativeCampaigns:0,resourceNativeReuse:'historical exact source binding only',
+    priorResultSha256:'5935e75284e32c6c16c183ae37de872093e734985087c33c0c3481f2ca085d07',
+    limit:'Current metadata-only packager/sealer/verifier/patcher/result tails are kept separately in the owned metadata result directory.'};
+  fs.writeFileSync(path.join(final,'authority.json'),JSON.stringify(authority,null,2)+'\n',{flag:'wx'});
+  const summary={schema:'C012-current-v2-readable-projection-not-original-raw/2',semanticUnresolved:closure.semanticUnresolved,
+    definitions:closure.definitions,validChanged:closure.compiledNonIdentity,counts:closure.counts,
+    parent:{exit:parent.exit,parentTestSha256:parent.parentTestSha256,inventorySha256:parent.inventorySha256,decisionsSha256:parent.decisionsSha256},
+    fresh:fresh.reports.map(row=>({kind:row.kind,summary:row.summary,exit:row.exit})),
+    coverage:coverage.files.map(row=>({file:row.file,loaded:row.loaded,lines:row.lines,branches:row.branches,functions:row.functions})),
+    historicalReuse:{resourceTotal:64,resourceConcurrency:8,nativeMajor:157,nativeSessions:2,newNativeCampaigns:0,allRecordedInputsExact:true},
+    oldUnacceptedResultImmutable:true,applied:false,creditGranted:false};
+  fs.writeFileSync(path.join(final,'summary.projection.json'),JSON.stringify(summary,null,2)+'\n',{flag:'wx'});
+  console.log(JSON.stringify({retainedCurrentOriginals:originals.length,semanticUnresolved:closure.semanticUnresolved,packaged:true}));
+}
+function seal(){
+  const file=path.join(final,'whole-seal.json'),files=[];
+  function walk(directory){for(const entry of fs.readdirSync(directory,{withFileTypes:true})){const target=path.join(directory,entry.name);assert.equal(fs.lstatSync(target).isSymbolicLink(),false);if(entry.isDirectory())walk(target);else{const bytes=fs.readFileSync(target);files.push({path:path.relative(ns,target),bytes:bytes.length,sha256:sha(bytes)});}}}
+  walk(ns);files.sort((a,b)=>a.path.localeCompare(b.path));
+  fs.writeFileSync(file,JSON.stringify({schema:'C012-current-v2-entire-physical-namespace-seal/2',files,fileSetSha256:sha(JSON.stringify(files)),
+    selfExcludedOnly:'evidence\\current-v2\\final\\whole-seal.json'},null,2)+'\n',{flag:'wx'});
+  console.log(JSON.stringify({sealedFiles:files.length,sealSha256:sha(fs.readFileSync(file))}));
+}
+function verify(){
+  const authority=json(path.join(final,'authority.json')),sealed=json(path.join(final,'whole-seal.json')),actual={};
+  function walk(directory){for(const entry of fs.readdirSync(directory,{withFileTypes:true})){const file=path.join(directory,entry.name);assert.equal(fs.lstatSync(file).isSymbolicLink(),false);if(entry.isDirectory())walk(file);else if(file!==path.join(final,'whole-seal.json'))actual[path.relative(ns,file)]=fs.readFileSync(file);}}
+  walk(ns);assert.deepEqual(whole(sealed,actual),[]);
+  const bytes=new Map();
+  for(const item of authority.originals){const decoded=compressed(item,fs.readFileSync(path.join(final,item.artifact)));assert.deepEqual(decoded.issues,[],item.metadataRelativePath);bytes.set(item.metadataRelativePath,decoded.raw);}
+  const read=relative=>{assert.ok(bytes.has(relative),'original '+relative);return bytes.get(relative);};
+  const data=relative=>JSON.parse(read(relative).toString());
+  const freeze=json(path.join(ns,authority.freeze));assert.equal(sha(fs.readFileSync(path.join(ns,authority.freeze))),authority.freezeSha256);
+  assert.deepEqual(list(ns),freeze.sources);
+  const domain=inventory(sources()),saved=data(path.join(locations.mutations,'inventory.json'));assert.deepEqual(domain,saved);
+  const rawBytes=read(path.join(locations.mutations,'outcomes.original.ndjson')),raws=new Map(rawBytes.toString().trimEnd().split('\n').map(line=>{const row=JSON.parse(line);return[row.id,row];}));
+  const closure=data(path.join(locations.closure,'report.json')),proofs=new Map();
+  assert.equal(domain.definitions.length,457);assert.equal(domain.definitions.filter(row=>!row.identity&&!row.syntax).length,435);
+  assert.equal(sha(rawBytes),closure.currentRawOutcomesSha256);
+  for(const decision of closure.decisions)if(decision.proofArtifact){
+    const gzip=read(path.join(locations.closure,decision.proofArtifact));assert.equal(sha(gzip),decision.proofGzipSha256);
+    const raw=zlib.gunzipSync(gzip);assert.equal(sha(raw),decision.proofSha256);const proof=JSON.parse(raw);proofs.set(decision.id,proof);
+    assert.equal(validProof(domain.definitions.find(row=>row.id===decision.id),decision,proof,raws.get(decision.id)),true,'actual proof '+decision.id);
+  }
+  const unresolved=derive(domain,closure.decisions,proofs,raws);assert.deepEqual(unresolved,[]);assert.equal(closure.semanticUnresolved,unresolved.length);
+  assert.equal(derive(domain,closure.decisions,new Map(),raws).length,435,'labels alone are never closure');
+  const parent=data(path.join(locations.parent,'report.json'));
+  assert.equal(parent.exit,0);assert.equal(parent.error,null);assert.equal(parent.signal,null);
+  assert.equal(parent.inventorySha256,sha(read(path.join(locations.mutations,'inventory.json'))));
+  assert.equal(parent.decisionsSha256,sha(read(path.join(locations.closure,'report.json'))));
+  assert.equal(sha(read(path.join(locations.parent,'parent-test.unchanged-source.txt'))),parent.parentTestSha256);
+  const parentText=read(path.join(locations.parent,'stdout.raw')).toString();assert.match(parentText,/# pass 2/);assert.match(parentText,/# fail 0/);
+  const currentPath=path.dirname(path.join(ns,authority.currentCapture));assert.deepEqual(capture(currentPath),[]);
+  const current=json(path.join(currentPath,'manifest.json')),stdout=zlib.gunzipSync(fs.readFileSync(path.join(currentPath,current.stdout.file))).toString();
+  const tests=Number(/^# tests (\d+)$/m.exec(stdout)?.[1]);assert.ok(tests>43);assert.match(stdout,new RegExp('^# pass '+tests+'$','m'));assert.match(stdout,/^# fail 0$/m);
+  const fresh=data(path.join(locations.fresh,'report.json'));assert.equal(fresh.pass,true);assert.equal(fresh.workspaceRemoved,true);
+  assert.equal(fresh.reports.length,2);for(const row of fresh.reports){assert.equal(row.exit,0);assert.equal(row.summary.tests,tests);assert.equal(row.summary.pass,tests);}
+  const coverage=data(path.join(locations.coverage,'report.json'));assert.equal(coverage.files.length,4);assert.equal(coverage.pass,true);
+  for(const row of coverage.files){assert.equal(row.loaded,true);for(const key of ['lines','branches','functions'])assert.ok(row[key]>=85);assert.equal(sha(fs.readFileSync(path.join(ns,row.file))),row.sourceReadSha256);}
+  const reuse=data('reuse-current-v2.json');assert.equal(reuse.secondNativeCampaignRun,false);
+  assert.ok(reuse.bindings.every(row=>row.inputBindings.length===104&&row.inputBindings.every(item=>item.exact)));
+  const freshRoots=path.join(process.env.C012_PRIVATE_ROOT,'w-current-v2');assert.equal(fs.existsSync(freshRoots),false);
+  const old=fs.readFileSync(path.join(process.env.C012_RUN,'results','C012.json'));assert.equal(sha(old),authority.priorResultSha256);
+  const currentCaptures=path.join(ns,'evidence','current-v2','captures');
+  for(const name of fs.readdirSync(currentCaptures)){const directory=path.join(currentCaptures,name);if(fs.existsSync(path.join(directory,'manifest.json')))assert.deepEqual(capture(directory),[],name);}
+  return {schema:'C012-current-v2-independent-final-byte-and-full-domain-audit/2',pass:true,sourceFiles:freeze.sources.length,sealedFiles:sealed.files.length,
+    currentTests:tests,freshKinds:fresh.reports.map(row=>row.kind),coverage:coverage.files.map(row=>({file:row.file,lines:row.lines,branches:row.branches,functions:row.functions,loaded:row.loaded})),
+    definitions:457,validChanged:435,proofs:proofs.size,semanticUnresolved:unresolved.length,counts:closure.counts,parentUnchangedGreen:true,
+    newNativeCampaigns:0,historicalSourceReuseExact:true,oldResultImmutable:true,sealSha256:sha(fs.readFileSync(path.join(final,'whole-seal.json')))};
+}
+if(require.main===module){try{const mode=process.argv[2];if(mode==='package')packageProof();else if(mode==='seal')seal();else if(mode==='verify')console.log(JSON.stringify(verify(),null,2));else throw Error('explicit metadata mode required');}catch(error){console.error(error);process.exitCode=1;}}
+module.exports={verify};

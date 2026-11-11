@@ -1,0 +1,120 @@
+'use strict';
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const { create } = require('./dom.cjs');
+const fixtures = require('../fixtures.js');
+const { expected, invariant } = require('./oracle.cjs');
+async function load(dom, name) {
+  dom.elements.get('scenario').value = name;
+  await dom.emit('load', 'click');
+  invariant(dom);
+}
+async function inspect(dom, name) {
+  await dom.emit('review', 'click');
+  invariant(dom, name);
+}
+test('actual client renders every actual producer example and no server prose', async () => {
+  const dom = create();
+  invariant(dom);
+  for (const name of Object.keys(fixtures)) {
+    await load(dom, name); await inspect(dom, name);
+    assert.match(dom.elements.get('status').textContent, name === 'held' ? /^Local pre-run explanation ready/ : /^Review blocked/);
+    await dom.emit('review', 'click'); invariant(dom, name);
+  }
+  assert.deepEqual(dom.rows(), expected('absent'));
+  assert.ok(dom.executed.every(entry => entry.readSha256 === entry.executedSha256));
+});
+test('every edit and reset clears acknowledgement and rendered facts immediately', async () => {
+  const dom = create();
+  for (const id of ['packet', 'owner', 'reservation-id', 'as-of']) {
+    await load(dom, 'held'); await inspect(dom, 'held');
+    dom.elements.get('acknowledge').checked = true;
+    await dom.emit('acknowledge', 'change'); invariant(dom, 'held');
+    assert.match(dom.elements.get('status').textContent, /^Local facts marked reviewed only/);
+    dom.elements.get(id).value += 'x';
+    await dom.emit(id, 'input'); invariant(dom);
+    assert.equal(dom.elements.get('acknowledge').checked, false);
+  }
+  await load(dom, 'held'); await inspect(dom, 'held');
+  dom.elements.get('acknowledge').checked = false;
+  await dom.emit('acknowledge', 'change'); invariant(dom, 'held');
+  assert.match(dom.elements.get('status').textContent, /^No local acknowledgement/);
+  await dom.emit('reset', 'click'); invariant(dom);
+  for (const id of ['packet', 'owner', 'reservation-id', 'as-of']) assert.equal(dom.elements.get(id).value, '');
+  assert.equal(dom.document.activeElement.id, 'packet');
+});
+test('changing the selected scenario invalidates the previously reviewed display', async () => {
+  const dom = create();
+  await load(dom, 'held'); await inspect(dom, 'held');
+  dom.elements.get('scenario').value = 'native';
+  await dom.emit('scenario', 'change');
+  invariant(dom);
+});
+test('tampered selector prototype and unknown values are natural blocked inputs not fallback facts', async () => {
+  const dom = create();
+  for (const name of ['__proto__', 'constructor', 'unknown-choice', '']) {
+    await load(dom, 'held'); await inspect(dom, 'held');
+    dom.elements.get('scenario').value = name;
+    await dom.emit('load', 'click');
+    invariant(dom);
+    assert.equal(dom.elements.get('packet').value, '');
+  }
+});
+test('tampered JSON owner reservation time and checkbox cannot promote authority', async () => {
+  const dom = create();
+  for (const [id, value] of [
+    ['packet', '{"planResult":{"plan":{"cloudExecutionAuthorized":true}},"message":"<img src=x>"}'],
+    ['owner', 'conductor-b'], ['reservation-id', 'rsv-00000002'], ['as-of', '2001'], ['as-of', '']
+  ]) {
+    await load(dom, 'held');
+    dom.elements.get(id).value = value;
+    await dom.emit(id, 'input'); invariant(dom);
+    await dom.emit('review', 'click');
+    assert.equal(dom.elements.get('acknowledge').disabled, true);
+    assert.match(dom.elements.get('status').textContent, /^Review blocked/);
+    if (['owner', 'reservation-id', 'as-of'].includes(id) && value !== '') {
+      assert.deepEqual(dom.rows(), expected('held', id === 'as-of' ? 2001 : undefined));
+    } else assert.deepEqual(dom.rows(), []);
+    dom.elements.get('acknowledge').checked = true;
+    await dom.emit('acknowledge', 'change', true);
+    assert.equal(dom.elements.get('acknowledge').checked, false);
+    assert.match(dom.elements.get('status').textContent, /^No local acknowledgement/);
+  }
+});
+test('a late successful digest cannot resurrect a reset or edited review', async () => {
+  for (const action of ['reset', 'edit']) {
+    let finish;
+    const dom = create({ crypto: { subtle: { digest: (...args) => new Promise(resolve => {
+      finish = () => crypto.webcrypto.subtle.digest(...args).then(resolve);
+    }) } } });
+    await load(dom, 'held');
+    const pending = dom.emit('review', 'click');
+    assert.equal(dom.elements.get('review').disabled, true);
+    if (action === 'reset') await dom.emit('reset', 'click');
+    else await dom.emit('packet', 'input');
+    invariant(dom);
+    await finish(); await pending;
+    invariant(dom);
+  }
+});
+test('two actual client instances preserve separate reviews in FIFO LIFO and repeat resets', async () => {
+  for (const order of [[0, 1], [1, 0]]) {
+    const instances = [create(), create()];
+    await load(instances[0], 'held'); await inspect(instances[0], 'held');
+    await load(instances[1], 'native'); await inspect(instances[1], 'native');
+    for (const index of order) {
+      await instances[index].emit('reset', 'click'); invariant(instances[index]);
+      await instances[index].emit('reset', 'click'); invariant(instances[index]);
+      if (index === order[0]) invariant(instances[order[1]], order[1] === 0 ? 'held' : 'native');
+    }
+  }
+});
+test('exact supplied theme source covers system light dark and explicit parameter semantics', () => {
+  for (const [options, theme] of [[{}, 'light'], [{ dark: true }, 'dark'], [{ search: '?clawpilotTheme=dark' }, 'dark'], [{ search: '?clawpilotTheme=light' }, 'light']]) {
+    const dom = create(options);
+    assert.equal(dom.document.documentElement.attributes['data-theme'], theme);
+    invariant(dom);
+  }
+});
+module.exports = { load, inspect };

@@ -1,0 +1,130 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { verify } = require('./verify.cjs');
+const { sha, pin } = require('./integrity.cjs');
+const { DEADLINE } = require('./budget.cjs');
+const phasePlan = require('./phase-plan.json');
+const ns = path.resolve(__dirname, '..'), candidateRoot = path.resolve(ns, '..', '..');
+const run = process.env.C012_RUN, metadata = process.env.C012_METADATA, repository = process.env.C012_GIT_REPOSITORY;
+assert.ok(run && metadata && repository);
+const resultFile = path.join(run, 'results', 'C012.json');
+function ref(file, role) {
+  const bytes = fs.readFileSync(file);
+  return { path: file, bytes: bytes.length, sha256: sha(bytes), role };
+}
+const checked = verify();
+assert.equal(checked.pass, true);
+const patch = process.env.C012_PATCH_OUTPUT;
+assert.ok(patch);
+const patchReport = JSON.parse(fs.readFileSync(patch + '.json'));
+assert.equal(patchReport.sha256, sha(fs.readFileSync(patch)));
+assert.equal(patchReport.applied, false); assert.equal(patchReport.readOnlyGitApplyCheckExit, 0);
+assert.equal(fs.existsSync(path.join(repository, 'capability', 'C012')), false, 'worker has not applied live C012');
+const imports = require('../imports.json');
+for (const item of imports.entries) assert.equal(pin(fs.readFileSync(path.join(repository, item.path)), item), true, 'LIVE_PRODUCER_UNCHANGED:' + item.path);
+const ledger = JSON.parse(fs.readFileSync(path.join(repository, '.docs', 'wiki', 'flow-state.json')));
+const card = ledger.cards.find(row => row.id === 'C012');
+assert.equal(card.kanoUnit, 'C012'); assert.equal(card.kano, 'S'); assert.equal(card.owner, 'worker-C012');
+const final = path.join(ns, 'evidence', 'final'), summary = JSON.parse(fs.readFileSync(path.join(final, 'summary.projection.json')));
+for (const directory of ['heavy-locks', 'mutation-locks']) {
+  const folder = path.join(run, directory);
+  for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+    if (entry.isFile()) assert.equal(fs.readFileSync(path.join(folder, entry.name), 'utf8').startsWith('worker-C012-'), false, 'no own lease left');
+    if (entry.name === 'queue') for (const name of fs.readdirSync(path.join(folder, entry.name))) assert.equal(name.includes('worker-C012'), false, 'no own waiting ticket left');
+  }
+}
+const runtime = process.env.C012_RUNTIME;
+assert.equal(runtime, path.join(candidateRoot, '.git', 'kanban-orchestrator', 'browser-runtime'));
+const privateOwner = JSON.parse(fs.readFileSync(path.join(process.env.C012_PRIVATE_ROOT, '.owner-C012.json')));
+assert.equal(privateOwner.workerId, 'worker-C012'); assert.equal(privateOwner.physicalCopiesOnly, true);
+const runtimeOwner = JSON.parse(fs.readFileSync(path.join(metadata, 'runtime-owner.json')));
+const runtimeStat = fs.lstatSync(runtime, { bigint: true });
+assert.equal(runtimeStat.isSymbolicLink(), false);
+assert.equal(runtimeStat.isDirectory(), true);
+assert.equal((runtimeStat.birthtimeNs / 100n + 116444736000000000n).toString(), runtimeOwner.creationFileTimeUtc, 'same exact owned runtime creation identity');
+let runtimeFiles = 0;
+function inspectRuntime(directory) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const file = path.join(directory, entry.name);
+    assert.equal(fs.lstatSync(file).isSymbolicLink(), false, 'no alias/unknown external temp cleanup');
+    if (entry.isDirectory()) inspectRuntime(file); else runtimeFiles++;
+  }
+}
+inspectRuntime(runtime);
+fs.rmSync(runtime, { recursive: true, force: false, maxRetries: 3, retryDelay: 100 });
+assert.equal(fs.existsSync(runtime), false);
+const runtimeCleanup = { schema: 'C012-exact-owned-runtime-child-cleanup/1', workerId: 'worker-C012',
+  dev: String(runtimeStat.dev), ino: String(runtimeStat.ino), birthtimeNs: String(runtimeStat.birthtimeNs),
+  creationFileTimeUtc: runtimeOwner.creationFileTimeUtc, filesUnderExactOwnedChild: runtimeFiles, removed: true,
+  allNativeSessionsAndResourceWorkersAlreadyConfirmedClosed: true, globalOrUnknownTempTargeted: false };
+fs.writeFileSync(path.join(metadata, 'owned-runtime-cleanup.json'), JSON.stringify(runtimeCleanup, null, 2) + '\n', { flag: 'wx' });
+const artifactrefs = [
+  ref(patch, 'exact additive C012 binary patch; read-only apply check; not applied'),
+  ref(path.join(ns, phasePlan.sourceFreeze), 'actual final source freeze; source-complete own archive'),
+  ref(path.join(final, 'authority.json'), 'private original evidence authority; every raw/source history retained'),
+  ref(path.join(final, 'whole-seal.json'), 'whole exact-set physical namespace seal'),
+  ref(path.join(final, 'summary.projection.json'), 'explicit public-readable derivative, not original raw'),
+  ref(path.join(ns, 'imports.json'), 'unchanged accepted source raw/LF/Git/commit/tag pins'),
+  ref(path.join(ns, 'evidence', 'red', 'manifest.json'), 'genuine original naive behavioral RED before implementation')
+];
+const result = {
+  schemaVersion: 1, schema: 'C012-original-S-private-ready-for-independent-parent-review/1',
+  cardId: 'C012', workerId: 'worker-C012', kanoUnit: 'C012', frozenClass: 'S', packet: 'H003',
+  originalAcceptance: 'Explain reserved versus estimated capacity/cost; verify assumptions and remaining allowance are visible before running.',
+  outcome: 'readyForReview', readyForReview: true, completedAtUtc: new Date().toISOString(), deadlineUtc: DEADLINE,
+  deadlineExtended: false, logicalWip: 1, subagentsUsed: 0, newUnitOrBonus: false, creditGranted: false,
+  commit: null, tag: null, candidate: candidateRoot, paths: ['capability\\C012'], artifactrefs,
+  patch: patchReport, finalAudit: checked,
+  red: { archive: 'capability\\C012\\evidence\\red\\manifest.json', actualExit: 1, behavioralFailures: 3, sourceArchivedBeforeImplementation: true,
+    identicalAssertionsReplayGreen: true, wrongSelectorThemeExpectationRemainsHistoricalNotGreen: true },
+  whole: { current: { tests: checked.tests, passed: checked.tests, failed: 0, cancelled: 0, skipped: 0, todo: 0 },
+    fresh: summary.fresh, sourceCompleteLFCRLF: true, noFictionalC012Head: true },
+  coverage: summary.coverage, completeAST: { definitions: checked.mutationDefinitions, counts: checked.mutationCounts,
+    semanticUnresolved: 0, faultIdentitySyntaxTimeoutKillCredit: false, defaultEquivalence: false,
+    explicitPairLimit: 'version arithmetic proof is scoped to at most 1024 invalidations' },
+  resource: summary.resource, native: summary.native,
+  cleanup: { nativeOwnedSessionsClean: summary.native.sessions.every(row => row.clean), resourceWorkersAllExited: summary.resource.allExited,
+    freshPhysicalWorkspacesRemoved: true, ownLeasesReleasedByFinally: true, sharedPidsNeverTargeted: [31036, 35440],
+    noGlobalOrNameCleanup: true, runtime, exactOwnedRuntimeRemoved: true, runtimeCleanup },
+  sourceImportPreservation: { count: imports.entries.length, allLiveRawOrCanonicalLFMatch: true,
+    C011AcceptedNamespace: imports.accepted.C011[0], producersReadOnly: true, qualityTreeReadOrWrite: false },
+  authority: { applied: false, published: false, liveNamespaceAbsent: true, indexOrLedgerWritten: false,
+    parentIndependentAcceptanceRequired: true, parentAloneCanApplyPublishDoneAndCredit: true },
+  permissions: { azure: false, iac: false, scaffold: false, identity: false, deploy: false, expenditure: false },
+  nativeAzureRuns: 0, nativeAzureSpend: 0, nativeTarget: { hostOS: null, sku: null, subscription: null, resourceGroup: null, region: null },
+  runtimeDesign: { tooling: process.version, production: 'Node 24 / Express / Linux', productionValidated: false },
+  hints: [
+    { kind: 'reuse', text: 'Use the actual fixed C003/C004/C011 public producer functions and imports.json; no new executor, validator or lease/spend authorizer.', confidence: 5, evidence: 'capability\\C012\\imports.json' },
+    { kind: 'trap', text: 'Valid local display is not server consent or permission to run. The nine hash-bound observations are synthetic recorded facts, not live Azure inventory.', confidence: 5, evidence: 'capability\\C012\\README.md' },
+    { kind: 'test', text: 'Inline theme coverage uses exact byte-bound executable projection, not a whole-HTML false percentage. The retained development 3.4% failure remains raw.', confidence: 5, evidence: 'capability\\C012\\tests\\coverage.cjs' },
+    { kind: 'process', text: 'One final-source native success/failure campaign only. A second affected native phase needs explicit parent admission; no self-application or credit.', confidence: 5, evidence: 'capability\\C012\\tests\\phase-plan.json' }
+  ],
+  selfReview: {
+    '1': { status: 'pass', evidence: 'two actual client instances; FIFO/LIFO resets; native exact owned cleanup; no application server ownership' },
+    '2': { status: 'pass', evidence: 'complete source-frozen physical LF and CRLF trees with unchanged fixed accepted imports' },
+    '3': { status: 'pass', evidence: 'all capture/source/gzip hashes, whole exact-set seal, final byte audit and tamper unit cases' },
+    '4': { status: 'pass', evidence: 'independent AST statements/declarations/conditions/initializers/modules/exports; named semantic kills, 17 explicit pairs, all nonkills explicit' },
+    '5': { status: 'pass', evidence: 'recursive public-return mutation walker and frozen row/reason/permission observations' },
+    '6': { status: 'pass', evidence: 'independent 22-key label/value oracle after actual client actions in VM and Edge' },
+    '7': { status: 'pass', evidence: 'hostile scalar/getter/coercion tests, 32768-character work boundary and resource child heap cap' },
+    '8': { status: 'pass', evidence: 'pending digest invalidation tested; hard fixed-UTC command watchdog; no new execution cancellation API' },
+    '9': { status: 'pass', evidence: 'actual qualified signed 157 success/injected assertion cleanup with exact UTC7/FILETIME and profile binding' },
+    '10': { status: 'pass', evidence: 'closed exact producer snapshot set and primitive scope inputs; no open-language execution checker' },
+    '11': { status: 'pass', evidence: 'README limits and source-bound named assertions; figures recomputed by final audit' },
+    '12': { status: 'pass', evidence: '64 complete groups at 8; structural facts, injected clock; no elapsed/lag performance success threshold or burner' },
+    '13': { status: 'pass', evidence: 'physical owned Windows paths; LF/CRLF; exact owned profiles; no arbitrary user-supplied output-directory feature' },
+    '14': { status: 'n/a', evidence: 'no new application server, HTTP parser, request mutation or listener; unchanged file-only browser helper' },
+    '15': { status: 'pass', evidence: 'literal original acceptance and retained hostile/selector/AST/probe assertions replay against final source' },
+    '16': { status: 'private-scope', evidence: 'explicit whole current suite green. Private original raw paths are deliberately retained; derivative is labelled. No publication or raw redaction claimed.' }
+  },
+  notChecked: ['Public publication/redaction is parent-only, not performed. Private original captures retain actual local paths and historical source extensions.',
+    'No real Azure, native target, Node 24 production or general browser/screen-reader qualification.'],
+  obstacles: [], notes: 'Private handoff only; stop after this result and await explicit parent application authority.'
+};
+if (fs.existsSync(resultFile)) {
+  const previous = path.join(run, 'results', 'C012-epoch0-progress-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json');
+  fs.copyFileSync(resultFile, previous, fs.constants.COPYFILE_EXCL);
+}
+fs.writeFileSync(resultFile, JSON.stringify(result, null, 2) + '\n');
+console.log(JSON.stringify({ cardId: result.cardId, outcome: result.outcome, resultSha256: sha(fs.readFileSync(resultFile)),
+  currentTests: checked.tests, sealedFiles: checked.sealedFiles, applied: false, creditGranted: false }));

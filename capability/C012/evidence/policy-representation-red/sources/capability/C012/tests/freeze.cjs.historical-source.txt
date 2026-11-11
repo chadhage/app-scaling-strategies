@@ -1,0 +1,36 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { list, physical } = require('./source.cjs');
+const { write, remaining } = require('./budget.cjs');
+const { sha, pin } = require('./integrity.cjs');
+const namespace = path.resolve(__dirname, '..'), root = path.resolve(namespace, '..', '..');
+remaining(60000);
+const name = process.env.C012_FREEZE_NAME || 'final-source';
+assert.match(name, /^final-source(?:-[0-9]+)?$/);
+const output = path.join(namespace, 'evidence', name);
+fs.mkdirSync(output, { recursive: false });
+const sources = list(namespace);
+for (const item of sources) {
+  const target = path.join(output, 'sources', item.path);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(path.join(namespace, item.path), target, fs.constants.COPYFILE_EXCL);
+}
+const imports = require('../imports.json');
+for (const item of imports.entries) {
+  const bytes = fs.readFileSync(path.join(root, item.path));
+  assert.equal(pin(bytes, item), true, item.path);
+  const target = path.join(output, 'accepted-producer-sources', item.path);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, bytes, { flag: 'wx' });
+}
+const freeze = {
+  schema: 'C012-last-source-freeze-before-final-campaigns/1', createdAtUtc: new Date().toISOString(),
+  timestampPrecision: 'UTC milliseconds; exact asynchronous native births are separate UTC7/FILETIME strings',
+  scope: 'NEW capability C012 only; private physical candidate; no application or publication authority',
+  physical: physical(root), node: process.version, sources, importsManifestSha256: sha(fs.readFileSync(path.join(namespace, 'imports.json'))),
+  sourceAuthority: 'This source-complete unpublished private archive, not a fictional C012 HEAD commit',
+  sourcesSha256: sha(JSON.stringify(sources)), acceptedImportCount: imports.entries.length,
+  permissions: { azure: false, iac: false, scaffold: false, identity: false, deploy: false, expenditure: false }
+};
+write(path.join(output, 'freeze.json'), freeze);
+console.log(JSON.stringify({ sources: sources.length, sourceSetSha256: freeze.sourcesSha256, freeze: path.relative(root, path.join(output, 'freeze.json')) }));

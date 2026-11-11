@@ -1,0 +1,17 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { remaining } = require('./budget.cjs');
+const { sha } = require('./integrity.cjs');
+remaining();
+const namespace = path.resolve(__dirname, '..');
+const archive = path.join(namespace, 'evidence', 'hostile-red');
+const sourcePath = 'capability\\C012\\tests\\model.test.cjs';
+const manifest = JSON.parse(fs.readFileSync(path.join(archive, 'manifest.json')));
+const expected = manifest.inputs.find(item => item.path === sourcePath);
+const bytes = fs.readFileSync(path.join(archive, 'sources', sourcePath));
+assert.equal(sha(bytes), expected.sha256);
+const file = path.join(__dirname, 'retained-hostile.test.cjs');
+fs.writeFileSync(file, bytes, { flag: 'wx' });
+console.log(JSON.stringify({ kind: 'explicit post-implementation replay copy; original chronology belongs only to immutable hostile-red',
+  original: 'evidence\\hostile-red\\sources\\' + sourcePath, replay: 'tests\\retained-hostile.test.cjs',
+  sha256: sha(bytes), assertionBytesChanged: false, copiedForReplayAtUtc: new Date().toISOString() }));

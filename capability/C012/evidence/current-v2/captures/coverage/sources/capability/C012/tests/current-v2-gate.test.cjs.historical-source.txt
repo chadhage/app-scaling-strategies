@@ -1,0 +1,32 @@
+'use strict';
+const {test}=require('node:test');
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),assert=require('node:assert/strict');
+const {derive}=require('./current-v2-close.cjs');
+const {sha}=require('./integrity.cjs');
+test('whole435-domain derivation retains all63 original gaps and rejects status-only relabelling or a missing proof',()=>{
+  const baseline=path.join(process.env.C012_RUN,'scratch','C012');
+  const domain=JSON.parse(fs.readFileSync(path.join(baseline,'mutations-final-v2','inventory.json')));
+  const rawRows=fs.readFileSync(path.join(baseline,'mutations-final-v2','outcomes.original.ndjson'),'utf8').trimEnd().split('\n').map(JSON.parse);
+  const raws=new Map(rawRows.map(row=>[row.id,row]));
+  const old=JSON.parse(fs.readFileSync(path.join(baseline,'pairs-final-v2','report.json')));
+  const proofs=new Map(),decisions=[];
+  for(const definition of domain.definitions){
+    const raw=raws.get(definition.id),prior=old.decisions.find(row=>row.id===definition.id);
+    let proof;
+    if(prior.decision==='named-assertion-kill')proof={kind:'current-raw-named-causal-assertion',definitionId:definition.id,name:raw.failures[0].name,originalOutcomeSha256:sha(Buffer.from(JSON.stringify(raw)))};
+    if(prior.decision==='specific-runnable-scoped-pair'){
+      const meta=old.proofs.find(row=>row.definitionId===definition.id);
+      proof={kind:'existing-specific-equivalence',definitionId:definition.id,
+        proof:JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(baseline,'pairs-final-v2',meta.artifact))))};
+    }
+    if(proof)proofs.set(definition.id,proof);
+    decisions.push({id:definition.id,key:definition.key,file:definition.file,sourceSha256:definition.sourceSha256,mutantSha256:definition.mutantSha256,
+      decision:prior.decision,proofSha256:proof?sha(Buffer.from(JSON.stringify(proof))):null});
+  }
+  const missing=derive(domain,decisions,proofs,raws);
+  assert.equal(domain.definitions.length,457);assert.equal(missing.length,63);
+  const relabelled=decisions.map(row=>missing.includes(row.id)?{...row,decision:'specific-runnable-scoped-pair'}:row);
+  assert.deepEqual(derive(domain,relabelled,proofs,raws),missing,'no proofless status label closes any of the63');
+  const removed=new Map(proofs),one=removed.keys().next().value;removed.delete(one);
+  assert.equal(derive(domain,decisions,removed,raws).length,64,'a missing previously genuine proof is unresolved too');
+});

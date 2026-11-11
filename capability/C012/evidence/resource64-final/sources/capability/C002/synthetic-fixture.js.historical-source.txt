@@ -1,0 +1,41 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    Object.defineProperty(root, 'C002SyntheticFixture', { value: factory() });
+  }
+}(globalThis, function () {
+  'use strict';
+
+  function freeze(value) {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  }
+
+  return freeze({
+    envelope: {
+      schemaVersion: 1,
+      action: 'local.probe',
+      scope: { mode: 'local-implementation-only', liveAzureRuns: 0 },
+      load: { requestsPerSecond: 10, concurrentUsers: 2 },
+      durationSeconds: 30,
+      capacity: { units: 1 },
+      budget: { cloudSpend: 0 }
+    },
+    limits: {
+      kind: 'local-comparison-only',
+      label: 'C002 synthetic fixture: not Azure authorization or universal defaults',
+      load: {
+        requestsPerSecond: { min: 1, max: 100 },
+        concurrentUsers: { min: 1, max: 20 }
+      },
+      durationSeconds: { min: 1, max: 300 },
+      capacity: { units: { min: 1, max: 4 } },
+      budget: { cloudSpend: { min: 0, max: 0 } }
+    }
+  });
+}));

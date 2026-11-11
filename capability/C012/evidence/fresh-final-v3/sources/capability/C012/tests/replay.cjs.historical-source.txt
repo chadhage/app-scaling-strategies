@@ -1,0 +1,24 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const { run } = require('./budget.cjs');
+const { sha } = require('./integrity.cjs');
+const root = path.resolve(__dirname, '..', '..', '..'), ns = path.resolve(__dirname, '..');
+const archived = path.join(ns, 'evidence', 'red', 'sources');
+const assertionPath = 'capability\\C012\\tests\\acceptance.test.cjs';
+const output = process.env.C012_REPLAY_OUTPUT;
+assert.ok(output && path.isAbsolute(output), 'owned replay raw output required');
+fs.mkdirSync(output, { recursive: false });
+assert.equal(sha(fs.readFileSync(path.join(archived, assertionPath))), sha(fs.readFileSync(path.join(root, assertionPath))), 'literal original RED assertions are unchanged on current source');
+const args = ['--test', '--experimental-test-isolation=none', '--test-concurrency=1', '--test-timeout=120000', assertionPath];
+const naive = run(args, { cwd: archived }), current = run(args, { cwd: root });
+for (const [name, result] of [['naive', naive], ['current', current]]) for (const kind of ['stdout', 'stderr']) {
+  fs.writeFileSync(path.join(output, name + '.' + kind + '.raw'), result[kind] || '', { flag: 'wx' });
+}
+assert.equal(naive.error, undefined); assert.equal(naive.signal, null); assert.equal(naive.status, 1);
+const notOk = [...naive.stdout.toString().matchAll(/^not ok \d+ - (.+)$/gm)].map(match => match[1]);
+assert.equal(notOk.length, 3); assert.ok(notOk.every(name => name.startsWith('C012 ')));
+assert.equal(current.error, undefined); assert.equal(current.signal, null); assert.equal(current.status, 0);
+const report = { originalNaiveBehavioralRed: { exit: naive.status, namedAssertions: notOk, stdoutSha256: sha(naive.stdout), stderrSha256: sha(naive.stderr) },
+  identicalFinalGreen: { exit: current.status, stdoutSha256: sha(current.stdout), stderrSha256: sha(current.stderr) } };
+fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+console.log(JSON.stringify(report));

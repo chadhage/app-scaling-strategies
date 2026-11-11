@@ -1,0 +1,11 @@
+'use strict';
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { sources } = require('./ast.cjs');
+const { observe } = require('./probes.cjs');
+test('complete pristine actual CJS browser client and inline source satisfies independent named probes', async () => {
+  const result = await observe(sources());
+  assert.deepEqual(result.faults, []);
+  assert.deepEqual(result.failures, []);
+  assert.ok(result.assertions.length > 300);
+});

@@ -1,0 +1,149 @@
+'use strict';
+const assert = require('node:assert/strict'), vm = require('node:vm'), path = require('node:path');
+const { createRequire } = require('node:module');
+const { create, root } = require('./dom.cjs');
+const fixtures = require('../fixtures.js');
+const { expected } = require('./oracle.cjs');
+const EXPECTED_REASONS = {
+  held: [], released: ['RESERVATION_INACTIVE'], expired: ['RESERVATION_INACTIVE'], refused: ['PRODUCER_REFUSED'],
+  unknown: ['PLAN_BLOCKED'], native: ['PLAN_BLOCKED'], unverified: ['PLAN_BLOCKED'],
+  missing: ['ALLOWANCE_UNKNOWN', 'RESERVATION_UNKNOWN'], absent: ['RESERVATION_UNKNOWN']
+};
+const json = value => value === undefined ? null : JSON.parse(JSON.stringify(value));
+async function observe(sources = {}) {
+  const assertions = [], failures = [], faults = [], trace = [];
+  function check(name, actual, expect) {
+    assertions.push(name);
+    try { assert.deepEqual(json(actual), json(expect), name); }
+    catch (error) {
+      if (error.code !== 'ERR_ASSERTION') throw error;
+      failures.push({ name, code: error.code, actual: json(actual), expected: json(expect) });
+    }
+    trace.push({ name, actual: json(actual) });
+  }
+  async function stage(name, callback) {
+    try { await callback(); }
+    catch (error) { faults.push({ stage: name, name: error.name, code: error.code || null, message: error.message }); }
+  }
+  for (const file of ['fixtures.js', 'model.js']) if (Object.hasOwn(sources, file)) {
+    await stage('CommonJS public initialization ' + file, () => {
+      const box = { module: { exports: {} }, require: createRequire(path.join(root, file)), TextEncoder, console };
+      vm.runInNewContext(sources[file], box, { filename: file, timeout: 10000 });
+      if (file === 'fixtures.js') {
+        check('C012 CommonJS complete fixture export contract', box.module.exports, fixtures);
+        check('C012 CommonJS fixture root immutable', Object.isFrozen(box.module.exports), true);
+      } else {
+        check('C012 CommonJS exact model API export contract', Object.keys(box.module.exports || {}), ['review']);
+        check('C012 CommonJS model export immutable', Object.isFrozen(box.module.exports), true);
+      }
+    });
+  }
+  await stage('actual browser module and client source initialization', async () => {
+    const dom = create({ sources, mutation: true });
+    check('C012 browser exact fixture export contract', dom.context.C012Fixtures, fixtures);
+    check('C012 browser fixtures root immutable', Object.isFrozen(dom.context.C012Fixtures), true);
+    for (const name of Object.keys(fixtures)) check('C012 browser fixture immutable ' + name, Object.isFrozen(dom.context.C012Fixtures?.[name]), true);
+    check('C012 browser exact model API export contract', Object.keys(dom.context.C012Model || {}), ['review']);
+    check('C012 browser model export immutable', Object.isFrozen(dom.context.C012Model), true);
+    check('C012 actual inline system-light theme', dom.document.documentElement.attributes['data-theme'], 'light');
+    if (typeof dom.context.C012Model?.review !== 'function' || !dom.context.C012Fixtures) return;
+    for (const [name, reasons] of Object.entries(EXPECTED_REASONS)) {
+      const packet = JSON.parse(fixtures[name].text);
+      const result = await dom.context.C012Model.review(fixtures[name].text, packet.subject, packet.reservationId, packet.observedAtMs);
+      const complete = { state: name === 'held' ? 'ready' : 'blocked', reviewable: name === 'held',
+        reasons, rows: expected(name), executionAuthorized: false, cloudExecutionAuthorized: false,
+        expenditureAuthorized: false, liveAzureRuns: 0, nativeAzureQualified: false, productionRuntimeValidated: false,
+        permissions: { native: false, iac: false, scaffold: false, identity: false, deploy: false, expenditure: false } };
+      check('C012 full producer-derived pre-run result ' + name, result, complete);
+      check('C012 result frozen ' + name, Object.isFrozen(result), true);
+      check('C012 result rows frozen ' + name, Object.isFrozen(result?.rows), true);
+      check('C012 result reasons frozen ' + name, Object.isFrozen(result?.reasons), true);
+      check('C012 result permissions frozen ' + name, Object.isFrozen(result?.permissions), true);
+      if (result?.rows) for (const row of result.rows) check('C012 fact tuple frozen ' + name + ':' + row[0], Object.isFrozen(row), true);
+      dom.elements.get('scenario').value = name;
+      await dom.emit('load', 'click');
+      check('C012 load clears facts ' + name, dom.rows(), []);
+      check('C012 load clears acknowledgement ' + name, dom.elements.get('acknowledge').checked, false);
+      await dom.emit('review', 'click');
+      check('C012 actual client all rendered facts ' + name, dom.rows(), expected(name));
+      check('C012 actual client review checkbox ' + name, dom.elements.get('acknowledge').disabled, name !== 'held');
+      check('C012 actual client completion enables retry ' + name, dom.elements.get('review').disabled, false);
+      check('C012 actual client result status ' + name, dom.elements.get('status').textContent,
+        name === 'held' ? 'Local pre-run explanation ready. Reserved, estimated, assumptions and remaining allowance shown. No permission to run.'
+          : `Review blocked: ${reasons.join(', ')}. No permission to run.`);
+    }
+    for (const [text, owner, id, at, reasons] of [
+      [fixtures.held.text, 'conductor-b', 'rsv-00000001', 1000, ['OWNER_MISMATCH']],
+      [fixtures.held.text, 'conductor-a', 'rsv-00000002', 1000, ['RESERVATION_MISMATCH']],
+      [fixtures.held.text, 'conductor-a', 'rsv-00000001', 999, ['STALE_OBSERVATION']],
+      [fixtures.held.text, 'conductor-a', 'rsv-00000001', 2001, ['STALE_OBSERVATION']],
+      ['', 'conductor-a', 'rsv-00000001', 1000, ['SOURCE_MISMATCH']],
+      ['x'.repeat(32769), 'conductor-a', 'rsv-00000001', 1000, ['INPUT_REJECTED']],
+      ['x'.repeat(32768), 'conductor-a', 'rsv-00000001', 1000, ['SOURCE_MISMATCH']],
+      [null, 'conductor-a', 'rsv-00000001', 1000, ['INPUT_REJECTED']],
+      [fixtures.held.text, null, 'rsv-00000001', 1000, ['INPUT_REJECTED']],
+      [fixtures.held.text, 'conductor-a', null, 1000, ['INPUT_REJECTED']],
+      [fixtures.held.text, 'conductor-a', 'rsv-00000001', NaN, ['STALE_OBSERVATION']]
+    ]) {
+      const result = await dom.context.C012Model.review(text, owner, id, at);
+      check('C012 typed negative input ' + trace.length, result?.reasons, reasons);
+      check('C012 typed negative cannot review ' + trace.length, result?.reviewable, false);
+    }
+    dom.elements.get('scenario').value = 'held'; await dom.emit('load', 'click'); await dom.emit('review', 'click');
+    dom.elements.get('acknowledge').checked = true; await dom.emit('acknowledge', 'change');
+    check('C012 actual client acknowledgement is local only', dom.elements.get('status').textContent, 'Local facts marked reviewed only. This is not server consent or permission to run.');
+    dom.elements.get('acknowledge').checked = false; await dom.emit('acknowledge', 'change');
+    check('C012 actual client uncheck removes review marking', dom.elements.get('status').textContent, 'No local acknowledgement. No permission to run.');
+    for (const id of ['packet', 'owner', 'reservation-id', 'as-of']) {
+      await dom.emit(id, 'input');
+      check('C012 edit clears facts ' + id, dom.rows(), []);
+      check('C012 edit invalidates acknowledgement ' + id, dom.elements.get('acknowledge').disabled, true);
+      check('C012 edit status ' + id, dom.elements.get('status').textContent, 'Inputs changed. Review cleared; no execution authority.');
+    }
+    await dom.emit('scenario', 'change'); check('C012 scenario change status', dom.elements.get('status').textContent, 'Selection changed. Load or review explicit facts; no execution authority.');
+    dom.elements.get('scenario').value = '__proto__'; await dom.emit('load', 'click');
+    check('C012 selector never falls back to prior packet', dom.elements.get('packet').value, '');
+    await dom.emit('reset', 'click');
+    check('C012 reset focus', dom.document.activeElement?.id, 'packet');
+    check('C012 reset status', dom.elements.get('status').textContent, 'Reset. No current explanation or acknowledgement; no permission to run.');
+    for (const id of ['packet', 'owner', 'reservation-id', 'as-of']) check('C012 reset clears field ' + id, dom.elements.get(id).value, '');
+  });
+  for (const action of ['reset', 'edit', 'load']) await stage('actual late completion ' + action, async () => {
+    let release;
+    const crypto = require('node:crypto').webcrypto;
+    const dom = create({ sources, mutation: true, crypto: { subtle: { digest: (...args) => new Promise(resolve => {
+      release = () => crypto.subtle.digest(...args).then(resolve);
+    }) } } });
+    if (typeof dom.context.C012Model?.review !== 'function' || !dom.context.C012Fixtures) return;
+    dom.elements.get('scenario').value = 'held'; await dom.emit('load', 'click');
+    const pending = dom.emit('review', 'click');
+    check('C012 pending disables own review ' + action, dom.elements.get('review').disabled, true);
+    if (action === 'reset') await dom.emit('reset', 'click');
+    else if (action === 'edit') await dom.emit('packet', 'input');
+    else await dom.emit('load', 'click');
+    if (release) await release();
+    await pending;
+    check('C012 late completion cannot resurrect facts ' + action, dom.rows(), []);
+    check('C012 late completion cannot enable acknowledgement ' + action, dom.elements.get('acknowledge').disabled, true);
+    dom.elements.get('acknowledge').checked = true; await dom.emit('acknowledge', 'change', true);
+    check('C012 forced acknowledgement after invalidation ' + action, dom.elements.get('acknowledge').checked, false);
+  });
+  await stage('actual model integrity unavailable and empty time', async () => {
+    const dom = create({ sources, mutation: true, crypto: {} });
+    if (typeof dom.context.C012Model?.review !== 'function') return;
+    const result = await dom.context.C012Model.review(fixtures.held.text, 'conductor-a', 'rsv-00000001', 1000);
+    check('C012 unavailable integrity remains typed denial', result?.reasons, ['INTEGRITY_UNAVAILABLE']);
+    dom.elements.get('scenario').value = 'held'; await dom.emit('load', 'click');
+    dom.elements.get('as-of').value = ''; await dom.emit('review', 'click');
+    check('C012 empty time has no rendered fallback', dom.rows(), []);
+    check('C012 empty time remains blocked', dom.elements.get('acknowledge').disabled, true);
+  });
+  if (Object.hasOwn(sources, 'index.html#theme')) for (const [options, expectedTheme] of [[{ dark: true }, 'dark'], [{ search: '?clawpilotTheme=dark' }, 'dark'], [{ search: '?clawpilotTheme=light' }, 'light']]) {
+    await stage('actual inline theme ' + JSON.stringify(options), () => {
+      const dom = create({ ...options, sources, mutation: true });
+      check('C012 inline explicit theme ' + JSON.stringify(options), dom.document.documentElement.attributes['data-theme'], expectedTheme);
+    });
+  }
+  return { assertions, failures, faults, trace };
+}
+module.exports = { observe, EXPECTED_REASONS };

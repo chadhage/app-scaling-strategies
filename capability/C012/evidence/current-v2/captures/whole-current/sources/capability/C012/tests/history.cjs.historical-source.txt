@@ -1,0 +1,36 @@
+'use strict';
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), zlib = require('node:zlib');
+const { capture, sha, lf } = require('./integrity.cjs');
+function auditCapture(directory) {
+  const issues = capture(directory), base = path.basename(directory);
+  if (!issues.includes('CAPTURE_OUTCOME') || base !== 'pairs-final') return { issues, role: 'original-capture-outcome-unmodified' };
+  const record = { issues, role: 'historical-unexpected-failure-not-yet-closed', originalExpectedExit: 0, originalActualExit: 1,
+    originalManifestSha256: '037211e32c251dec3263d4710d599f8540b0eaf8ec00c2439f823322a6472cf4',
+    closedBy: 'pairs-final-v2', regressionRed: 'domain-roundtrip-red' };
+  try {
+    assert.deepEqual(issues, ['CAPTURE_OUTCOME'], 'no source or raw-byte issue is waived');
+    const bytes = fs.readFileSync(path.join(directory, 'manifest.json'));
+    assert.equal(sha(bytes), record.originalManifestSha256);
+    const old = JSON.parse(bytes);
+    assert.equal(old.expectedExit, 0); assert.equal(old.exit, 1); assert.equal(old.error, null); assert.equal(old.signal, null);
+    const stderr = zlib.gunzipSync(fs.readFileSync(path.join(directory, old.stderr.file))).toString();
+    assert.match(stderr, /ERR_ASSERTION.*complete independent current AST and exact generated specimens/);
+    assert.match(stderr, /declarationKind: undefined/);
+    const parent = path.dirname(directory), closureDir = path.join(parent, record.closedBy), redDir = path.join(parent, record.regressionRed);
+    assert.deepEqual(capture(closureDir), []); assert.deepEqual(capture(redDir), []);
+    const closure = JSON.parse(fs.readFileSync(path.join(closureDir, 'manifest.json')));
+    const red = JSON.parse(fs.readFileSync(path.join(redDir, 'manifest.json')));
+    assert.equal(closure.expectedExit, 0); assert.equal(closure.exit, 0); assert.equal(red.expectedExit, 1); assert.equal(red.exit, 1);
+    assert.ok(Date.parse(red.startedAtUtc) > Date.parse(old.completedAtUtc));
+    assert.ok(Date.parse(closure.startedAtUtc) > Date.parse(red.completedAtUtc));
+    const assertion = red.inputs.find(row => row.path === 'capability\\C012\\tests\\domain-roundtrip.test.cjs');
+    assert.equal(sha(lf(fs.readFileSync(path.join(__dirname, 'domain-roundtrip.test.cjs')))), assertion.lfSha256);
+    const domain = require('./ast.cjs').inventory();
+    assert.deepEqual(JSON.parse(JSON.stringify(domain)), domain, 'actual complete current JSON data has no omitted undefined fields');
+    record.issues = []; record.role = 'historical-unexpected-failure-causally-closed-not-current-green';
+  } catch (error) {
+    record.closureError = { code: error.code || null, message: error.message };
+  }
+  return record;
+}
+module.exports = { auditCapture };

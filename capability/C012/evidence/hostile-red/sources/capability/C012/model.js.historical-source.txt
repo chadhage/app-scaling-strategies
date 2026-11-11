@@ -1,0 +1,76 @@
+(function (root, factory) {
+  'use strict';
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./fixtures.js'), require('node:crypto').webcrypto);
+  else Object.defineProperty(root, 'C012Model', { value: factory(root.C012Fixtures, root.crypto) });
+}(globalThis, function (fixtures, crypto) {
+  'use strict';
+  const permissions = Object.freeze({ native: false, iac: false, scaffold: false, identity: false, deploy: false, expenditure: false });
+  function result(codes, rows) {
+    return Object.freeze({
+      state: codes.length === 0 ? 'ready' : 'blocked', reviewable: codes.length === 0,
+      reasons: Object.freeze(codes), rows: Object.freeze(rows.map(Object.freeze)),
+      executionAuthorized: false, cloudExecutionAuthorized: false, expenditureAuthorized: false,
+      liveAzureRuns: 0, nativeAzureQualified: false, productionRuntimeValidated: false, permissions
+    });
+  }
+  async function review(text, owner, reservationId, asOfMs) {
+    if (typeof text !== 'string' || text.length > 32768 || typeof owner !== 'string' || typeof reservationId !== 'string') {
+      return result(['INPUT_REJECTED'], []);
+    }
+    let packet;
+    try {
+      const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))), byte => byte.toString(16).padStart(2, '0')).join('');
+      if (!Object.values(fixtures).some(entry => entry.sha256 === digest)) return result(['SOURCE_MISMATCH'], []);
+      packet = JSON.parse(text);
+    } catch {
+      return result(['INTEGRITY_UNAVAILABLE'], []);
+    }
+    const codes = [];
+    if (owner !== packet.subject) codes.push('OWNER_MISMATCH');
+    if (reservationId !== packet.reservationId) codes.push('RESERVATION_MISMATCH');
+    const allowance = packet.allowance.ok ? packet.allowance.value.allowance : null;
+    const reservation = packet.reservation.ok ? packet.reservation.value.reservation : null;
+    if (!allowance) codes.push('ALLOWANCE_UNKNOWN');
+    if (!reservation) codes.push('RESERVATION_UNKNOWN');
+    if (reservation && reservation.state !== 'reserved') codes.push('RESERVATION_INACTIVE');
+    if (!Number.isSafeInteger(asOfMs) || asOfMs < packet.observedAtMs || asOfMs - packet.observedAtMs > packet.freshnessMs ||
+        (reservation && reservation.state === 'reserved' && asOfMs >= reservation.deadlineMs)) codes.push('STALE_OBSERVATION');
+    const plan = packet.planResult.plan;
+    if (packet.planResult.outcome !== 'local-review-ready') codes.push('PLAN_BLOCKED');
+    if (packet.producerRefusal !== null) codes.push('PRODUCER_REFUSED');
+    const held = allowance && reservation;
+    const unknown = 'Unknown — no verified synthetic observation';
+    const pricing = {
+      'not-applicable': 'Not applicable — no cloud execution; amount unknown / null, not zero',
+      unknown: 'Unknown — amount unknown / null, not zero',
+      missing: 'Missing — amount unknown / null, not zero',
+      'unverified-estimate': `${plan.cost.totalMinorUnits} ${plan.cost.currency} minor units — unverified; blocked`
+    };
+    const rows = [
+      ['scope', 'Observation scope', 'C011 bounded SYNTHETIC in-memory fixture; not Azure inventory, reservation or spend'],
+      ['reservation', 'Observed reservation', reservation ? `${reservation.id} — ${reservation.state}` : unknown],
+      ['reserved-capacity', 'Reserved capacity — already held', held ? `${allowance.lease.heldUnits} synthetic units` : unknown],
+      ['estimated-capacity', 'Estimated capacity — proposed, not held', `${packet.estimate.units} synthetic units`],
+      ['reserved-cost', 'Reserved cost — already held', held ? `${allowance.lease.heldSpend} fictional spend units` : unknown],
+      ['estimated-cost', 'Estimated cost — proposed, not spent', `${packet.estimate.spend} fictional spend units`],
+      ['remaining-capacity', 'Remaining own capacity allowance', allowance ? `${allowance.lease.remainingUnits} synthetic units` : unknown],
+      ['remaining-cost', 'Remaining own spend allowance', allowance ? `${allowance.lease.remainingSpend} fictional spend units` : unknown],
+      ['active-allowance', 'Active reservation allowance', allowance ? `${allowance.lease.active} / ${allowance.lease.maxActive}` : unknown],
+      ['replay-allowance', 'Lifetime replay-key allowance', allowance ? `${allowance.lease.remainingReplayKeys} remaining / ${allowance.lease.maxReplayKeys}; release does not restore keys` : unknown],
+      ['price', 'Synthetic estimate assumption', `${packet.estimate.priceVersion}: ${packet.estimate.request.tier} at ${packet.estimate.rate} fictional spend units per synthetic unit`],
+      ['cloud-cost', 'Separate cloud estimate', pricing[plan.cost.status]],
+      ['cloud-resources', 'Cloud resource assumption', plan.resources.cloudResourceCount === null ? 'Unknown — not inventoried' : '0 — explicitly resource-free local cloud scope'],
+      ['duration', 'Duration assumption', `${plan.duration.comparisonSeconds} synthetic comparison seconds; supplied bounds ${plan.duration.suppliedBounds.min}..${plan.duration.suppliedBounds.max}; native elapsed / billing unknown`],
+      ['comparison', 'C002 capacity assumption', `${JSON.stringify(plan.capacity)}; synthetic comparison only, not an Azure SKU`],
+      ['observation', 'As-of / freshness scope', `Synthetic clock t=${packet.observedAtMs} ms; reviewed at ${asOfMs} ms; maximum age ${packet.freshnessMs} ms; not current wall-clock inventory`],
+      ['assumptions', 'Assumptions and gaps', 'Fixed C011 p1 prices and own lease caps; C004 explicit local or blocked-native plan. No quote, quota check, cloud inventory, tax, discount or billing-duration verification. Local machine costs unknown.'],
+      ['matrix', 'C003 documented capability boundary', `${packet.matrixCounts.rows} rows: ${packet.matrixCounts.planned} planned, ${packet.matrixCounts.documented} documented-supported, ${packet.matrixCounts.unsupported} unsupported, ${packet.matrixCounts.unknown} unknown, ${packet.matrixCounts.qualified} native-qualified`],
+      ['provenance', 'Accepted producer source', Object.entries(packet.provenance).map(([card, source]) => `${card} ${source.commit} (${source.tag})`).join('; ')],
+      ['target', 'Native target', 'OS, SKU, subscription, resource group and region: unknown; Node 24 / Express / Linux production design unvalidated; Node 22.23.4 is tooling'],
+      ['producer-outcome', 'Observed producer decision', packet.producerRefusal === null ? 'No proposed reservation executed by this page' : `C011 ${packet.producerRefusal}; refused with unchanged books`],
+      ['authority', 'Authority boundary', 'Display / review only — not server consent or permission to run. All Azure, IaC, scaffold, identity, deployment and expenditure flags false; native Azure runs and spend 0 (forbidden, not free).']
+    ];
+    return result(codes, rows);
+  }
+  return Object.freeze({ review });
+}));
