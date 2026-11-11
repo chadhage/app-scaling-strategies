@@ -1,4 +1,60 @@
-# C011 replay correction: U068 and U069
+# C011 bounded reservations; U073 causal flood-oracle amendment
+
+U073 changes only test fixtures, the oracle, documentation and new evidence
+authority. The seven application production files and `imports.json` remain
+the exact published `cbd45aa88753fbbe54958629b770fd1b2aef2e85` Git bytes.
+No C009/C010 producer, runtime policy, browser grant, cloud or spend authority
+is changed.
+
+## Same-flood causal refusal proof
+
+The original flood still uses 30 sockets and the same eight terminal request
+patterns. Every odd socket first queues `GET /scope.json`, so the independently
+declared cohort contains 45 requests/responses: 15 public 200s and 30 typed
+terminal refusals (401:15, 404:4, 405:4, 414:4, 421:3).
+
+An opaque fixture-only cohort/slot header identifies those actual incoming
+requests. Inside that owned child only, instance socket `write`/`end` methods
+record successful outer payload calls without double-counting nested writes;
+the recorder parses their actual status, content length and JSON body and
+correlates response `finish` events. A snapshot after owned socket-close
+callbacks and an IPC event-loop-turn barrier must show the exact cohort,
+types, bodies and closure. These are Node/server write observations, **not**
+a claim that TCP delivered every byte or that a client retained it.
+
+All former closure/read/CPU/heap/no-effect/neighbour assertions, the same-run
+bare/naive controls and the race-free cross-process typed matrix remain.
+Missing observations, silent closed sockets, wrong types/cohorts and the naive
+control are rejected. A separate real-service control deliberately retains
+zero client answers while proving its real server frames; it is labelled as
+application discard, not a forced-OS-loss experiment.
+
+Original job146 (`flood.test.cjs:102`) remains a genuine historical
+`ERR_ASSERTION`: 30 sockets closed but zero terminal replies were retained by
+the client. Its raw stream/hash and all 360-group/4320-case history remain
+unchanged. The old minimum-client-read predicate is explicitly versioned in
+`evidence/u073/history/wrong-client-predicate-transition.json`; the changed
+assertion is **not** called an unchanged old GREEN.
+
+The original resource requirement is **64 total complete resource groups at
+concurrency eight**, not 512. Prior parent-overspecified attempts and every
+extra failure remain history. New current resource and load captures use one
+final source epoch, with all required leaf/control facts and no cherry-picking.
+
+The reusable capture tools require an explicitly owned output, an actual
+parent stress-release notice (`U073_STRESS_RELEASE`) and an explicit future
+`U073_CAPTURE_DEADLINE`; there is no implicit resource admission. Resource64
+starts **zero** standalone burners. The separate inherited 20-by-four loaded80
+exercise starts exactly four small-heap owned burners, records their native
+PID/creation identities and waits for their exit in `finally`. Its raw leaf
+streams and role are separate from resource64.
+
+The current source/Git audit enumerates executable C011 consumers rather than
+inventing a dependency. A separate complete current C009 regression uses the
+accepted `u053-suite.cjs suite`, with its whole source/test set hash-checked
+before and after and all temporary fixture work redirected to an owned private
+root. This is labelled unchanged-producer regression, not falsely C011
+executable-consumer coverage.
 
 This is the original local, synthetic Node-builtins reservation fixture, not a
 cloud control API. IPv4 loopback port zero, fake C009 identities, fictional
@@ -125,7 +181,7 @@ reads, not its index or HEAD. Output directories must be new and caller-owned.
 ```powershell
 $env:C011_GIT_REPOSITORY = '<OWNING-REPOSITORY>'
 $env:C011_ASSERTION_DIR = "$PWD\private\assertions-current"
-$env:U069_REPORT = "$PWD\capability\C011\evidence\u069\current-report-v2.json"
+$env:U069_REPORT = "$PWD\capability\C011\evidence\u073\current\mutation-report.json"
 node capability\C011\tests\suite.cjs core
 
 $env:C011_COVERAGE_OUT = "$PWD\private\coverage-originals"
@@ -142,7 +198,11 @@ $env:C011_BROWSER_OUTPUT = "$PWD\private\browser.json"
 node --test --test-concurrency=1 --test-timeout=900000 capability\C011\tests\browser.cjs
 ```
 
-`evidence/current/` is the final additive source freeze, projections and seal.
+`evidence/u073/current/` is the new qualifying source freeze, projections and
+seal, with a separate actual current-filesystem exact-set/hash guard.
+`evidence/current/` is the retained cbd qualification, verified only through
+its exact historical source role; it is not silently treated as a current
+U073 capture. Every original file remains exact in its recorded role.
 `evidence/joint/` is the preserved **failed first** frozen attempt, not current
 acceptance: fresh LF correctly exposed a raw-only transition check and actual
 Windows PID reuse colliding with PID-only assertion-report filenames. All 105

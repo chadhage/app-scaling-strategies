@@ -61,7 +61,7 @@ async function startChildTarget(name, { mode = 'service', heapMb = 48, watchdogM
   const early = exited.then((result) => { throw new Error(`the child exited early: ${JSON.stringify(result)} ${Buffer.concat(errors)}`); });
   const listening = await Promise.race([next('listening'), early]);
   return {
-    port: listening.port, tokens: listening.tokens, exited, errors: () => Buffer.concat(errors).toString('utf8'),
+    port: listening.port, tokens: listening.tokens, pid:child.pid,exited, errors: () => Buffer.concat(errors).toString('utf8'),
     stats: (reset = false) => { const reply = next('stats'); child.send({ type: 'stats', reset }); return reply; },
     release: () => { const reply = next('released'); child.send({ type: 'release' }); return reply; },
     failIds: (on) => { const reply = next('failed'); child.send({ type: 'failIds', on }); return reply; },

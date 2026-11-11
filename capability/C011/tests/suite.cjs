@@ -12,10 +12,11 @@ assert.equal(fs.existsSync(directory), false, 'assertion output is never silentl
 fs.mkdirSync(directory, { recursive: false });
 let names = fs.readdirSync(__dirname).filter((name) => name.endsWith('.test.cjs')).sort();
 if (mode === 'red-replay') names = ['reserve', 'race', 'idempotency', 'lifecycle', 'leaks', 'roles', 'hostile', 'batch', 'audit'].map((name) => name + '.test.cjs');
-if (mode === 'final') names.push('u068-evidence-final.cjs');
+if (mode === 'final') names.push('u073-evidence-final.cjs');
 const env = { ...process.env };
 for (const name of ['NODE_TEST_CONTEXT', 'NODE_V8_COVERAGE', 'CAPTURE_BROWSER_EVIDENCE', 'C011_SUBJECT_DIR']) delete env[name];
-env.U069_REPORT=path.join(__dirname,'..','evidence','u069','current-report-v2.json');
+env.U069_REPORT=path.join(__dirname,'..','evidence','u073','current','mutation-report.json');
+env.U069_INITIALIZATION_REPORT=env.U069_REPORT;
 const args = ['--require', path.join(__dirname, 'assertions-preload.cjs'), '--test', '--test-concurrency=1', '--test-timeout=180000',
   ...names.map((name) => path.join(__dirname, name))];
 const result = spawnSync(process.execPath, args, { cwd: root, env, windowsHide: true, timeout: 1200000, maxBuffer: 128 * 1024 * 1024 });

@@ -10,12 +10,20 @@ const http = require('node:http');
 const { monitorEventLoopDelay } = require('node:perf_hooks');
 const { startLocal } = require('../server.cjs');
 const { appOptions } = require('./targets.cjs');
+const {createFloodObservation}=require('./u073-server-observation.cjs');
 
 const [configName = 'default', mode = 'service'] = process.argv.slice(2);
 let flags = null;
 
 async function startReference() {
   const server = http.createServer((request, response) => {
+    if(mode==='silent'){request.socket.destroy();return;}
+    if(mode==='wrong'){
+      const body=Buffer.from(JSON.stringify({outcome:'ROLE_FORBIDDEN',error:{code:'ROLE_FORBIDDEN',message:'Wrong-response negative control.'},ignoredClaims:[]}));
+      response.once('finish',()=>request.socket.destroy());
+      response.writeHead(403,{'Content-Type':'application/json; charset=utf-8','Content-Length':body.length,Connection:'close'});
+      response.end(body);return;
+    }
     const body = Buffer.from('{"error":"refused"}');
     if (mode === 'bare') response.once('finish', () => request.socket.destroy());
     response.writeHead(400, { 'Content-Type': 'application/json', 'Content-Length': body.length, ...(mode === 'bare' ? { Connection: 'close' } : {}) });
@@ -35,11 +43,12 @@ async function startService() {
   const local = await startLocal(options);
   const tokens = { ...local.tokens, expired: local.app.issueToken('conductor-b', { ttlMs: 1 }) };
   await new Promise((resolve) => setTimeout(resolve, 20));
-  return { server: local.app.server, tokens, stop: () => local.close(), release };
+  return { server: local.app.server, tokens, stop: () => local.close(), release, readBooks:local.app.snapshot };
 }
 
 async function main() {
-  const { server, tokens, stop, release } = mode === 'service' || mode === 'hold' ? await startService() : await startReference();
+  const { server, tokens, stop, release,readBooks } = ['service','hold','missing-observation'].includes(mode) ? await startService() : await startReference();
+  const observation=createFloodObservation(server,{readBooks,disabled:mode==='missing-observation'});
   const delay = monitorEventLoopDelay({ resolution: 5 });
   delay.enable();
   let bytesRead = 0;
@@ -47,10 +56,14 @@ async function main() {
   const connections = () => new Promise((resolve) => server.getConnections((error, count) => resolve(error ? -1 : count)));
   process.on('message', async (message) => {
     if (message.type === 'stats') {
+      if(message.reset&&typeof message.reset==='object'&&message.reset.flood)observation.arm(message.reset.flood);
       if (global.gc) global.gc();
       const memory = process.memoryUsage();
       const cpu = process.cpuUsage();
-      const reply = { type: 'stats', heapUsed: memory.heapUsed, rss: memory.rss, connections: await connections(), lagMaxMs: delay.max / 1e6, cpuMicros: cpu.user + cpu.system, bytesRead };
+      const count=await connections();
+      await new Promise(resolve=>setImmediate(resolve));
+      const reply = { type: 'stats', heapUsed: memory.heapUsed, rss: memory.rss, connections:count, lagMaxMs: delay.max / 1e6, cpuMicros: cpu.user + cpu.system, bytesRead,
+        floodObservation:observation.snapshot() };
       if (message.reset) delay.reset();
       process.send(reply);
     } else if (message.type === 'release') {

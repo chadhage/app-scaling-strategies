@@ -1,0 +1,51 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {gunzipSync,gzipSync}=require('node:zlib');
+const candidate=path.resolve(__dirname,'..'),ns=path.join(candidate,'capability','C011'),current=path.join(ns,'evidence','u073','current');
+const {sha}=require(path.join(ns,'tests','u073-seal.cjs'));
+assert.equal(fs.existsSync(path.join(current,'pins.json')),false,'No physical seal may be modified');
+const freeze=JSON.parse(fs.readFileSync(path.join(current,'source-freeze.json')));
+for(const pin of freeze.files)assert.equal(sha(fs.readFileSync(path.join(ns,...pin.path.split('/')))),pin.sha256,'All129 source files stay fixed');
+const streamPath=path.join(current,'streams','U073-final-consumer.stdout.projection.txt.gz');
+const recordPath=path.join(current,'records','U073-final-consumer.json'),catalogPath=path.join(current,'catalog.json');
+const originals=[streamPath,recordPath,catalogPath].map(file=>({file,bytes:fs.readFileSync(file)}));
+const text=gunzipSync(originals[0].bytes).toString('utf8');
+const identifiers=[...new Set([process.env.USERNAME,/[\\/]Users[\\/]([^\\/]+)/i.exec(process.cwd())?.[1]].filter(Boolean))];
+assert.ok(identifiers.length>0);
+const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const expression=new RegExp(identifiers.map(escape).join('|'),'gi');
+let replacements=0;
+const refined=Buffer.from(text.replace(expression,()=>{replacements++;return'<PRIVATE-LOCAL-IDENTIFIER>';}));
+assert.equal(replacements,2,'Exact observed nested-JSON diagnostic identifiers, not a blanket claim about unknown data');
+const history=path.join(__dirname,'current-proof','projection-v1-history');fs.mkdirSync(history);
+const retained=originals.map(entry=>{
+  const target=path.join(history,path.basename(entry.file));
+  fs.renameSync(entry.file,target);assert.equal(sha(fs.readFileSync(target)),sha(entry.bytes));
+  return{originalProposedPath:path.relative(ns,entry.file).replaceAll('\\','/'),privateRetainedPath:'<PRIVATE>/projection-v1-history/'+path.basename(target),
+    sha256:sha(entry.bytes),bytes:entry.bytes.length,movedOnlyNeverRewritten:true};
+});
+const source=fs.readFileSync(__filename),witness='evidence/u073/current/subjects/projection-refinement-v2.source.txt';
+fs.writeFileSync(path.join(ns,...witness.split('/')),source,{flag:'wx'});
+const newStreamRelative='evidence/u073/current/streams/U073-final-consumer.stdout.projection-v2.txt.gz',compressed=gzipSync(refined,{level:9});
+fs.writeFileSync(path.join(ns,...newStreamRelative.split('/')),compressed,{flag:'wx'});
+const record=JSON.parse(originals[1].bytes),stream=record.transcripts.stdout;
+stream.path=newStreamRelative;stream.projectionBytes=refined.length;stream.projectionSha256=sha(refined);stream.projectionGzipSha256=sha(compressed);
+record.projectionRefinement={version:2,scope:'Data-only public derivative refinement for multiply escaped nested JSON diagnostics; NOT a129-source edit',
+  baseProjectionGzipSha256:sha(originals[0].bytes),sourceWitness:witness,sourceWitnessSha256:sha(source),
+  replacementCount:replacements,originalRawAndOriginalCaptureRecordUnchanged:true};
+const newRecordRelative='evidence/u073/current/records/U073-final-consumer-v2.json';
+fs.writeFileSync(path.join(ns,...newRecordRelative.split('/')),JSON.stringify(record,null,2)+'\n',{flag:'wx'});
+const catalog=JSON.parse(originals[2].bytes),entry=catalog.records.find(row=>row.name==='U073-final-consumer');
+assert.ok(entry);entry.path=newRecordRelative;
+catalog.roles.projectionRefinement='Consumer derivative v2: nested local-identifier replacement; exact failed derivative/catalog v1 retained privately, no raw mutation';
+fs.writeFileSync(catalogPath,JSON.stringify(catalog,null,2)+'\n',{flag:'wx'});
+const metadata={schema:'U073-explicit-data-projection-refinement/2',sourceFreezeSha256:sha(fs.readFileSync(path.join(current,'source-freeze.json'))),
+  fixedSourceFiles:129,sourceEdits:0,productionEdits:0,importEdits:0,originalRawNeverRewritten:true,
+  correction:'Frozen base projector handles ordinary path forms; multiply escaped nested diagnostic strings required a separate explicit data-only identifier projection.',
+  currentProjectionVersion:2,oldV1Retained:retained,sourceWitness:witness,sourceWitnessSha256:sha(source),
+  replacementCount:replacements,newStream:newStreamRelative,newRecord:newRecordRelative,
+  invalidated:['V1 in-memory draft completion qualification','V1 public privacy result'],
+  mustReclose:['Physical current namespace exact-set/hash guard','All evidence/tamper/completion tests','Whole sealed current and full LF/CRLF','Post-seal source/privacy/own-cleanup'],
+  newFailure:'U073-projection-privacy-red-v1: actual1-test ERR_ASSERTION, separate from the original7 causal fixture REDs'};
+fs.writeFileSync(path.join(current,'projection-refinement-v2.json'),JSON.stringify(metadata,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({version:2,sourceEdits:0,originalRawUntouched:true,replacements,retainedV1Files:retained.length,newRecord:newRecordRelative}));

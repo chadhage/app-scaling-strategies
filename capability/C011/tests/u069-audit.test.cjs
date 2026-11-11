@@ -7,9 +7,9 @@ const {test}=require('node:test');
 const {root}=require('./u069-loader.cjs');
 const {audit}=require('./u069-audit.cjs');
 const read=file=>fs.readFileSync(path.join(root,...file.split('/')));
-const report=JSON.parse(read('evidence/u069/current-report-v2.json'));
-const freeze=JSON.parse(read('evidence/current/source-freeze.json'));
-const capture=JSON.parse(read('evidence/current/records/u069-final-mutations.json'));
+const report=JSON.parse(read('evidence/u073/current/mutation-report.json'));
+const freeze=JSON.parse(read('evidence/u073/current/source-freeze.json'));
+const capture=JSON.parse(read('evidence/u073/current/records/U073-final-mutations.json'));
 const text=gunzipSync(read(capture.transcripts.stdout.path)).toString('utf8')
   +gunzipSync(read(capture.transcripts.stderr.path)).toString('utf8');
 test('U069 every final regenerated position has exact read/executed bytes and a real named assertion, explicit paired proof, or non-kill invalid witness',()=>{

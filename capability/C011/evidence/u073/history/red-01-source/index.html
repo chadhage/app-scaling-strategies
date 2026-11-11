@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C011 lease capacity and spend inspector</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+<h1>Who holds the capacity?</h1>
+<p>Synthetic capacity units and cost units, loopback HTTP only, no real spend. Every outcome below is derived from the HTTP status, the typed code and the shape and the numbers of the answer; this page only asks and shows.</p>
+
+<section aria-labelledby="tokens-title">
+<h2 id="tokens-title">1. Present the four synthetic tokens</h2>
+<p><label for="token-visitor">visitor token</label><br><input id="token-visitor" type="text" size="60" autocomplete="off" spellcheck="false"></p>
+<p><label for="token-conductor-a">conductor-a token</label><br><input id="token-conductor-a" type="text" size="60" autocomplete="off" spellcheck="false"></p>
+<p><label for="token-conductor-b">conductor-b token</label><br><input id="token-conductor-b" type="text" size="60" autocomplete="off" spellcheck="false"></p>
+<p><label for="token-operator">operator token</label><br><input id="token-operator" type="text" size="60" autocomplete="off" spellcheck="false"></p>
+<p><button id="run" type="button">Inspect every identity</button></p>
+</section>
+
+<section aria-labelledby="result-title">
+<h2 id="result-title">2. What each identity reached</h2>
+<p id="status" role="status">Not inspected yet. Nothing is shown as allowed until the server says so.</p>
+<table>
+<caption>One row per identity, action and target</caption>
+<thead>
+<tr><th scope="col">Identity</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">HTTP</th><th scope="col">Code</th><th scope="col">Outcome</th></tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+</section>
+
+<section aria-labelledby="books-title">
+<h2 id="books-title">3. The books, as the operator sees them and as each conductor reports its own share</h2>
+<table>
+<caption>Capacity units and cost units</caption>
+<thead>
+<tr><th scope="col">Figure</th><th scope="col">Capacity units</th><th scope="col">Cost units</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Pool total</th><td id="books-pool-units">&mdash;</td><td id="books-pool-spend">&mdash;</td></tr>
+<tr><th scope="row">Reserved</th><td id="books-reserved-units">&mdash;</td><td id="books-reserved-spend">&mdash;</td></tr>
+<tr><th scope="row">Free</th><td id="books-free-units">&mdash;</td><td id="books-free-spend">&mdash;</td></tr>
+<tr><th scope="row">Held by conductor-a</th><td id="books-a-units">&mdash;</td><td id="books-a-spend">&mdash;</td></tr>
+<tr><th scope="row">Held by conductor-b</th><td id="books-b-units">&mdash;</td><td id="books-b-spend">&mdash;</td></tr>
+<tr><th scope="row">The books balance</th><td id="books-balanced" colspan="2" data-balanced="unknown">&mdash;</td></tr>
+</tbody>
+</table>
+</section>
+</main>
+<script src="/page.js"></script>
+</body>
+</html>

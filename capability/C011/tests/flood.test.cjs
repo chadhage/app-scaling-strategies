@@ -7,29 +7,17 @@
 // stay close to the reference (a refused socket is not read on), the child's CPU time per socket stays within a ratio of the reference, the heap is
 // bounded. The naive keep-alive control fails the structure BY NAME. Event-loop lag is only reported.
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
 const http = require('node:http');
-const path = require('node:path');
+const {randomBytes}=require('node:crypto');
 const test = require('node:test');
 const { startChildTarget } = require('./targets.cjs');
 const { call } = require('./helpers.cjs');
+const {runAttack}=require('./u073-attack.cjs');
+const {problems:typedProblems,facts:typedFacts}=require('./u073-flood-oracle.cjs');
+const {expected}=require('./u073-flood-workload.cjs');
 
 const SOCKETS = 30;
 const MB = 1024 * 1024;
-
-function attack(port, limitMs) {
-  const env = { ...process.env };
-  delete env.NODE_TEST_CONTEXT;
-  delete env.NODE_V8_COVERAGE;
-  const child = spawn(process.execPath, [path.join(__dirname, 'attacker.cjs'), String(port), String(SOCKETS), String(limitMs)], { env, windowsHide: true });
-  const chunks = [];
-  child.stdout.on('data', (chunk) => chunks.push(chunk));
-  const watchdog = setTimeout(() => child.kill(), limitMs + 20000);
-  return new Promise((resolve, reject) => child.once('close', (code) => {
-    clearTimeout(watchdog);
-    try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); } catch { reject(new Error(`the attacker printed no report (exit ${code})`)); }
-  }));
-}
 
 async function until(check, label) {
   for (let turn = 0; turn < 20000; turn += 1) {
@@ -54,6 +42,7 @@ function neighbour(child) {
 }
 
 async function flood(mode, limitMs) {
+  const cohort='u073-'+randomBytes(12).toString('hex');
   const child = await startChildTarget('default', { mode, watchdogMs: limitMs + 90000 });
   const kept = mode === 'service' ? neighbour(child) : null;
   try {
@@ -61,9 +50,9 @@ async function flood(mode, limitMs) {
     const expected = mode === 'service' ? 200 : 400;
     assert.equal((await probe()).status, expected, `${mode} answers before the flood`);
     if (kept) assert.equal(await kept.once(), 200);
-    await child.stats(true);
+    await child.stats({flood:{cohort,sockets:SOCKETS}});
     const before = await child.stats();
-    const flooding = attack(child.port, limitMs);
+    const flooding = runAttack(child.port,SOCKETS,limitMs,cohort);
     const during = [];
     if (kept) for (let index = 0; index < 3; index += 1) during.push(await kept.once());
     const report = await flooding;
@@ -73,7 +62,7 @@ async function flood(mode, limitMs) {
     // very reading in which the child no longer counts it (rev-C010 M2: read at once, a child that is behind still counted it and the run failed under load).
     let settled = null;
     await until(async () => { settled = await child.stats(); return settled.connections === 0; }, `${mode} holds no connection after the neighbour's last request`);
-    return { mode, report, stats: settled, before, status: (await probe()).status, expected, during, afterKept };
+    return { mode, cohort,report, stats: settled, before, status: (await probe()).status, expected, during, afterKept };
   } finally {
     kept?.close();
     await child.close();
@@ -99,7 +88,19 @@ test(`a refusal flood from ANOTHER process (${SOCKETS} sockets, endless chunked 
   assert.deepEqual(violations(reference, reference), [], 'the bare reference satisfies the structure by construction');
   assert.deepEqual(violations(service, reference), []);
   assert.deepEqual([...service.during, service.afterKept], [200, 200, 200, 200], 'the neighbour on a kept-alive connection is served during and after the flood');
-  assert.ok(service.report.answered >= 1, 'some attackers saw a typed answer (a reset may discard the rest; the typed answers are proved without a race in the matrix)');
+  assert.deepEqual(typedProblems(service.stats.floodObservation,{cohort:service.cohort,sockets:SOCKETS}),[],
+    'U073 the same-flood actual server cohort writes every required typed response, independently of lossy client receipt');
+  const writes=typedFacts(service.stats.floodObservation);
+  assert.deepEqual(writes,{actualServerFrames:45,actualTypedTerminalWrites:30,
+    statuses:{200:15,401:15,404:4,405:4,414:4,421:3}},'exact counts come from thirty observed terminal requests and fifteen observed preceding GETs');
+  assert.deepEqual(service.stats.floodObservation.booksAfter,service.stats.floodObservation.booksBefore,'the actual same-flood books have no effect');
+  assert.equal(service.report.submitted,SOCKETS,'the attacker submitted or observed closure of every intended socket before its complete report');
+  for(const socket of service.report.sockets){
+    const plan=expected(socket.slot),allowed=plan.precedingPublicGet?[200,plan.status]:[plan.status];
+    assert.deepEqual(socket.retainedStatuses,allowed.slice(0,socket.retainedStatuses.length),'any retained client status is consistent; none is inferred from server closure');
+  }
+  t.diagnostic('U073_CAUSAL_SERVER_WRITES '+JSON.stringify({cohort:service.cohort,writes,clientRetainedTerminalReplies:service.report.answered,
+    serverBarrier:service.stats.floodObservation.barrier,oldClientMinimumPredicateUsed:false}));
   const found = violations(naive, reference);
   assert.ok(found.includes('SOCKETS_NOT_CLOSED_BY_THE_SERVER'), `the naive server was not detected: ${found}`);
   assert.equal(naive.report.timedOut, true);

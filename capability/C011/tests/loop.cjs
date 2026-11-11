@@ -2,13 +2,18 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawn,execFileSync } = require('node:child_process');
 const { gzipSync } = require('node:zlib');
 const { createHash } = require('node:crypto');
 const root = path.resolve(__dirname, '..', '..', '..');
 const out = process.env.C011_LOOP_OUTPUT;
 assert.ok(out && path.isAbsolute(out), 'an explicitly owned new loop output is required');
 assert.equal(fs.existsSync(out), false);
+const permission=JSON.parse(fs.readFileSync(process.env.U073_STRESS_RELEASE));
+assert.equal(permission.parentActuallyReleasedC014StressLane,true,'The independent loaded80 capture also waits for actual stress admission');
+assert.equal(permission.additionalLoaded80BurnersExplicitlyAdmitted,4,'Four loaded80 burners require separate explicit parent admission, never inferred from the resource64 release');
+const deadline=Date.parse(process.env.U073_CAPTURE_DEADLINE);
+assert.ok(Number.isFinite(deadline)&&deadline>Date.now(),'An explicit bounded invocation deadline is required');
 const directory = path.join(path.dirname(out), 'loop-original-streams');
 fs.mkdirSync(directory, { recursive: false });
 const families = ['flood', 'flood-pending', 'burst', 'pipeline-process-a', 'pipeline-process-b', 'pipeline-process-c'];
@@ -19,7 +24,7 @@ const burners = [];
 const reports = [];
 
 function once(index) {
-  const args = ['--test', '--test-concurrency=1', '--test-timeout=180000', ...families.map((name) => path.join('capability', 'C011', 'tests', name + '.test.cjs'))];
+  const args = ['--max-old-space-size=64','--max-semi-space-size=4','--test', '--test-concurrency=1', '--test-timeout=180000', ...families.map((name) => path.join('capability', 'C011', 'tests', name + '.test.cjs'))];
   return new Promise((resolve) => {
     const child = spawn(process.execPath, args, { cwd: root, env, windowsHide: true });
     const stdout = [];
@@ -49,10 +54,16 @@ function once(index) {
 (async () => {
   try {
     for (let index = 0; index < 4; index += 1) {
-      const child = spawn(process.execPath, ['-e', 'for (;;) {}'], { cwd: root, env, windowsHide: true, stdio: 'ignore' });
+      const child = spawn(process.execPath, ['--max-old-space-size=24','--max-semi-space-size=4','-e', 'for (;;) {}'], { cwd: root, env, windowsHide: true, stdio: 'ignore' });
       burners.push({ child, pid: child.pid, startedAtUtc: new Date().toISOString(), exited: new Promise((resolve) => child.once('exit', resolve)) });
     }
+    const filter=burners.map(burner=>'ProcessId='+burner.pid).join(' OR ');
+    const script="$ErrorActionPreference='Stop';@(Get-CimInstance Win32_Process -Filter '"+filter+"' | ForEach-Object { @{pid=$_.ProcessId;ppid=$_.ParentProcessId;creationUtc=$_.CreationDate.ToUniversalTime().ToString('o')} }) | ConvertTo-Json -Compress";
+    const native=JSON.parse(execFileSync('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-Command',script],{windowsHide:true,timeout:60000}).toString());
+    assert.deepEqual(native.map(row=>row.pid).sort((a,b)=>a-b),burners.map(row=>row.pid).sort((a,b)=>a-b));
+    for(const burner of burners)burner.nativeIdentity=native.find(row=>row.pid===burner.pid);
     for (let round = 0; round < 20; round += 1) {
+      assert.ok(Date.now()<deadline,'No new loaded round without the explicit invocation cleanup budget');
       const results = await Promise.all(Array.from({ length: 4 }, (_, column) => once(round * 4 + column + 1)));
       reports.push(...results);
       console.log('C011_LOAD_ROUND ' + JSON.stringify({ round: round + 1, total: reports.length,
@@ -64,7 +75,8 @@ function once(index) {
   }
   const bad = reports.filter((run) => run.code !== 0 || run.signal || run.timedOut || run.summary.fail !== 0 || run.summary.cancelled !== 0 || run.summary.skipped !== 0 || run.summary.tests <= 0);
   const report = { schema: 'C011-load-loop/1', rounds: 20, concurrency: 4, families,
-    burners: burners.map(({ pid, startedAtUtc }) => ({ pid, startedAtUtc, stopped: true })),
+    burners: burners.map(({ pid, startedAtUtc,nativeIdentity }) => ({ pid, startedAtUtc,nativeIdentity, stopped: true })),
+    actualParentStressRelease:permission,
     runs: reports, completed: reports.length, bad: bad.length, passed: reports.length === 80 && bad.length === 0 };
   fs.writeFileSync(out, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
   assert.equal(report.passed, true, 'every requested loaded repetition must pass; a timeout is never a structural success');
