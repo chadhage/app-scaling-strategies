@@ -1,0 +1,265 @@
+TAP version 13
+# Subtest: U045 bounds: the actual adapter factory records preserved 400 and clamped 1500 without an OS spawn
+not ok 1 - U045 bounds: the actual adapter factory records preserved 400 and clamped 1500 without an OS spawn
+  ---
+  duration_ms: 42.0026
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\execution-20261108-64927fc0\\scratch\\U045-qualify-residuals-20261111\\candidate\\testing\\browser\\qualify\\u045\\tests\\residuals.test.cjs:6:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    actual adapter construction must receive the resolved shell bounds
+    + actual - expected
+    
+    + []
+    - [
+    -   400,
+    -   1500
+    - ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 400
+    1: 1500
+  actual:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\U045-qualify-residuals-20261111\candidate\testing\browser\qualify\u045\tests\residuals.test.cjs:15:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: U045 structural sources: the current timeout and outer-bound tests depend on virtual counters, never child startup
+not ok 2 - U045 structural sources: the current timeout and outer-bound tests depend on virtual counters, never child startup
+  ---
+  duration_ms: 0.866
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\execution-20261108-64927fc0\\scratch\\U045-qualify-residuals-20261111\\candidate\\testing\\browser\\qualify\\u045\\tests\\residuals.test.cjs:18:1'
+  failureType: 'testCodeFailure'
+  error: 'timeouts.test.cjs must not decide its verdict by OS startup or elapsed time'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    'use strict';
+    
+    // N3 of the second review: the shell start (60 s) and the outer bound (90 s) were too tight for the worst moments of a shared
+    // machine and could only be changed in the API, with two coupled knobs. The defaults are larger and coherent (the shell
+    // bound stays below the outer bound), ONE override (option, command-line flag, environment variable) drives both, and a
+    // timeout can only ever make a check fail, never pass.
+    const assert = require('node:assert/strict');
+    const test = require('node:test');
+    const adapters = require('../adapters.cjs');
+    const qualify = require('../qualify.cjs');
+    const cli = require('../cli.cjs');
+    const { fixtureAdapters } = require('./support.cjs');
+    const { fakeShell } = require('./harness.cjs');
+    
+    // The fake shell hangs, but ends itself with exit code 3 after 12 s, so a missing bound shows up as a wrong reason, not as a leftover process.
+    const HANG = 'setTimeout(() => process.exit(3), 12000); setInterval(() => {}, 1000)';
+    const LIMIT = { timeout: 30000 };
+    const noShellAdapters = () => {
+      const { signature, fileVersion, ...rest } = fixtureAdapters();
+      return rest;
+    };
+    const sink = () => ({ text: '', write(chunk) { this.text += chunk; } });
+    const resolve = (options, env) => {
+      assert.equal(typeof qualify.resolveTimeouts, 'function', 'qualify.resolveTimeouts is missing');
+      return qualify.resolveTimeouts(options, env);
+    };
+    
+    test('the defaults are 240 s for every adapter call and 180 s for one PowerShell start, and the shell bound is the smaller one', () => {
+      assert.equal(qualify.DEFAULT_TIMEOUT_MS, 240000);
+      assert.equal(adapters.SHELL_TIMEOUT_MS, 180000);
+      assert.ok(adapters.SHELL_TIMEOUT_MS < qualify.DEFAULT_TIMEOUT_MS);
+      assert.equal(qualify.TIMEOUT_ENV, 'QUALIFY_TIMEOUT_MS');
+      assert.equal(qualify.MAX_TIMEOUT_MS, 1800000);
+      assert.deepEqual(resolve({}, {}), { ok: true, timeoutMs: 240000, shellTimeoutMs: 180000 });
+    });
+    
+    test('one knob drives both bounds: the shell bound is 75 percent of the outer bound, an explicit shell bound may only be smaller', () => {
+      assert.deepEqual(resolve({ timeoutMs: 8000 }, {}), { ok: true, timeoutMs: 8000, shellTimeoutMs: 6000 });
+      assert.deepEqual(resolve({ timeoutMs: 8000, shell: { timeoutMs: 2000 } }, {}), { ok: true, timeoutMs: 8000, shellTimeoutMs: 2000 });
+      assert.deepEqual(resolve({ timeoutMs: 8000, shell: { timeoutMs: 7900 } }, {}), { ok: true, timeoutMs: 8000, shellTimeoutMs: 6000 });
+      assert.deepEqual(resolve({ timeoutMs: 1 }, {}), { ok: true, timeoutMs: 1, shellTimeoutMs: 1 });
+    });
+    
+    test('the environment variable QUALIFY_TIMEOUT_MS sets the same two bounds, an option wins over it, and the name is case-insensitive', () => {
+      assert.deepEqual(resolve({}, { QUALIFY_TIMEOUT_MS: '8000' }), { ok: true, timeoutMs: 8000, shellTimeoutMs: 6000 });
+      assert.deepEqual(resolve({}, { qualify_timeout_ms: '12000' }), { ok: true, timeoutMs: 12000, shellTimeoutMs: 9000 });
+      assert.deepEqual(resolve({ timeoutMs: 4000 }, { QUALIFY_TIMEOUT_MS: '8000' }), { ok: true, timeoutMs: 4000, shellTimeoutMs: 3000 });
+    });
+    
+    test('a value that is not an integer number of milliseconds from 1 to 1800000 is refused by name, never guessed', () => {
+      for (const bad of ['', 'abc', '0', '-5', '1.5', '1e3', ' 8000', '8000 ', '0x10', '1800001', '99999999999', '８０００']) {
+        const result = resolve({}, { QUALIFY_TIMEOUT_MS: bad });
+        assert.equal(result.ok, false, JSON.stringify(bad));
+        assert.match(result.error, /^QUALIFY_TIMEOUT_MS must be an integer number of milliseconds from 1 to 1800000/, JSON.stringify(bad));
+      }
+      for (const bad of [0, -1, NaN, Infinity, 1.5, '5000', 1800001, null]) {
+        const result = resolve({ timeoutMs: bad }, {});
+        assert.equal(result.ok, false, String(bad));
+        assert.match(result.error, /^options\.timeoutMs must be an integer number of milliseconds from 1 to 1800000/, String(bad));
+      }
+      for (const bad of [0, -1, NaN, '100', 1.5]) {
+        const result = resolve({ timeoutMs: 5000, shell: { timeoutMs: bad } }, {});
+        assert.equal(result.ok, false, String(bad));
+        assert.match(result.error, /^options\.shell\.timeoutMs must be an integer number of milliseconds from 1 to 1800000/, String(bad));
+      }
+    });
+    
+    test('an invalid timeout is a typed failure before anything is asked, and no timeout ever makes a check pass', LIMIT, async () => {
+      let asked = 0;
+      const spy = fixtureAdapters({ candidates: () => { asked += 1; return []; } });
+      const report = await qualify.qualifyEdge({ timeoutMs: 0, adapters: spy });
+      assert.equal(report.ok, false);
+      assert.deepEqual(report.reasonCodes, ['QUALIFY_TIMEOUT_INVALID']);
+      assert.match(report.reasons[0], /^QUALIFY_TIMEOUT_INVALID: options\.timeoutMs must be an integer number of milliseconds/);
+      assert.equal(asked, 0);
+      const env = await qualify.qualifyEdge({ env: { QUALIFY_TIMEOUT_MS: 'soon' }, adapters: spy });
+      assert.deepEqual(env.reasonCodes, ['QUALIFY_TIMEOUT_INVALID']);
+      assert.equal(asked, 0);
+    });
+    
+    test('the option shortens both waits: a hung shell is ended at 75 percent of the outer bound and both answers time out', LIMIT, async () => {
+      const report = await qualify.qualifyEdge({ timeoutMs: 2000, shell: fakeShell(HANG), adapters: noShellAdapters() });
+      assert.equal(report.ok, false);
+      assert.deepEqual(report.reasonCodes, ['SIGNATURE_TIMEOUT', 'VERSION_TIMEOUT']);
+      assert.match(report.reasons[0], /the shell did not answer within 1500 ms and was ended/);
+    });
+    
+    test('an explicit shell bound below the outer bound is kept, one above it is clamped so that the outer bound never fires first', LIMIT, async () => {
+      const small = await qualify.qualifyEdge({ timeoutMs: 3000, shell: { ...fakeShell(HANG), timeoutMs: 400 }, adapters: noShellAdapters() });
+      assert.match(small.reasons[0], /the shell did not answer within 400 ms and was ended/);
+      const large = await qualify.qualifyEdge({ timeoutMs: 2000, shell: { ...fakeShell(HANG), timeoutMs: 60000 }, adapters: noShellAdapters() });
+      assert.match(large.reasons[0], /the shell did not answer within 1500 ms and was ended/);
+    });
+    
+    test('the environment variable reaches the PowerShell bound through qualifyEdge()', LIMIT, async () => {
+      const report = await qualify.qualifyEdge({ env: { QUALIFY_TIMEOUT_MS: '2000' }, shell: fakeShell(HANG), adapters: noShellAdapters() });
+      assert.match(report.reasons[0], /the shell did not answer within 1500 ms and was ended/);
+    });
+    
+    test('the command line has one flag, --timeout-ms <n>, that is validated and handed to the check and to the requalification', async () => {
+      const parsed = cli.parseArgs(['--timeout-ms', '12000', '--requalify']);
+      assert.equal(parsed.error, undefined);
+      assert.equal(parsed.options.timeoutMs, 12000);
+      assert.equal(cli.parseArgs([]).options.timeoutMs, null);
+      for (const argv of [['--timeout-ms'], ['--timeout-ms', '--requalify'], ['--timeout-ms', 'abc'], ['--timeout-ms', '0'], ['--timeout-ms', '1800001'], ['--timeout-ms', '5', '--timeout-ms', '6']]) {
+        const bad = cli.parseArgs(argv);
+        assert.equal(typeof bad.error, 'string', argv.join(' '));
+        assert.match(bad.error, /--timeout-ms/, argv.join(' '));
+      }
+      const seen = [];
+      const report = { ok: true, version: '1.0.0.0', path: 'p', major: 1, sha256: 's', signature: { publisher: 'Microsoft Corporation' } };
+      const io = (extra) => ({ stdout: sink(), stderr: sink(), qualifyOptions: { marker: 1 }, qualify: async (options) => { seen.push(options); return report; }, requalify: async (options) => { seen.push(options.qualifyOptions); return report; }, ...extra });
+      assert.equal(await cli.main(['--timeout-ms', '9000'], io()), 0);
+      assert.equal(await cli.main(['--requalify', '--timeout-ms', '9000'], io()), 0);
+      assert.equal(await cli.main([], io()), 0);
+      assert.deepEqual(seen, [{ marker: 1, timeoutMs: 9000 }, { marker: 1, timeoutMs: 9000 }, { marker: 1 }]);
+    });
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\U045-qualify-residuals-20261111\candidate\testing\browser\qualify\u045\tests\residuals.test.cjs:24:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: U045 documentation: current help and source state the clock exception and README disclaims authenticity
+not ok 3 - U045 documentation: current help and source state the clock exception and README disclaims authenticity
+  ---
+  duration_ms: 4.7571
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\execution-20261108-64927fc0\\scratch\\U045-qualify-residuals-20261111\\candidate\\testing\\browser\\qualify\\u045\\tests\\residuals.test.cjs:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /clock.*(?:exception|except|may).*checkedAtUtc.*null/i. Input:
+    
+    'Usage: node testing\\browser\\qualify\\qualify.cjs [--json <out>] [--timeout-ms <n>] [--requalify [--slot-script <heavy-slot.ps1> --slot-owner <name>]]\n' +
+      '  --json <out>     also write the JSON report to <out>; checked before anything runs: never overwrites, no reserved device name,\n' +
+      '                   trailing dot or space, colon after the drive letter or UNC path, and the folder must exist\n' +
+      '  --timeout-ms <n> every adapter call may take n ms (1 to 1800000; default 240000); the one PowerShell start is ended at 75 percent of it;\n' +
+      '                   the environment variable QUALIFY_TIMEOUT_MS sets the same value, the flag wins; a timeout fails the check, it never passes it\n' +
+      '  --requalify      run testing\\browser\\isolated.test.cjs and loopback.test.cjs on the installed Edge and record the counts\n' +
+      '  --slot-script    with --requalify: take a heavy-run slot through this PowerShell script (-Action Acquire|Release -Owner <name>)\n' +
+      '  stdout is the JSON report, stderr one verdict line (usage errors print this text); exit 0 qualified, 1 fails closed, 2 usage\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Usage: node testing\browser\qualify\qualify.cjs [--json <out>] [--timeout-ms <n>] [--requalify [--slot-script <heavy-slot.ps1> --slot-owner <name>]]
+      --json <out>     also write the JSON report to <out>; checked before anything runs: never overwrites, no reserved device name,
+                       trailing dot or space, colon after the drive letter or UNC path, and the folder must exist
+      --timeout-ms <n> every adapter call may take n ms (1 to 1800000; default 240000); the one PowerShell start is ended at 75 percent of it;
+                       the environment variable QUALIFY_TIMEOUT_MS sets the same value, the flag wins; a timeout fails the check, it never passes it
+      --requalify      run testing\browser\isolated.test.cjs and loopback.test.cjs on the installed Edge and record the counts
+      --slot-script    with --requalify: take a heavy-run slot through this PowerShell script (-Action Acquire|Release -Owner <name>)
+      stdout is the JSON report, stderr one verdict line (usage errors print this text); exit 0 qualified, 1 fails closed, 2 usage
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\U045-qualify-residuals-20261111\candidate\testing\browser\qualify\u045\tests\residuals.test.cjs:34:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U045 append: an actual injected EPERM then EBUSY retries the same append and succeeds on the third rename
+not ok 4 - U045 append: an actual injected EPERM then EBUSY retries the same append and succeeds on the third rename
+  ---
+  duration_ms: 10.8349
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\execution-20261108-64927fc0\\scratch\\U045-qualify-residuals-20261111\\candidate\\testing\\browser\\qualify\\u045\\tests\\residuals.test.cjs:43:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a suite did not pass every test (isolated.test.cjs)
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\U045-qualify-residuals-20261111\candidate\testing\browser\qualify\u045\tests\residuals.test.cjs:55:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: U045 append: exhausted transient renames have a fixed attempt bound and a typed refusal
+not ok 5 - U045 append: exhausted transient renames have a fixed attempt bound and a typed refusal
+  ---
+  duration_ms: 7.6661
+  type: 'test'
+  location: 'C:\\Users\\chhage\\repos\\app-scaling-strategies\\.git\\kanban-orchestrator\\execution-20261108-64927fc0\\scratch\\U045-qualify-residuals-20261111\\candidate\\testing\\browser\\qualify\\u045\\tests\\residuals.test.cjs:64:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    at most three actual rename attempts, not unbounded retries
+    
+    0 !== 3
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 3
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\chhage\repos\app-scaling-strategies\.git\kanban-orchestrator\execution-20261108-64927fc0\scratch\U045-qualify-residuals-20261111\candidate\testing\browser\qualify\u045\tests\residuals.test.cjs:72:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 0
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 202.3504
