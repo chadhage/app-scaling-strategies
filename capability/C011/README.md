@@ -1,4 +1,61 @@
-# C011 bounded reservations; U073 causal flood-oracle amendment
+# C011 bounded reservations; U074 parser-complete mutation domain
+
+U074 changes test/generator/parser-inventory/evidence authority, not the seven
+application production modules or `imports.json`. The published U073 source
+`11372fbdf027a2db5f084412bf0384fc2cf5abbe` remains exact in a typed historical
+role: its 1,839 genuine outcomes are **additional lexical operator proof**, not
+an exhaustive statement inventory.
+
+The immutable parser is Node `v22.23.4`'s already-bundled Acorn `8.16.0`,
+`internal/deps/acorn/acorn/dist/acorn`, source SHA-256
+`e10ec115cb48101e961e2bb8352fa3dd3cb6422375ebdaab7b64f5e9548d380d`.
+Its exact source is executed unchanged in an owned parser context; an unknown
+runtime/module hash is NONPASS, never installation or fallback.
+
+Two independently written AST traversals enumerate the actual seven files.
+The current domain has 893 statement/declaration nodes and 541 condition spans.
+Declarations, returns, throws, breaks/continues, function/block bodies and loop
+header declarations are not excluded. Conditions include branch/loop/ternary/
+switch tests, whole logical expressions and either operand, every comparison,
+negation and boolean literal anywhere (including arrow predicates and returns).
+Nullish sites additionally force null and present outcomes. UTF-16 offsets and
+byte offsets are distinguished explicitly.
+
+The 4,363 current positions include that complete AST domain plus the retained
+lexical extras; duplicate semantic transformations do not create credit.
+Syntactically invalid constructions and unchanged identities remain explicit
+NON-kills. A compiled production declaration that changes initialization is
+tested against a real named public-module initialization/export contract only
+after pinned modules and an identical-environment pristine control pass.
+Runtime JSON-data rejection is not confused with VM/parser compilation failure.
+
+Actual AST reach markers and finite-input work counters are validation-only
+observations; hashes distinguish original read bytes from instrumented executed
+bytes. Page validators are observed in their actual owned VM, not reimplemented.
+The bounded Node test-event reporter preserves every named result/error code;
+its original output is not falsely described as full default-TAP stack text.
+A survivor needs a specific runnable source-exact paired domain, not a default
+test pass or a reachability sentence. Final outcome counts are recomputed by
+`tests\u074-audit.cjs` from the sealed current report and original event streams.
+
+The parent's unchanged missing-Set assertion is replayed with explicit
+`U074_SOURCE` and `U074_INVENTORY_REPORT`: the canonical source is unchanged and
+the report contains all current positions, not a tailored single declaration.
+Original core chronology remains uncertified; old job146, the360 groups and
+the explicitly versioned wrong client minimum remain historical, unrewritten.
+The new physical-namespace authority is `evidence/u074/current/`; all original
+7,005 published files are independently verified through their exact historical
+roles, and the actual current namespace receives a separate whole exact-set seal.
+
+Use `node capability\C011\tests\suite.cjs core` or `final` with a fresh explicitly
+owned `C011_ASSERTION_DIR`. The900s test-file watchdog is a bounded failure
+control, never a latency/performance success or mutation kill. Coverage remains
+the seven separate85/85/85 whole-file commands in `tests\coverage.cjs`; native
+replay uses the existing signed/qualified Edge157 helper and approved cached
+Playwright1.56.1, with exact owned success/failure cleanup. No producer, browser
+policy, cloud/Entra/deployment or spend authority is changed.
+
+## Retained U073 causal flood amendment
 
 U073 changes only test fixtures, the oracle, documentation and new evidence
 authority. The seven application production files and `imports.json` remain
