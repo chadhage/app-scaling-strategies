@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Low-interruption promotion walkthrough | App Scaling Strategies</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/slot-promotion.css">
+  <script src="assets/slot-promotion.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="layout">
+  <nav class="toc" aria-label="On this page">
+    <p class="toc-title">On this page</p>
+    <ol>
+      <li><a href="index.html">← Repository explainer</a></li>
+      <li><a href="#walkthrough">Interactive walkthrough</a></li>
+      <li><a href="#timing">Timing and evidence</a></li>
+      <li><a href="#scenarios">Related scenarios and sources</a></li>
+    </ol>
+  </nav>
+  <main id="main">
+    <header class="page-header">
+      <p class="kicker"><a href="index.html#use-example">Repository explainer / S001 example</a></p>
+      <h1>Low-interruption promotion, event by event</h1>
+      <p class="lede">Choose an architecture component to promote. Compare an App Service–managed native swap where supported with a GitHub Actions–orchestrated, user-managed handoff, including traffic, data and retirement gates.</p>
+      <div class="note status" role="note">
+        <p class="note-title">Illustration, not an execution or a benchmark</p>
+        <p>Offsets and estimated ranges are illustrative, not measurements, forecasts or platform guarantees. Some durations are labeled as actual settings or fixed limits in the demo source; those are not observed elapsed times. Real operations vary; low interruption is an objective, not a guarantee. Never retire a resource merely because an example clock has elapsed.</p>
+      </div>
+    </header>
+    <section id="walkthrough" class="doc-section" aria-labelledby="walkthrough-heading">
+      <h2 id="walkthrough-heading">Interactive walkthrough <span class="tag ed">Editorial</span></h2>
+      <div class="mode-controls" role="group" aria-label="Select promotion method">
+        <button type="button" class="mode" data-mode="native" aria-pressed="true" aria-describedby="promotion-capability">App Service managed swap</button>
+        <button type="button" class="mode" data-mode="managed" aria-pressed="false">GitHub Actions + controlled handoff</button>
+      </div>
+      <p id="method-description"></p>
+      <fieldset id="architecture-options" class="architecture-options">
+        <legend>Configure the example architecture</legend>
+        <p id="architecture-help">Select components, edit their example connections and choose any selected component to promote. Optional tiers and their handoffs are conceptual additions, not part of the demo. Selections do not inspect or provision resources or change the demo workflow.</p>
+        <div class="component-options" aria-describedby="architecture-help">
+          <label><input id="architecture-spa" type="checkbox"> Front-end SPA (App Service)</label>
+          <label><input id="architecture-gateway" type="checkbox"> Azure Application Gateway</label>
+          <label><input id="architecture-apim" type="checkbox"> Azure API Management (APIM)</label>
+          <label><input id="architecture-bff" type="checkbox"> Backend for Frontend (BFF)</label>
+          <label><input id="architecture-postgres" type="checkbox"> Azure Database for PostgreSQL Flexible Server</label>
+          <label><input id="architecture-redis" type="checkbox"> Azure Managed Redis</label>
+          <label>Microservices
+            <select id="architecture-services">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+        </div>
+        <div class="architecture-wiring">
+          <p>Connections below are editable example assumptions, not discovered Azure configuration. Uncheck a connection if the component is not on that service's path.</p>
+          <div class="component-options">
+            <label>Promotion target
+              <select id="architecture-target">
+                <option value="1">Microservice 1</option>
+                <option value="2">Microservice 2</option>
+                <option value="3">Microservice 3</option>
+                <option value="spa" hidden disabled>Front-end SPA (App Service)</option>
+                <option value="gateway" hidden disabled>Application Gateway</option>
+                <option value="apim" hidden disabled>API Management</option>
+                <option value="bff" hidden disabled>Backend for Frontend</option>
+                <option value="postgres" hidden disabled>Azure Database for PostgreSQL Flexible Server</option>
+                <option value="redis" hidden disabled>Azure Managed Redis</option>
+              </select>
+            </label>
+            <label id="bff-host-option" hidden>BFF host
+              <select id="architecture-bff-host">
+                <option value="other">Other / unspecified</option>
+                <option value="appservice">App Service (slot-capable plan)</option>
+              </select>
+            </label>
+            <label id="spa-gateway-option" hidden><input id="wire-spa-gateway" type="checkbox" checked> Route SPA delivery through Application Gateway</label>
+            <label id="bff-order-option" hidden>When both are on an API path
+              <select id="architecture-bff-order">
+                <option value="after">APIM before BFF</option>
+                <option value="before">BFF before APIM</option>
+              </select>
+            </label>
+          </div>
+          <p id="promotion-capability" aria-live="polite"></p>
+          <div id="service-connections"></div>
+        </div>
+      </fieldset>
+      <div class="tool walkthrough-card">
+        <div class="event-heading"><div><p class="kicker" id="phase"></p><h3 id="event-title"></h3></div><div class="clock"><span>Example offset</span><strong id="offset"></strong><small id="duration"></small></div></div>
+        <p id="event-detail" aria-live="polite"></p>
+        <div class="timing-control"><strong>Duration control</strong><p id="event-timing-control"></p></div>
+        <div class="diagram" role="img" aria-labelledby="diagram-title diagram-state">
+          <strong id="diagram-title">Illustrative traffic and release identities</strong>
+          <p id="diagram-state" class="sr-only"></p>
+          <div class="diagram-grid">
+            <div class="node"><span class="node-label" id="client-label">Users</span><b id="client-name">Stable endpoint</b><small id="client-detail">Representative journeys</small></div>
+            <div class="node"><span class="node-label">Traffic</span><b id="router-label"></b><small id="router-detail"></small></div>
+            <div class="destinations">
+              <div id="old-node" class="node destination"><span class="node-label" id="old-name"></span><b id="old-release"></b><small id="old-state"></small></div>
+              <div id="new-node" class="node destination"><span class="node-label" id="new-name"></span><b id="new-release"></b><small id="new-state"></small></div>
+            </div>
+          </div>
+        </div>
+        <div class="gate"><strong>Gate / failure path</strong><p id="gate"></p></div>
+        <div class="play-controls">
+          <button type="button" id="previous">← Previous event</button>
+          <button type="button" class="btn" id="play">▶ Play</button>
+          <button type="button" id="next">Next event →</button>
+          <span id="counter"></span>
+        </div>
+        <p class="play-note">Playback uses a fixed 2-second delay per event for readability; it is not synchronized to the example offsets.</p>
+        <section class="diagram architecture" aria-labelledby="architecture-title">
+          <h4 id="architecture-title">Selected architecture</h4>
+          <p id="architecture-summary"></p>
+          <div id="architecture-paths"></div>
+          <p id="unlinked-components"></p>
+          <p class="architecture-check"><strong>What to verify at this event</strong></p>
+          <ul id="architecture-checks"></ul>
+          <h4 id="component-timing-heading">Timing controls for selected components</h4>
+          <p>A configurable timeout or policy is a limit or waiting period, not the actual elapsed operation time. Configure it in the named service, application or workflow—not on this page. Only selected components are shown.</p>
+          <div class="table-wrap" role="region" aria-labelledby="component-timing-heading" tabindex="0">
+            <table class="component-timing-table">
+              <thead><tr><th scope="col">Component</th><th scope="col">Configurable duration or policy</th><th scope="col">Not directly configurable</th></tr></thead>
+              <tbody id="component-timing"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <h3 id="events-heading">Event-by-event timeline</h3>
+      <p>Example elapsed offsets start at the beginning of each illustration; they are illustrative milestones, not calculated by adding the displayed duration ranges. Select any row for details. Each duration is identified as an illustrative estimate or a demo setting; the control column identifies what can be adjusted outside this page. Some operations can overlap.</p>
+      <div class="table-wrap" role="region" aria-labelledby="events-heading" tabindex="0">
+        <table class="event-table">
+          <thead><tr><th scope="col">Example offset</th><th scope="col">Event</th><th scope="col">Duration / provenance</th><th scope="col">Duration control</th></tr></thead>
+          <tbody id="events"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="timing" class="doc-section">
+      <h2>Timing and evidence</h2>
+      <p>The examples omit unbounded queue and approval delays. Readiness, staged observation, long-running work and a rollback window dominate real schedules. Drain may overlap traffic migration; retention is a policy decision, not an automated deadline. Changing the promotion target selects a corresponding illustration; example connections do not change its timings or playback speed.</p>
+      <p>Capture actual client timestamps and correlation IDs, control-plane responses, release identities, readiness checks, routing observations and in-flight work. Client clocks and service clocks can differ. The demo’s 2-second retention is a synthetic experiment, not a production recommendation.</p>
+    </section>
+    <section id="scenarios" class="doc-section">
+      <h2>Related scenarios and sources</h2>
+      <ul>
+        <li><a href="index.html#use-example">S001: warm, overlapping blue-green handoff</a>; <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#a-deployment-and-traffic-migration-strategies">S002: prepared native slot swap; S003: progressive canary</a>.</li>
+        <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#e-in-flight-requests-and-long-lived-work">S041: in-flight HTTP</a>; <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#j-failure-containment-and-rollback">S092: rollback</a>; <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#k-networking-configuration-and-edge-routing">S101: stable endpoint</a>; <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/README.md#o-demonstration-and-acceptance-testing">S148: actual migration evidence</a>.</li>
+        <li><a href="https://github.com/chadhage/app-scaling-strategies/blob/main/demo/README.md">Demo experiments, actual limits and teardown</a> · <a href="https://github.com/chadhage/app-scaling-strategies/blob/main/.github/workflows/azure-demo.yml">GitHub Actions workflow</a> · <a href="https://learn.microsoft.com/azure/app-service/deploy-staging-slots#understand-what-happens-during-a-swap">Microsoft Learn: swap operation steps</a>.</li>
+        <li><a href="https://learn.microsoft.com/azure/application-gateway/configuration-http-settings">Application Gateway timeouts and draining</a> · <a href="https://learn.microsoft.com/azure/api-management/forward-request-policy">APIM forwarding timeouts</a> · <a href="https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-server-parameters">Azure PostgreSQL parameters</a> · <a href="https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-STATEMENT-TIMEOUT">PostgreSQL statement timeout</a> · <a href="https://learn.microsoft.com/azure/redis/best-practices-connection">Azure Managed Redis client timeouts</a>.</li>
+        <li><a href="https://learn.microsoft.com/azure/api-management/api-management-revisions">APIM API revisions</a> · <a href="https://learn.microsoft.com/azure/application-gateway/configuration-overview">Application Gateway configuration</a> · <a href="https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-read-replicas">PostgreSQL asynchronous replicas</a> and <a href="https://learn.microsoft.com/azure/postgresql/read-replica/concepts-read-replicas-promote">planned promotion</a> · <a href="https://learn.microsoft.com/azure/redis/migrate/migrate-overview">Redis migration overview</a>.</li>
+      </ul>
+      <p>Slots share App Service plan capacity. A zero-percent staging endpoint still needs access protection. A native swap may recycle former production workers, abandoning in-flight work; the previous release is then in the source slot, not the production slot. External routing improves control but does not prevent platform restarts.</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>
