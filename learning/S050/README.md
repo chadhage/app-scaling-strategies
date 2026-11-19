@@ -6,7 +6,7 @@ A-S050 · D-S050 · SC-S050 · frozen Kano S · owner `worker-A-S050`.
 
 The exact [S050 source](../../README.md#e-in-flight-requests-and-long-lived-work)
 requires keeping the old destination usable until remaining traffic is accounted for.
-The [D-S050 backlog](../../.docs/wiki/backlog.md#e-in-flight-requests-and-long-lived-work)
+The [D-S050 backlog](../../meta/wiki/backlog.md#e-in-flight-requests-and-long-lived-work)
 adds stale keep-alive/pinned clients, a dependency viewer, and blocking or explicitly
 counting premature retirement as interruption. The portable A card specifically
 requires exposing remaining stale connections/cookies. These inputs and the

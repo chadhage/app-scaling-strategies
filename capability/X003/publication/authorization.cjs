@@ -87,7 +87,7 @@ if (require.main === module) {
   const [mode, ledgerPath, publisherPath] = process.argv.slice(2);
   assert.equal(mode, '--verify-live');
   const repository = path.resolve(__dirname, '..', '..', '..');
-  assert.equal(path.resolve(ledgerPath), path.join(repository, '.docs', 'wiki', 'flow-state.json'));
+  assert.equal(path.resolve(ledgerPath), path.join(repository, 'meta', 'wiki', 'flow-state.json'));
   assert.equal(path.resolve(publisherPath), path.join(repository, '.git', 'kanban-orchestrator', 'publish.ps1'));
   const proof = verifyAuthority(JSON.parse(fs.readFileSync(ledgerPath)), fs.readFileSync(publisherPath));
   process.stdout.write(`${JSON.stringify(proof)}\n`);

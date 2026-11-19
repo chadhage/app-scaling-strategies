@@ -80,9 +80,9 @@ function captureSources() {
   const rows = {};
   for (const [key, sourceName, row] of [
     ['readme', 'README.md', manifest.sourceContract.readmeRow],
-    ['backlog', path.join('.docs', 'wiki', 'backlog.md'), manifest.sourceContract.backlogRow],
-    ['portable', path.join('.docs', 'wiki', 'kanban.md'), manifest.sourceContract.portableRow],
-    ['native', path.join('.docs', 'wiki', 'kanban.md'), manifest.sourceContract.nativeSiblingRow],
+    ['backlog', path.join('meta', 'wiki', 'backlog.md'), manifest.sourceContract.backlogRow],
+    ['portable', path.join('meta', 'wiki', 'kanban.md'), manifest.sourceContract.portableRow],
+    ['native', path.join('meta', 'wiki', 'kanban.md'), manifest.sourceContract.nativeSiblingRow],
   ]) {
     const file = path.join(root, sourceName);
     const bytes = fs.readFileSync(file);

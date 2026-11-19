@@ -28,7 +28,7 @@ const MUTANTS = [
   ['M11', 'invalid-arguments code changed', "code: 'INVALID_ARGUMENTS',", "code: 'INVALID_ARGUMENT',"],
   ['M12', 'invalid-arguments answer drops the guard reasons', '}, ...denied.reasons]', '}]'],
   ['M13', 'command line runs on require', 'if (require.main === module) {', 'if (true) {'],
-  ['M14', 'wrong ledger file name', "'.docs', 'wiki', 'flow-state.json'", "'.docs', 'wiki', 'flow-state.jsn'"],
+  ['M14', 'wrong ledger file name', "'meta', 'wiki', 'flow-state.json'", "'meta', 'wiki', 'flow-state.jsn'"],
   ['M15', 'missing approvals section throws', 'state && state.approvals && state.approvals.C001', 'state.approvals.C001'],
   ['M16', 'module export not frozen', 'module.exports = Object.freeze({ evaluateCurrentApproval });', 'module.exports = { evaluateCurrentApproval };'],
   ['M17', 'decision printed compact', 'JSON.stringify(decision, null, 2)', 'JSON.stringify(decision)']

@@ -55,7 +55,7 @@ $results = [Collections.Generic.List[object]]::new()
 foreach ($case in $cases) {
     $fixture = Join-Path $fixtures $case.name
     $target = Join-Path $fixture 'capability\C045\consent.ps1'
-    $ledger = Join-Path $fixture '.docs\wiki\flow-state.json'
+    $ledger = Join-Path $fixture 'meta\wiki\flow-state.json'
     [IO.Directory]::CreateDirectory((Split-Path -Parent $target)) | Out-Null
     [IO.Directory]::CreateDirectory((Split-Path -Parent $ledger)) | Out-Null
     [IO.File]::WriteAllBytes($target, [IO.File]::ReadAllBytes($sourceFile))
@@ -72,7 +72,7 @@ foreach ($case in $cases) {
     $json = $state | ConvertTo-Json -Depth 20 -Compress
     if ($case.mode -eq 'malformed') { $json = '{"cards":[' }
     if ($case.mode -eq 'full') {
-        $actualLedger = Join-Path ([IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $sourceFile) '..\..'))) '.docs\wiki\flow-state.json'
+        $actualLedger = Join-Path ([IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $sourceFile) '..\..'))) 'meta\wiki\flow-state.json'
         $json = [IO.File]::ReadAllText($actualLedger)
     }
     [IO.File]::WriteAllText($ledger, $json, [Text.UTF8Encoding]::new($false))

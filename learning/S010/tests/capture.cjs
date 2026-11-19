@@ -1,5 +1,6 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -94,7 +95,7 @@ const record = {
   startedAtUtc, finishedAtUtc: new Date().toISOString(), nodeVersion: process.version,
   nodeExecutable: process.execPath, productionNode24Validated: false,
   commands, sourceHashes, sourceDocHashes: Object.fromEntries(sourceDocs.map((file) =>
-    [file, sha(path.join(repo, file))])),
+    [file, sha(workingSourcePath(repo, file))])),
   behavioralRed: phase === 'red' ? {
     loadableStubSyntaxExitCode: commands[0].exitCode,
     actualTestExitCode: commands[1].exitCode,

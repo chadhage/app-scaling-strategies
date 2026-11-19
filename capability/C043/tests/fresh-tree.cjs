@@ -16,7 +16,7 @@ const options = Object.fromEntries(process.argv.slice(2).map((argument) => { con
 const into = options.into ? path.resolve(options.into) : null;
 const SKIP = new Set((options.skip ?? 'mutants.test.cjs').split(','));
 const ONLY = options.only ? new Set(options.only.split(',')) : null;
-const IMPORTED = ['capability/C042', 'capability/C001', '.docs/wiki/flow-state.json'];
+const IMPORTED = ['capability/C042', 'capability/C001', 'meta/wiki/flow-state.json'];
 
 function fail(message) {
   console.error(message);
@@ -48,7 +48,7 @@ fs.cpSync(path.join(repository, 'capability', 'C043'), path.join(into, 'capabili
   recursive: true,
   filter: (source) => !/[\\/]C043[\\/](?:data|tests[\\/]scratch)(?:[\\/]|$)/.test(source),
 });
-const converted = options.crlf ? ['capability/C042', 'capability/C001', '.docs'].reduce((total, name) => total + toCrlf(path.join(into, name)), 0) : 0;
+const converted = options.crlf ? ['capability/C042', 'capability/C001', 'meta'].reduce((total, name) => total + toCrlf(path.join(into, name)), 0) : 0;
 
 const tests = fs.readdirSync(path.join(into, 'capability', 'C043', 'tests')).filter((name) => name.endsWith('.test.cjs') && !SKIP.has(name) && (ONLY === null || ONLY.has(name))).sort()
   .map((name) => path.join('capability', 'C043', 'tests', name));

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
@@ -50,7 +52,7 @@ function source() {
   ];
   const entries = descriptors.map(([name, file, extract]) => {
     const gitPath = file.split(path.sep).join('/');
-    const raw = extract(fs.readFileSync(path.join(repo, file)));
+    const raw = extract(fs.readFileSync(workingSourcePath(repo, file)));
     const blob = git('show', `${commit}:${gitPath}`);
     const exactGit = extract(blob);
     if (!canonical(raw).equals(exactGit)) throw new Error(`Semantic source mismatch: ${name}`);
@@ -64,7 +66,7 @@ function source() {
   const helperGit = git('show', `${helperCommit}:testing/browser/isolated.cjs`);
   if (hash(helper) !== '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055'
       || !canonical(helper).equals(helperGit)) throw new Error('Unqualified shared browser helper');
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const card = ledger.cards.find(entry => entry.id === 'A-S107');
   if (card?.owner !== 'worker-A-S107' || card.state !== 'In Progress' || card.kano !== 'S'
       || card.packet !== 'SC-S107') throw new Error('Claim or frozen unit mismatch');

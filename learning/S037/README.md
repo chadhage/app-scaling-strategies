@@ -99,8 +99,8 @@ serializer transitions and rollback evidence on a qualified host.
 The relevant To Do boundary is to retain that genuinely gated native remainder;
 do not create a second test, refinement or plumbing credit for this one lesson.
 The [source README S037](../../README.md#d-sessions-authentication-and-user-state),
-[D-S037 acceptance](../../.docs/wiki/backlog.md#d-sessions-authentication-and-state)
-and [portable A-card contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract)
+[D-S037 acceptance](../../meta/wiki/backlog.md#d-sessions-authentication-and-state)
+and [portable A-card contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract)
 remain authoritative.
 
 Provided “AS IS” for education, without warranties or guarantees. References to

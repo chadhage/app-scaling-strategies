@@ -1,0 +1,483 @@
+# Web Demonstration Harness Backlog
+
+## Purpose and scope
+
+Implement a browser-accessible demonstration harness for the strategies and scenarios in [README.md](../../README.md). An interested party must be able to discover a demo, understand its prerequisites, conduct it through a web UI, observe real outcomes, and reset or export the run without installing Azure CLI, kubectl, or application-development tools.
+
+Atomic delivery cards, Kano completion rules, and the three-column pull policy are in [kanban.md](kanban.md).
+
+Source baseline: [README.md at commit a1411c1](https://github.com/chadhage/app-scaling-strategies/blob/a1411c1fd7b081e7772db0ac96eb61d697452c86/README.md).
+
+This backlog contains:
+
+- 12 shared harness stories, H001-H012.
+- 7 platform and fixture enablers, P001-P007.
+- 150 individually selectable scenario-demo stories, D-S001 through D-S150, mapped one-to-one to S001-S150 in the source.
+- 2 integrated guided demonstrations, W001-W002, covering deployment rings and side-by-side getProfile version promotion.
+
+All 171 items are **Planned**. This document does not implement the harness, provision resources, or establish a reliability guarantee.
+
+The source catalog includes deployment strategies, supporting capabilities, failure-injection scenarios, and acceptance tests. Preserve all 150 entries as distinct runnable demonstrations rather than incorrectly treating every entry as a separate deployment mechanism.
+
+## TOC
+
+- [Experience and access model](#experience-and-access-model)
+- [Shared definition of done](#shared-definition-of-done)
+- [Priorities and dependencies](#priorities-and-dependencies)
+- [Shared harness stories](#shared-harness-stories)
+- [Platform and fixture enablers](#platform-and-fixture-enablers)
+- [Scenario-demo backlog](#scenario-demo-backlog)
+  - [A. Deployment and traffic migration](#a-deployment-and-traffic-migration)
+  - [B. Capacity scaling](#b-capacity-scaling)
+  - [C. Readiness and warm-up](#c-readiness-and-warm-up)
+  - [D. Sessions, authentication, and state](#d-sessions-authentication-and-state)
+  - [E. In-flight requests and long-lived work](#e-in-flight-requests-and-long-lived-work)
+  - [F. N-tier and version compatibility](#f-n-tier-and-version-compatibility)
+  - [G. Database and persistent data](#g-database-and-persistent-data)
+  - [H. Caches, queues, and workers](#h-caches-queues-and-workers)
+  - [I. State machine and orchestration](#i-state-machine-and-orchestration)
+  - [J. Failure containment and rollback](#j-failure-containment-and-rollback)
+  - [K. Networking, configuration, and routing](#k-networking-configuration-and-routing)
+  - [L. Zones, regions, and failure domains](#l-zones-regions-and-failure-domains)
+  - [M. Hosting-model-specific demonstrations](#m-hosting-model-specific-demonstrations)
+  - [N. Complete end-user journeys](#n-complete-end-user-journeys)
+  - [O. Demonstration and acceptance testing](#o-demonstration-and-acceptance-testing)
+- [Integrated guided demonstrations](#integrated-guided-demonstrations)
+- [Delivery sequence](#delivery-sequence)
+- [Completion and evidence policy](#completion-and-evidence-policy)
+
+## Experience and access model
+
+Recommended baseline, subject to approval in H001:
+
+| Persona | Web experience | Permissions |
+| --- | --- | --- |
+| Visitor | Browse all scenario cards, instructions, supported configurations, limitations, and sanitized completed-run reports. | No Azure-management access or mutation of another party's run. |
+| Conductor | Sign in, obtain an approved sandbox lease, configure a demo, run or step it, inspect the sample application, and export/reset the run. | Only bounded actions against resources owned by the conductor's lease. |
+| Operator | Approve expensive or privileged experiments, manage capacity pools, and recover failed cleanup. | Audited administrative actions; no unrestricted public execution endpoint. |
+
+Normal supported runs should be self-service after authentication and preflight. Advanced runs may require operator approval, but the conductor must still be able to conduct the approved experiment through the same UI. The normal hosted experience must not require the conductor to own an Azure subscription or supply cloud credentials.
+
+### Standard conductor journey
+
+1. Select a scenario card; read its purpose, expected outcome, limitations, and prerequisite configuration.
+2. Choose a supported host, deployment format, load profile, user cohorts, and operating budgets.
+3. Review estimated cost, duration, permissions, and affected leased resources; approve the run.
+4. Open the sample application and start real or synthetic user journeys.
+5. Conduct guided actions such as warm, promote, scale, inject an approved fault, drain, or roll back.
+6. Observe actual routing, deployment versions, state transitions, client outcomes, and dependency behavior.
+7. Review the evidence-backed result, export a sanitized report, and reset or release the sandbox.
+
+Provide both guided single-step operation and an automated complete-run mode. Browser refresh or disconnection must not cancel a durable run implicitly.
+
+Front-end framework, control-service language, identity provider, harness hosting, infrastructure format, regions, and concrete SKUs are intentionally not selected here. H001 must approve those implementation decisions before infrastructure generation or provisioning.
+
+## Shared definition of done
+
+The following criteria apply to every D-S item and W item in addition to its row-specific acceptance criteria:
+
+1. **Discoverable:** A distinct catalog entry identifies the source scenario, learning objective, prerequisites, expected outcome, supported hosts/formats, and limitations. Planned entries are visibly non-runnable until implemented.
+2. **Conductible through the web UI:** Inputs, instructions, confirmations, run/step controls, progress, sample-client interactions, and results are available without local command-line setup. Controls are keyboard operable and accessible; target WCAG 2.2 AA in the implemented UI.
+3. **Implemented end-to-end:** The card invokes a validated backend scenario workflow, appropriate Azure adapter, versioned sample fixture, user-journey driver, and verifier. A button or animation without its real execution path is insufficient.
+4. **Isolated and bounded:** Authentication, server-side authorization, resource ownership, validated inputs, concurrency limits, runtime limits, capacity limits, and cost ceilings are enforced. Browser clients never receive Azure-management credentials or arbitrary ARM/kubectl execution capability.
+5. **Explicit operating envelope:** Each run records its host/SKU/region, fixture versions, maximum load, journey latency budget, readiness window, request/job duration limits, drain budget, rollback retention, dependency limits, and fault model. H001 approves defaults; do not invent universal thresholds.
+6. **Real evidence:** Live runs measure client-visible latency, authentication/state continuity, business effects, actual tier versions/routing, readiness, and resource behavior. A successful health probe or configured 100% traffic weight is not proof of successful user migration.
+7. **Honest execution mode:** Label live native operations, fault emulation, recorded replay, and simulation separately. Simulated output cannot certify a native-platform strategy. Regional/zone isolation experiments are outage proxies unless the corresponding real failure has actually been observed.
+8. **Honest result classification:** Display verification verdict, user-transition outcome, and cleanup status separately. Supported outcomes include uninterrupted transition, safe abort before exposure, interrupted transition, expected interruption observed, unsupported, unverified, and cancelled. An expected negative-test failure is not an uninterrupted migration.
+9. **Complete attribution:** Record attempted journeys, successful transitions, interruptions, unknown outcomes, cohort membership, deployment epochs, action timing, and evidence references. Failures before rollback stay in the record; users never exposed to the candidate do not prove migration.
+10. **Recoverable:** Cancellation reconciles any in-flight platform action rather than pretending to undo it. Reset and lease expiry perform idempotent cleanup; failed cleanup remains visible and alerts an operator.
+11. **Reproducible:** Save a versioned manifest and sanitized evidence export. Rerunning starts from a known fixture state and retains previous results rather than overwriting them.
+12. **Tested and documented:** Include focused workflow/API tests, browser interaction tests, target-host integration evidence, capability-limit tests, and learner-facing explanations. Show the source's Microsoft disclaimer and do not market demonstration targets as Microsoft SLAs.
+
+Use synthetic profiles, accounts, transactions, uploads, and events. External side effects must use isolated test fixtures or suitable sandboxes. Never inject faults into production, other conductors' resources, or the shared harness management plane.
+
+## Priorities and dependencies
+
+- **P0:** Required for a safe, usable first release and the core uninterrupted-migration demonstrations.
+- **P1:** Required to complete broader strategy and platform coverage.
+- **P2:** Advanced, expensive, long-running, or destructive experiments that require additional operational controls.
+
+Priorities are ordering guidance, not effort estimates or permission to provision resources.
+
+Dependency notation:
+
+- A comma-separated list means all listed prerequisites are required.
+- `none` means no additional prerequisites.
+- `HOST` means an applicable, approved adapter: **P001 OR P002 OR P003 OR P004**.
+- `CONTAINER` means **P002 OR P003**, for the shared ACA/AKS orchestrator demonstrations.
+- `IMAGEHOST` means **P001 in container mode OR P002 OR P003**.
+- `HOSTJAVA` means a supported Java application configuration on **P001 OR P002 OR P003**.
+- Every D-S item additionally requires **BASE = H011 + P005 + HOST**. Its Dependencies cell lists prerequisites beyond BASE.
+
+The host is not chosen arbitrarily: H001's capability matrix and the scenario manifest must select a supported combination. A listed native host adapter, such as P001 for App Service swaps, is the host under test, not merely another installed plugin. Multi-host comparisons must record both configurations.
+
+Reusable prerequisite scenarios must have acceptance evidence on the target configuration; success on App Service cannot substitute for proof on AKS. Alternative prerequisites are explicit OR groups, not a requirement to finish all four host adapters before the first demo can run.
+
+## Shared harness stories
+
+| ID | Priority | Implementation story | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| H001 | P0 | Define and approve the product contract, typed demo/run/evidence schemas, supported configuration matrix, and operating envelopes. | Record hosting/stack/auth choices, budgets, capacity, duration limits, data contracts, native constraints, and approval requirements; unresolved choices block affected provisioning. | none |
+| H002 | P0 | Build the searchable web catalog and manifest registry for all 150 scenarios and the two guided workflows. | Filter by strategy, host, format, priority, risk, and prerequisite; each card shows implemented/planned status and support reasons; source IDs remain stable. | H001 |
+| H003 | P0 | Implement authenticated roles, per-conductor sandbox leases, server-side ownership checks, capacity reservation, and cost/admission controls. | Public visitors cannot mutate resources; approved conductors operate only within their lease; estimates, concurrency, expiry, and approval decisions are visible and audited. | H001 |
+| H004 | P0 | Implement the durable run API, queued workers, deployment epochs, idempotent commands, locks, and cancellation reconciliation. | Runs survive worker restart and browser reconnect; conflicting commands are rejected explicitly; desired state is reconciled with actual platform state; errors remain visible. | H001, H003, H006 |
+| H005 | P0 | Build extensible n-tier fixtures: frontend, getProfile v1/v2, shared session/state, database, cache, queue, and worker; include compatible and intentionally incompatible variants. | Immutable fixture versions and synthetic data are repeatable; version stamps are observable per tier; baseline auth, read/write, job, and state-continuity assertions are available. | H001 |
+| H006 | P0 | Build browser and backend protocol drivers plus a client-side journey/correctness oracle. | Track individual attempts, original latency budgets, identity/state continuity, duplicate/missing effects, and actual migration; preserve failed/unknown outcomes; backend drivers support protocols browsers cannot speak natively. | H005 |
+| H007 | P0 | Implement telemetry ingestion, readiness observations, resource/version timelines, and evidence-backed result evaluation. | Correlate lease/run/user/epoch across tiers; distinguish desired and observed routing; redact secrets/PII; incomplete or stale evidence produces unverified results, not success. | H004, H006 |
+| H008 | P0 | Build the run console and schema-driven panels for load, versions, cohorts, warm-up, routing, scale, faults, drain, and rollback. | Guided and automated modes call validated workflows; unsupported controls show reasons; streamed progress, reconnection, error notifications, and sample-client windows work without CLI setup. | H002, H004, H007 |
+| H009 | P0 | Implement stable endpoint routing, authorized preview audiences, deterministic cohorts, ring promotion policies, and release-eligibility metadata. | Enforce preview authorization on every reachable v2 path; distinguish preview/GA eligibility from deployment lifecycle; record actual cohort destinations and gate expansion on fresh evidence. | H003, H005, H008 |
+| H010 | P0 | Implement reset, lease expiry, checkpoint-aware teardown, resource reconciliation, and operator recovery for orphaned runs. | Delete only owned resources after safe reconciliation; retries do not duplicate destructive work; cleanup status and remaining resources are visible; failed cleanup alerts operators. | H003, H004 |
+| H011 | P0 | Deploy the approved web harness and publish its catalog, documentation, evidence export, and operational controls. | A stable HTTPS URL supports visitor/conductor/operator personas; management secrets stay server-side; live runs require admission; cost/health/cleanup alerts and the Microsoft disclaimer are present. | H008, H009, H010, H012 |
+| H012 | P0 | Establish automated contract, authorization, isolation, accessibility, recovery, and UI regression checks for the harness. | CI verifies role boundaries, arbitrary-action rejection, lease isolation, bounded inputs, cancellation/cleanup, keyboard/screen-reader flows, and explicit unknown/unsupported results before public live execution is enabled. | H002, H003, H004, H008, H009, H010 |
+
+## Platform and fixture enablers
+
+| ID | Priority | Implementation story | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| P001 | P0 | Build App Service adapters for Windows/Linux code, custom containers, slots, native swaps, shared/separate plans, scale, and supported health/configuration operations. | Observe real slot/plan effects; reserve overlap capacity; expose cookie and recycling behavior; reject unsupported auto-swap or scaling combinations; native operations do not masquerade as custom draining. | H003, H004, H005, H007, H010 |
+| P002 | P0 | Build Container Apps adapters for immutable revisions, single/multiple revision modes, probes, scale, labels, and controlled routing. | Demonstrate native revision readiness and traffic effects; independently protect preview access; report direct revision/label access and active-work limitations; cleanup is lease-scoped. | H003, H004, H005, H007, H010 |
+| P003 | P1 | Build AKS adapters for version-specific Deployments/Services, approved ingress/gateway routing, probes, rollout settings, scaling, termination, and owned worker fault injection. | Do not accidentally mix preview and GA versions through unqualified selectors; measure readiness, surge, eviction, and grace behavior; restrict faults to dedicated leased workloads. | H003, H004, H005, H007, H010 |
+| P004 | P1 | Build Functions adapters for supporting slot plans and available Flex rolling-update configurations, with durable/checkpointed workload fixtures. | Show actual execution termination/recovery, plan support, mixed versions, duration limits, and platform-managed progress; unavailable completion evidence remains unverified. | H003, H004, H005, H007, H010 |
+| P005 | P0 | Build leased native data/cache/object-storage/messaging services and synthetic transaction, session, replication, partition, checkpoint, and deduplication fixtures. | Verify real data operations and capabilities using test clients; keep credentials server-side; expose capacity/freshness/ownership metrics; unsupported online/replication operations are declared. | H003, H005, H006, H007, H010 |
+| P006 | P1 | Build approved private-network, DNS/TLS, gateway/WAF, and multi-region/failure-domain sandbox extensions. | Use owned domains/resources and bounded faults; expose origin/probe/data ownership; clearly label regional/zone outage proxies and native effects; restore without affecting the harness or other leases. | H003, H010, P005, HOST |
+| P007 | P1 | Add Spring Boot fixture variants and packaging/runtime instrumentation for supported Java hosts. | Observe JVM/bean readiness, session compatibility, warm-up, and servlet/reactive shutdown on a real selected host; do not treat Spring Boot as a separate orchestration platform. | H005, HOSTJAVA |
+
+## Scenario-demo backlog
+
+Every row maps to the source scenario with the same numeric suffix. All rows inherit BASE and the shared definition of done. The work column identifies a visible conductor action and the backend/fixture behavior to implement; the acceptance column identifies evidence the verifier must evaluate.
+
+### A. Deployment and traffic migration
+
+Source: [deployment and traffic-migration strategies](../../README.md#a-deployment-and-traffic-migration-strategies).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S001 | P0 | Add a **Warm and hand off** flow that prepares v2 beside v1, validates gates, and changes eligible admissions. | Actual journeys move to v2 within budgets; state and effects remain correct; v1 is retained until drain/rollback gates permit retirement. | none |
+| D-S002 | P0 | Add a **Native slot swap** flow with effective target configuration, explicit warm-up statuses, and production as target. | Native swap evidence and client outcomes are recorded; failed gates prevent exposure; recycling/long-work limits are explained rather than hidden. | P001 |
+| D-S003 | P0 | Add configurable canary stages, observation windows, and **Promote next cohort** controls over the handoff workflow. | Expansion requires fresh journey evidence; regressions stop promotion; actual cohorts and interruptions are retained through rollback. | D-S001 |
+| D-S004 | P1 | Add **Hold 50/50 experiment**, cohort inspection, and controlled convergence to one version. | Users remain in stable cohorts with equivalent state/effects; prolonged A/B operation is not reported as complete migration. | D-S003 |
+| D-S005 | P0 | Add **Migrate selected tenant** with tenant-scoped routing and state/work ownership observations. | No cross-tenant leakage or double ownership; selected tenant moves while unaffected tenants remain usable. | D-S031 |
+| D-S006 | P0 | Add separate GA/preview client sessions, **Join authorized preview**, and denied-access probes against all v2 routes. | Only authorized preview identities reach v2; ordinary users stay on v1; login/callback/navigation continuity holds; 0% routing is not an authorization substitute. | none |
+| D-S007 | P0 | Add **Move new sessions, drain existing sessions** with live session/request counters and retirement gates. | New sessions reach v2; existing journeys complete correctly; unresolved pinned clients/work prevent retirement. | D-S031, D-S041 |
+| D-S008 | P0 | Add ring membership, per-ring tier-version affinity, promotion windows, and **Promote next ring**. | Rings advance in order; required tier versions match within a ring; shared contracts remain compatible; pending rings and failed promotions are visible. | D-S003, D-S051, D-S052, D-S056 |
+| D-S009 | P1 | Add **Shadow getProfile traffic** and v1/v2 response comparison with suppressed external mutations. | Production responses stay on the intended version; shadow discrepancies are reported; transaction/notification counters show no duplicate side effects. | none |
+| D-S010 | P1 | Add **Enable feature by cohort** and **Revert flag** using versioned compatible configuration. | Behavior changes without disruptive deployment; existing sessions and data remain valid; reversal does not conceal earlier failures. | none |
+
+### B. Capacity scaling
+
+Source: [actual capacity-scaling strategies](../../README.md#b-actual-capacity-scaling-strategies).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S011 | P0 | Add **Scale out** with requested/effective instance counts, readiness, load, and connection observations. | Additional ready capacity is evidenced before increased admission; actual journeys meet budgets; adding slots alone is not counted as compute scaling. | D-S021 |
+| D-S012 | P1 | Add CPU/memory load controls and supported native metric-based autoscale configuration. | Native rules, capacity changes, and client budgets correlate; saturation or unsupported rule/slot combinations remain explicit. | P001 |
+| D-S013 | P1 | Add concurrency/queue-pressure controls and a supported workload-driven scaling rule. | Backlog/concurrency causes observed capacity changes; completion deadlines hold within the declared envelope; unsupported metrics are rejected. | none |
+| D-S014 | P1 | Add **Schedule demand spike** and pre-provision/warm capacity through supported schedule-based scaling. | Ready capacity precedes scheduled demand; native schedule and client outcomes are observed, not inferred from the calendar. | P001 |
+| D-S015 | P0 | Add **Scale in safely** while requests and jobs are active, using supported drain or continuation mechanisms. | Already-admitted work completes or resumes correctly within budgets; retired capacity receives no unintended new work; opaque host behavior is not fabricated. | D-S041, D-S076 |
+| D-S016 | P1 | Add oscillating load and stabilization/cooldown comparison controls. | Capacity oscillations and journey failures are measured; stabilization reduces unsafe transitions without silently exceeding declared budgets. | D-S011, D-S015 |
+| D-S017 | P1 | Add **Replace with larger capacity** beside **In-place resize** as a clearly labeled comparison. | Parallel capacity is ready before handoff; continuity and cost are compared; disruptive in-place outcomes are reported honestly. | P001, D-S001 |
+| D-S018 | P1 | Add per-tier bottleneck selection and independent frontend/API/worker scaling controls. | Only intended tiers scale; downstream limits and end-to-end journey budgets remain satisfied. | D-S062 |
+| D-S019 | P1 | Add **Create cell and move tenant** using isolated capacity and synchronized/fenced state handoff. | Routing and ownership transfer without missing writes; existing cells remain usable; additional capacity is real. | D-S005, D-S064 |
+| D-S020 | P0 | Add bounded sandbox-capacity exhaustion and **Request unsafe expansion** controls. | Native versus harness-limit rejection is labeled; unsafe promotion is blocked; reserved service remains usable; untested Azure quota exhaustion is not claimed. | none |
+
+### C. Readiness and warm-up
+
+Source: [readiness and warm-up](../../README.md#c-readiness-and-warm-up).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S021 | P0 | Add per-instance probe status and **Make one candidate instance unready**. | One healthy response cannot approve the whole required pool; stale/failed instances block unsafe admission. | none |
+| D-S022 | P0 | Add required dependency switches and effective readiness checks for data, cache, queue, and services. | A missing required dependency blocks promotion; optional dependencies are not blindly allowed to eject all healthy capacity. | none |
+| D-S023 | P1 | Add **Warm representative journeys** using isolated login/read/transaction fixtures. | Readiness requires real safe business-path evidence; fixture transactions and external effects stay isolated. | none |
+| D-S024 | P1 | Add **Validate with production settings** and a slot/configuration difference viewer. | Candidate readiness reflects effective target settings and identity/network access; background work cannot accidentally run twice. | P001, D-S022 |
+| D-S025 | P1 | Add cold/warm runtime comparison and JVM/bean/cache/pool initialization controls. | Client latency and actual initialization evidence show warm-up effectiveness; unsupported or unmeasured routes are disclosed. | P007 |
+| D-S026 | P1 | Add delayed/failed immutable image pull and container-startup fixtures. | Existing GA traffic continues while candidate startup fails or waits; readiness does not precede successful initialization. | IMAGEHOST |
+| D-S027 | P0 | Add probe fixtures returning 500, redirects, and misleading 200 responses. | Strict status and business assertions reject false readiness; no successful-health-only promotion is reported. | none |
+| D-S028 | P0 | Add configurable warm-up timeout and **Abort preparation** controls. | Timeout/error is visible; production stays routed correctly; the result is safe abort, not completed migration. | none |
+| D-S029 | P1 | Add flapping probes and a stable-readiness-window comparison. | Fresh consecutive evidence gates promotion; intermittent success alone cannot advance the candidate. | none |
+| D-S030 | P1 | Add simultaneous versus bounded warm-up of many instances. | Dependency load, initialization duration, and journey outcomes show whether warm-up stays within shared capacity limits. | none |
+
+### D. Sessions, authentication, and state
+
+Source: [sessions, authentication, and user state](../../README.md#d-sessions-authentication-and-user-state).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S031 | P0 | Add local/shared session-store modes and repeated version/instance switching in sample clients. | Shared mode preserves state; local-state loss is detected as an interruption, not an empty successful response. | none |
+| D-S032 | P1 | Add routing-cookie inspection, pinned-client replay, and controlled slot reassignment. | Observed client destinations differ appropriately from nominal weights; retirement waits for unresolved pinned clients. | P001 |
+| D-S033 | P1 | Add worker-affinity on/off comparison after session externalization. | Affinity removal does not lose state; unsupported local-state removal fails explicitly rather than resetting users silently. | P001, D-S031 |
+| D-S034 | P0 | Add compatible/incompatible cookie/token-key rotation across v1/v2. | Valid sessions survive compatible rotation; invalid configuration is detected without weakening authentication or exposing keys. | none |
+| D-S035 | P0 | Add **Start login on v1, finish after cutover** with callback-path tracing. | Authentication completes within its budget without loops, lost state, or forced restart. | none |
+| D-S036 | P1 | Add old-page anti-forgery submission across deployments. | Valid prior tokens succeed under compatible configuration; forged tokens remain rejected. | none |
+| D-S037 | P1 | Add old/new session-payload serializers and controlled transition/rollback. | Existing payloads remain readable or an explicit compatibility gate blocks transition; data is not silently discarded. | D-S031 |
+| D-S038 | P0 | Add multi-tenant authorization probes before/after routing changes. | Tenant permissions and isolation hold on every reachable version; forbidden access is explicitly rejected. | none |
+| D-S039 | P1 | Add local/durable upload, workflow-state, and artifact storage comparisons. | Required artifacts survive ownership changes in durable mode; local losses are detected and explained. | none |
+| D-S040 | P1 | Add authenticated cookie-less API/mobile drivers controlled from the web console. | Actual API clients move correctly without browser affinity assumptions; identity, state, and budgets are preserved. | none |
+
+### E. In-flight requests and long-lived work
+
+Source: [in-flight requests and long-lived work](../../README.md#e-in-flight-requests-and-long-lived-work).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S041 | P0 | Add timed short requests and **Cut over while request is active**. | Already-admitted requests return correct results within original budgets; traces distinguish old completion from new admission. | none |
+| D-S042 | P0 | Add long-request fixtures and supported drain versus durable asynchronous continuation modes. | Completion/continuation is correct within host limits; forced termination and over-budget retries count as interruptions. | D-S041 |
+| D-S043 | P1 | Add multipart upload, pause/resume, ownership transfer, and content-hash verification. | Accepted parts survive transition; final bytes/hash and completion budget are correct without duplicate uploads. | D-S039, D-S042 |
+| D-S044 | P1 | Add large artifact download and range-resume controls. | Completed bytes/hash match the original artifact; unsupported resume or visible over-budget disruption is reported. | D-S039 |
+| D-S045 | P1 | Add versioned WebSocket fixtures with sequence numbers, reconnect, and resume cursors. | Acknowledged state/messages survive; missed/duplicate events and UX-budget breaches count as interruptions. | none |
+| D-S046 | P1 | Add SSE stream cutover with event IDs and cursor-based resumption. | User-visible events remain ordered and complete; reconnection gaps are measured against the original budget. | none |
+| D-S047 | P1 | Add a real backend gRPC streaming driver and browser-visible stream controls/results. | Native HTTP/2/gRPC continuation is verified separately from browser proxy behavior; dropped or duplicated stream results remain explicit. | P003 |
+| D-S048 | P1 | Add checkpointed batch jobs and **Retire active worker**. | Durable checkpoints permit correct bounded continuation; jobs are neither lost nor falsely marked complete. | none |
+| D-S049 | P0 | Add **Lose response after commit** and controlled POST retry with idempotency keys. | The ledger records one business effect; the client receives a correct outcome or an explicit unresolved result. | none |
+| D-S050 | P1 | Add stale keep-alive/pinned-destination clients and a retirement dependency viewer. | Old destinations remain available until required traffic/work is resolved; premature retirement is blocked or counted as interruption. | none |
+
+### F. N-tier and version compatibility
+
+Source: [n-tier and version compatibility](../../README.md#f-n-tier-and-version-compatibility).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S051 | P0 | Add **Old frontend to new API** with compatible and breaking response fixtures. | Old client journeys still function under the compatible contract; breaking changes fail the gate visibly. | none |
+| D-S052 | P0 | Add **New frontend to old API** while routing deliberately remains mixed. | New clients tolerate supported old contracts; required unsupported features do not silently return success. | none |
+| D-S053 | P0 | Add deployment-version versus API-contract controls, adapters, and client-upgrade paths. | A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted. | D-S051, D-S052 |
+| D-S054 | P0 | Add staged **Expand, migrate, contract** data operations while both versions serve journeys. | Old/new consumers remain valid during overlap; contraction is blocked until dependent consumers/work disappear. | none |
+| D-S055 | P1 | Add cache payload/version namespaces and mixed-version readers. | Compatible translation/versioning preserves correctness; incompatible cached objects fail explicitly. | none |
+| D-S056 | P0 | Add old/new event producers and consumers with schema compatibility switches. | Events remain interpretable and effects correct across overlap; incompatible producers are blocked before expansion. | none |
+| D-S057 | P1 | Add cached old HTML with immutable old/new assets and deploy/retire controls. | Existing pages resolve required assets correctly; early asset removal produces a visible failing result. | none |
+| D-S058 | P1 | Add durable workflow version pinning and incompatible execution-history fixtures. | Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected. | P004 |
+| D-S059 | P1 | Add configuration-schema/flag version changes across mixed deployments. | Both versions interpret approved shared configuration consistently; incompatible publication is gated. | D-S010 |
+| D-S060 | P0 | Add rollback-compatible and irreversible schema/data change modes. | Compatible rollback preserves data; irreversible changes invoke explicit forward recovery, not a fake successful reversal. | D-S054 |
+
+### G. Database and persistent data
+
+Source: [database and persistent-data scaling](../../README.md#g-database-and-persistent-data-scaling).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S061 | P1 | Add **Expand read replicas** and read-your-writes/freshness controls. | Eligible reads use actual replicas; consistency-sensitive reads meet the contract; write scalability is not inferred from extra read replicas. | none |
+| D-S062 | P0 | Add per-instance connection-pool settings and aggregate connection-limit visualization during scale-out. | Total connections stay within the approved data-tier limit; connection exhaustion and journey latency are detected. | D-S011 |
+| D-S063 | P1 | Add data-tier in-place scale versus supported parallel-capacity/failover paths. | Reconnects and transaction outcomes meet budgets where supported; disruptive native operations remain failed/unsupported, not assumed online. | none |
+| D-S064 | P1 | Add **Create shard, synchronize, assign tenant** with routing and writer ownership. | Committed data is copied/synchronized before handoff; fencing prevents missing or duplicate writes. | D-S054 |
+| D-S065 | P1 | Add hot-tenant partition/shard rebalance under live read/write load. | Ownership changes preserve committed effects and routing; no two writers own the same moved partition. | D-S064 |
+| D-S066 | P1 | Add data failover during transaction commit and outcome reconciliation. | Retries do not duplicate effects; committed, failed, and unresolved outcomes are attributed honestly. | none |
+| D-S067 | P1 | Add controlled replica lag and consistency-sensitive read routing. | Actual lag and selected reader are shown; stale results outside the contract cannot pass as uninterrupted correctness. | D-S061 |
+| D-S068 | P1 | Add supported online index creation and a deliberately blocking-operation comparison. | Locking, latency, and native capability are observed; unsupported online operations are rejected or labeled. | none |
+| D-S069 | P1 | Add fenced writer-epoch transfer and competing-writer probes. | Only the authorized epoch writes; stale writers are rejected and acknowledged data is retained. | none |
+| D-S070 | P1 | Add restored-replica synchronization and **Promote restored capacity**. | Promotion requires the declared committed-data boundary and valid ownership; incomplete restoration cannot appear successful. | D-S069 |
+
+### H. Caches, queues, and workers
+
+Source: [caches, queues, and background workers](../../README.md#h-caches-queues-and-background-workers).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S071 | P1 | Add cache-capacity changes under mixed-version read/write traffic. | Actual cache behavior, payload compatibility, and journey budgets remain valid; native resize limitations are disclosed. | none |
+| D-S072 | P1 | Add cold-cache burst and coalesced/bounded refill comparison controls. | Refill strategy is evidenced by data-tier load and journey latency; stampede-induced failures stay counted. | none |
+| D-S073 | P1 | Add cache outage and tested durable recovery modes. | Correct required state is recovered within budgets; empty sessions/profiles are never a successful fallback. | none |
+| D-S074 | P1 | Add controlled eviction/TTL pressure against session and required-state fixtures. | Eviction effects are visible; required state survives through the approved durable contract or fails explicitly. | D-S031 |
+| D-S075 | P1 | Add **Scale consumers out** with real queue/partition ownership and deduplication metrics. | New capacity processes work without missing events, incorrect ownership, or duplicate business effects. | none |
+| D-S076 | P0 | Add **Scale consumers in** during claimed work with finish/renew/release modes. | Claimed jobs finish or safely relinquish ownership/checkpoints; retirement does not lose work. | none |
+| D-S077 | P0 | Add lock expiry/redelivery and a business-effect ledger. | Redelivered messages produce one intended effect; duplicates and unresolved outcomes remain visible. | none |
+| D-S078 | P1 | Add simultaneous v1/v2 schedulers and ownership-lease/fencing comparison. | Only the valid owner performs each scheduled effect; duplicate scheduling is detected. | none |
+| D-S079 | P1 | Add bounded backlog bursts, consumer expansion, and deadline/ordering views. | Capacity drains real work within the declared deadline and ordering contract; overdue jobs are failures. | D-S075 |
+| D-S080 | P1 | Add partition rebalance with checkpoint transfer and concurrent consumer probes. | Event/checkpoint ownership transfers without missing effects; tolerated delivery duplicates are distinguished from duplicate business effects. | D-S075 |
+
+### I. State machine and orchestration
+
+Source: [state machine and orchestration correctness](../../README.md#i-state-machine-and-orchestration-correctness).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S081 | P0 | Add an interactive desired/observed lifecycle timeline and gate inspector. | Endpoint, epoch, readiness, routing, drain, and retention evidence control transitions; a warm boolean alone cannot approve migration. | none |
+| D-S082 | P1 | Add **Deliver stale epoch update** to an isolated run worker/controller. | Stale updates cannot change current routing or readiness; rejected commands are surfaced with evidence. | D-S081 |
+| D-S083 | P0 | Add **Restart run worker/controller** while the console remains available. | Durable state restores progress without duplicate destructive actions or lost user outcomes. | D-S081 |
+| D-S084 | P0 | Add duplicate command delivery/retry against provisioning, routing, and cleanup steps. | Idempotency prevents duplicate resources, repeated swaps, and contradictory state; each operation remains auditable. | D-S081 |
+| D-S085 | P0 | Add two competing promotion sessions against one leased destination. | Locks/conditional epochs serialize or reject conflict; unrelated leases remain unaffected. | D-S081 |
+| D-S086 | P0 | Add **Expire readiness evidence before promotion**. | Stale observations trigger revalidation or safe rejection; promotion cannot reuse an invalid health snapshot. | D-S021 |
+| D-S087 | P0 | Add delayed/partial routing application and observed-cohort verification. | Desired percentages do not imply convergence; dependent old capacity remains until effective routing is evidenced. | D-S003 |
+| D-S088 | P0 | Add scoped permission-denial fixtures for a leased platform action. | The operation fails visibly; production routing and state remain honest; no broad success fallback is returned. | none |
+| D-S089 | P0 | Add loss of the per-run management/control path while independent data-plane journeys continue. | Established data traffic does not depend on management availability; the shared harness remains able to report/recover the bounded fault. | none |
+| D-S090 | P0 | Add **Attempt retirement before drain/retention completion**. | Guarded retirement is rejected while required users/work/ownership remain; rejection is not a completed migration. | D-S007 |
+
+### J. Failure containment and rollback
+
+Source: [failure containment and rollback](../../README.md#j-failure-containment-and-rollback).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S091 | P0 | Add candidate process failure during warm-up. | Failure causes visible safe abort before exposure; existing production journeys remain usable. | D-S028 |
+| D-S092 | P0 | Add candidate failure during a measured canary stage. | Expansion stops and recovery executes; failed journeys remain in the attempted-transition denominator and interruption counts, not the success numerator. | D-S003 |
+| D-S093 | P0 | Add slow successful responses that violate journey budgets. | Latency regression blocks expansion even with HTTP 200; actual slow journeys count as interruptions. | D-S003 |
+| D-S094 | P1 | Add incompatible authentication settings to the candidate during controlled exposure. | Authentication failures stop expansion without bypassing validation; affected users remain counted. | D-S034 |
+| D-S095 | P0 | Add required-dependency isolation on the candidate only. | Candidate admission is gated/removed through supported mechanisms; a healthy compatible destination and recovery evidence are preserved. | D-S022 |
+| D-S096 | P0 | Add shared-plan warm-up pressure and a separate-plan isolation comparison. | Real shared compute/dependency contention and journey outcomes are measured; additional slots are not treated as free extra capacity. | P001 |
+| D-S097 | P0 | Add warm versus cold rollback standby during the retention window. | Ready retained capacity meets the promised recovery budget; cold recovery delays are explicit. | D-S001 |
+| D-S098 | P0 | Add new-version writes followed by supported rollback or forward recovery. | New committed state remains interpretable and correct; rollback cannot silently discard or corrupt writes. | D-S060 |
+| D-S099 | P1 | Add failure of the rollback operation itself. | The controller reconciles effective routing and preserves known-good service; an uncertain reversal is not declared complete. | D-S098 |
+| D-S100 | P0 | Add bounded forced termination during active requests/jobs. | Lost, retried, duplicated, and unresolved work is detected; expected interruption is visibly distinct from successful migration. | D-S042, D-S049 |
+
+### K. Networking, configuration, and routing
+
+Source: [networking, configuration, and edge routing](../../README.md#k-networking-configuration-and-edge-routing).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S101 | P0 | Add stable getProfile public/service endpoint with visible backend-version switches. | Existing callers keep their endpoint and valid contract; observed backend changes without broken navigation or authentication. | none |
+| D-S102 | P1 | Add owned test-DNS updates with fresh/cached resolver-driver observations. | Old cached destinations remain usable for the declared overlap; resolver emulation is labeled and not claimed as universal DNS convergence. | P006 |
+| D-S103 | P1 | Add leased-domain TLS/certificate continuity probes across eligible destinations. | Hostname/trust requirements pass for real clients; raw private keys never reach the browser; invalid candidates are gated. | P006 |
+| D-S104 | P1 | Add internal warm-up versus external host-header/redirect/callback probes. | External production-path failures are detected despite internal health success; approved redirects do not loop or lose state. | P006 |
+| D-S105 | P1 | Add non-swapped identity/network/configuration differences and effective-destination validation. | Real slot-specific settings/access are observed after transition; mistaken assumptions about swapped identity/configuration fail visibly. | P001, D-S024 |
+| D-S106 | P1 | Add leased private endpoints/DNS and a backend client on the actual private access path. | Required private connectivity is verified without exposing management access; public-probe success alone cannot approve the path. | P006 |
+| D-S107 | P1 | Add two owned browser origins and compatible/incompatible CORS transitions. | Real browser enforcement is measured; valid existing origins continue, and denied access is not bypassed for the demo. | P006 |
+| D-S108 | P1 | Add approved sandbox WAF/policy differences against benign valid requests. | Unexpected blocks of valid journeys/assets are detected and policy recovery is verified; rules affect only leased routes. | P006 |
+| D-S109 | P2 | Add bounded outbound-connection pressure and pool/connection-management comparison. | Native network capacity evidence and journey budgets are evaluated; unavailable SNAT signals remain unverified rather than inferred from app counts. | P006 |
+| D-S110 | P1 | Add actual gateway configuration changes and distributed origin/cohort probes. | Old origins remain until required observed propagation/drain gates pass; desired configuration is not mistaken for complete edge convergence. | P006 |
+
+### L. Zones, regions, and failure domains
+
+Source: [availability zones, regions, and failure domains](../../README.md#l-availability-zones-regions-and-failure-domains).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S111 | P1 | Add termination of one owned application worker under live journeys. | Surviving capacity and state meet the declared contract; worker/process versus node/region failure is accurately labeled. | P003 |
+| D-S112 | P2 | Add verified zone placement and bounded isolation of leased workloads in one zone. | Surviving workload/data capacity is measured; the injected zone-workload fault is labeled as an outage proxy, not an actual Azure-zone outage. | P006, P003 |
+| D-S113 | P2 | Add **Evacuate selected region** with destination warm-up, state synchronization, and writer handoff. | Required state and capacity exist before migration; actual regional routes and exclusive ownership converge safely. | P006, D-S069 |
+| D-S114 | P2 | Add unplanned owned-origin/dependency isolation and regional recovery orchestration. | Detection, surviving capacity, transaction outcomes, and client recovery meet the declared budget where evidenced; full-region claims are not fabricated. | P006, D-S066 |
+| D-S115 | P2 | Add active-passive warm/cold standby comparisons across two regions. | Compute, cache, dependency access, state, and client recovery are measured; a shallow healthy endpoint cannot certify standby readiness. | P006, D-S021, D-S022 |
+| D-S116 | P2 | Add active-active application regions with the approved writer/consistency/conflict model. | Both regions serve users under the declared data contract; actual writer topology is shown and multi-writer capability is not invented. | P006, D-S069 |
+| D-S117 | P2 | Add partial regional dependency failure while shallow origin probes stay healthy. | Dependency-aware routing/readiness detects the failure; affected journeys and recovery are attributed correctly. | P006, D-S022 |
+| D-S118 | P2 | Add global routing failover during stateful and mutating journeys. | Actual alternate-origin use preserves identity/state and avoids duplicate effects within supported recovery budgets. | P006, D-S049 |
+| D-S119 | P2 | Add controlled failback after recovered-region synchronization. | Data/ownership gates precede gradual return; users and committed effects survive failback. | P006, D-S069 |
+| D-S120 | P2 | Add a bounded all-destinations-unavailable experiment within a dedicated lease. | The UI demonstrates unavoidable interruption/consistency limits and labels the unsupported envelope; recovery restores only owned resources. | P006 |
+
+### M. Hosting-model-specific demonstrations
+
+Source: [hosting-model-specific scenarios](../../README.md#m-hosting-model-specific-scenarios).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S121 | P1 | Add a Windows code App Service preset for the native swap workflow. | Actual code-slot configuration, strict readiness, state, and client outcomes are evidenced on Windows. | P001, D-S002 |
+| D-S122 | P1 | Add a Linux code App Service preset with controlled manual/pipeline swap. | Unsupported native auto-swap is unavailable with explanation; supported native effects and continuity are measured. | P001, D-S002 |
+| D-S123 | P1 | Add an App Service custom-container preset with immutable images and explicit initialization/swap controls. | Container startup and native swap behavior are observed; unsupported auto-swap is not offered as a working option. | P001, D-S026 |
+| D-S124 | P1 | Add shared-plan slots versus separate-plan externally routed blue-green comparison. | Real capacity isolation, cost, routing, drain control, and user outcomes are compared without claiming independent fault domains for shared slots. | P001, D-S001, D-S096 |
+| D-S125 | P0 | Add a Container Apps single-revision preset with failed/successful candidate readiness. | Old revision routing persists until native readiness permits replacement; active-work/state outcomes are independently verified. | P002 |
+| D-S126 | P0 | Add a Container Apps multiple-revision preset for canary/preview/rollback/retirement. | Native revisions and actual traffic are observed; preview routes stay authorized; old revision retirement follows verified gates. | P002, D-S003 |
+| D-S127 | P1 | Add an AKS rolling preset with readiness, surge, availability, and termination settings. | Native pod readiness and grace behavior match the manifest; surge capacity exists; PDBs are not presented as universal protection. | P003, D-S021, D-S015 |
+| D-S128 | P1 | Add AKS version-specific backend routing and ring/canary promotion. | Separate Deployments/Services and gateway routes preserve cohorts; no accidental selector mixes GA and preview; user outcomes are verified. | P003, D-S008 |
+| D-S129 | P1 | Add supporting-plan Functions slot swaps during active executions and replay. | Native execution termination and bounded recovery are measured; duplicate effects are prevented; slot swaps alone cannot certify zero downtime. | P004, D-S049, D-S077 |
+| D-S130 | P1 | Add available Flex rolling-update presets, including multi-instance and single-instance comparisons. | Real grace/version/capacity behavior is measured; single-instance downtime and unobservable completion are disclosed rather than reported as guaranteed continuity. | P004, D-S041, D-S048 |
+
+### N. Complete end-user journeys
+
+Source: [complete end-user journeys](../../README.md#n-complete-end-user-journeys).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S131 | P1 | Add a browsing journey that loads old/new pages and assets during migration. | Complete rendered-page correctness is verified, not merely successful HTML status. | D-S057 |
+| D-S132 | P0 | Add an interactive sign-in journey spanning the cutover boundary. | The user finishes login without restarting, losing state, or exceeding the agreed budget. | D-S035 |
+| D-S133 | P1 | Add a multi-step form with prior validation/token/session state and cutover between steps. | Answers, validation, permissions, and one final submission survive the transition. | D-S036, D-S037 |
+| D-S134 | P0 | Add synthetic checkout/order submission with response-loss and retry controls. | Exactly one intended order/effect is recorded with a correct client result or explicit unresolved failure. | D-S049 |
+| D-S135 | P1 | Add sandbox webhook retries/delays during deployment changes. | Repeated deliveries preserve one business effect and correct observable processing status. | D-S077 |
+| D-S136 | P1 | Add an offline sample-client synchronization journey while the harness console remains online. | Queued authenticated operations synchronize with v2 without missing/duplicate changes; offline/recovery budgets and protocol assumptions are explicit. | D-S040, D-S077 |
+| D-S137 | P1 | Add cached/service-worker old-frontend journeys against the new API. | Existing bundles/assets/contracts remain supported; incompatible stale clients produce detected failures, not silent UI corruption. | D-S051, D-S057 |
+| D-S138 | P1 | Add paginated profile/result browsing with cursor reuse after migration. | Cursor/snapshot semantics avoid unintended missing or duplicate results under the declared contract. | D-S051 |
+| D-S139 | P1 | Add collaborative editing over a resumable real-time fixture. | Acknowledged edits and document state remain ordered and correct through reconnection/version migration. | D-S045 |
+| D-S140 | P1 | Add asynchronous export submission, processing cutover, polling, and download. | Job state, final artifact bytes, authorization, and download access survive independent tier transitions. | D-S039, D-S048, D-S044 |
+
+### O. Demonstration and acceptance testing
+
+Source: [demonstration and acceptance testing](../../README.md#o-demonstration-and-acceptance-testing).
+
+| ID | Priority | Web-UI demo and implementation work | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| D-S141 | P0 | Add approved steady-load profiles and repeated complete-journey execution during transitions. | Attempted/successful/failed/unknown journeys and latency budgets are measured at the client with actual migration evidence. | none |
+| D-S142 | P1 | Add demand bursts during candidate warm-up and capacity expansion. | Shared initialization/demand pressure stays within the declared envelope or produces explicit budget failures. | D-S011, D-S030 |
+| D-S143 | P1 | Add bounded slow-client/network variability through labeled client-driver conditions. | Original journey budgets include retries/reconnects; emulated conditions and observed native effects are distinguished. | D-S042 |
+| D-S144 | P1 | Add combined frontend/API/data/cache/worker pressure profiles. | End-to-end bottlenecks and downstream limits are measured together, not inferred from isolated successful tier benchmarks. | D-S018, D-S062 |
+| D-S145 | P1 | Add resumable swap/rollback soak runs with resource and correctness trends. | Memory/connections/cache growth and cumulative failures remain attributable across cycles; cancellation preserves evidence. | D-S001 |
+| D-S146 | P1 | Add a lifecycle-phase/fault matrix over the handoff workflow. | Observable phases have explicit fault results; unobservable native timing is disclosed; no untested phase is reported covered. | D-S081, D-S001 |
+| D-S147 | P0 | Add intentionally misleading 200 responses, silent state loss, duplicate effects, and broken UI fixtures. | The client-side oracle flags every injected acceptance failure and does not rely solely on HTTP/health status. | none |
+| D-S148 | P0 | Add per-user/tier version trace inspection and false-migration fixtures. | Successful migration requires observed intended version movement; users remaining entirely on v1 do not inflate migration success. | none |
+| D-S149 | P1 | Add cost-approved batch evidence collection, confidence calculations, and independent-event/cluster analysis views. | Distinguish journeys from requests and correlated swaps; zero-failure independent-trial illustration uses 299,572 trials at one-sided 95%; insufficient evidence never yields a five-nines-certified badge. | D-S141, D-S145, D-S148 |
+| D-S150 | P0 | Add **Verify retirement** with routing, session/work, artifact, ownership, and retained-capacity inventories. | No required dependency remains on v1; failed checks block retirement; cleanup outcome and remaining resources are exportable. | D-S090 |
+
+## Integrated guided demonstrations
+
+These compose the source scenarios into complete learner journeys; they are not new source strategies. A workflow must run its reused scenario steps on the same supported target configuration and record their individual evidence.
+
+| ID | Priority | Implementation story | Acceptance criteria | Dependencies |
+| --- | --- | --- | --- | --- |
+| W001 | P0 | Build a **Progressive deployment rings** walkthrough with internal validation, pilot tenants, limited production, and remaining production rings. | Show ring membership, tier versions, promotion windows, independent ring rollout status, shared-dependency risk, stopped expansion, and tested recovery; internal validation alone is not production-migration evidence. | H009, D-S003, D-S005, D-S008 |
+| W002 | P0 | Build a **Shared-orchestrator getProfile: v1 GA to v2 private preview to v2 GA** walkthrough on ACA or AKS. | Both independently routable versions share the chosen orchestrator; preview authorization is enforced; all production consumers move through a stable compatible endpoint; v1 drains, remains for rollback, then retires with actual evidence. | CONTAINER, H009, D-S001, D-S006, D-S007, D-S051, D-S053, D-S062, D-S098, D-S150 |
+
+### W001 conductor flow
+
+1. Select a host and inspect ring membership and current frontend/API/worker versions.
+2. Prepare the candidate and run internal validation without claiming that production users have migrated.
+3. Promote the pilot ring; observe its actual client journeys for the configured window.
+4. Expand through subsequent rings only when readiness, compatibility, capacity, correctness, and latency gates pass.
+5. Inject a bounded candidate regression; show halted later-ring promotion and the recovery behavior.
+6. Restore, complete promotion, and export per-ring and aggregate transition evidence.
+
+Track ring rollout state separately from deployment state: a version can be ACTIVE for one ring while another ring remains pending. Logical cohorts do not automatically isolate shared compute, databases, or queues.
+
+### W002 conductor flow
+
+1. Provision getProfile v1 and v2 as separate revisions on ACA or version-specific Deployments/Services on AKS, within the same leased orchestrator environment.
+2. Open a normal-user client and an authorized-preview client:
+
+   ```text
+   Stable getProfile endpoint
+       Default audience           -> v1, GA
+       Authorized preview audience -> v2, private preview
+   ```
+
+3. Confirm that direct and indirect v2 access rejects unauthorized preview callers. A feature flag, obscure URL, or 0% traffic weight is not the security boundary.
+4. Observe both live versions, shared resource/dependency pressure, user state, and API contract behavior. Preview/GA eligibility is metadata separate from readiness and deployment lifecycle.
+5. Approve v2 for broader production exposure and promote controlled cohorts or rings.
+6. Make v2 the default across all browser, mobile, API, and microservice entry points; handle pinned users and older clients through the approved compatibility policy.
+7. Verify actual migration and zero unintended new v1 admission; finish or safely transfer existing v1 work.
+8. Exercise the retained compatible rollback path without discarding v2 writes; keep any interruptions in the result.
+9. Complete promotion again, satisfy retention/drain/ownership gates, retire v1, and export the evidence.
+
+If v1/v2 denote breaking API contracts rather than deployment versions, the walkthrough must use an adapter or explicit client migration. Backend routing alone cannot force old consumers onto an incompatible contract and satisfy zero interruption.
+
+## Delivery sequence
+
+| Milestone | Implementation focus | Exit criteria |
+| --- | --- | --- |
+| M0: Approved contract | H001 and concrete capability/cost/access decisions. | Supported first-host configurations, limits, budgets, fixture contracts, and approval gates are recorded; no infrastructure is generated or provisioned without the required approval. |
+| M1: Harness foundation | H002-H012, P001/P002, and P005, implemented in dependency order. | A publicly discoverable catalog and authenticated leased execution path work; security/accessibility/recovery checks pass; unsupported/planned entries cannot execute. |
+| M2: First complete demonstrations | P0 D-S items and W001/W002, including their actual prerequisites. | Interested parties can conduct baseline migration, private preview, rings, scale, guarded failure, rollback, and retirement through the hosted UI with client evidence. |
+| M3: Broader compatibility/platform coverage | P003/P004/P007 and remaining P1 protocol, runtime, data, worker, and platform demonstrations. | Every supported source strategy has a working card on an appropriate host; native host claims have target-host evidence. |
+| M4: Advanced failure domains | P006 and P2 experiments, with explicit cost/risk approvals. | Privileged experiments remain isolated/bounded; outage proxies and platform limits are visible; recovery and cleanup are verified. |
+| M5: Coverage and evidence completion | All remaining D-S items, matrix coverage, soak/statistical collection, learner documentation, and operational readiness. | All 150 cards and both guided workflows meet the shared definition of done; exclusions and insufficient evidence are explicit; no unverified reliability claim is published. |
+
+Do not treat milestone order as an implicit dependency. The item-level prerequisites are authoritative; independent components can proceed in parallel. No story-point, delivery-date, or Azure-cost estimate is asserted before the approved implementation and capacity choices exist.
+
+## Completion and evidence policy
+
+The source goal is:
+
+```text
+Uninterrupted-transition success =
+    uninterrupted successful transition journeys
+    / all attempted transition journeys
+
+Target >= 0.99999
+```
+
+The UI must count errors, timeouts, over-budget latency, unexpected logout/state loss, missing/duplicate effects, and violated data contracts as interruptions. Unknown started outcomes cannot be excluded or presented as successful. Empty samples and users never moved to the candidate provide no migration proof.
+
+For zero failures in independent comparable Bernoulli trials:
+
+```text
+p_upper = 1 - 0.05^(1/n)
+n >= ceil(ln(0.05) / ln(1 - 0.00001)) = 299572
+```
+
+The 299,572-trial figure is an illustrative one-sided 95% confidence bound, not a universal proof threshold. Correlated users within a swap, repeated requests from one user, changed operating envelopes, and outage emulation require explicit analysis and qualification.
+
+Successful educational execution of a negative test does not satisfy the uninterrupted-transition goal. Keep verification verdicts, actual user impact, and cleanup status independently visible.
+
+This backlog inherits the [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer). It does not assign a license, imply Microsoft endorsement/support, or turn the five-nines target into a Microsoft service-level agreement.

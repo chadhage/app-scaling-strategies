@@ -44,9 +44,9 @@ if (stage === 'red') {
   ]) write(snapshot, fs.readFileSync(path.join(__dirname, source)));
   const rows = [
     ['README.md', '| S018 |'],
-    [path.join('.docs', 'wiki', 'backlog.md'), '| D-S018 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), '| A-S018 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), '| B-S018 |']
+    [path.join('meta', 'wiki', 'backlog.md'), '| D-S018 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), '| A-S018 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), '| B-S018 |']
   ].map(([source, prefix]) => {
     const row = fs.readFileSync(path.join(root, source), 'utf8').split(/\r?\n/)
       .find((line) => line.startsWith(prefix));

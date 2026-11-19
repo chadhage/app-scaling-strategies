@@ -5,7 +5,7 @@ try {
     if ($args.Count -ne 0) { throw 'No ledger, card, worker or authorization overrides are accepted.' }
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'Current parent authorization read timed out.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path (Get-Location) '.docs\wiki\flow-state.json')) |
+    $ledger = [IO.File]::ReadAllText((Join-Path (Get-Location) 'meta\wiki\flow-state.json')) |
         ConvertFrom-Json -AsHashtable
     $cards = @($ledger.cards | Where-Object id -eq 'C016')
     $workers = @($ledger.workers | Where-Object id -eq 'worker-C016')

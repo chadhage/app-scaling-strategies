@@ -107,7 +107,7 @@ five-nines guarantee is claimed. Synthetic owner epochs are not real credentials
 Only the parent independently accepts the published lesson.
 
 Authority: [README S043](../../README.md#e-in-flight-requests-and-long-lived-work),
-[D-S043](../../.docs/wiki/backlog.md#e-in-flight-requests-and-long-lived-work),
-[portable card contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract).
+[D-S043](../../meta/wiki/backlog.md#e-in-flight-requests-and-long-lived-work),
+[portable card contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract).
 Provided AS IS for education without warranties; no Microsoft endorsement,
 certification, support or SLA. See the [repository disclaimer](../../README.md#microsoft-open-source-disclaimer).

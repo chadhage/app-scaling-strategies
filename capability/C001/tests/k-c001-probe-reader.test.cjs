@@ -10,7 +10,7 @@ const codes = (result) => result.reasons.map((reason) => reason.code);
 const approval = JSON.stringify(snapshot.approval);
 const approved = `{"approvals":{"C001":${approval}}}`;
 const SECRET = 'k-c001-secret-detail';
-const SOURCE_MESSAGE = 'Cannot read current approvals.C001 from .docs\\wiki\\flow-state.json; all operations are denied.';
+const SOURCE_MESSAGE = 'Cannot read current approvals.C001 from meta\\wiki\\flow-state.json; all operations are denied.';
 const fails = (value) => () => { throw value; };
 
 test('the module exports exactly one frozen function', () => {

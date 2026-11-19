@@ -5,7 +5,7 @@ const { test } = require('node:test');
 const { resolve } = require('node:path');
 const { snapshot, ledgerPath, SECRET, ledgerOf, approved, codes, run, runAll, decisionOf } = require('./fixtures/k-c001-run-probe.cjs');
 
-// The real probe.cjs runs as a child whose reads of .docs\wiki\flow-state.json are served from memory: the live ledger is never read.
+// The real probe.cjs runs as a child whose reads of meta\wiki\flow-state.json are served from memory: the live ledger is never read.
 const LONG = { timeout: 180000 };
 const drifted = (change) => {
   const approval = structuredClone(snapshot.approval);
@@ -13,7 +13,7 @@ const drifted = (change) => {
   return ledgerOf(approval);
 };
 const LOCAL_ONLY = ['LOCAL_ONLY', 'ZERO_NATIVE_LIMIT', 'CLOUD_SPEND_FORBIDDEN', 'NATIVE_TARGET_UNAPPROVED'];
-const SOURCE_MESSAGE = 'Cannot read current approvals.C001 from .docs\\wiki\\flow-state.json; all operations are denied.';
+const SOURCE_MESSAGE = 'Cannot read current approvals.C001 from meta\\wiki\\flow-state.json; all operations are denied.';
 
 test('approved ledger: local.summary and local.probe are allowed, nothing is executed, limits are zero', LONG, async () => {
   const actions = ['local.summary', 'local.probe'];
@@ -78,7 +78,7 @@ test('every ledger defect denies local.summary with the ledger reason first, one
   });
 });
 
-test('the command line asks for .docs\\wiki\\flow-state.json under the repository root and nowhere else', LONG, async () => {
+test('the command line asks for meta\\wiki\\flow-state.json under the repository root and nowhere else', LONG, async () => {
   const [asked, elsewhere] = await Promise.all([
     run(['local.summary'], { text: approved }),
     run(['local.summary'], { text: approved, ledger: resolve(ledgerPath, '..', 'other', 'flow-state.json') })

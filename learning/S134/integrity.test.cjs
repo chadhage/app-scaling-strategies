@@ -23,8 +23,8 @@ test('exact S134 README, D-S134 acceptance, portable card and independent SC-S13
   assert.equal(manifest.objective, 'Retry checkout after response loss; select the ledger showing one correct order.');
   assert.equal(manifest.sourceContract.acceptance, 'Exactly one intended order/effect is recorded with a correct client result or explicit unresolved failure.');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(source.includes('| S134 | **Checkout/order submission:** Produce one order with the correct result despite retries or routing changes. |'), true);
   assert.equal(backlog.includes('| D-S134 | P0 | Add synthetic checkout/order submission with response-loss and retry controls. | Exactly one intended order/effect is recorded with a correct client result or explicit unresolved failure. | D-S049 |'), true);
   assert.equal(kanban.includes('| A-S134 | D-S134 | S | Retry checkout after response loss; select the ledger showing one correct order. | SOURCE |'), true);

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const assert = require('node:assert/strict');
 const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
@@ -26,7 +28,7 @@ if (stage === 'source') {
   const canonical = [];
   const sources = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md']
     .map((file, index) => {
-      const bytes = fs.readFileSync(path.join(repo, file));
+      const bytes = fs.readFileSync(workingSourcePath(repo, file));
       const source = git(['show', `${baseline}:${gitPath(file)}`]);
       const workingSnapshot = `evidence\\raw\\source\\${index + 1}.working.raw.gz`;
       const gitSnapshot = `evidence\\raw\\source\\${index + 1}.git.raw.gz`;
@@ -86,7 +88,7 @@ if (stage === 'source') {
   assert.equal(signed.version, '156.0.4314.50');
   assert.equal(playwrightVersion, '1.56.1');
   assert.equal(process.version, 'v22.23.4');
-  assert.equal(sha(fs.readFileSync(path.join(repo, helperPath))), helperSha256);
+  assert.equal(sha(fs.readFileSync(workingSourcePath(repo, helperPath))), helperSha256);
   json('evidence\\tooling.json', {
     capturedAtUtc: new Date().toISOString(), node: process.version, playwrightVersion,
     browserVersion: signed.version, signatureStatus: signed.signatureStatus, signer: signed.signer,

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -43,7 +45,7 @@ if (command === 'source') {
     { path: '.docs\\wiki\\backlog.md', name: 'backlog' },
     { path: '.docs\\wiki\\kanban.md', name: 'kanban' },
   ].map((item) => {
-    const working = fs.readFileSync(path.join(repo, item.path));
+    const working = fs.readFileSync(workingSourcePath(repo, item.path));
     const committed = git(['show', `${baseline}:${item.path.replace(/\\/g, '/')}`]);
     const workingSnapshot = `evidence\\raw\\source\\${item.name}.working.raw.gz`;
     const gitSnapshot = `evidence\\raw\\source\\${item.name}.git.raw.gz`;

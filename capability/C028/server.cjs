@@ -90,7 +90,7 @@ function closeWeb(server) {
   });
 }
 
-async function startLocal({ readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8') } = {}) {
+async function startLocal({ readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8') } = {}) {
   let approval;
   try {
     approval = JSON.parse(readLedger()).approvals?.C001;

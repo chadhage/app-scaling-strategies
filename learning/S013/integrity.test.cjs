@@ -18,8 +18,8 @@ const manifest = json('manifest.json');
 test('canonical S013 title, D-S013 objective, original no-prerequisite row, and A-card lineage are exact', () => {
   const root = path.resolve(__dirname, '..', '..');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const contract = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const contract = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.ok(source.includes('| S013 | **Concurrency/queue-driven scale-out:** Use supported workload metrics to increase capacity before excessive request accumulation. |'));
   assert.ok(backlog.includes('| D-S013 | P1 | Add concurrency/queue-pressure controls and a supported workload-driven scaling rule. | Backlog/concurrency causes observed capacity changes; completion deadlines hold within the declared envelope; unsupported metrics are rejected. | none |'));
   assert.ok(contract.includes('| A-S013 | D-S013 | S | Increase queue/concurrency pressure; select a valid metric and evaluate deadline outcomes. | SOURCE |'));

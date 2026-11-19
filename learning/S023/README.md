@@ -7,8 +7,8 @@ Open [index.html](index.html) directly in a browser. No server, subscription, cr
 ## Exact source and scope
 
 - **S023**, [root README](../../README.md): “Exercise safe login, read, and transaction paths using isolated test fixtures.”
-- **D-S023**, [backlog](../../.docs/wiki/backlog.md): warm representative journeys using isolated login/read/transaction fixtures. Real safe business-path evidence and isolated external effects remain native parent acceptance requirements.
-- **A-S023**, [portable card contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract): warm a representative business path; detect a shallow probe that missed a failing transaction.
+- **D-S023**, [backlog](../../meta/wiki/backlog.md): warm representative journeys using isolated login/read/transaction fixtures. Real safe business-path evidence and isolated external effects remain native parent acceptance requirements.
+- **A-S023**, [portable card contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract): warm a representative business path; detect a shallow probe that missed a failing transaction.
 - Packet **SC-S023**, one frozen **S** Kano unit, owned only under `learning\S023`. No additional test/plumbing/refinement unit. Exact input excerpts, hashes, claim and implicit packet semantics are in [source-inputs.json](evidence/source-inputs.json).
 
 This checkout defines S023 as a row in the root README, not a separate source directory. The source rows and portable contract were read before behavior design; the captured input record preserves their exact text.

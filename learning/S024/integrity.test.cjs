@@ -38,8 +38,8 @@ test('manifest preserves the exact original frozen S024 source, card contract, p
   assert.deepEqual(manifest.nativeRemainderGates, ['CORE', 'DATA', 'ASANY', 'C064']);
   for (const [file, field, prefix] of [
     ['README.md', 'canonicalReadmeRow', '| S024 |'],
-    [path.join('.docs', 'wiki', 'backlog.md'), 'backlogRow', '| D-S024 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), 'cardRow', '| A-S024 |']
+    [path.join('meta', 'wiki', 'backlog.md'), 'backlogRow', '| D-S024 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), 'cardRow', '| A-S024 |']
   ]) {
     const row = fs.readFileSync(path.join(root, file), 'utf8').split(/\r?\n/).find((line) => line.startsWith(prefix));
     assert.equal(source[field], row);

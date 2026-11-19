@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -57,7 +59,7 @@ if (stage === 'source') {
     const gitPath = file.replace(/\\/g, '/');
     const blob = git(['rev-parse', `${baselineCommit}:${gitPath}`]).toString().trim();
     const committed = git(['cat-file', 'blob', blob]);
-    const raw = select(fs.readFileSync(path.join(repo, file)));
+    const raw = select(fs.readFileSync(workingSourcePath(repo, file)));
     const committedSelection = select(committed);
     if (!canonical(raw).equals(canonical(committedSelection))) throw new Error(`Source drift: ${file}`);
     write(evidence(snapshot), raw);
@@ -72,8 +74,8 @@ if (stage === 'source') {
     packet: 'SC-S060', owner: 'worker-A-S060', entryGate: 'SOURCE', ownedScope: 'learning\\S060\\**',
     baselineCommit, sourceReadAndQualifiedAtUtc: new Date().toISOString(),
     sourceRow: row('S060')(fs.readFileSync(path.join(repo, 'README.md'))).toString().trimEnd(),
-    backlogRow: row('D-S060')(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'backlog.md'))).toString().trimEnd(),
-    cardRow: row('A-S060')(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'kanban.md'))).toString().trimEnd(),
+    backlogRow: row('D-S060')(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'backlog.md'))).toString().trimEnd(),
+    cardRow: row('A-S060')(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'kanban.md'))).toString().trimEnd(),
     sourceFiles: entries,
     qualification: 'Exact raw selected working-tree bytes are preserved; their canonical LF bytes equal selections from the recorded Git blobs. Git object paths use Git slash syntax, not OS path syntax.',
     refinement: 'One small local synthetic schema-recovery exercise; no additional unit, parent or native work is admitted. B-S060 and D-S060 real data/host acceptance remain incomplete.',

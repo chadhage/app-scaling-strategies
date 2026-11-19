@@ -8,7 +8,7 @@ $held = $false
 try {
     $held = $state.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'State timeout.' }
-    $bytes = [IO.File]::ReadAllBytes((Join-Path $root '.docs\wiki\flow-state.json'))
+    $bytes = [IO.File]::ReadAllBytes((Join-Path $root 'meta\wiki\flow-state.json'))
     $ledger = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json -AsHashtable
     $a = $ledger.localPublisherAuthorization
     $approval = [ordered]@{}

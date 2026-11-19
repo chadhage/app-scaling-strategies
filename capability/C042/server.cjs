@@ -261,7 +261,7 @@ function closeServer(server) {
 }
 
 async function startLocal({
-  readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8'),
+  readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8'),
   dataName = null, io = null, settleMs = 0,
 } = {}) {
   let approval;

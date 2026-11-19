@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
@@ -85,8 +87,8 @@ if (stage === 'source') {
     atomicPortableSha256: hash(Buffer.from(atomic)),
     sourceCanonicalSha256: hash(source), backlogCanonicalSha256: hash(backlog), kanbanCanonicalSha256: hash(kanban),
     rawWorkingFiles: Object.fromEntries(files.map((name) => [name, {
-      sha256: hash(fs.readFileSync(path.join(repo, name))),
-      crlfCount: (fs.readFileSync(path.join(repo, name)).toString().match(/\r\n/g) || []).length
+      sha256: hash(fs.readFileSync(workingSourcePath(repo, name))),
+      crlfCount: (fs.readFileSync(workingSourcePath(repo, name)).toString().match(/\r\n/g) || []).length
     }])),
     helper: {
       publishedCommit: '53c0c0d82cc1db6780a87ac2b1085734af6d5c60',

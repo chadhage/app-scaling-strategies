@@ -26,9 +26,9 @@ test('exact S126 source acceptance, portable unit and packet are not native proo
   for (const key of ['accepted', 'nativeProofComplete', 'sourceParentComplete', 'productionNode24Validated']) assert.equal(manifest[key], false);
   assert.equal(manifest.extraKanoCredits, 0);
   assert.equal(fs.readFileSync(path.join(root, 'README.md'), 'utf8').includes('| S126 | **Container Apps, multiple revisions:** Demonstrate weighted canaries, controlled retirement, and compatible rollback. |'), true);
-  assert.equal(fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8').includes('| D-S126 | P0 | Add a Container Apps multiple-revision preset for canary/preview/rollback/retirement. | Native revisions and actual traffic are observed; preview routes stay authorized; old revision retirement follows verified gates. | P002, D-S003 |'), true);
-  assert.equal(fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8').includes('| A-S126 | D-S126 | S | Split multiple revisions and retire one; preview access and old-work gates remain necessary. | SOURCE |'), true);
-  assert.equal(fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8').includes('| B-S126 | D-S126 | S | Conduct one multiple-revision preset; verify native routing, authorized preview, and controlled retirement. | CORE, DATA, ACA, C070 |'), true);
+  assert.equal(fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8').includes('| D-S126 | P0 | Add a Container Apps multiple-revision preset for canary/preview/rollback/retirement. | Native revisions and actual traffic are observed; preview routes stay authorized; old revision retirement follows verified gates. | P002, D-S003 |'), true);
+  assert.equal(fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8').includes('| A-S126 | D-S126 | S | Split multiple revisions and retire one; preview access and old-work gates remain necessary. | SOURCE |'), true);
+  assert.equal(fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8').includes('| B-S126 | D-S126 | S | Conduct one multiple-revision preset; verify native routing, authorized preview, and controlled retirement. | CORE, DATA, ACA, C070 |'), true);
 });
 
 test('documented ACA constraints and fixed-data application gates are explicitly qualified', () => {

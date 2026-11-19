@@ -98,8 +98,8 @@ No Azure, IaC, registration, credentials, deployment, expenditure, native suppor
 production Node.js 24 validation, concurrent ownership fencing, HTTP transport,
 multipart upload, download resume or reliability SLA is claimed. The authoritative
 [source S039](../../README.md#d-sessions-authentication-and-user-state),
-[D-S039 acceptance](../../.docs/wiki/backlog.md#d-sessions-authentication-and-state)
-and [portable A-card contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract)
+[D-S039 acceptance](../../meta/wiki/backlog.md#d-sessions-authentication-and-state)
+and [portable A-card contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract)
 remain separate from local evidence.
 
 Provided “AS IS” for education, without warranties. Microsoft and Azure references

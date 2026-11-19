@@ -29,8 +29,8 @@ if (stage === 'source') {
   const baseline = git('rev-parse', 'HEAD').toString().trim();
   const sources = [
     ['README.md', '| S116 | **Active-active regions:** Preserve declared consistency and conflict-resolution semantics while either region serves a user. |'],
-    [path.join('.docs', 'wiki', 'backlog.md'), '| D-S116 | P2 | Add active-active application regions with the approved writer/consistency/conflict model. | Both regions serve users under the declared data contract; actual writer topology is shown and multi-writer capability is not invented. | P006, D-S069 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), '| A-S116 | D-S116 | S | Serve both regions; identify the real writer/consistency model instead of assuming multi-writer support. | SOURCE |'],
+    [path.join('meta', 'wiki', 'backlog.md'), '| D-S116 | P2 | Add active-active application regions with the approved writer/consistency/conflict model. | Both regions serve users under the declared data contract; actual writer topology is shown and multi-writer capability is not invented. | P006, D-S069 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), '| A-S116 | D-S116 | S | Serve both regions; identify the real writer/consistency model instead of assuming multi-writer support. | SOURCE |'],
   ];
   const records = sources.map(([name, row], index) => {
     const raw = fs.readFileSync(path.join(repo, name));
@@ -59,7 +59,7 @@ if (stage === 'source') {
   });
   const inventory = JSON.parse(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'inventory.json')));
   const pair = inventory.cards.filter((card) => card.packet === 'SC-S116');
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const claim = ledger.cards.find((card) => card.id === 'A-S116');
   if (claim.owner !== 'worker-A-S116' || claim.state !== 'In Progress') throw Error('Claim not owned');
   json('source-contract.json', {

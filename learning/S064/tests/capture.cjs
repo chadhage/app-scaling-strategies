@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync, execFileSync } = require('node:child_process');
@@ -34,7 +36,7 @@ function sourceCapture() {
     ['.docs\\wiki\\kanban.md', 'source-parent-rule.snapshot', (text) => block(text, '## Parent completion and traceability', '## Operating checks')],
   ];
   const records = sources.map(([source, name, extract]) => {
-    const bytes = fs.readFileSync(path.join(repo, source));
+    const bytes = fs.readFileSync(workingSourcePath(repo, source));
     const excerpt = Buffer.from(extract(bytes.toString('utf8')));
     const output = path.join(evidence, 'raw', 'source', name);
     writeNew(output, excerpt);

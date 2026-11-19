@@ -26,8 +26,8 @@ test('exact README S135, D-S135 acceptance, A/B cards and default SC-S135 packet
   assert.equal(manifest.sourceContract.backlog, 'Add sandbox webhook retries/delays during deployment changes.');
   assert.equal(manifest.sourceContract.acceptance, 'Repeated deliveries preserve one business effect and correct observable processing status.');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(source.includes('| S135 | **External webhook:** Process repeated or delayed delivery without duplicate business effects. |'), true);
   assert.equal(backlog.includes('| D-S135 | P1 | Add sandbox webhook retries/delays during deployment changes. | Repeated deliveries preserve one business effect and correct observable processing status. | D-S077 |'), true);
   assert.equal(kanban.includes('| A-S135 | D-S135 | S | Redeliver a delayed webhook; distinguish event attempts from business effects. | SOURCE |'), true);

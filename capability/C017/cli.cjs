@@ -37,7 +37,7 @@ function parseArgs(argv) {
 
 function readApproval() {
   try {
-    const file = path.join(here, '..', '..', '.docs', 'wiki', 'flow-state.json');
+    const file = path.join(here, '..', '..', 'meta', 'wiki', 'flow-state.json');
     return JSON.parse(fs.readFileSync(file, 'utf8')).approvals?.C001;
   } catch {
     throw new Error('C001 current consent is unavailable; the local listener was not started.');

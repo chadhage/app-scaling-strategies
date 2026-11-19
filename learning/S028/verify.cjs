@@ -16,8 +16,8 @@ function captureSource() {
   if (!proof.capture) throw new Error('Source capture is deliberate: set CAPTURE_BROWSER_EVIDENCE=1.');
   const read = (file) => fs.readFileSync(path.join(proof.repo, file), 'utf8');
   const source = read('README.md');
-  const backlog = read(path.join('.docs', 'wiki', 'backlog.md'));
-  const kanban = read(path.join('.docs', 'wiki', 'kanban.md'));
+  const backlog = read(path.join('meta', 'wiki', 'backlog.md'));
+  const kanban = read(path.join('meta', 'wiki', 'kanban.md'));
   const row = (text, id) => text.split(/\r?\n/).find((line) => line.startsWith(`| ${id} |`));
   const head = spawnSync('git', ['--no-pager', 'rev-parse', 'HEAD'], { cwd: proof.repo, encoding: 'utf8' });
   if (head.status !== 0) throw new Error(head.stderr);

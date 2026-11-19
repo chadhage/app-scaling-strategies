@@ -220,7 +220,7 @@ test('listener options cannot override address, port, consent or the fifteen-min
 });
 
 test('unchanged C001 guard denies missing, false, string and drifted consent without ledger mutation', async () => {
-  const approval = JSON.parse(fs.readFileSync(path.join(root, '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8')).approvals.C001;
+  const approval = JSON.parse(fs.readFileSync(path.join(root, '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8')).approvals.C001;
   assert.equal((await guardOperation('local.probe', approval)).allowed, true);
   for (const candidate of [
     undefined, null, {}, { ...approval, designAndLocalImplementationApproved: false },

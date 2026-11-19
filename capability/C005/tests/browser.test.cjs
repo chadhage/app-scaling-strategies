@@ -96,7 +96,7 @@ test('C005 actual isolated headless DOM, keyboard, source, count and CSP accepta
       for (const id of ['S001', 'S150', 'W001', 'W002']) {
         assert.ok((await page.locator(`#${id} .source-link`).first().innerText()).includes(id));
       }
-      const localLinks = await page.locator('a[href^="../../README"], a[href^="../../.docs"]').count();
+      const localLinks = await page.locator('a[href^="../../README"], a[href^="../../meta"]').count();
       assert.equal(localLinks, 3);
     });
     await check('portable, native, support and parent distinctions remain separate on all cards', async () => {

@@ -10,11 +10,11 @@ credentials or network access is needed.
 - [README S034](../../README.md#d-sessions-authentication-and-user-state):
   “Authentication-key continuity: Keep cookie/token validation compatible across
   deployments and planned key rotation.”
-- [D-S034](../../.docs/wiki/backlog.md#d-sessions-authentication-and-state):
+- [D-S034](../../meta/wiki/backlog.md#d-sessions-authentication-and-state):
   compare compatible/incompatible cookie/token-key rotation across v1/v2;
   valid sessions survive compatible rotation and invalid configuration is detected
   without weakening authentication or exposing keys.
-- [A-S034 portable contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract):
+- [A-S034 portable contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract):
   rotate compatible/incompatible fixture keys; authentication failures cannot be
   reclassified as migration success.
 - Frozen **S**, one unit `A-S034`, packet `SC-S034`, owner `worker-A-S034`.

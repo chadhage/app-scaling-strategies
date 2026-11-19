@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -8,7 +10,7 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..', '..');
 const evidence = path.join(__dirname, 'evidence');
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-const read = (file) => fs.readFileSync(path.join(root, file));
+const read = (file) => fs.readFileSync(workingSourcePath(root, file));
 const git = (...args) => {
   const result = spawnSync('git', ['--no-pager', ...args], { cwd: root, encoding: 'utf8' });
   if (result.status !== 0) throw new Error(result.stderr || `git failed: ${args.join(' ')}`);

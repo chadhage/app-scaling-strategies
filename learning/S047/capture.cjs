@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -36,7 +38,7 @@ function sourceHashes(directory = owned, prefix = '') {
 }
 
 function captureContract() {
-  const read = (relative) => fs.readFileSync(path.join(repo, ...relative.split('/')), 'utf8');
+  const read = (relative) => fs.readFileSync(workingSourcePath(repo, relative), 'utf8');
   const row = (relative, id) => {
     const text = read(relative);
     const lines = text.split(/\r?\n/);

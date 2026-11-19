@@ -13,8 +13,8 @@ const lf = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'))
 
 test('exact S129 source acceptance, portable card, native gate and packet remain separate', () => {
   const readme = fs.readFileSync(path.join(repo, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(readme.includes('| S129 | **Functions, supported-plan slots:** Test interrupted execution and replay; slot swaps alone do not guarantee zero downtime. |'), true);
   assert.equal(backlog.includes('| D-S129 | P1 | Add supporting-plan Functions slot swaps during active executions and replay. | Native execution termination and bounded recovery are measured; duplicate effects are prevented; slot swaps alone cannot certify zero downtime. | P004, D-S049, D-S077 |'), true);
   assert.equal(kanban.includes('| A-S129 | D-S129 | S | Swap active Functions executions; distinguish termination/replay from guaranteed zero downtime. | SOURCE |'), true);

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -36,7 +38,7 @@ const sourceNames = [
     'tests\\page.test.cjs', 'tests\\syntax.cjs', 'tests\\browser.cjs', 'tests\\integrity.cjs',
   ].filter((name) => fs.existsSync(path.join(owned, name))).map((name) => `learning\\S040\\${name}`),
 ];
-const sources = Object.fromEntries(sourceNames.map((name) => [name, digest(fs.readFileSync(path.join(root, name)))]));
+const sources = Object.fromEntries(sourceNames.map((name) => [name, digest(fs.readFileSync(workingSourcePath(root, name)))]));
 if (stage === 'red') {
   fs.writeFileSync(path.join(owned, 'evidence', 'red', 'model.stub.snapshot'), fs.readFileSync(path.join(owned, 'model.js')), { flag: 'wx' });
   fs.writeFileSync(path.join(owned, 'evidence', 'red', 'assertion.source.snapshot'), fs.readFileSync(path.join(__dirname, 'model.test.cjs')), { flag: 'wx' });
@@ -55,7 +57,7 @@ if (stage === 'red') {
   };
   for (const [key, row] of Object.entries(sourceProof.sourceRows)) {
     const file = key === 'readme' ? 'README.md' : key === 'backlog' ? '.docs\\wiki\\backlog.md' : '.docs\\wiki\\kanban.md';
-    assert.ok(fs.readFileSync(path.join(root, file), 'utf8').includes(row), `Exact ${key} source must match`);
+    assert.ok(fs.readFileSync(workingSourcePath(root, file), 'utf8').includes(row), `Exact ${key} source must match`);
   }
   fs.writeFileSync(path.join(owned, 'evidence', 'source-contract.json'), `${JSON.stringify(sourceProof, null, 2)}\n`, { flag: 'wx' });
 }

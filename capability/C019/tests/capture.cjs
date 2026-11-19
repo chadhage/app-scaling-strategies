@@ -1,5 +1,6 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -59,12 +60,12 @@ if (mode === 'prerequisites') {
     let bytes;
     if (relative === '.docs\\wiki\\kanban.md') {
       const locked = spawnSync('pwsh.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-        "$m=[Threading.Mutex]::new($false,'Local\\AppScalingStrategies_KanbanState_v1');$h=$false;try{$h=$m.WaitOne([TimeSpan]::FromSeconds(30));if(-not $h){throw 'State mutex timeout'};[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path (Get-Location) '.docs\\wiki\\kanban.md')))}finally{if($h){$m.ReleaseMutex()};$m.Dispose()}"],
+        "$m=[Threading.Mutex]::new($false,'Local\\AppScalingStrategies_KanbanState_v1');$h=$false;try{$h=$m.WaitOne([TimeSpan]::FromSeconds(30));if(-not $h){throw 'State mutex timeout'};[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path (Get-Location) 'meta\\wiki\\kanban.md')))}finally{if($h){$m.ReleaseMutex()};$m.Dispose()}"],
       { encoding: 'utf8', timeout: 45000, maxBuffer: 1024 * 1024, windowsHide: true });
       assert.ifError(locked.error);
       assert.equal(locked.status, 0);
       bytes = Buffer.from(locked.stdout.trim(), 'base64');
-    } else bytes = fs.readFileSync(path.resolve(relative));
+    } else bytes = fs.readFileSync(workingSourcePath(process.cwd(), relative));
     const canonical = spawnSync('git', ['--no-pager', 'show', `${baseline}:${relative.replaceAll('\\', '/')}`],
       { timeout: 30000, maxBuffer: 1024 * 1024, windowsHide: true });
     assert.ifError(canonical.error);

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -76,7 +78,7 @@ const sourceDefinitions = [
 function source() {
   const commit = git('rev-parse', 'HEAD').toString('utf8').trim();
   const sources = sourceDefinitions.map((definition) => {
-    const working = fs.readFileSync(path.join(root, definition.file));
+    const working = fs.readFileSync(workingSourcePath(root, definition.file));
     const canonicalPath = definition.file.split('\\').join('/');
     const canonical = git('show', `${commit}:${canonicalPath}`);
     const variants = {};

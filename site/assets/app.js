@@ -7,8 +7,8 @@
   var REPO = 'https://github.com/chadhage/app-scaling-strategies/blob/main/';
   var DOCS = {
     readme: REPO + 'README.md',
-    backlog: REPO + '.docs/wiki/backlog.md',
-    kanban: REPO + '.docs/wiki/kanban.md'
+    backlog: REPO + 'meta/wiki/backlog.md',
+    kanban: REPO + 'meta/wiki/kanban.md'
   };
 
   /* Scenario groups A-O, ten scenarios each. `readme` and `plan` are the GitHub heading

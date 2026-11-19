@@ -1,4 +1,6 @@
 'use strict';
+
+const { workingSourcePath } = require('../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -18,7 +20,7 @@ const sources = [
   ['isolated-helper', 'testing/browser/isolated.cjs'],
 ];
 const records = sources.map(([name, gitPath]) => {
-  const working = fs.readFileSync(path.join(root, ...gitPath.split('/')));
+  const working = fs.readFileSync(workingSourcePath(root, gitPath));
   const canonical = git('show', `${baseline}:${gitPath}`);
   const workingArchive = `${name}.working.raw.gz`;
   const canonicalArchive = `${name}.canonical.raw.gz`;

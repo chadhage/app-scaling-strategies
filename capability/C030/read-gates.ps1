@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'State mutex timed out; no cached fallback.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path $root '.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
+    $ledger = [IO.File]::ReadAllText((Join-Path $root 'meta\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
     $consent = $ledger.approvals.C001.designAndLocalImplementationApproved
     if ($consent -isnot [bool] -or $consent -ne $true) { throw 'Literal current local design consent is required.' }
     $card = @($ledger.cards | Where-Object id -eq 'C030')
@@ -17,7 +17,7 @@ try {
         throw 'Exact original C030 frozen identity is required.'
     }
     $row = '| C030 | H006, H012 | D | Detect missing/duplicate business effects; verify one intended effect remains distinct from delivery retries. | C023, C029 |'
-    if (@([IO.File]::ReadAllLines((Join-Path $root '.docs\wiki\kanban.md')) | Where-Object { $_ -ceq $row }).Count -ne 1) {
+    if (@([IO.File]::ReadAllLines((Join-Path $root 'meta\wiki\kanban.md')) | Where-Object { $_ -ceq $row }).Count -ne 1) {
         throw 'Exact original C030 kanban row is required.'
     }
     $cards = foreach ($id in @('C023', 'C029')) {

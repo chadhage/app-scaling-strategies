@@ -5,6 +5,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const assert = require('node:assert/strict');
+const { workingSourcePath } = require('../../testing/source-path.cjs');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const PINNED_COMMIT = 'c8b3139f07aa60a64833a5380503b2bd794c0e0e';
@@ -196,7 +197,7 @@ function verifyLearningTargets(catalog) {
 }
 function checkCurrentCanonical(sources) {
   for (const document of ['readme', 'backlog']) {
-    assert.equal(fs.readFileSync(path.join(ROOT, SOURCE_PATHS[document]), 'utf8').replace(/\r\n/g, '\n'),
+    assert.equal(fs.readFileSync(workingSourcePath(ROOT, SOURCE_PATHS[document]), 'utf8').replace(/\r\n/g, '\n'),
       sources[document].replace(/\r\n/g, '\n'), `${document} changed; explicitly review and refresh the pin`);
   }
 }

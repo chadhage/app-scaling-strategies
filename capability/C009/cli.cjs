@@ -5,7 +5,7 @@ const path = require('node:path');
 const { guardOperation } = require('../C001/contract-guard.js');
 const { createApp, scope } = require('./server.cjs');
 
-const LEDGER = path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+const LEDGER = path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json');
 const NAMES = Object.freeze(['visitor', 'conductor-a', 'conductor-b', 'operator']);
 // The browser helper allows a caller-owned listener at most 15 minutes, so the fixture closes itself well before that.
 const DEFAULT_LIFETIME_MS = 600000;

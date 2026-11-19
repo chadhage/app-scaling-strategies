@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
@@ -22,7 +24,7 @@ const sources = [
   ['helper', 'testing/browser/isolated.cjs'],
 ];
 const entries = sources.map(([name, gitPath]) => {
-  const working = fs.readFileSync(path.join(repo, ...gitPath.split('/')));
+  const working = fs.readFileSync(workingSourcePath(repo, gitPath));
   const canonicalCommit = name === 'helper' ? '53c0c0d' : commit;
   const canonical = git('show', `${canonicalCommit}:${gitPath}`);
   const save = (kind, bytes) => {

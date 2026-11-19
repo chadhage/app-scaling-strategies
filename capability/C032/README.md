@@ -49,7 +49,7 @@ node capability\C032\server.cjs
 ```
 
 The CLI rechecks current C001 `local.probe` consent (`guardOperation` from the accepted C001 guard against
-`.docs\wiki\flow-state.json` `approvals.C001`), binds **only `127.0.0.1` on an automatically assigned port** and prints
+`meta\wiki\flow-state.json` `approvals.C001`), binds **only `127.0.0.1` on an automatically assigned port** and prints
 the exact origin and owned PID. It accepts no host, port, identity, credential, destination, stamp or consent override
 and closes itself after 10 minutes. Stop your own CLI with Ctrl+C. Try the credential list in the page: alpha and beta
 are valid, then the expired, forged, empty and absent cases. Set a decoy cookie that names green, observe, then name blue

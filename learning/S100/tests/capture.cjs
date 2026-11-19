@@ -58,8 +58,8 @@ function source() {
   const head = git('rev-parse', 'HEAD').toString().trim();
   const files = [
     ['readme', 'README.md', /^\| S100 \|.*$/m],
-    ['backlog', path.join('.docs', 'wiki', 'backlog.md'), /^\| D-S100 \|.*$/m],
-    ['kanban', path.join('.docs', 'wiki', 'kanban.md'), /^\| A-S100 \|.*$/m],
+    ['backlog', path.join('meta', 'wiki', 'backlog.md'), /^\| D-S100 \|.*$/m],
+    ['kanban', path.join('meta', 'wiki', 'kanban.md'), /^\| A-S100 \|.*$/m],
   ];
   let kanban;
   const sourceFiles = files.map(([name, file, row]) => {
@@ -89,7 +89,7 @@ function source() {
     if (!value) throw new Error(`Missing contract section: ${heading}`);
     return value;
   };
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const claimed = ledger.cards.find((card) => card.id === 'A-S100');
   if (claimed?.owner !== 'worker-A-S100' || claimed.state !== 'In Progress') {
     throw new Error('Claim identity/state mismatch');

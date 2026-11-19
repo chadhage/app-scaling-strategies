@@ -17,8 +17,8 @@ const manifest = json('manifest.json');
 
 test('source title/objective and original D-S012/P001 lineage are exact, not guessed', () => {
   const readme = fs.readFileSync(path.join(__dirname, '..', '..', 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(__dirname, '..', '..', '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const contract = fs.readFileSync(path.join(__dirname, '..', '..', '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(__dirname, '..', '..', 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const contract = fs.readFileSync(path.join(__dirname, '..', '..', 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.ok(readme.includes('| S012 | **CPU/memory-driven scale-out:** Scale before resource saturation causes queuing or latency-budget violations. |'));
   assert.match(backlog, /\| D-S012 \| P1 \| Add CPU\/memory load controls and supported native metric-based autoscale configuration\./);
   assert.match(contract, /\| A-S012 \| D-S012 \| S \| Raise synthetic CPU\/memory demand; explain rule triggers without inferring user success\./);

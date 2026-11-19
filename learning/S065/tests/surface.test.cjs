@@ -12,8 +12,8 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 test('manifest preserves exact S065 source, single frozen unit, packet and native remainder', () => {
   const manifest = JSON.parse(read('manifest.json'));
   const readme = fs.readFileSync(path.join(repo, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.match(readme, /\| S065 \| \*\*Hot-shard rebalancing:\*\* Move tenants or partitions without missing writes or assigning two active owners\. \|/);
   assert.match(backlog, /\| D-S065 \| P1 \| Add hot-tenant partition\/shard rebalance under live read\/write load\. \| Ownership changes preserve committed effects and routing; no two writers own the same moved partition\. \| D-S064 \|/);
   assert.match(kanban, /\| A-S065 \| D-S065 \| S \| Move a hot partition; detect routing gaps and simultaneous active owners\. \| SOURCE \|/);

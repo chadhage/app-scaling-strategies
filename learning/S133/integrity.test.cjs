@@ -26,8 +26,8 @@ test('exact S133 source, D-S133 acceptance, portable card and SC-S133 packet pre
   assert.deepEqual(manifest.sourceContract.dependencies, ['D-S036', 'D-S037']);
   for (const [name, rows] of [
     ['README.md', [manifest.sourceContract.readmeRow]],
-    [path.join('.docs', 'wiki', 'backlog.md'), [manifest.sourceContract.backlogRow]],
-    [path.join('.docs', 'wiki', 'kanban.md'), [manifest.sourceContract.portableRow, manifest.sourceContract.nativeSiblingRow]],
+    [path.join('meta', 'wiki', 'backlog.md'), [manifest.sourceContract.backlogRow]],
+    [path.join('meta', 'wiki', 'kanban.md'), [manifest.sourceContract.portableRow, manifest.sourceContract.nativeSiblingRow]],
   ]) {
     const source = fs.readFileSync(path.join(root, name), 'utf8');
     for (const row of rows) assert.equal(source.includes(row), true, `Exact source row: ${row}`);

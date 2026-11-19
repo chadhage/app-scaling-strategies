@@ -6,7 +6,7 @@ const path = require('node:path');
 // K_C020_NAMESPACE_ROOT is read only by the mutation check, which aims these tests at a private copy of the namespace.
 const namespaceRoot = process.env.K_C020_NAMESPACE_ROOT || path.resolve(__dirname, '..');
 const serverFile = path.join(namespaceRoot, 'server.cjs');
-const ledgerFile = path.join(namespaceRoot, '..', '..', '.docs', 'wiki', 'flow-state.json');
+const ledgerFile = path.join(namespaceRoot, '..', '..', 'meta', 'wiki', 'flow-state.json');
 const { createLocalServer, startLocal } = require(serverFile);
 const approvedContract = require(path.join(namespaceRoot, '..', 'C001', 'approved-contract.js'));
 

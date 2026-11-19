@@ -1,4 +1,6 @@
 'use strict';
+
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -72,7 +74,7 @@ test('exact source rows and default packet rule are preserved without title gues
     ['README.md', 'source', 'S035'], ['.docs\\wiki\\backlog.md', 'parent', 'D-S035'],
     ['.docs\\wiki\\kanban.md', 'card', 'A-S035'], ['.docs\\wiki\\kanban.md', 'nativeSibling', 'B-S035'],
   ]) {
-    const row = fs.readFileSync(path.join(repo, file), 'utf8').split(/\r?\n/).find((line) => line.startsWith(`| ${id} |`));
+    const row = fs.readFileSync(workingSourcePath(repo, file), 'utf8').split(/\r?\n/).find((line) => line.startsWith(`| ${id} |`));
     assert.equal(source[field], row);
   }
   assert.match(source.source, /Complete an OAuth\/OIDC flow started before migration without redirect loops or forced reauthentication/);

@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -110,7 +112,7 @@ function source() {
   const directory = unique('source');
   const commit = git('rev-parse', 'HEAD').toString('utf8').trim();
   const sources = definitions.map((definition) => {
-    const working = fs.readFileSync(path.join(root, definition.file));
+    const working = fs.readFileSync(workingSourcePath(root, definition.file));
     const canonicalPath = definition.file.split('\\').join('/');
     const canonical = git('show', `${commit}:${canonicalPath}`);
     const variants = {};
@@ -238,7 +240,7 @@ function tooling() {
     return { name, version, integrity, cachedDigestVerified: true, registrySignatureIndependentlyVerified: false };
   });
   const helper = 'testing\\browser\\isolated.cjs';
-  const helperSha256 = hash(fs.readFileSync(path.join(root, helper)));
+  const helperSha256 = hash(fs.readFileSync(workingSourcePath(root, helper)));
   if (browser.signatureStatus !== 'Valid' || browser.productVersion !== '156.0.4314.50'
     || !browser.signer.includes('Microsoft Corporation') || process.version !== 'v22.23.4'
     || helperSha256 !== '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055') {

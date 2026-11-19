@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -48,7 +50,7 @@ function capture() {
   }
   const sourceCommit = git(['rev-parse', 'HEAD']).toString().trim();
   const records = sources.map((spec) => {
-    const working = fs.readFileSync(path.join(repo, spec.path));
+    const working = fs.readFileSync(workingSourcePath(repo, spec.path));
     const raw = extract(working, spec);
     const blob = git(['rev-parse', `${sourceCommit}:${spec.path.replace(/\\/g, '/')}`]).toString().trim();
     const committed = git(['cat-file', 'blob', blob]);

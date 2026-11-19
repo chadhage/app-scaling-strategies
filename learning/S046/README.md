@@ -5,7 +5,7 @@
 A-S046 · D-S046 · packet SC-S046 · frozen Kano S · owner `worker-A-S046`.
 The [source S046](../../README.md#e-in-flight-requests-and-long-lived-work)
 requires cursor resumption without missing or duplicating user-visible events.
-The [backlog](../../.docs/wiki/backlog.md#e-in-flight-requests-and-long-lived-work)
+The [backlog](../../meta/wiki/backlog.md#e-in-flight-requests-and-long-lived-work)
 also requires ordering and reconnection-gap measurement against the original budget.
 The portable card specifically asks learners to expose a gap hidden by a newly established stream.
 

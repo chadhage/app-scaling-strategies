@@ -103,7 +103,7 @@ function checkPublisher() {
   const assessed = provenance.inspectCurrent(snapshot, actualSha256);
   if (!assessed.exactAuthorizedBytes) fail(assessed.code);
   return freeze({
-    actualSha256, currentAuthorizationSource: '.docs\\wiki\\flow-state.json.localPublisherAuthorization',
+    actualSha256, currentAuthorizationSource: 'meta\\wiki\\flow-state.json.localPublisherAuthorization',
     currentParentAuthorization: snapshot.authorization, assessment: assessed,
     controllerId: snapshot.controllerId, ledgerRevision: snapshot.ledgerRevision,
     observedAtUtc: snapshot.observedAtUtc, readerPid: snapshot.readerPid,

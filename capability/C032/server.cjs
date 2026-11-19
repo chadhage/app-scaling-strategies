@@ -7,7 +7,7 @@ const { guardOperation } = require(path.join(__dirname, '..', 'C001', 'contract-
 const contract = require('./contract.js');
 const { createWorld, FixtureError } = require('./fixture.cjs');
 
-const LEDGER = path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+const LEDGER = path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json');
 const LISTENER_LIFETIME_MS = 10 * 60 * 1000;
 const scope = Object.freeze({
   cardId: 'C032', businessData: 'synthetic', transport: '127.0.0.1 HTTP only',

@@ -24,8 +24,8 @@ test('exact S132 README, D-S132 acceptance/dependency, A/B cards and packet are 
   assert.equal(manifest.sourceContract.acceptance, 'The user finishes login without restarting, losing state, or exceeding the agreed budget.');
   assert.equal(manifest.sourceContract.dependency, 'D-S035');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(source.includes(manifest.sourceContract.readmeRow), true);
   assert.equal(backlog.includes(manifest.sourceContract.backlogRow), true);
   for (const field of ['portableRow', 'nativeRow', 'packetRule']) assert.equal(kanban.includes(manifest.sourceContract[field]), true, field);

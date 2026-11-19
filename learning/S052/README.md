@@ -5,7 +5,7 @@
 A-S052 · D-S052 · SC-S052 · frozen Kano S · `worker-A-S052`.
 The exact [S052 source](../../README.md#f-n-tier-and-version-compatibility)
 requires compatibility while routing propagation still leaves requests on the old
-backend. [D-S052](../../.docs/wiki/backlog.md#f-n-tier-and-version-compatibility)
+backend. [D-S052](../../meta/wiki/backlog.md#f-n-tier-and-version-compatibility)
 requires new clients to tolerate supported old contracts without silently reporting
 success for required unsupported features. This lesson does both, rather than
 equating HTTP 200 or a new-only sample with old-contract compatibility.

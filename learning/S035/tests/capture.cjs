@@ -1,4 +1,6 @@
 'use strict';
+
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -24,7 +26,7 @@ function files(directory) {
 }
 const [action, ...args] = process.argv.slice(2);
 if (action === 'source') {
-  const read = (file) => fs.readFileSync(path.join(repo, file), 'utf8');
+  const read = (file) => fs.readFileSync(workingSourcePath(repo, file), 'utf8');
   const readme = read('README.md');
   const backlog = read('.docs\\wiki\\backlog.md');
   const kanban = read('.docs\\wiki\\kanban.md');
@@ -39,7 +41,7 @@ if (action === 'source') {
     packetRule: kanban.split(/\r?\n/).find((line) => line.startsWith('Packet membership is fixed')),
     claim, helperCommit: '53c0c0d',
     hashes: ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md', 'testing\\browser\\isolated.cjs']
-      .map((file) => ({ path: file, sha256: hash(fs.readFileSync(path.join(repo, file))) })),
+      .map((file) => ({ path: file, sha256: hash(fs.readFileSync(workingSourcePath(repo, file))) })),
   };
   if (!result.source || !result.parent || !result.card || claim.owner !== 'worker-A-S035') throw new Error('Exact source/claim missing');
   writeNew(`${next('source-contract')}.json`, `${JSON.stringify(result, null, 2)}\n`);

@@ -36,8 +36,8 @@ test('exact S125 source acceptance, portable unit and packet remain distinct fro
   assert.equal(manifest.mode, 'portable-synthetic');
   for (const field of ['accepted', 'nativeProofComplete', 'sourceParentComplete']) assert.equal(manifest[field], false);
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(source.includes('| S125 | **Container Apps, single revision:** Verify readiness-gated replacement and user continuity beyond the routing switch itself. |'), true);
   assert.equal(backlog.includes('| D-S125 | P0 | Add a Container Apps single-revision preset with failed/successful candidate readiness. | Old revision routing persists until native readiness permits replacement; active-work/state outcomes are independently verified. | P002 |'), true);
   assert.equal(kanban.includes('| A-S125 | D-S125 | S | Update a single ACA revision; the old revision remains until candidate readiness. | SOURCE |'), true);

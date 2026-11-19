@@ -83,8 +83,8 @@ test('recorded exact strategy/card rows still match the source, without freezing
   const source = JSON.parse(read(path.join('evidence', 'source-contract.json')));
   const repository = path.resolve(root, '..', '..');
   for (const [file, field] of [['README.md', 'exactSource'],
-    [path.join('.docs', 'wiki', 'backlog.md'), 'exactParent'],
-    [path.join('.docs', 'wiki', 'kanban.md'), 'exactCard']]) {
+    [path.join('meta', 'wiki', 'backlog.md'), 'exactParent'],
+    [path.join('meta', 'wiki', 'kanban.md'), 'exactCard']]) {
     assert.ok(fs.readFileSync(path.join(repository, file), 'utf8').includes(source[field]), file);
   }
   assert.equal(source.portableContractReadBeforeBehaviorDesign, true);

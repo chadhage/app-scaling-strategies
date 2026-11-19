@@ -1,5 +1,6 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -41,7 +42,7 @@ if (mode === 'source') {
   const records = sources.map(([name, file, exactRow]) => {
     const gitPath = file.replaceAll('\\', '/');
     const committed = git(['show', `${head}:${gitPath}`]);
-    const working = read(path.join(root, file));
+    const working = read(workingSourcePath(root, file));
     for (const [label, bytes] of [['git', committed], ['working', working]]) {
       if (!bytes.toString('utf8').split(/\r?\n/).some((line) => line.trim() === exactRow)) {
         throw new Error(`${name} ${label} does not contain the exact contracted row`);

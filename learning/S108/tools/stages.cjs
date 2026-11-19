@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -48,7 +50,7 @@ if (stage === 'source') {
     ['kanban', '.docs/wiki/kanban.md', commit],
     ['helper', 'testing/browser/isolated.cjs', '53c0c0d'],
   ].map(([name, source, canonicalCommit]) => {
-    const working = fs.readFileSync(path.join(repo, ...source.split('/')));
+    const working = fs.readFileSync(workingSourcePath(repo, source));
     const canonical = git(['show', `${canonicalCommit}:${source}`]);
     const normalized = Buffer.from(working.toString('utf8').replace(/\r\n/g, '\n'));
     return {
@@ -60,7 +62,7 @@ if (stage === 'source') {
       workingEqualsCanonicalBytes: working.equals(canonical),
     };
   });
-  const kanban = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'kanban.md'), 'utf8');
   const portableA = kanban.split('### Portable A-card lesson contract')[1].split('## Concurrent pull')[0].trim();
   assert.ok(portableA.includes('Training rehearsal - synthetic data - not a live Azure result'));
   writeJson('source.json', {

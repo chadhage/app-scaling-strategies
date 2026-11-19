@@ -156,9 +156,9 @@ test('manifest and exact source rows preserve A/native acceptance boundaries', (
   const repo = path.resolve(__dirname, '..', '..');
   const lines = (file) => fs.readFileSync(path.join(repo, ...file), 'utf8').split(/\r?\n/);
   assert.ok(lines(['README.md']).includes(`| S103 | ${source.readmeRequiredBehavior} |`));
-  assert.ok(lines(['.docs', 'wiki', 'backlog.md']).includes(`| D-S103 | P1 | ${source.backlogWork} | ${source.backlogAcceptance} | P006 |`));
-  assert.ok(lines(['.docs', 'wiki', 'kanban.md']).includes(`| A-S103 | D-S103 | S | ${source.cardObjective} | SOURCE |`));
-  assert.ok(lines(['.docs', 'wiki', 'kanban.md']).includes(`| B-S103 | D-S103 | S | ${source.nativeObjective} | CORE, DATA, HOST, C092 |`));
+  assert.ok(lines(['meta', 'wiki', 'backlog.md']).includes(`| D-S103 | P1 | ${source.backlogWork} | ${source.backlogAcceptance} | P006 |`));
+  assert.ok(lines(['meta', 'wiki', 'kanban.md']).includes(`| A-S103 | D-S103 | S | ${source.cardObjective} | SOURCE |`));
+  assert.ok(lines(['meta', 'wiki', 'kanban.md']).includes(`| B-S103 | D-S103 | S | ${source.nativeObjective} | CORE, DATA, HOST, C092 |`));
   assert.equal(manifest.objective, source.cardObjective);
   assert.equal(manifest.packet, 'SC-S103');
   assert.equal(manifest.kanoUnit, 'A-S103');

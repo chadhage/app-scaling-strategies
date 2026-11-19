@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'No state path, card or approval overrides are accepted.' }
-$path = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\.docs\wiki\flow-state.json'))
+$path = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\meta\wiki\flow-state.json'))
 $mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
 $held = $false
 try {

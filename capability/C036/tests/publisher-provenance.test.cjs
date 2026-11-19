@@ -112,7 +112,7 @@ test('actual wrapper observes State-before-Publisher order and checks actual byt
   assert.match(reader, /Local\\AppScalingStrategies_KanbanState_v1/);
   assert.match(reader, /finally.*ReleaseMutex/s);
   assert.match(wrapper, /Private bytes changed immediately before unchanged standard delegation/);
-  assert.match(wrapper, /currentCanonicalAuthorizationSource='\.docs\\wiki\\flow-state\.json\.localPublisherAuthorization'/);
+  assert.match(wrapper, /currentCanonicalAuthorizationSource='meta\\wiki\\flow-state\.json\.localPublisherAuthorization'/);
   assert.match(wrapper, /-Paths @\('capability\\C036'\)/);
   assert.match(wrapper, /unownedBefore\.sha256 -cne \$unownedAfter\.sha256/);
   assert.match(wrapper, /main must equal remote before any staging/);

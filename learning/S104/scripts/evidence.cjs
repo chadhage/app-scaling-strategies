@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -75,7 +77,7 @@ function captureSource() {
     }
   ];
   const sourceFiles = descriptors.map(descriptor => {
-    const working = fs.readFileSync(path.join(repo, descriptor.path));
+    const working = fs.readFileSync(workingSourcePath(repo, descriptor.path));
     const gitBlobOid = git(['rev-parse', `${head}:${gitPath(descriptor.path)}`]).toString().trim();
     const blob = git(['cat-file', 'blob', gitBlobOid]);
     return {
@@ -97,7 +99,7 @@ function captureSource() {
     };
   });
   const inventory = JSON.parse(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'inventory.json')));
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const card = ledger.cards.find(value => value.id === 'A-S104');
   if (card.owner !== 'worker-A-S104' || card.state !== 'In Progress') throw new Error('Claim no longer owned.');
   writeJson('source-contract.json', {

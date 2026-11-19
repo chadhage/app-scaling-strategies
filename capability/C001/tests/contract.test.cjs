@@ -20,7 +20,7 @@ const canonical = (value) => {
 };
 
 test('approved artifact exactly records current operator approval and source', () => {
-  const state = JSON.parse(readFileSync(resolve(__dirname, '..', '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8'));
+  const state = JSON.parse(readFileSync(resolve(__dirname, '..', '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8'));
   assert.deepEqual(snapshot.approval, state.approvals.C001);
   assert.equal(snapshot.source.commit, '26747d4fbbd51235c612dbd9d8c92ab335aef78e');
   assert.equal(snapshot.source.selector, 'approvals.C001');

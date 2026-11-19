@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'Current State read timed out; no historical authority fallback.' }
-    $bytes = [IO.File]::ReadAllBytes((Join-Path $root '.docs\wiki\flow-state.json'))
+    $bytes = [IO.File]::ReadAllBytes((Join-Path $root 'meta\wiki\flow-state.json'))
     $ledger = [Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json -AsHashtable
     if ($ledger.controllerId -cne '942b9aec-aa3f-4179-b6ed-e2bc57abeed2') { throw 'Current controller mismatch.' }
     $cards = foreach ($id in @('C015', 'C029', 'C001', 'C002')) {
@@ -50,7 +50,7 @@ try {
         worker=[ordered]@{id=$worker[0].id;cardId=$worker[0].cardId;status=$worker[0].status}
         authorization=$authorization
         ownedPaths=@('capability\C035')
-        exactOriginalKanbanRowPresent=(@([IO.File]::ReadAllLines((Join-Path $root '.docs\wiki\kanban.md')) |
+        exactOriginalKanbanRowPresent=(@([IO.File]::ReadAllLines((Join-Path $root 'meta\wiki\kanban.md')) |
             Where-Object { $_ -ceq '| C035 | H001, H007, H012 | D | Classify unsupported, unknown, cancelled, and interrupted results honestly; incomplete evidence cannot become success. | C015, C029 |' }).Count -eq 1)
     } | ConvertTo-Json -Depth 20 -Compress))
 } finally {

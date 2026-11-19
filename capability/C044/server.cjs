@@ -179,7 +179,7 @@ async function closeOwned(server) {
 async function startLocal(settings = {}) {
   let approval;
   try {
-    const file = path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+    const file = path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json');
     approval = JSON.parse(fs.readFileSync(file, 'utf8')).approvals?.C001;
   } catch {
     throw new Error('C001 current consent is unavailable; the local listener was not started.');

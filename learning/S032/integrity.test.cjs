@@ -44,9 +44,9 @@ test('manifest preserves exact S032 source, frozen unit, packet, portable contra
   }
   for (const [file, field, prefix] of [
     ['README.md', 'canonicalReadmeRow', '| S032 |'],
-    [path.join('.docs', 'wiki', 'backlog.md'), 'backlogRow', '| D-S032 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), 'cardRow', '| A-S032 |'],
-    [path.join('.docs', 'wiki', 'kanban.md'), 'nativeRemainderRow', '| B-S032 |']
+    [path.join('meta', 'wiki', 'backlog.md'), 'backlogRow', '| D-S032 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), 'cardRow', '| A-S032 |'],
+    [path.join('meta', 'wiki', 'kanban.md'), 'nativeRemainderRow', '| B-S032 |']
   ]) {
     const row = fs.readFileSync(path.join(root, file), 'utf8').split(/\r?\n/).find((line) => line.startsWith(prefix));
     assert.equal(source[field], row);

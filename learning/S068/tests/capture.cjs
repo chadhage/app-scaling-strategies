@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -34,7 +36,7 @@ if (mode === 'source') {
   const snapshots = [];
   const contents = [];
   for (const [index, file] of files.entries()) {
-    const raw = fs.readFileSync(path.join(repo, file));
+    const raw = fs.readFileSync(workingSourcePath(repo, file));
     const objectPath = `${baselineCommit}:${file.replace(/\\/g, '/')}`;
     const gitBlob = git(['rev-parse', objectPath]).toString().trim();
     const committed = git(['cat-file', 'blob', gitBlob]);

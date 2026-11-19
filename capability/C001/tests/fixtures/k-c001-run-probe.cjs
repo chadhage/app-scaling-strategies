@@ -10,7 +10,7 @@ const snapshot = require('../../approved-contract.js');
 
 const probe = resolve(__dirname, '..', '..', 'probe.cjs');
 const preload = resolve(__dirname, 'k-c001-probe-preload.cjs');
-const ledgerPath = resolve(__dirname, '..', '..', '..', '..', '.docs', 'wiki', 'flow-state.json');
+const ledgerPath = resolve(__dirname, '..', '..', '..', '..', 'meta', 'wiki', 'flow-state.json');
 const SECRET = 'k-c001-secret-detail';
 const TIMEOUT_MS = 30000;
 const FAILED_CLOSED = Object.freeze({

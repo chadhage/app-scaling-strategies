@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const assert = require('node:assert/strict');
 const zlib = require('node:zlib');
 const { spawnSync, execFileSync } = require('node:child_process');
@@ -68,7 +70,7 @@ if (command === 'source') {
   const working = [];
   const committed = [];
   const sources = paths.map((sourcePath, index) => {
-    const bytes = fs.readFileSync(path.join(repo, sourcePath));
+    const bytes = fs.readFileSync(workingSourcePath(repo, sourcePath));
     const gitBytes = git(['show', `${baseline}:${sourcePath.replace(/\\/g, '/')}`]);
     working.push(bytes.toString());
     committed.push(gitBytes.toString());
@@ -126,7 +128,7 @@ if (command === 'source') {
     noCloudIaCScaffoldIdentityCredentialsDeploySpendPackagesDownloads: true,
   });
 } else if (command === 'tooling') {
-  assert.equal(sha(fs.readFileSync(path.join(repo, helperPath))), helperSha256);
+  assert.equal(sha(fs.readFileSync(workingSourcePath(repo, helperPath))), helperSha256);
   const browser = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
   const ps = `$p='${browser}';$s=Get-AuthenticodeSignature $p;[ordered]@{signatureStatus=\"$($s.Status)\";signer=$s.SignerCertificate.Subject;browserVersion=(Get-Item $p).VersionInfo.ProductVersion}|ConvertTo-Json -Compress`;
   const signature = JSON.parse(execFileSync('pwsh', ['-NoProfile', '-NonInteractive', '-Command', ps], { windowsHide: true }));

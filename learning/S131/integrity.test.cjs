@@ -1,4 +1,6 @@
 'use strict';
+
+const { workingSourcePath } = require('../../testing/source-path.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -63,7 +65,7 @@ test('exact S131 source, portable card and SC-S131 packet stay bound without cla
   assert.equal(receipt.nativeSibling.id, 'B-S131');
   assert.equal(receipt.exactLines.length, 4);
   const currentLines = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'].flatMap((file) =>
-    fs.readFileSync(path.join(repo, file), 'utf8').split(/\r?\n/).filter((line) => /^\| (?:S131|D-S131|A-S131|B-S131) \|/.test(line)));
+    fs.readFileSync(workingSourcePath(repo, file), 'utf8').split(/\r?\n/).filter((line) => /^\| (?:S131|D-S131|A-S131|B-S131) \|/.test(line)));
   assert.deepEqual(currentLines, receipt.exactLines);
   assert.deepEqual(manifest.sourceContract.sourcePrerequisites, ['D-S057']);
 });

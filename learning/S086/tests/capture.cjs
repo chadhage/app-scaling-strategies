@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -50,7 +52,7 @@ function slices(name, raw) {
 function captureSource() {
   const baseline = git(['rev-parse', 'HEAD']).toString('utf8').trim();
   const observations = ['README.md', '.docs/wiki/backlog.md', '.docs/wiki/kanban.md'].map((source, i) => {
-    const working = fs.readFileSync(path.join(repo, ...source.split('/')));
+    const working = fs.readFileSync(workingSourcePath(repo, source));
     const canonical = git(['show', `${baseline}:${source}`]);
     const prefix = `evidence/raw/source/${i + 1}`;
     once(`${prefix}-working.gz`, zlib.gzipSync(working));

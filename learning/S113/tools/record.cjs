@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -28,7 +30,7 @@ if (stage === 'source') {
     ['kanban', '.docs/wiki/kanban.md', canonicalCommit],
     ['helper', 'testing/browser/isolated.cjs', '53c0c0d'],
   ].map(([name, source, commit]) => {
-    const working = fs.readFileSync(path.join(repo, ...source.split('/')));
+    const working = fs.readFileSync(workingSourcePath(repo, source));
     const canonical = git(['show', `${commit}:${source}`]);
     return { name, source, canonicalCommit: commit, working: raw('source', `${name}-working`, working),
       canonicalGit: raw('source', `${name}-canonical`, canonical), workingLfSha256: hash(lf(working)),

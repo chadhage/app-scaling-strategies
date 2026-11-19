@@ -16,7 +16,7 @@ const extracts = [
     assert.ok(row[0].includes('Pin or explicitly version long-lived workflows so new code does not invalidate existing execution history.'));
     return row[0];
   }],
-  [path.join('.docs', 'wiki', 'backlog.md'), 'source-backlog.snapshot', (text) => {
+  [path.join('meta', 'wiki', 'backlog.md'), 'source-backlog.snapshot', (text) => {
     const row = text.match(/^\| D-S058 \|[^\n]*\n/gm);
     assert.equal(row?.length, 1);
     assert.ok(row[0].includes('Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected.'));
@@ -24,7 +24,7 @@ const extracts = [
     assert.equal(prerequisite?.length, 1);
     return row[0] + prerequisite[0];
   }],
-  [path.join('.docs', 'wiki', 'kanban.md'), 'source-portable-contract.snapshot', (text) => {
+  [path.join('meta', 'wiki', 'kanban.md'), 'source-portable-contract.snapshot', (text) => {
     const row = text.match(/^\| A-S058 \|[^\n]*\n/gm);
     const sibling = text.match(/^\| B-S058 \|[^\n]*\n/gm);
     const packet = text.match(/^Packet membership is fixed[^\n]*\n/m);

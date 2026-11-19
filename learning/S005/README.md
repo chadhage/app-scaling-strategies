@@ -99,5 +99,5 @@ blocks connections and form navigation. No arbitrary destinations or credentials
 are accepted. Native B-S005 proof remains gated separately.
 
 Sources: [S005](../../README.md#scenario-catalog),
-[D-S005](../../.docs/wiki/backlog.md#a-deployment-and-traffic-migration),
-[portable A contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract).
+[D-S005](../../meta/wiki/backlog.md#a-deployment-and-traffic-migration),
+[portable A contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract).

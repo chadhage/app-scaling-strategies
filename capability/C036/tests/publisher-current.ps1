@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'Current canonical parent state mutex timed out.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path $repository '.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable -Depth 100
+    $ledger = [IO.File]::ReadAllText((Join-Path $repository 'meta\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable -Depth 100
     $cards = @($ledger.cards | Where-Object { $_.id -eq 'C036' })
     $workers = @($ledger.workers | Where-Object { $_.id -eq 'worker-C036' })
     if ($cards.Count -ne 1 -or $workers.Count -ne 1) { throw 'Exact original C036 delegation unavailable.' }

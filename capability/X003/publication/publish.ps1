@@ -7,7 +7,7 @@ if ($env:CAPTURE_BROWSER_EVIDENCE -cne '1') { throw 'Only exact CAPTURE_BROWSER_
 if (-not $Message.StartsWith('[X003][L]')) { throw 'Only original X003 with frozen L class may be published.' }
 $root=(Get-Location).Path
 $owned=Join-Path $root 'capability\X003'
-$ledgerPath=Join-Path $root '.docs\wiki\flow-state.json'
+$ledgerPath=Join-Path $root 'meta\wiki\flow-state.json'
 $publisher=Join-Path $root '.git\kanban-orchestrator\publish.ps1'
 $validator=Join-Path $owned 'publication\authorization.cjs'
 $indexValidator=Join-Path $owned 'publication\index.cjs'

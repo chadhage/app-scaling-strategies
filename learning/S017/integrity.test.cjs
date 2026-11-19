@@ -57,8 +57,8 @@ test('one frozen S unit, source parent and packet; no native completion', () => 
 
 test('canonical S017, backlog comparison and portable contracts match the declared scope', () => {
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.ok(source.includes('| S017 | **Vertical scaling through replacement:** Prepare a larger parallel deployment when an in-place size change would violate continuity requirements. |'));
   assert.ok(backlog.includes('| D-S017 | P1 | Add **Replace with larger capacity** beside **In-place resize** as a clearly labeled comparison. | Parallel capacity is ready before handoff; continuity and cost are compared; disruptive in-place outcomes are reported honestly. | P001, D-S001 |'));
   assert.ok(kanban.includes('| A-S017 | D-S017 | S | Compare in-place resize with ready parallel replacement; expose both cost and disruption tradeoffs. | SOURCE |'));

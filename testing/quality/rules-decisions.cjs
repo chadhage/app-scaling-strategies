@@ -13,7 +13,7 @@ const KEYS = ['target', 'iacGeneration', 'scaffold', 'identityRegistration', 'de
 const PLACEHOLDERS = ['subscriptionId', 'tenantId', 'resourceGroupName', 'region'];
 const FLAGS = ['liveAzureExecutionApproved', 'iacGenerationApproved', 'scaffoldApproved', 'deploymentApproved', 'identityRegistrationApproved', 'expenditureApproved'];
 const COMMIT = /^[0-9a-f]{7,40}$/;
-const ARTIFACTS = [/^demo\//, /^infra[/\\*]/, /^\.github\/workflows\/azure-demo/, /^\.azure\/deployment-plan\.md$/, /^demo\/cleanup\.cjs$/];
+const ARTIFACTS = [/^demo\//, /^infra[/\\*]/, /^\.github\/workflows\/azure-demo/, /^(?:meta|\.azure)\/deployment-plan\.md$/, /^demo\/cleanup\.cjs$/];
 const MAX_PRICE_AGE_DAYS = 7;
 
 // One balanced <...> group that spans the whole string: nested pairs are fine, a value after the closing bracket is not.
@@ -69,7 +69,7 @@ function checkRepositoryState(packet, add) {
   if (!(isObj(rs.ownerCommit) && COMMIT.test(String(rs.ownerCommit.id || '')))) add('REPO_STATE_HEAD', 'repositoryState.ownerCommit.id', 'the owner commit that added the artifacts must be named');
   const artifacts = isArr(rs.artifacts) ? rs.artifacts : [];
   const paths = artifacts.map((x) => (isObj(x) ? String(x.path) : ''));
-  if (!ARTIFACTS.every((re) => paths.some((p) => re.test(p)))) add('REPO_STATE_ARTIFACTS', 'repositoryState.artifacts', 'the state must list demo/, infra/, the azure-demo workflows, .azure/deployment-plan.md and demo/cleanup.cjs');
+  if (!ARTIFACTS.every((re) => paths.some((p) => re.test(p)))) add('REPO_STATE_ARTIFACTS', 'repositoryState.artifacts', 'the state must list demo/, infra/, the azure-demo workflows, meta/deployment-plan.md (or its historical .azure path) and demo/cleanup.cjs');
   if (artifacts.some((x) => !isObj(x) || x.approval !== 'not an approval')) add('REPO_STATE_APPROVAL_CLAIM', 'repositoryState.artifacts', 'every HEAD artifact is "not an approval"');
   const rel = isObj(rs.relationToThisPacket) ? rs.relationToThisPacket : {};
   if (rel.headArtifactsAreApprovals !== false) add('REPO_STATE_APPROVAL_CLAIM', 'repositoryState.relationToThisPacket.headArtifactsAreApprovals', 'HEAD artifacts are not approvals');

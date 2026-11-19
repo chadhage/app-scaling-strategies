@@ -1,5 +1,6 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -45,7 +46,7 @@ if (mode === 'source') {
   ];
   const sources = rows.map(([name, file, exactRow]) => {
     const gitPath = file.replaceAll('\\', '/');
-    const bytesByFormat = { git: git(['show', `${head}:${gitPath}`]), working: read(path.join(root, file)) };
+    const bytesByFormat = { git: git(['show', `${head}:${gitPath}`]), working: read(workingSourcePath(root, file)) };
     const snapshots = {};
     for (const [format, bytes] of Object.entries(bytesByFormat)) {
       if (!bytes.toString('utf8').split(/\r?\n/).includes(exactRow)) throw new Error(`Exact ${name} ${format} contract is absent.`);

@@ -10,7 +10,7 @@ Open `capability\C004\index.html` directly in a browser. No server, package inst
 
 ## What this delivers
 
-One frozen **S** card, `kanoUnit=C004`, parents **H001/H003**, technical gates **C002/C003**. The exact acceptance is the [C004 row](../../.docs/wiki/kanban.md) and its source parents in [backlog.md](../../.docs/wiki/backlog.md). This is a local plan/consent **data UI**, not a new executor, production API, native adapter, role boundary, lease, reservation or server consent/audit service. It does not complete either parent.
+One frozen **S** card, `kanoUnit=C004`, parents **H001/H003**, technical gates **C002/C003**. The exact acceptance is the [C004 row](../../meta/wiki/kanban.md) and its source parents in [backlog.md](../../meta/wiki/backlog.md). This is a local plan/consent **data UI**, not a new executor, production API, native adapter, role boundary, lease, reservation or server consent/audit service. It does not complete either parent.
 
 `buildPlan(request, explicitApproval)` and `createReviewSession()` are local JavaScript component functions; `plan-model.d.ts` describes their shapes. The runtime rejects unknown/missing fields, non-data properties, invalid numeric values and inconsistent price/scope records. No TypeScript compiler or JSON Schema engine was installed or claimed.
 

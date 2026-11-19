@@ -73,7 +73,7 @@ async function converse(client, parsed) {
 }
 
 async function runCli(argv, {
-  readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8'),
+  readLedger = () => fs.readFileSync(path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8'),
   connectTo = connect, log = console.log, error = console.error
 } = {}) {
   let parsed;

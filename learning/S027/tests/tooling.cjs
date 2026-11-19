@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -9,7 +11,7 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..', '..', '..');
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const helper = 'testing\\browser\\isolated.cjs';
-const helperSha256 = hash(fs.readFileSync(path.join(root, helper)));
+const helperSha256 = hash(fs.readFileSync(workingSourcePath(root, helper)));
 assert.equal(helperSha256, '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86cc055');
 const playwrightVersion = JSON.parse(fs.readFileSync(
   path.join(root, 'testing', 'browser', 'node_modules', 'playwright', 'package.json'), 'utf8',
@@ -27,7 +29,7 @@ assert.match(edge.signer, /CN=Microsoft Corporation/);
 assert.equal(edge.version, '156.0.4314.50');
 const sourceFiles = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
 const source = sourceFiles.map((relative) => {
-  const bytes = fs.readFileSync(path.join(root, relative));
+  const bytes = fs.readFileSync(workingSourcePath(root, relative));
   const lines = bytes.toString('utf8').split(/\r?\n/);
   return {
     path: relative,

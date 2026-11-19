@@ -16,7 +16,7 @@ const target = path.join(repository, supplied, `fresh-${mode}`);
 if (fs.existsSync(target)) throw new Error('U055 fresh target already exists; preserve that attempt and use a distinct owned target.');
 fs.mkdirSync(target, { recursive: true });
 const archive = path.join(target, 'accepted.tar');
-const scopes = ['capability\\C026', 'capability\\C001', '.docs\\wiki\\flow-state.json'];
+const scopes = ['capability\\C026', 'capability\\C001', 'meta\\wiki\\flow-state.json'];
 fs.writeFileSync(archive, execFileSync('git', ['--no-pager', 'archive', '--format=tar', commit, ...scopes], { cwd: repository, maxBuffer: 64 * 1024 * 1024 }), { flag: 'wx' });
 try {
   execFileSync('tar', ['-xf', archive, '-C', target], { windowsHide: true });

@@ -136,8 +136,8 @@ function source() {
       if(-not $held){throw 'State mutex timed out; no unlocked fallback'}
       $files=@('README.md','.docs\\wiki\\backlog.md','.docs\\wiki\\kanban.md','.git\\kanban-orchestrator\\inventory.json')
       $buffers=@{}
-      foreach($file in $files){$buffers[$file]=[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $PWD $file)))}
-      $ledger=[IO.File]::ReadAllText((Join-Path $PWD '.docs\\wiki\\flow-state.json')) | ConvertFrom-Json -AsHashtable
+      foreach($file in $files){$current=$file -replace '^\\.docs\\\\','meta\\';$buffers[$file]=[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $PWD $current)))}
+      $ledger=[IO.File]::ReadAllText((Join-Path $PWD 'meta\\wiki\\flow-state.json')) | ConvertFrom-Json -AsHashtable
       $card=@($ledger.cards | Where-Object id -eq 'A-S149')
       if($card.Count -ne 1 -or $card[0].state -ne 'In Progress' -or $card[0].owner -ne 'worker-A-S149'){throw 'Exact claim mismatch'}
       @{buffers=$buffers;claimedCard=$card[0];readHandlesClosedBeforeRelease=$true;mutex='Local\\AppScalingStrategies_KanbanState_v1'} | ConvertTo-Json -Depth 20 -Compress

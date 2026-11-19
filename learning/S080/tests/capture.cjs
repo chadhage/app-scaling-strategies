@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -17,13 +19,13 @@ const json = (file, value) => write(file, JSON.stringify(value, null, 2) + '\n')
 if (stage === 'source') {
   const baseline = git(['rev-parse', 'HEAD']).toString().trim();
   const names = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
-  const working = names.map((name) => fs.readFileSync(path.join(repo, name)));
+  const working = names.map((name) => fs.readFileSync(workingSourcePath(repo, name)));
   const committed = names.map((name) => git(['show', `${baseline}:${name.replace(/\\/g, '/')}`]));
   const selected = acceptance(...working.map(String));
   if (JSON.stringify(selected) !== JSON.stringify(acceptance(...committed.map(String)))) {
     throw new Error('Exact acceptance differs from declared Git baseline.');
   }
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const card = ledger.cards.find((item) => item.id === 'A-S080');
   if (card?.owner !== 'worker-A-S080' || card.state !== 'In Progress'
       || card.kano !== 'S' || card.packet !== 'SC-S080' || card.authorization !== 'local-synthetic-only') {

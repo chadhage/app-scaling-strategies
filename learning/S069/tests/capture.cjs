@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 // Explicit evidence recorder, never imported by the normal verification suite.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -50,7 +52,7 @@ function recordSource() {
   const working = [];
   const committed = [];
   const sources = sourcePaths.map((file, index) => {
-    const raw = fs.readFileSync(path.join(repo, file));
+    const raw = fs.readFileSync(workingSourcePath(repo, file));
     const gitBytes = git(['show', `${baseline}:${file.replace(/\\/g, '/')}`]);
     const workingSnapshot = `evidence\\raw\\source-${index + 1}.working.snapshot`;
     const gitSnapshot = `evidence\\raw\\source-${index + 1}.git.snapshot`;

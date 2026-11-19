@@ -1,6 +1,6 @@
 'use strict';
 // K-C001 test fixture: a node --require preload for the REAL capability\C001\probe.cjs command line (tests only; never production code).
-// It serves the ledger from memory, so no test reads .docs\wiki\flow-state.json, and it injects at most one fault into a collaborator.
+// It serves the ledger from memory, so no test reads meta\wiki\flow-state.json, and it injects at most one fault into a collaborator.
 //   K_C001_LEDGER_PATH   the one path the probe may ask for (the preload throws for any other flow-state.json path)
 //   K_C001_LEDGER_TEXT   the text served for that path; K_C001_LEDGER_ERROR (ENOENT or EACCES) makes the read fail instead
 //   K_C001_FAULT         reject | throw | empty | bigint (the guard misbehaves) or console (console.log throws)

@@ -38,8 +38,8 @@ test('exact source/card/packet acceptance is separated from the uncompleted nati
   assert.equal(manifest.objective, 'Choose a supported Linux promotion path; reject unsupported native auto-swap.');
   assert.equal(manifest.sourceContract.backlogAcceptance, 'Unsupported native auto-swap is unavailable with explanation; supported native effects and continuity are measured.');
   const readme = fs.readFileSync(path.join(repo, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.ok(readme.includes('| S122 | **App Service, Linux code:** Use a controlled deployment/swap pipeline; do not depend on unsupported native auto-swap. |'));
   assert.ok(backlog.includes('| D-S122 | P1 | Add a Linux code App Service preset with controlled manual/pipeline swap. | Unsupported native auto-swap is unavailable with explanation; supported native effects and continuity are measured. | P001, D-S002 |'));
   assert.ok(kanban.includes('| A-S122 | D-S122 | S | Choose a supported Linux promotion path; reject unsupported native auto-swap. | SOURCE |'));

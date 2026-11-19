@@ -12,7 +12,7 @@ const manifest = JSON.parse(read('manifest.json'));
 
 test('manifest binds the exact source behavior, source acceptance and one frozen portable unit', () => {
   const source = fs.readFileSync(path.join(repo, 'README.md'), 'utf8').split(/\r?\n/).find(line => /^\| S111 \|/.test(line));
-  const backlog = fs.readFileSync(path.join(repo, '.docs', 'wiki', 'backlog.md'), 'utf8').split(/\r?\n/).find(line => /^\| D-S111 \|/.test(line));
+  const backlog = fs.readFileSync(path.join(repo, 'meta', 'wiki', 'backlog.md'), 'utf8').split(/\r?\n/).find(line => /^\| D-S111 \|/.test(line));
   assert.equal(manifest.sourceRequiredBehavior, source.split('|')[2].trim().replace(/\*\*/g, ''));
   assert.equal(manifest.sourceAcceptance, backlog.split('|')[4].trim());
   assert.equal(manifest.objective, 'Lose one worker; distinguish application-worker, node, zone, and region failures.');

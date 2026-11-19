@@ -15,13 +15,13 @@ const files = [
     assert.ok(row[0].includes('Use versioned endpoints or transitional adapters instead of abruptly changing a live contract.'));
     return row[0] + text.slice(text.indexOf('## Acceptance and evidence'), text.indexOf('## Recommended demonstration sequence'));
   }],
-  [path.join('.docs', 'wiki', 'backlog.md'), 'backlog', (text) => {
+  [path.join('meta', 'wiki', 'backlog.md'), 'backlog', (text) => {
     const row = text.match(/^\| D-S053 \|[^\n]*\n/gm);
     assert.equal(row?.length, 1);
     assert.ok(row[0].includes('A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted.'));
     return row[0] + text.slice(text.indexOf('## Completion and evidence policy'));
   }],
-  [path.join('.docs', 'wiki', 'kanban.md'), 'portable-contract', (text) => {
+  [path.join('meta', 'wiki', 'kanban.md'), 'portable-contract', (text) => {
     const row = text.match(/^\| A-S053 \|[^\n]*\n/gm);
     assert.equal(row?.length, 1);
     const packet = text.match(/^Packet membership is fixed[^\n]*\n/m);

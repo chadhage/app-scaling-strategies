@@ -54,7 +54,7 @@ try{
     if($branch -cne 'main' -or $head -cne $remoteMain){throw 'Actual HEAD must equal remote under Publisher before staging; no carry/reset/amend/force.'}
     $before=Unowned-Index
     $boundary=[ordered]@{cardId='C037';workerId='worker-C037';actualPublisherSha256=$actual
-        currentCanonicalSource='.docs\wiki\flow-state.json.localPublisherAuthorization';currentCanonicalSnapshot=$canonical.snapshot
+        currentCanonicalSource='meta\wiki\flow-state.json.localPublisherAuthorization';currentCanonicalSnapshot=$canonical.snapshot
         publisherMutexHeld=$true;stateReleasedBeforePublisher=$true;stateAcquiredUnderPublisher=$false
         nestedRevisionsAreHistoricalNotCurrentAuthority=$true;preStagingHead=$head;preStagingRemoteMain=$remoteMain
         unownedIndexBefore=$before;observedAtUtc=[DateTime]::UtcNow.ToString('o')}

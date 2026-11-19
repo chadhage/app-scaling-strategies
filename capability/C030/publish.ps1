@@ -11,7 +11,7 @@ $stateHeld = $false
 try {
     $stateHeld = $stateMutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $stateHeld) { throw 'State timeout; no cached authority.' }
-    $ledgerBytes = [IO.File]::ReadAllBytes((Join-Path $root '.docs\wiki\flow-state.json'))
+    $ledgerBytes = [IO.File]::ReadAllBytes((Join-Path $root 'meta\wiki\flow-state.json'))
     $ledger = [Text.Encoding]::UTF8.GetString($ledgerBytes) | ConvertFrom-Json -AsHashtable
     $card = @($ledger.cards | Where-Object id -eq 'C030')
     $worker = @($ledger.workers | Where-Object id -eq 'worker-C030')
@@ -24,7 +24,7 @@ try {
         throw 'Current exact original claimed owner/class/path identity required before staging.'
     }
     $row = '| C030 | H006, H012 | D | Detect missing/duplicate business effects; verify one intended effect remains distinct from delivery retries. | C023, C029 |'
-    if (@([IO.File]::ReadAllLines((Join-Path $root '.docs\wiki\kanban.md')) | Where-Object { $_ -ceq $row }).Count -ne 1) {
+    if (@([IO.File]::ReadAllLines((Join-Path $root 'meta\wiki\kanban.md')) | Where-Object { $_ -ceq $row }).Count -ne 1) {
         throw 'Exact frozen original kanban row required.'
     }
     foreach ($id in @('C023', 'C029')) {

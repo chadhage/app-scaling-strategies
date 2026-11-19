@@ -143,8 +143,8 @@ independent review and acceptance remain pending after scoped publication.
 
 Authoritative sources:
 [README S040](../../README.md#d-sessions-authentication-and-user-state),
-[D-S040 backlog](../../.docs/wiki/backlog.md#d-sessions-authentication-and-state),
-and [portable A-card contract](../../.docs/wiki/kanban.md#portable-a-card-lesson-contract).
+[D-S040 backlog](../../meta/wiki/backlog.md#d-sessions-authentication-and-state),
+and [portable A-card contract](../../meta/wiki/kanban.md#portable-a-card-lesson-contract).
 No native Azure result, source-parent completion, production Node 24 validation,
 real authentication, durable storage or reliability SLA is claimed.
 

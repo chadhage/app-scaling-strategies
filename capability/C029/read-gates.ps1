@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'State mutex timed out; no fallback.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path $root '.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
+    $ledger = [IO.File]::ReadAllText((Join-Path $root 'meta\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable
     $consent = $ledger.approvals.C001.designAndLocalImplementationApproved
     if ($consent -isnot [bool] -or $consent -ne $true) { throw 'Current literal true local design consent is required.' }
     $cards = foreach ($id in @('C020','C023','C033','C034')) {

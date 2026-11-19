@@ -6,7 +6,7 @@ try {
     if ($args.Count -ne 0) { throw 'No ledger, source selector, card, scope or approval overrides are accepted.' }
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'Controller state read timeout.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path $repository '.docs\wiki\flow-state.json')) |
+    $ledger = [IO.File]::ReadAllText((Join-Path $repository 'meta\wiki\flow-state.json')) |
         ConvertFrom-Json -AsHashtable
     $cards = @($ledger.cards | Where-Object id -eq 'C019')
     $workers = @($ledger.workers | Where-Object id -eq 'worker-C019')

@@ -49,7 +49,7 @@ try {
     if ($branch -cne 'main' -or $head -cne $remoteMain) { throw 'Parent-qualified main must equal remote before any staging; never carry a failed C016 candidate.' }
     $boundary=[ordered]@{
         cardId='C036';workerId='worker-C036';actualPublisherSha256=$actualSha
-        currentCanonicalAuthorizationSource='.docs\wiki\flow-state.json.localPublisherAuthorization'
+        currentCanonicalAuthorizationSource='meta\wiki\flow-state.json.localPublisherAuthorization'
         currentCanonicalSnapshot=$canonical.snapshot;assessment=$assessment
         publisherMutexHeld=$true;stateMutexReleasedBeforePublisher=$true;stateAcquiredUnderPublisher=$false
         historical4bUsedPublisherSha256='60ae100b96622c8ca828d7db2f8000780476e7c7411a9f3d26f0959fd182aeea'

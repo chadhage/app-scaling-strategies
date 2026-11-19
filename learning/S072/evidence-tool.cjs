@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -41,7 +43,7 @@ function captureSource() {
     { name: 'source-gate', path: '.docs\\wiki\\kanban.md', row: 'SOURCE' },
   ];
   const proofs = selections.map((selection) => {
-    const working = extract(fs.readFileSync(path.join(repo, selection.path)), selection);
+    const working = extract(fs.readFileSync(workingSourcePath(repo, selection.path)), selection);
     const canonical = extract(git('show', `${commit}:${selection.path.replaceAll('\\', '/')}`), selection);
     const workingPath = path.join('evidence', 'raw', 'source', `${selection.name}.working.snapshot`);
     const gitPath = path.join('evidence', 'raw', 'source', `${selection.name}.git.snapshot`);
@@ -49,7 +51,7 @@ function captureSource() {
     writeNew(path.join(owned, gitPath), canonical);
     return { ...selection, workingPath, gitPath, workingSha256: sha(working), canonicalGitSha256: sha(canonical) };
   });
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json'), 'utf8'));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json'), 'utf8'));
   const card = ledger.cards.find((item) => item.id === 'A-S072');
   if (!card || card.owner !== 'worker-A-S072' || card.packet !== 'SC-S072' || card.kano !== 'S' || card.state !== 'In Progress') {
     throw new Error('Exact claimed A-S072 packet/owner/class not available');

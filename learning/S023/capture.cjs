@@ -19,16 +19,16 @@ fs.mkdirSync(evidence, { recursive: true });
 if (stage === 'inputs') {
   const sources = [
     ['README.md', 225, 235],
-    [path.join('.docs', 'wiki', 'backlog.md'), 187, 195],
-    [path.join('.docs', 'wiki', 'kanban.md'), 117, 153],
-    [path.join('.docs', 'wiki', 'kanban.md'), 364, 365]
+    [path.join('meta', 'wiki', 'backlog.md'), 187, 195],
+    [path.join('meta', 'wiki', 'kanban.md'), 117, 153],
+    [path.join('meta', 'wiki', 'kanban.md'), 364, 365]
   ].map(([relativePath, start, end]) => {
     const bytes = fs.readFileSync(path.join(root, relativePath));
     const excerpt = bytes.toString('utf8').split(/\r?\n/).slice(start - 1, end).join('\n');
     return { path: relativePath, sha256: sha(bytes), startLine: start, endLine: end,
       excerpt, excerptSha256: sha(excerpt) };
   });
-  const ledger = JSON.parse(fs.readFileSync(path.join(root, '.docs', 'wiki', 'flow-state.json'), 'utf8'));
+  const ledger = JSON.parse(fs.readFileSync(path.join(root, 'meta', 'wiki', 'flow-state.json'), 'utf8'));
   const card = ledger.cards.find(item => item.id === 'A-S023');
   assert.equal(card.owner, 'worker-A-S023');
   assert.equal(card.packet, 'SC-S023');

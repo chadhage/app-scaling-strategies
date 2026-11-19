@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -33,7 +35,7 @@ if (mode === 'source' || mode === 'tooling') {
       assert.ok(to > from, `${file}: excerpt end`);
       return Buffer.from(text.slice(from, to));
     };
-    const raw = fs.readFileSync(path.join(repo, file));
+    const raw = fs.readFileSync(workingSourcePath(repo, file));
     const committed = git('show', `${baseline}:${file.replace(/\\/g, '/')}`);
     const selected = select(raw);
     const gitSelected = select(committed);
@@ -57,7 +59,7 @@ if (mode === 'source' || mode === 'tooling') {
     'source-portable-contract.snapshot');
   const packetRule = excerpt('.docs\\wiki\\kanban.md', 'Packet membership is fixed before admission.',
     '', 'source-packet-rule.snapshot', true);
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json')));
   const claim = ledger.cards.find((entry) => entry.id === 'A-S054');
   assert.equal(claim.owner, 'worker-A-S054');
   assert.equal(claim.packet, 'SC-S054');

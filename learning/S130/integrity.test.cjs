@@ -21,8 +21,8 @@ test('exact S130 README, D-S130 acceptance, portable card, packet and native sib
   assert.equal(manifest.objective, 'Compare single/multi-instance Flex traces; unknown completion or grace limits cannot be certified away.');
   assert.equal(manifest.sourceContract.acceptance, 'Real grace/version/capacity behavior is measured; single-instance downtime and unobservable completion are disclosed rather than reported as guaranteed continuity.');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.equal(source.includes('| S130 | **Functions, Flex Consumption:** Test rolling site updates, mixed-version compatibility, execution grace limits, and sufficient multi-instance capacity. |'), true);
   assert.equal(backlog.includes('| D-S130 | P1 | Add available Flex rolling-update presets, including multi-instance and single-instance comparisons. | Real grace/version/capacity behavior is measured; single-instance downtime and unobservable completion are disclosed rather than reported as guaranteed continuity. | P004, D-S041, D-S048 |'), true);
   assert.equal(kanban.includes('| A-S130 | D-S130 | S | Compare single/multi-instance Flex traces; unknown completion or grace limits cannot be certified away. | SOURCE |'), true);

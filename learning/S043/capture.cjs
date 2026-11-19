@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -60,7 +62,7 @@ if (process.env.CAPTURE_TEST_EVIDENCE !== '1') {
 
 if (phase === 'source') {
   const files = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
-  const sources = files.map((name) => fs.readFileSync(path.join(repo, name)));
+  const sources = files.map((name) => fs.readFileSync(workingSourcePath(repo, name)));
   const [readme, backlog, kanban] = sources.map((bytes) => bytes.toString('utf8'));
   jsonNew('source-contract.json', {
     capturedAtUtc: new Date().toISOString(),

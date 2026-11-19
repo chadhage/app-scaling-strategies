@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -39,7 +41,7 @@ function sourceCapture() {
     ['honest-mode', '.docs/wiki/backlog.md', /^7\. \*\*Honest execution mode[^\n]*\n/m],
   ];
   const records = contracts.map(([id, gitPath, pattern]) => {
-    const working = fs.readFileSync(path.join(root, ...gitPath.split('/')));
+    const working = fs.readFileSync(workingSourcePath(root, gitPath));
     const git = spawnSync('git', ['show', `${head.stdout.trim()}:${gitPath}`], {
       cwd: root, encoding: 'buffer', maxBuffer: 4 * 1024 * 1024,
     });

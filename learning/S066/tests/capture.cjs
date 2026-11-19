@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -58,7 +60,7 @@ function evidenceHashes() {
 if (stage === 'source') {
   const baseline = git(['rev-parse', 'HEAD']).toString().trim();
   const names = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
-  const working = names.map((name) => fs.readFileSync(path.join(repo, name)));
+  const working = names.map((name) => fs.readFileSync(workingSourcePath(repo, name)));
   const committed = names.map((name) => git(['show', `${baseline}:${name.replace(/\\/g, '/')}`]));
   const raw = path.join(root, 'evidence', 'raw', 'source');
   const sources = names.map((name, index) => {

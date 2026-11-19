@@ -132,6 +132,6 @@ original credits. This lesson does not change shared registries or capabilities.
 
 See [evidence.json](evidence.json), [manifest.json](manifest.json), the
 [original source](../../README.md#k-networking-configuration-and-edge-routing),
-[D-S101 backlog](../../.docs/wiki/backlog.md) and
+[D-S101 backlog](../../meta/wiki/backlog.md) and
 [Microsoft Open Source Disclaimer](../../README.md#microsoft-open-source-disclaimer).
 No Microsoft endorsement, support or SLA is implied.

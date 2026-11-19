@@ -45,7 +45,7 @@ const report = {
   proof: index.proof, counts: index.counts, qualification: index.qualification,
   originalDRequested: 1, extraCredits: 0, reportedAtUtc: new Date().toISOString(),
   interpretation: 'Same original C036 D, bounded provenance correction only; old actual 4b/60AE/E6 and parent/current GREEN preserved.',
-  currentAuthorizationSource: '.docs\\wiki\\flow-state.json.localPublisherAuthorization',
+  currentAuthorizationSource: 'meta\\wiki\\flow-state.json.localPublisherAuthorization',
   currentPublisherSha256: publication.publisherBoundary.actualPublisherSha256,
   nativeCorrelationVerified: false, authenticatedIdentityVerified: false, leaseAuthority: false,
   productionNode24Validated: false, liveAzureRuns: 0, cloudSpend: 0,

@@ -1,5 +1,6 @@
 "use strict";
 
+const { workingSourcePath } = require("../../../testing/source-path.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -26,16 +27,16 @@ assert.match(edge.version, /^156\./);
 assert.equal(edge.status, "Valid");
 assert.match(edge.signer, /Microsoft Corporation/);
 function source(local, prefix) {
-  const bytes = fs.readFileSync(path.join(repo, local));
+  const bytes = fs.readFileSync(workingSourcePath(repo, local));
   const exactRow = bytes.toString("utf8").split(/\r?\n/).find((line) => line.startsWith(prefix));
   assert.ok(exactRow, prefix);
   return { path: local, sha256: hash(bytes), exactRow };
 }
-const kanban = fs.readFileSync(path.join(repo, ".docs", "wiki", "kanban.md"), "utf8");
+const kanban = fs.readFileSync(path.join(repo, "meta", "wiki", "kanban.md"), "utf8");
 const start = kanban.indexOf("## Atomic card contract");
 const end = kanban.indexOf("## Concurrent pull and one-piece flow", start);
 assert.ok(start >= 0 && end > start);
-const ledger = JSON.parse(fs.readFileSync(path.join(repo, ".docs", "wiki", "flow-state.json"), "utf8"));
+const ledger = JSON.parse(fs.readFileSync(path.join(repo, "meta", "wiki", "flow-state.json"), "utf8"));
 const card = ledger.cards.find((item) => item.id === "A-S029");
 assert.equal(card.packet, "SC-S029");
 assert.equal(card.kanoUnit, "A-S029");

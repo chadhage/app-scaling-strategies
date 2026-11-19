@@ -10,7 +10,7 @@ package installation, Azure access, or resource creation is needed.
 - Source: [README.md, S020](../../README.md#b-actual-capacity-scaling-strategies):
   “Preserve existing service using reserved capacity, block unsafe transitions,
   and report unsupported demand explicitly.”
-- Parent: [D-S020](../../.docs/wiki/backlog.md#b-capacity-scaling), including its
+- Parent: [D-S020](../../meta/wiki/backlog.md#b-capacity-scaling), including its
   **Request unsafe expansion** control and harness-limit versus native-quota distinction.
 - Card: A-S020, frozen Kano **S**, original unit A-S020, packet **SC-S020**, SOURCE gate,
   owner `worker-A-S020`, authorization `local-synthetic-only`.

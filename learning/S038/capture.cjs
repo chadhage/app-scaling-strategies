@@ -1,4 +1,5 @@
 "use strict";
+const { workingSourcePath } = require("../../testing/source-path.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -72,7 +73,7 @@ function seal() {
 }
 
 function source() {
-  const read = (file) => fs.readFileSync(path.join(repo, file), "utf8");
+  const read = (file) => fs.readFileSync(workingSourcePath(repo, file), "utf8");
   const readme = read("README.md");
   const backlog = read(".docs\\wiki\\backlog.md");
   const kanban = read(".docs\\wiki\\kanban.md");
@@ -99,7 +100,7 @@ function source() {
     atomicAndPortableContract: kanban.slice(kanban.indexOf("## Atomic card contract"), kanban.indexOf("## Concurrent pull")),
     packetRule: kanban.split(/\r?\n/).find((line) => line.startsWith("Packet membership is fixed before admission.")),
     disclaimer: readme.slice(readme.indexOf("## Microsoft Open Source Disclaimer"), readme.indexOf("## Sources")),
-    sources: Object.fromEntries(["README.md", ".docs\\wiki\\backlog.md", ".docs\\wiki\\kanban.md"].map((file) => [file, digest(fs.readFileSync(path.join(repo, file)))])),
+    sources: Object.fromEntries(["README.md", ".docs\\wiki\\backlog.md", ".docs\\wiki\\kanban.md"].map((file) => [file, digest(fs.readFileSync(workingSourcePath(repo, file)))])),
     implementationHead: spawnSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).stdout.trim()
   });
 }

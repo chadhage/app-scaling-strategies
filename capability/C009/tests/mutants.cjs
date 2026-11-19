@@ -67,8 +67,8 @@ function copyBase(dir) {
   for (const name of ['C009', 'C001']) {
     fs.cpSync(path.join(repository, 'capability', name), path.join(dir, 'capability', name), { recursive: true, filter: (source) => !/[\\/]evidence([\\/]|$)/.test(source) });
   }
-  fs.mkdirSync(path.join(dir, '.docs', 'wiki'), { recursive: true });
-  fs.copyFileSync(path.join(repository, '.docs', 'wiki', 'flow-state.json'), path.join(dir, '.docs', 'wiki', 'flow-state.json'));
+  fs.mkdirSync(path.join(dir, 'meta', 'wiki'), { recursive: true });
+  fs.copyFileSync(path.join(repository, 'meta', 'wiki', 'flow-state.json'), path.join(dir, 'meta', 'wiki', 'flow-state.json'));
 }
 
 function mutate([id, file, find, replace]) {

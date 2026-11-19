@@ -10,10 +10,10 @@ authentication, credentials or subscription is needed.
 - [README S054](../../README.md#f-n-tier-and-version-compatibility):
   “Add compatible structures, migrate safely, and remove old structures only after
   old consumers disappear.”
-- [D-S054](../../.docs/wiki/backlog.md#f-n-tier-and-version-compatibility):
+- [D-S054](../../meta/wiki/backlog.md#f-n-tier-and-version-compatibility):
   “Old/new consumers remain valid during overlap; contraction is blocked until
   dependent consumers/work disappear.”
-- [A-S054 and portable contract](../../.docs/wiki/kanban.md):
+- [A-S054 and portable contract](../../meta/wiki/kanban.md):
   sequence expand, migrate, contract; reject contraction with old consumers.
 - Frozen **S**, one `A-S054` Kano unit, packet `SC-S054`, owner `worker-A-S054`.
   Exact raw source excerpts, default packet rule, claim and canonical baseline

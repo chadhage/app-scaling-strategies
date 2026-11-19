@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -38,7 +40,7 @@ if (mode === 'source') {
   const sources = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
   const contents = [];
   const entries = sources.map((file, index) => {
-    const raw = fs.readFileSync(path.join(repo, file));
+    const raw = fs.readFileSync(workingSourcePath(repo, file));
     const gitBlob = git(['rev-parse', `${baselineCommit}:${file.replace(/\\/g, '/')}`]).toString().trim();
     const blob = git(['cat-file', 'blob', gitBlob]);
     const name = ['readme', 'backlog', 'kanban'][index];

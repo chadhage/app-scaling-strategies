@@ -102,7 +102,7 @@ or treat template compilation as cloud-deployment validation.
 Use a dedicated demonstration subscription wherever possible. The confirmed
 initial location is `centralus`; alternative US regions are authorized for
 evaluation, but none tested has passed yet. The target and allowance are recorded in
-[the deployment plan](../.azure/deployment-plan.md). The user-confirmed USD
+[the deployment plan](../meta/deployment-plan.md). The user-confirmed USD
 10,000 allowance is **not the expected cost**, and the pipeline does not default
 to spending it.
 

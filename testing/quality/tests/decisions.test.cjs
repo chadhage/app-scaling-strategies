@@ -49,6 +49,16 @@ test('the accepted fixture and a good markdown copy pass; the date injection is 
   assert.equal(run(p, { nowUtc: undefined }).ok, true);
 });
 
+test('repository-state review accepts the relocated deployment plan without changing approval', () => {
+  const { checkDecisionsAndState } = require('../rules-decisions.cjs');
+  const p = load();
+  const plan = p.repositoryState.artifacts.find((artifact) => artifact.path === '.azure/deployment-plan.md');
+  plan.path = 'meta/deployment-plan.md';
+  const findings = [];
+  checkDecisionsAndState(p, (code, path, message) => findings.push({ code, path, message }), {});
+  assert.deepEqual(findings, []);
+});
+
 test('PACKET_NOT_OBJECT: a result is { ok, findings: [{ code, path, message }] } and never throws on junk', () => {
   for (const junk of [null, undefined, 5, 'text', []]) {
     const result = run(junk);

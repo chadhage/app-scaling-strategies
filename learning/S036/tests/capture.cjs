@@ -50,7 +50,7 @@ function recordSourcesAndRedSnapshots() {
   ]) {
     fs.writeFileSync(path.join(directory, snapshot), fs.readFileSync(path.join(lesson, source)), { flag: 'wx' });
   }
-  const sourceFiles = ['README.md', path.join('.docs', 'wiki', 'backlog.md'), path.join('.docs', 'wiki', 'kanban.md')];
+  const sourceFiles = ['README.md', path.join('meta', 'wiki', 'backlog.md'), path.join('meta', 'wiki', 'kanban.md')];
   const sources = sourceFiles.map((relative) => {
     const bytes = fs.readFileSync(path.join(repository, relative));
     return { path: relative, sha256: hash(bytes), text: bytes.toString('utf8') };

@@ -24,7 +24,7 @@ function rootFixture(context) {
   const calls = [];
   const options = { allowed: true };
   const readLedger = () => JSON.stringify({ approvals: { C001: { fixture: 'synthetic-current-approval' } } });
-  const ledger = path.resolve(__dirname, '..', '..', '..', '.docs', 'wiki', 'flow-state.json');
+  const ledger = path.resolve(__dirname, '..', '..', '..', 'meta', 'wiki', 'flow-state.json');
   const readFile = fs.readFileSync;
   context.mock.method(fs, 'readFileSync', function fixtureLedger(file, ...args) {
     if (typeof file === 'string' && path.resolve(file) === ledger) {

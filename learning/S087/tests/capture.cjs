@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -15,7 +17,7 @@ const json = (file, value) => write(file, JSON.stringify(value, null, 2) + '\n')
 if (stage === 'source') {
   const baseline = git(['rev-parse', 'HEAD']).toString().trim();
   const names = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'];
-  const working = names.map((file) => fs.readFileSync(path.join(repo, file)));
+  const working = names.map((file) => fs.readFileSync(workingSourcePath(repo, file)));
   const committed = names.map((file) => git(['show', `${baseline}:${file.replace(/\\/g, '/')}`]));
   const selected = acceptance(...working.map(String));
   if (JSON.stringify(selected) !== JSON.stringify(acceptance(...committed.map(String)))) {

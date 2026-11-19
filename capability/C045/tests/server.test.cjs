@@ -109,7 +109,7 @@ test('actual owned C045 servers preserve C020 and refuse boundary overrides', as
         ['encoded traversal', '/%2e%2e/.git/config', 400], ['raw traversal', '/../.git/config', 400],
         ['backslash traversal', '/..\\server.cjs', 400], ['absolute target', `http://127.0.0.1:${client.server.address().port}/`, 400],
         ['foreign implementation', `/fixtures/${client === ga ? 'v2' : 'v1'}/getProfile?profileId=synthetic-001`, 404],
-        ['repository data', '/.docs/wiki/flow-state.json', 404], ['private git', '/.git/config', 404],
+        ['repository data', '/meta/wiki/flow-state.json', 404], ['legacy repository path', '/.docs/wiki/flow-state.json', 404], ['private git', '/.git/config', 404],
         ['closed evidence', '/evidence/dependency-pins.json', 404], ['unreviewed lesson', '/c041-lessons/A-S001/index.html', 404],
         ['unknown own file', '/server.cjs', 404], ['query-selected asset', '/?target=synthetic-001', 404]
       ]) await t.test(`${client.client}: actual HTTP refuses ${name}`, async () => {

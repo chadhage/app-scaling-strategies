@@ -1,5 +1,6 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -76,7 +77,7 @@ if (stage === 'source') {
   ];
   const sources = required.map(([name, repoPath, exactText]) => {
     const gitPath = repoPath.replaceAll('\\', '/');
-    const formats = { git: git(['show', `${sourceHead}:${gitPath}`]), working: read(path.join(root, repoPath)) };
+    const formats = { git: git(['show', `${sourceHead}:${gitPath}`]), working: read(workingSourcePath(root, repoPath)) };
     const snapshots = {};
     for (const [format, bytes] of Object.entries(formats)) {
       for (const text of exactText) {
@@ -91,7 +92,7 @@ if (stage === 'source') {
     }
     return { repoPath, exactText, snapshots };
   });
-  const ledger = JSON.parse(read(path.join(root, '.docs', 'wiki', 'flow-state.json')));
+  const ledger = JSON.parse(read(path.join(root, 'meta', 'wiki', 'flow-state.json')));
   const card = ledger.cards.find((item) => item.id === 'A-S095');
   if (!card || card.owner !== 'worker-A-S095' || card.state !== 'In Progress'
       || card.kano !== 'S' || card.packet !== 'SC-S095' || card.authorization !== 'local-synthetic-only') {

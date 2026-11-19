@@ -31,7 +31,8 @@ function liveSources() {
       if(-not $held){throw 'State mutex timeout; no unlocked fallback'}
       $result=[ordered]@{}
       foreach($file in @('README.md','.docs\\wiki\\backlog.md','.docs\\wiki\\kanban.md','.git\\kanban-orchestrator\\inventory.json')){
-        $result[$file]=[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path (Get-Location) $file)))
+        $current=$file -replace '^\\.docs\\\\','meta\\'
+        $result[$file]=[Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path (Get-Location) $current)))
       }
       $result | ConvertTo-Json -Compress
     } finally {

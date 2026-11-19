@@ -10,8 +10,8 @@ Only `learning\S065\**` belongs to this A-S065 / D-S065 / SC-S065 delivery: one 
 Read before behavior design:
 
 - [README S065](../../README.md): **Hot-shard rebalancing:** move tenants or partitions without missing writes or assigning two active owners.
-- [Backlog D-S065](../../.docs/wiki/backlog.md): hot-tenant partition/shard rebalance under **live read/write load**; ownership changes preserve committed effects and routing, with no two writers owning the moved partition. Its source prerequisite remains D-S064.
-- [A-S065 and portable A-card contract](../../.docs/wiki/kanban.md): **Move a hot partition; detect routing gaps and simultaneous active owners.** SOURCE gate; packet SC-S065. The inventory assigns A-S065 and native sibling B-S065 to that packet; no delighter companions are inferred.
+- [Backlog D-S065](../../meta/wiki/backlog.md): hot-tenant partition/shard rebalance under **live read/write load**; ownership changes preserve committed effects and routing, with no two writers owning the moved partition. Its source prerequisite remains D-S064.
+- [A-S065 and portable A-card contract](../../meta/wiki/kanban.md): **Move a hot partition; detect routing gaps and simultaneous active owners.** SOURCE gate; packet SC-S065. The inventory assigns A-S065 and native sibling B-S065 to that packet; no delighter companions are inferred.
 
 This lesson does not certify the source acceptance. Actual partitions, migrations, load,
 read/write effects, routing and exclusive ownership require B-S065 and the original D-S065 gates.

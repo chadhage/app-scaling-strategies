@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0 -or $env:CAPTURE_BROWSER_EVIDENCE -cne '1') { throw 'One deliberate exact C029 publication only; no arguments or overrides.' }
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 if ((Get-Location).Path -ne $root) { throw 'Publication requires this actual checked-out repository root.' }
-$ledgerPath = Join-Path $root '.docs\wiki\flow-state.json'
+$ledgerPath = Join-Path $root 'meta\wiki\flow-state.json'
 $publisherPath = Join-Path $root '.git\kanban-orchestrator\publish.ps1'
 $accepted = ([IO.File]::ReadAllText((Join-Path $PSScriptRoot 'imports.json')) | ConvertFrom-Json -AsHashtable).accepted
 $stateMutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
@@ -22,7 +22,7 @@ try {
         throw 'Exactly one freshly claimed original C029 D/P0/H001 is required.'
     }
     $exactRow = '| C029 | H001, H006, H012 | D | Evaluate journey outcomes against original latency/state budgets; injected failures cannot pass through retries. | C020, C023, C033 |'
-    if (@([IO.File]::ReadAllLines((Join-Path $root '.docs\wiki\kanban.md')) | Where-Object { $_ -ceq $exactRow }).Count -ne 1) {
+    if (@([IO.File]::ReadAllLines((Join-Path $root 'meta\wiki\kanban.md')) | Where-Object { $_ -ceq $exactRow }).Count -ne 1) {
         throw 'The exact frozen original kanban C029 row must remain unchanged.'
     }
     foreach ($id in @('C020','C023','C033')) {

@@ -98,10 +98,10 @@ function captureSource() {
       ['readme-s106', bytes => lines(bytes, '| S106 |')],
       ['outcome-classification', bytes => section(bytes, '### Outcome classification', '### Five-nines transition metric')]
     ]],
-    [path.join('.docs', 'wiki', 'backlog.md'), [
+    [path.join('meta', 'wiki', 'backlog.md'), [
       ['backlog-d-s106', bytes => lines(bytes, '| D-S106 |')]
     ]],
-    [path.join('.docs', 'wiki', 'kanban.md'), [
+    [path.join('meta', 'wiki', 'kanban.md'), [
       ['card-a-s106', bytes => lines(bytes, '| A-S106 |')],
       ['card-b-s106', bytes => lines(bytes, '| B-S106 |')],
       ['atomic-card-contract', bytes => section(bytes, '## Atomic card contract', '### Portable A-card lesson contract')],
@@ -134,7 +134,7 @@ function captureSource() {
     };
   });
   const inventory = JSON.parse(fs.readFileSync(path.join(repo, '.git', 'kanban-orchestrator', 'inventory.json'), 'utf8'));
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json'), 'utf8'));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json'), 'utf8'));
   const card = inventory.cards.find(item => item.id === identity.cardId);
   const claim = ledger.cards.find(item => item.id === identity.cardId);
   if (claim.owner !== identity.workerId || claim.state !== 'In Progress' || card.packet !== identity.packet || card.kano !== 'S') {

@@ -29,7 +29,7 @@ function runFresh(mode) {
     fs.cpSync(root, path.join(directory, 'capability', 'C009'), { recursive: true, force: true,
       filter: (file) => !/(?:^|\\)\.u053-scratch(?:\\|$)/.test(file.slice(root.length)) });
     for (const relative of ['capability\\C001', 'capability\\C010', 'capability\\C011', 'capability\\C014', 'capability\\C020',
-      'capability\\C022', 'testing', '.docs\\wiki', 'README.md']) {
+      'capability\\C022', 'testing', 'meta\\wiki', 'README.md']) {
       const source = path.join(repository, relative);
       fs.mkdirSync(path.dirname(path.join(directory, relative)), { recursive: true });
       fs.cpSync(source, path.join(directory, relative), { recursive: true, force: false, errorOnExist: true,

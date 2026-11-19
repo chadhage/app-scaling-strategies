@@ -28,8 +28,8 @@ const helperHash = '86c80bc2ce52f828a96b176056706c60970be4367b085dc0919d3bfce86c
 test('exact canonical S016, D-S016 and A-S016 contract preserve original dependencies and packet', () => {
   const root = path.resolve(__dirname, '..', '..');
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const contract = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const contract = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   assert.ok(source.includes('| S016 | **Autoscale oscillation:** Apply suitable stabilization so repeated scale-out/scale-in does not repeatedly interrupt users. |'));
   assert.ok(backlog.includes('| D-S016 | P1 | Add oscillating load and stabilization/cooldown comparison controls. | Capacity oscillations and journey failures are measured; stabilization reduces unsafe transitions without silently exceeding declared budgets. | D-S011, D-S015 |'));
   assert.ok(contract.includes('| A-S016 | D-S016 | S | Apply oscillating demand; compare stabilized versus repeated disruptive capacity changes. | SOURCE |'));

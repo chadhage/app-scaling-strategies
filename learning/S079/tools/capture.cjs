@@ -35,11 +35,11 @@ function captureSources() {
       ['scenario', /^\| S079 \|.*$/m],
       ['outcomePolicy', /### Outcome classification[\s\S]*?(?=### Five-nines transition metric)/],
     ]],
-    ['backlog', path.join('.docs', 'wiki', 'backlog.md'), [
+    ['backlog', path.join('meta', 'wiki', 'backlog.md'), [
       ['parent', /^\| D-S079 \|.*$/m],
       ['dependency', /^\| D-S075 \|.*$/m],
     ]],
-    ['kanban', path.join('.docs', 'wiki', 'kanban.md'), [
+    ['kanban', path.join('meta', 'wiki', 'kanban.md'), [
       ['card', /^\| A-S079 \|.*$/m],
       ['nativeSibling', /^\| B-S079 \|.*$/m],
       ['atomicContract', /Every listed row is one card[\s\S]*?(?=### Portable A-card lesson contract)/],

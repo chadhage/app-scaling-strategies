@@ -4,7 +4,7 @@ const { readFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 const { guardOperation } = require('./contract-guard.js');
 
-const sourcePath = resolve(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+const sourcePath = resolve(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json');
 
 async function evaluateCurrentApproval(action, readSource = () => readFileSync(sourcePath, 'utf8')) {
   let state;
@@ -14,7 +14,7 @@ async function evaluateCurrentApproval(action, readSource = () => readFileSync(s
     const decision = await guardOperation(action, undefined);
     const reason = Object.freeze({
       code: error instanceof SyntaxError ? 'SOURCE_INVALID_JSON' : 'SOURCE_UNAVAILABLE',
-      message: 'Cannot read current approvals.C001 from .docs\\wiki\\flow-state.json; all operations are denied.'
+      message: 'Cannot read current approvals.C001 from meta\\wiki\\flow-state.json; all operations are denied.'
     });
     return Object.freeze({ ...decision, reasons: Object.freeze([reason, ...decision.reasons]) });
   }

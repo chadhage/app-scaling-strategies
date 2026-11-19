@@ -8,7 +8,7 @@ Open `index.html` directly in a modern browser. This standalone, resource-free l
 
 [S053 in the source README](../../README.md#f-n-tier-and-version-compatibility): **Use versioned endpoints or transitional adapters instead of abruptly changing a live contract.**
 
-[D-S053](../../.docs/wiki/backlog.md): **A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted.** Its native prerequisites D-S051/D-S052 are not completed here. The portable A-card contract and default SC-S053 packet rule are preserved in `evidence\source-portable-contract.snapshot`.
+[D-S053](../../meta/wiki/backlog.md): **A stable compatible route can migrate all consumers; a breaking API cannot be force-rerouted and declared uninterrupted.** Its native prerequisites D-S051/D-S052 are not completed here. The portable A-card contract and default SC-S053 packet rule are preserved in `evidence\source-portable-contract.snapshot`.
 
 Three fixed synthetic profile consumers originally require v1's `displayName: "Ada Example"`. Blue software **1.8.0** serves v1; green software **2.0.0** uses v2's `name: { given: "Ada", family: "Example" }`. A client upgrade is explicit and independent of a software deployment. The same synthetic `profileId` and value must be preserved, not just HTTP status.
 

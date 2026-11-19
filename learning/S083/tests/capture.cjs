@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -27,7 +29,7 @@ function captureSource() {
     ['backlog', '.docs/wiki/backlog.md'],
     ['kanban', '.docs/wiki/kanban.md']
   ].map(([label, sourcePath]) => {
-    const working = fs.readFileSync(path.join(root, ...sourcePath.split('/')));
+    const working = fs.readFileSync(workingSourcePath(root, sourcePath));
     const canonical = git(['show', `${sourceCommit}:${sourcePath}`]);
     const workingFile = path.join(rawRoot, `${label}.working.snapshot`);
     const canonicalFile = path.join(rawRoot, `${label}.git.snapshot`);

@@ -70,7 +70,7 @@ server authorization service or a current-ledger approval probe.
 
 ## Sources and actual checks
 
-[README](../../README.md) and [backlog](../../.docs/wiki/backlog.md) supply the
+[README](../../README.md) and [backlog](../../meta/wiki/backlog.md) supply the
 documented baseline. A dedicated researcher verified the cited Microsoft Learn
 pages during this session; scope and adopted/declined assumptions are recorded
 in `evidence\documentation-review.json`. This was documentation research, not

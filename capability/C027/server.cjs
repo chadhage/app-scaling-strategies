@@ -95,7 +95,7 @@ async function startLocal(options = {}) {
     throw new Error('lifetimeMs must be a positive integer at most 900000 (15 minutes).');
   }
   let ledger;
-  try { ledger = JSON.parse(fs.readFileSync(path.join(root, '..', '..', '.docs', 'wiki', 'flow-state.json'), 'utf8')); }
+  try { ledger = JSON.parse(fs.readFileSync(path.join(root, '..', '..', 'meta', 'wiki', 'flow-state.json'), 'utf8')); }
   catch { throw new Error('Current C001 local consent is unavailable; no listener was started.'); }
   if (!(await guardOperation('local.probe', ledger.approvals?.C001)).allowed) {
     throw new Error('Current C001 local consent denies this listener.');

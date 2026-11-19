@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { read, acceptance, repo } = require('.\\provenance.cjs');
@@ -76,7 +78,7 @@ test('runtime is deterministic synthetic data with no management, network or sto
 
 test('exact current acceptance retains source failure, recovery, denominator and prerequisite clauses', () => {
   const current = acceptance(...['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md']
-    .map((file) => fs.readFileSync(path.join(repo, file), 'utf8')));
+    .map((file) => fs.readFileSync(workingSourcePath(repo, file), 'utf8')));
   assert.equal(current.readmeS092, '| S092 | **Candidate fails during canary:** Stop further exposure and reverse routing; count interruptions already experienced. |');
   assert.equal(current.backlogDS092, '| D-S092 | P0 | Add candidate failure during a measured canary stage. | Expansion stops and recovery executes; failed journeys remain in the attempted-transition denominator and interruption counts, not the success numerator. | D-S003 |');
   assert.equal(current.cardAS092, '| A-S092 | D-S092 | S | Fail a canary; failed journeys remain interruptions despite successful rollback. | SOURCE |');

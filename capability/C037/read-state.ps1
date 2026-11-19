@@ -6,7 +6,7 @@ $held = $false
 try {
     $held = $mutex.WaitOne([TimeSpan]::FromSeconds(30))
     if (-not $held) { throw 'Current State mutex timeout; no historical authority fallback.' }
-    $ledger = [IO.File]::ReadAllText((Join-Path $repository '.docs\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable -Depth 100
+    $ledger = [IO.File]::ReadAllText((Join-Path $repository 'meta\wiki\flow-state.json')) | ConvertFrom-Json -AsHashtable -Depth 100
     $cards = @($ledger.cards | Where-Object id -eq 'C037')
     $workers = @($ledger.workers | Where-Object id -eq 'worker-C037')
     if ($cards.Count -ne 1 -or $workers.Count -ne 1) { throw 'Exactly the registered original C037 is required.' }

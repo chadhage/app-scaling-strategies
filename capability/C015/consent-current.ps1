@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$ledgerPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\.docs\wiki\flow-state.json'))
+$ledgerPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\meta\wiki\flow-state.json'))
 $mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
 $held = $false
 try {

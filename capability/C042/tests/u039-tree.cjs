@@ -41,7 +41,7 @@ function build() {
   created = true;
   const tarball = `${dir}.tar`;
   try {
-    execFileSync('git', ['archive', '--format=tar', `--output=${tarball}`, 'HEAD', 'capability/C001', 'capability/C042', '.docs/wiki/flow-state.json'], { cwd: repository });
+    execFileSync('git', ['archive', '--format=tar', `--output=${tarball}`, 'HEAD', 'capability/C001', 'capability/C042', 'meta/wiki/flow-state.json'], { cwd: repository });
     execFileSync('tar', ['-xf', tarball, '-C', dir]);
   } finally {
     fs.rmSync(tarball, { force: true });

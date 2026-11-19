@@ -33,8 +33,8 @@ function source() {
   const rows = {};
   const sources = [
     ['readme', 'README.md', '| S101 |'],
-    ['backlog', path.join('.docs', 'wiki', 'backlog.md'), '| D-S101 |'],
-    ['kanban', path.join('.docs', 'wiki', 'kanban.md'), '| A-S101 |'],
+    ['backlog', path.join('meta', 'wiki', 'backlog.md'), '| D-S101 |'],
+    ['kanban', path.join('meta', 'wiki', 'kanban.md'), '| A-S101 |'],
   ].map(([name, relative, prefix]) => {
     const working = fs.readFileSync(path.join(root, relative));
     const canonical = git(['show', `${commit}:${relative.split(path.sep).join('/')}`]);
@@ -50,7 +50,7 @@ function source() {
       workingCRLFCount: (working.toString('utf8').match(/\r\n/g) || []).length,
       gitCRLFCount: (canonical.toString('utf8').match(/\r\n/g) || []).length };
   });
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8')
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8')
     .replace(/\r\n/g, '\n');
   const portable = kanban.split('### Portable A-card lesson contract\n')[1]
     .split('\n## Concurrent pull and one-piece flow')[0].trim();

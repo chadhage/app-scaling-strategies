@@ -13,7 +13,7 @@ const original = '48846487727dd2ef35f03d88d65e64121059b6867188bbf34daeaee3fda1c0
 const current = 'f6df80bdafc028538813330fe810bd81a69a50822a4a862e0bf42f59b2b0b2a4';
 const script = "$m=[Threading.Mutex]::new($false,'Local\\AppScalingStrategies_KanbanState_v1');$held=$false;" +
   "try{$held=$m.WaitOne(30000);if(-not $held){throw 'Mutex unavailable'};" +
-  "$s=Get-Content .docs\\wiki\\flow-state.json -Raw|ConvertFrom-Json;$a=$s.localPublisherAuthorization;" +
+  "$s=Get-Content meta\\wiki\\flow-state.json -Raw|ConvertFrom-Json;$a=$s.localPublisherAuthorization;" +
   "[ordered]@{publisherSha256=$a.publisherSha256;durabilityConsumerRevision=$a.durabilityConsumerRevision;" +
   "savedTraceRevision=$a.savedTraceRevision}|ConvertTo-Json -Depth 12 -Compress}" +
   "finally{if($held){$m.ReleaseMutex()};$m.Dispose()}";

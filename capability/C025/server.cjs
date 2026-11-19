@@ -146,7 +146,7 @@ async function startLocal(options = {}) {
   if (!Number.isSafeInteger(lifetimeMs) || lifetimeMs < 1 || lifetimeMs > MAX_LIFETIME_MS) {
     throw new Error('lifetimeMs must be a positive integer at most 900000 (15 minutes).');
   }
-  const file = path.join(__dirname, '..', '..', '.docs', 'wiki', 'flow-state.json');
+  const file = path.join(__dirname, '..', '..', 'meta', 'wiki', 'flow-state.json');
   let approval;
   try { approval = JSON.parse(fs.readFileSync(file, 'utf8')).approvals?.C001; }
   catch { throw new Error('Current C001 local consent is unavailable; no listener was started.'); }

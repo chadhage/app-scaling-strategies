@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'C033 consent reader accepts no source, target or override arguments.' }
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$ledgerPath = Join-Path $root '.docs\wiki\flow-state.json'
+$ledgerPath = Join-Path $root 'meta\wiki\flow-state.json'
 $mutex = [Threading.Mutex]::new($false, 'Local\AppScalingStrategies_KanbanState_v1')
 $held = $false
 try {

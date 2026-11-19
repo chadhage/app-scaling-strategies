@@ -60,7 +60,7 @@ test('real loopback HTTP exposes only the exact host and pinned lesson allowlist
   });
   await t.test('repository, existing but unselected lessons, evidence, and management endpoints are absent', async () => {
     for (const target of [
-      '/.git/config', '/.git/', '/.docs/wiki/flow-state.json', '/README.md', '/capability/C001/index.html',
+      '/.git/config', '/.git/', '/.docs/wiki/flow-state.json', '/meta/wiki/flow-state.json', '/README.md', '/capability/C001/index.html',
       '/learning/S001/index.html', '/learning/S005/index.html', '/c041-lessons/A-S005/index.html',
       '/c041-lessons/A-S009/index.html', '/c041-lessons/A-S001/', '/c041-lessons/', '/evidence.json',
       '/serve.cjs', '/.gitattributes', '/tests/server.test.cjs', '/api/manage', '/api/run', '/management', '/signup'

@@ -8,7 +8,7 @@ Open `index.html` directly in a modern browser. This standalone lesson owns only
 
 [S058 in the source README](../../README.md#f-n-tier-and-version-compatibility): **Pin or explicitly version long-lived workflows so new code does not invalidate existing execution history.**
 
-[D-S058 acceptance](../../.docs/wiki/backlog.md): **Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected.** Its prerequisite P004 and native sibling B-S058 are not completed here. Exact source, atomic/portable contract and default packet rules are preserved in `evidence\source-*.snapshot`.
+[D-S058 acceptance](../../meta/wiki/backlog.md): **Existing histories continue under the correct version strategy; unexpected replay/history behavior is detected.** Its prerequisite P004 and native sibling B-S058 are not completed here. Exact source, atomic/portable contract and default packet rules are preserved in `evidence\source-*.snapshot`.
 
 The fixed fixture contains two histories started with definition **1.0**, `ReadOrder → ReserveStock → ShipOrder`, and one with **2.0**, `ReadOrder → RiskCheck → ReserveStock → ShipOrder`.
 

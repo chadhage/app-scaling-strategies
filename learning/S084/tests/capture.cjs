@@ -1,5 +1,7 @@
 'use strict';
 
+const { workingSourcePath } = require('../../../testing/source-path.cjs');
+
 // Deliberate append-only capture; never imported by the normal test suite.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -19,7 +21,7 @@ if (mode === 'source') {
   const texts = [];
   const committed = [];
   const sources = ['README.md', '.docs\\wiki\\backlog.md', '.docs\\wiki\\kanban.md'].map((file, i) => {
-    const raw = fs.readFileSync(path.join(repo, file));
+    const raw = fs.readFileSync(workingSourcePath(repo, file));
     const original = git(['show', `${baseline}:${file.replace(/\\/g, '/')}`]);
     const workingSnapshot = `evidence\\raw\\source-${i}.working.raw.gz`;
     const gitSnapshot = `evidence\\raw\\source-${i}.git.raw.gz`;
@@ -34,7 +36,7 @@ if (mode === 'source') {
   });
   const exactAcceptance = acceptance(...texts);
   if (JSON.stringify(exactAcceptance) !== JSON.stringify(acceptance(...committed))) throw new Error('Acceptance differs from committed source.');
-  const ledger = JSON.parse(fs.readFileSync(path.join(repo, '.docs', 'wiki', 'flow-state.json'), 'utf8'));
+  const ledger = JSON.parse(fs.readFileSync(path.join(repo, 'meta', 'wiki', 'flow-state.json'), 'utf8'));
   const card = ledger.cards.find((item) => item.id === 'A-S084');
   if (card.owner !== 'worker-A-S084' || card.state !== 'In Progress') throw new Error('Claimed source identity differs.');
   json('evidence\\source-contract.json', {

@@ -61,8 +61,8 @@ test('the immutable published source bytes and raw evidence match their separate
 
 test('exact source, backlog and portable packet acceptance are preserved without native completion', () => {
   const source = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
-  const backlog = fs.readFileSync(path.join(root, '.docs', 'wiki', 'backlog.md'), 'utf8');
-  const kanban = fs.readFileSync(path.join(root, '.docs', 'wiki', 'kanban.md'), 'utf8');
+  const backlog = fs.readFileSync(path.join(root, 'meta', 'wiki', 'backlog.md'), 'utf8');
+  const kanban = fs.readFileSync(path.join(root, 'meta', 'wiki', 'kanban.md'), 'utf8');
   const readmeRow = source.split(/\r?\n/).find((line) => line.startsWith('| S123 |'));
   const backlogRow = backlog.split(/\r?\n/).find((line) => line.startsWith('| D-S123 |'));
   const cardRow = kanban.split(/\r?\n/).find((line) => line.startsWith('| A-S123 |'));
