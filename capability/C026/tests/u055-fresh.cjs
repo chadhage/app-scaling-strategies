@@ -16,8 +16,9 @@ const target = path.join(repository, supplied, `fresh-${mode}`);
 if (fs.existsSync(target)) throw new Error('U055 fresh target already exists; preserve that attempt and use a distinct owned target.');
 fs.mkdirSync(target, { recursive: true });
 const archive = path.join(target, 'accepted.tar');
-const scopes = ['capability\\C026', 'capability\\C001', 'meta\\wiki\\flow-state.json'];
-fs.writeFileSync(archive, execFileSync('git', ['--no-pager', 'archive', '--format=tar', commit, ...scopes], { cwd: repository, maxBuffer: 64 * 1024 * 1024 }), { flag: 'wx' });
+const scopes = [path.join('capability', 'C026'), path.join('capability', 'C001'), path.join('.docs', 'wiki', 'flow-state.json')];
+const archiveArgs = ['--no-pager', '-c', 'core.autocrlf=false', 'archive', '--format=tar', commit, ...scopes];
+fs.writeFileSync(archive, execFileSync('git', archiveArgs, { cwd: repository, maxBuffer: 64 * 1024 * 1024 }), { flag: 'wx' });
 try {
   execFileSync('tar', ['-xf', archive, '-C', target], { windowsHide: true });
   const tree = execFileSync('git', ['--no-pager', 'ls-tree', '-r', commit, '--', ...scopes], { cwd: repository, encoding: 'utf8' });
@@ -30,6 +31,10 @@ try {
     if (hash !== match[1]) throw new Error('U055 extracted bytes differ from their accepted Git blob.');
     committedFiles += 1;
   }
+  const archivedLedger = path.join(target, '.docs', 'wiki', 'flow-state.json');
+  const currentLedger = path.join(target, 'meta', 'wiki', 'flow-state.json');
+  fs.mkdirSync(path.dirname(currentLedger), { recursive: true });
+  fs.copyFileSync(archivedLedger, currentLedger, fs.constants.COPYFILE_EXCL);
   fs.cpSync(path.join(repository, 'capability', 'C026'), path.join(target, 'capability', 'C026'), { recursive: true });
   let converted = 0;
   if (mode === 'crlf') {
@@ -45,7 +50,7 @@ try {
   const result = spawnSync(process.execPath, ['capability\\C026\\tests\\u055-suite.cjs', 'capability\\C026\\tests\\*.test.cjs'], {
     cwd: target, env: { ...process.env }, windowsHide: true, timeout: 1800000, maxBuffer: 64 * 1024 * 1024
   });
-  process.stdout.write(`U055 fresh ${mode}: accepted Git archive ${commit}, ${committedFiles} exact blobs; current C026 overlay; ${converted} C001 imports converted; C026 -text bytes preserved.\n`);
+  process.stdout.write(`U055 fresh ${mode}: accepted Git archive ${commit}, ${committedFiles} exact blobs; archived ledger mapped to current path; current C026 overlay; ${converted} C001 imports converted; C026 -text bytes preserved.\n`);
   process.stdout.write(result.stdout ?? '');
   process.stderr.write(result.stderr ?? '');
   process.exitCode = result.status ?? 2;

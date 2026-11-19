@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { spawnSync } = require('node:child_process');
 const { workingSourcePath } = require('./source-path.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -87,6 +88,37 @@ test('C005 checks current canonical documents using POSIX paths', () => {
     __dirname: path.posix.join(virtualRoot, 'capability', 'C005')
   });
   catalogModule.exports.checkCurrentCanonical({ readme: 'readme', backlog: 'backlog' });
+});
+
+test('the C026 fresh archive preserves pinned historical blobs even with automatic CRLF conversion', () => {
+  const source = fs.readFileSync(path.join(root, 'capability', 'C026', 'tests', 'u055-fresh.cjs'), 'utf8');
+  const commit = /^const commit = '([a-f0-9]{40})';$/m.exec(source);
+  const declaration = /^const scopes = (\[[^\r\n]+\]);$/m.exec(source);
+  const argsDeclaration = /^const archiveArgs = (\[[^\r\n]+\]);$/m.exec(source);
+  assert.ok(commit && declaration && argsDeclaration, 'The pinned archive and arguments must remain explicit.');
+  const scopes = vm.runInNewContext(declaration[1], { path });
+  assert.ok(Array.isArray(scopes) && scopes.every(scope => typeof scope === 'string'));
+  const args = vm.runInNewContext(argsDeclaration[1], { commit: commit[1], scopes });
+  const archive = spawnSync('git', args, {
+    cwd: root, env: { ...process.env, GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.autocrlf', GIT_CONFIG_VALUE_0: 'true' },
+    encoding: null, windowsHide: true, timeout: 120000, maxBuffer: 64 * 1024 * 1024
+  });
+  assert.ifError(archive.error);
+  assert.equal(archive.status, 0, archive.stderr.toString('utf8'));
+  for (const entry of [['.docs', 'wiki', 'flow-state.json'], ['capability', 'C001', 'approved-contract.js']]) {
+    const name = entry.join('/');
+    const extracted = spawnSync('tar', ['-xOf', '-', name], {
+      input: archive.stdout, encoding: null, windowsHide: true, maxBuffer: 64 * 1024 * 1024
+    });
+    const original = spawnSync('git', ['--no-pager', 'cat-file', 'blob', `${commit[1]}:${name}`], {
+      cwd: root, encoding: null, windowsHide: true, maxBuffer: 64 * 1024 * 1024
+    });
+    assert.ifError(extracted.error);
+    assert.ifError(original.error);
+    assert.equal(extracted.status, 0, extracted.stderr.toString('utf8'));
+    assert.equal(original.status, 0, original.stderr.toString('utf8'));
+    assert.ok(extracted.stdout.equals(original.stdout), `${name} must match its pinned Git blob.`);
+  }
 });
 
 test('recorded source labels still locate working documents in either path-separator form', () => {
