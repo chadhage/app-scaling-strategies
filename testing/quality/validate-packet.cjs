@@ -4,6 +4,7 @@
 // A U001 result file ({ packet, packetMarkdown }) is unwrapped. Only this file reads files, stdin and the clock.
 const fs = require('node:fs');
 const { validatePacket } = require('./packet-validator.cjs');
+const { findDuplicateJsonKeys, scanForBom } = require('./json-token-reader.cjs');
 const { isObj } = require('./util.cjs');
 const { LIMITS } = require('./limits.cjs');
 const { parseClock } = require('./dates.cjs');
@@ -49,8 +50,11 @@ function run(argv, env) {
   let input;
   let markdown;
   try {
-    const text = env.read(args.file);
+    const original = env.read(args.file);
+    const text = scanForBom(original) ? original.slice(1) : original;
     if (text.length > LIMITS.maxJsonBytes) return report({ ok: false, findings: [{ code: 'INPUT_TOO_LARGE', path: args.file, message: `the input is longer than ${LIMITS.maxJsonBytes} characters` }] }, args.file, args, env);
+    const findings = findDuplicateJsonKeys(text);
+    if (findings.length > 0) return report({ ok: false, findings }, args.file, args, env);
     input = JSON.parse(text);
     if (args.markdown !== null) markdown = env.read(args.markdown);
   } catch (error) {

@@ -89,7 +89,7 @@ const MUTANTS = [
   { id: 'N32', file: 'markdown-structure.cjs', find: "if (got.length !== want.length || at >= 0) add('MARKDOWN_CODE_ORDER'", replace: "if (got.length !== want.length) add('MARKDOWN_CODE_ORDER'", why: 'reordered code lines pass', tests: [R4MD] },
   { id: 'N33', file: 'markdown-structure.cjs', find: "if (hit) add('MARKDOWN_CLAIM'", replace: "if (false) add('MARKDOWN_CLAIM'", why: 'a claim in the prose passes', tests: [R4MD] },
   { id: 'N34', file: 'rules-hygiene.cjs', find: "if (key && PROTOTYPE_KEYS.has(text)) add('PROTOTYPE_KEY'", replace: "if (false) add('PROTOTYPE_KEY'", why: 'an own __proto__ key passes', tests: [R4M] },
-  { id: 'N35', file: 'rules-hygiene.cjs', find: "if (!allowed.includes(key)) add('UNKNOWN_KEY'", replace: "if (false) add('UNKNOWN_KEY'", why: 'an undocumented key passes', tests: [R4M] },
+  { id: 'N35', file: 'rules-hygiene.cjs', find: 'if (!allowed.includes(key)) {', replace: 'if (false) {', why: 'an undocumented key passes', tests: [R4M] },
   { id: 'N36', file: 'rules-hygiene.cjs', find: "!PLACEHOLDER_BODY.test(text)) add('PLACEHOLDER_VALUE'", replace: "false) add('PLACEHOLDER_VALUE'", why: 'a placeholder with a value passes', tests: [R4M] },
   // The four survivors of the review (X16, X20, X22) and the redundant counter (X08) are killed by R4M tests; X01 and X08 are equivalent and not listed.
   { id: 'N37', file: 'rules-prices.cjs', find: "if (r.includedInTotals !== true) add('RESOURCE_PRICED_NO_LINE'", replace: "if (false) add('RESOURCE_PRICED_NO_LINE'", why: 'a priced resource kept out of the totals passes (X16)', tests: [R4M] },

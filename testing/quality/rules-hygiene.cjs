@@ -3,6 +3,7 @@
 // pricing.lines[].meterId and bare SHA-256 values at the hash paths are the only exceptions), no unresolved or enforcement wording, no
 // approval claim in prose, and the integrity hash recomputes.
 const { isObj, integrityHash } = require('./util.cjs');
+const { quoteKey } = require('./json-token-reader.cjs');
 const ident = require('./ident.cjs');
 const meters = require('./meters.cjs');
 
@@ -17,6 +18,8 @@ const HASH_PATHS = new Set(['integrity.packetSha256', 'revision.supersedes.packe
 const APPROVAL = /\b(?:owner|user) (?:has |have )?(?:approved|authori[sz]ed)\b|\bapproved by (?:the )?(?:owner|user)\b|\b(?:is|are|was|were|been) (?:now )?approved\b|\boption [a-c] (?:is |was )?approved\b|\bgo ahead\b|\bdeploy(?:ment)? now\b/i;
 // The documented fields of the three objects a reader trusts most (N13): an undocumented field could carry an approval nobody reads.
 const KEYS = {
+  root: ['schemaVersion', 'itemId', 'title', 'servesItems', 'preparedBy', 'preparedAtUtc', 'status', 'authority', 'pricing', 'documentedSources', 'options', 'recommendation', 'requiredResources', 'exclusions',
+    'cleanupAndRollback', 'ownerDecisions', 'risksAndAssumptions', 'integrity', 'validation', 'revision', 'repositoryState', 'defaultChoice', 'fixtureNote'],
   authority: ['source', 'observedFlags', 'observedOperatingEnvelope', 'hosting', 'runtime', 'framework', 'authentication', 'controlStorage', 'firstNativeHost', 'firstNativeConfiguration', 'preferredIacFormat',
     'pinnedSnapshotSha256', 'reading', 'observedAtUtc', 'unitStatement', 'c002Pins'],
   option: ['id', 'name', 'title', 'os', 'runtime', 'planProduct', 'sku', 'skuKey', 'cliSku', 'tier', 'steadyInstances', 'instanceCap', 'stagingSlots', 'autoscale', 'defaultRegion', 'regionCandidates', 'expectedRunHours',
@@ -31,12 +34,16 @@ const PLACEHOLDER_BODY = /^<OWNER-SUPPLIED[A-Za-z0-9 ,.:()<>|-]{0,390}>$/;
 function checkKeys(packet, add) {
   const closed = (object, allowed, path) => {
     if (!isObj(object)) return;
-    for (const key of Object.keys(object)) if (!allowed.includes(key)) add('UNKNOWN_KEY', `${path}.${key}`, `${key} is not a documented field of this object: an undocumented field could carry an approval or a value no reader sees`);
+    for (const key of Object.keys(object)) if (!allowed.includes(key)) {
+      const shown = quoteKey(key).slice(1, -1);
+      add('UNKNOWN_KEY', path ? `${path}.${shown}` : shown, `${shown} is not a documented field of this object: an undocumented field could carry an approval or a value no reader sees`);
+    }
   };
   closed(packet.authority, KEYS.authority, 'authority');
   (Array.isArray(packet.options) ? packet.options : []).forEach((o, i) => closed(o, KEYS.option, `options[${i}]`));
   const decisions = isObj(packet.ownerDecisions) && Array.isArray(packet.ownerDecisions.decisions) ? packet.ownerDecisions.decisions : [];
   decisions.forEach((d, i) => closed(d, KEYS.decision, `ownerDecisions.decisions[${i}]`));
+  closed(packet, KEYS.root, '');
 }
 
 function scanIdentifiers(text, path, add) {
